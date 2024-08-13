@@ -1,0 +1,19 @@
+const pool = require('../config/db');
+
+const Batch = {
+  newBatch: (title, description, admin_id, callback) => {
+    const sql = `
+      INSERT INTO \`batches\` (\`title\`, \`description\`, \`admin_id\`)
+      VALUES (?, ?, ?)
+    `;
+    pool.query(sql, [title, description, admin_id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results);
+    });
+  }
+};
+
+module.exports = Batch;
