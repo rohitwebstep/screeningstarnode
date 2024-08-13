@@ -1,9 +1,9 @@
 const pool = require("../config/db");
 
 const Service = {
-  newBatch: (title, description, admin_id, callback) => {
+  newService: (title, description, admin_id, callback) => {
     const sql = `
-      INSERT INTO \`batches\` (\`title\`, \`description\`, \`admin_id\`)
+      INSERT INTO \`services\` (\`title\`, \`description\`, \`admin_id\`)
       VALUES (?, ?, ?)
     `;
     pool.query(sql, [title, description, admin_id], (err, results) => {
@@ -16,7 +16,7 @@ const Service = {
   },
   // Method to list all batches
   list: (callback) => {
-    const sql = `SELECT * FROM \`batches\``;
+    const sql = `SELECT * FROM \`services\``;
     pool.query(sql, (err, results) => {
       if (err) {
         console.error("Database query error:", err);

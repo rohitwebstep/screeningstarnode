@@ -38,8 +38,8 @@ exports.newService = (req, res) => {
       return res.status(401).json({ status: false, message: result.message });
     }
 
-    // Call the model to create a new batch if the token is valid
-    Service.newBatch(title, description, admin_id, (err, result) => {
+    // Call the model to create a new service if the token is valid
+    Service.newService(title, description, admin_id, (err, result) => {
       if (err) {
         console.error("Database error:", err);
         return res
@@ -51,7 +51,7 @@ exports.newService = (req, res) => {
       res.json({
         status: true,
         message: "Package created successfully",
-        batchData: result,
+        serviceData: result,
       });
     });
   });
@@ -88,7 +88,7 @@ exports.list = (req, res) => {
       return res.status(401).json({ status: false, message: result.message });
     }
 
-    // Call the model to list all batches if the token is valid
+    // Call the model to list all services if the token is valid
     Service.list((err, result) => {
       if (err) {
         console.error("Database error:", err);
@@ -100,8 +100,8 @@ exports.list = (req, res) => {
       // Send a successful response
       res.json({
         status: true,
-        message: "Batches fetched successfully",
-        batchData: result,
+        message: "Services fetched successfully",
+        serviceData: result,
       });
     });
   });
