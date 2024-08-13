@@ -4,7 +4,7 @@ const pool = require('../config/db');
 const generateToken = () => crypto.randomBytes(32).toString('hex');
 const getTokenExpiry = () => new Date(Date.now() + 3600000).toISOString();
 
-const Batch = {
+const common = {
   isAdminTokenValid: (_token, admin_id, callback) => {
     const sql = `
       SELECT \`login_token\`, \`token_expiry\`
@@ -57,4 +57,4 @@ const Batch = {
   },
 };
 
-module.exports = Batch;
+module.exports = common;

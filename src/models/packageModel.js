@@ -1,6 +1,6 @@
 const pool = require("../config/db");
 
-const Batch = {
+const Package = {
   newBatch: (title, description, admin_id, callback) => {
     const sql = `
       INSERT INTO \`batches\` (\`title\`, \`description\`, \`admin_id\`)
@@ -27,4 +27,4 @@ const Batch = {
   },
 };
 
-module.exports = Batch;
+module.exports = Package;

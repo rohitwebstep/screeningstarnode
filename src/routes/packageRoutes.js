@@ -1,6 +1,6 @@
  const express = require('express');
 const router = express.Router();
-const batchController = require('../controllers/batchController');
+const batchController = require('../controllers/packageController');
 
 // Authentication routes
 router.post('/add', batchController.newBatch);
