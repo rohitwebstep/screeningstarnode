@@ -39,6 +39,26 @@ const Admin = {
       callback(null, results);
     });
   },
+
+  updateToken: (id, token, tokenExpiry, callback) => {
+    // Log the query operation
+    console.log('Updating token for admin ID:', id);
+    const sql = `
+      UPDATE \`admins\`
+      SET \`login_token\` = ?, \`token_expiry\` = ?
+      WHERE \`id\` = ?
+    `;
+    pool.query(sql, [token, tokenExpiry, id], (err, results) => {
+      if (err) {
+        // Log database query errors
+        console.error('Database query error:', err);
+        return callback(err, null);
+      }
+      // Log the results of the update operation
+      console.log('Update results:', results);
+      callback(null, results);
+    });
+  },
 };
 
 module.exports = Admin;
