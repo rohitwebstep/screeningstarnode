@@ -1,22 +1,27 @@
+const crypto = require('crypto');
 const Admin = require('../models/adminModel');
 
 const isEmail = (username) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username);
 
-// ===============--------------- LOGIN  ---------------===============
+const generateToken = () => {
+  return crypto.randomBytes(32).toString('hex');
+};
+
+const getTokenExpiry = () => {
+  return new Date(Date.now() + 3600000).toISOString();
+};
+
 exports.login = (req, res) => {
   const { username, password } = req.body;
 
-  // Perform initial validation if needed
   if (!username || !password) {
     return res.status(400).json({ status: false, message: "Username and password are required" });
   }
 
-  // Check if the username is in a valid format
   if (!isEmail(username)) {
     return res.status(400).json({ status: false, message: "Invalid username format" });
   }
 
-  // Find user by email or mobile
   Admin.findByEmailOrMobile(username, (err, result) => {
     if (err) {
       console.error("Database error:", err);
@@ -27,7 +32,8 @@ exports.login = (req, res) => {
       return res.status(404).json({ status: false, message: "User not registered" });
     }
 
-    // Validate password
+    const user = result[0];
+
     Admin.validatePassword(username, password, (err, result) => {
       if (err) {
         console.error("Database error:", err);
@@ -38,8 +44,17 @@ exports.login = (req, res) => {
         return res.status(404).json({ status: false, message: "Incorrect password" });
       }
 
-      // If everything is successful
-      res.json({ status: true, message: "Login successful", adminData: result });
+      const token = generateToken();
+      const tokenExpiry = getTokenExpiry();
+
+      Admin.updateToken(user.id, token, tokenExpiry, (err) => {
+        if (err) {
+          console.error("Database error:", err);
+          return res.status(500).json({ status: false, message: "Error updating token" });
+        }
+
+        res.json({ status: true, message: "Login successful", adminData: user, token });
+      });
     });
   });
 };
