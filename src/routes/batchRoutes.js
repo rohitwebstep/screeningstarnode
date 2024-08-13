@@ -4,6 +4,6 @@ const batchController = require('../controllers/batchController');
 
 // Authentication routes
 router.post('/add', batchController.newBatch);
-router.post('/list', batchController.list);
+router.get('/list', batchController.list);
 
 module.exports = router;
