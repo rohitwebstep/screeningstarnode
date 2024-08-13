@@ -5,7 +5,7 @@ const generateToken = () => crypto.randomBytes(32).toString('hex');
 const getTokenExpiry = () => new Date(Date.now() + 3600000).toISOString();
 
 const Batch = {
-  isAdminTokenValid: (admin_id, callback) => {
+  isAdminTokenValid: (_token, admin_id, callback) => {
     const sql = `
       SELECT \`login_token\`, \`token_expiry\`
       FROM \`admins\`
@@ -22,11 +22,16 @@ const Batch = {
         return callback({ status: false, message: 'Admin not found' }, null);
       }
 
+      const currentToken = results[0].login_token;
       const tokenExpiry = new Date(results[0].token_expiry);
       const currentTime = new Date();
 
+      if (_token !== currentToken) {
+        return callback({ status: false, message: 'Invalid token provided' }, null);
+      }
+
       if (tokenExpiry > currentTime) {
-        // Token is valid
+        // Token is valid and matches the provided token
         callback(null, { status: true, message: 'Token is valid' });
       } else {
         // Token is expired, generate and save a new one

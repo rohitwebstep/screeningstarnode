@@ -28,7 +28,7 @@ exports.newBatch = (req, res) => {
   }
 
   // Validate the admin token
-  Common.isAdminTokenValid(admin_id, (err, result) => {
+  Common.isAdminTokenValid(_token, admin_id, (err, result) => {
     if (err) {
       console.error("Error checking token validity:", err);
       return res.status(500).json(err);
