@@ -1,4 +1,4 @@
-const Batch = require('../models/commonModel');
+const Package = require('../models/commonModel');
 
 exports.isAdminTokenValid = (req, res) => {
   const { admin_id } = req.params;
@@ -10,7 +10,7 @@ exports.isAdminTokenValid = (req, res) => {
   // Convert admin_id to a number to ensure correct type handling
   const adminId = Number(admin_id);
 
-  Batch.isAdminTokenValid(adminId, (err, result) => {
+  Package.isAdminTokenValid(adminId, (err, result) => {
     if (err) {
       console.error('Error checking token validity:', err);
       return res.status(500).json(err);

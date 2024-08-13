@@ -1,5 +1,5 @@
-const Batch = require("../models/batchModel");
-const Common = require("../models/commonModel"); // Import the common model for token validation
+const Package = require("../models/packageModel");
+const Common = require("../models/commonModel");
 
 exports.newBatch = (req, res) => {
   const { title, description, admin_id, _token } = req.body;
@@ -39,7 +39,7 @@ exports.newBatch = (req, res) => {
     }
 
     // Call the model to create a new batch if the token is valid
-    Batch.newBatch(title, description, admin_id, (err, result) => {
+    Package.newBatch(title, description, admin_id, (err, result) => {
       if (err) {
         console.error("Database error:", err);
         return res
@@ -50,7 +50,7 @@ exports.newBatch = (req, res) => {
       // Send a successful response
       res.json({
         status: true,
-        message: "Batch created successfully",
+        message: "Package created successfully",
         batchData: result,
       });
     });
@@ -89,7 +89,7 @@ exports.list = (req, res) => {
     }
 
     // Call the model to list all batches if the token is valid
-    Batch.list((err, result) => {
+    Package.list((err, result) => {
       if (err) {
         console.error("Database error:", err);
         return res
