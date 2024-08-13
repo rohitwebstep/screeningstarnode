@@ -2,6 +2,7 @@ const Admin = require('../models/adminModel');
 
 const isEmail = (username) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username);
 
+// ===============--------------- LOGIN  ---------------===============
 exports.login = (req, res) => {
   const { username, password } = req.body;
 
