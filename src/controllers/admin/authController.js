@@ -1,11 +1,10 @@
 const crypto = require('crypto');
-const Admin = require('../models/adminModel');
+const Admin = require('../../models/adminModel');
 
 const isEmail = (username) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username);
 
 const generateToken = () => crypto.randomBytes(32).toString('hex');
-
-const getTokenExpiry = () => new Date(Date.now() + 3600000).toISOString(); // 1 hour from now
+const getTokenExpiry = () => new Date(Date.now() + 3600000).toISOString();
 
 exports.login = (req, res) => {
   const { username, password } = req.body;
