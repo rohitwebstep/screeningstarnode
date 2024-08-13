@@ -1,9 +1,9 @@
  const express = require('express');
 const router = express.Router();
-const batchController = require('../controllers/packageController');
+const packageController = require('../controllers/packageController');
 
 // Authentication routes
-router.post('/add', batchController.newBatch);
-router.get('/list', batchController.list);
+router.post('/add', packageController.newPackage);
+router.get('/list', packageController.list);
 
 module.exports = router;
