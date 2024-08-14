@@ -155,7 +155,7 @@ exports.validateLogin = (req, res) => {
     }
 
     const admin = result[0];
-    const isTokenValid = admin.login_token === _token && new Date(admin.token_expiry) > new Date();
+    const isTokenValid = admin.login_token === _token;
 
     if (!isTokenValid) {
       return res.status(401).json({ status: false, message: 'Invalid or expired token' });

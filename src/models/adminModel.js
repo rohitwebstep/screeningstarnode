@@ -69,7 +69,7 @@ const Admin = {
   validateLogin: (id, callback) => {
   
     const sql = `
-      SELECT \`id\`, \`emp_id\`, \`name\`, \`profile_picture\`, \`email\`, \`mobile\`, \`status\`, \`login_token\`, \`token_expiry\`
+      SELECT \`login_token\`
       FROM \`admins\`
       WHERE \`id\` = ?
     `;
