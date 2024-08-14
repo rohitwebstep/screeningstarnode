@@ -21,7 +21,7 @@ exports.login = (req, res) => {
   Admin.findByEmailOrMobile(username, (err, result) => {
     if (err) {
       console.error("Database error:", err);
-      return res.status(500).json({ status: false, message: "Database error 1" });
+      return res.status(500).json({ status: false, message: "Database error 1"+err });
     }
 
     if (result.length === 0) {
