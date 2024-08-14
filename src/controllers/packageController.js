@@ -42,13 +42,26 @@ exports.newPackage = (req, res) => {
     Package.newPackage(title, description, admin_id, (err, result) => {
       if (err) {
         console.error("Database error:", err);
-        Common.adminActivityLog(admin_id,"Package","Add","0",err.message,() => {});
-        return res
-          .status(500)
-          .json({ status: false, message: err.message });
+        Common.adminActivityLog(
+          admin_id,
+          "Package",
+          "Add",
+          "0",
+          err.message,
+          () => {}
+        );
+        return res.status(500).json({ status: false, message: err.message });
       }
 
-      Common.adminActivityLog(admin_id,"Package","Add","1",`{id: ${result.insertId}}`,null,() => {});
+      Common.adminActivityLog(
+        admin_id,
+        "Package",
+        "Add",
+        "1",
+        `{id: ${result.insertId}}`,
+        null,
+        () => {}
+      );
 
       // Send a successful response
       res.json({
@@ -104,7 +117,8 @@ exports.list = (req, res) => {
       res.json({
         status: true,
         message: "Packages fetched successfully",
-        packageData: result,
+        packages: result,
+        totalResults: result.length,
       });
     });
   });
