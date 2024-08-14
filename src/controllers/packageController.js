@@ -152,34 +152,57 @@ exports.editPackage = (req, res) => {
       return res.status(401).json({ status: false, message: result.message });
     }
 
-    Package.editPackage(id, title, description, admin_id, (err, result) => {
+    // Fetch current package data
+    Package.getPackageById(id, (err, currentPackage) => {
       if (err) {
-        console.error("Database error:", err);
+        console.error("Error fetching package data:", err);
+        return res.status(500).json(err);
+      }
+
+      // Compare current data with new data
+      const changes = {};
+      if (currentPackage.title !== title) {
+        changes.title = {
+          old: currentPackage.title,
+          new: title,
+        };
+      }
+      if (currentPackage.description !== description) {
+        changes.description = {
+          old: currentPackage.description,
+          new: description,
+        };
+      }
+
+      Package.editPackage(id, title, description, admin_id, (err, result) => {
+        if (err) {
+          console.error("Database error:", err);
+          Common.adminActivityLog(
+            admin_id,
+            "Package",
+            "Edit",
+            "0",
+            err.message,
+            () => {}
+          );
+          return res.status(500).json({ status: false, message: err.message });
+        }
+
         Common.adminActivityLog(
           admin_id,
           "Package",
           "Edit",
-          "0",
-          err.message,
+          "1",
+          JSON.stringify({ id, ...changes }),
+          null,
           () => {}
         );
-        return res.status(500).json({ status: false, message: err.message });
-      }
 
-      Common.adminActivityLog(
-        admin_id,
-        "Package",
-        "Edit",
-        "1",
-        `{id: ${id}}`,
-        null,
-        () => {}
-      );
-
-      res.json({
-        status: true,
-        message: "Package updated successfully",
-        packages: result,
+        res.json({
+          status: true,
+          message: "Package updated successfully",
+          packages: result,
+        });
       });
     });
   });
