@@ -21,7 +21,7 @@ exports.login = (req, res) => {
   Admin.findByEmailOrMobile(username, (err, result) => {
     if (err) {
       console.error("Database error:", err);
-      return res.status(500).json({ status: false, message: "Database error" });
+      return res.status(500).json({ status: false, message: "Database error 1" });
     }
 
     if (result.length === 0) {
@@ -34,7 +34,7 @@ exports.login = (req, res) => {
       if (err) {
         console.error("Database error:", err);
         Common.adminLoginLog(user.id, 'login', 'login', '0', 'Database error: '+err, () => {});
-        return res.status(500).json({ status: false, message: "Database error" });
+        return res.status(500).json({ status: false, message: "Database error 2" });
       }
 
       if (result.length === 0) {
