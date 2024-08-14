@@ -88,6 +88,29 @@ const common = {
       });
     });
   },
+
+  adminActivityLog: (admin_id,module,action,result,update,error,callback) => {
+    const insertSql = `
+      INSERT INTO \`admin_activity_logs\` (\`admin_id\`, \`module\`, \`action\`, \`result\`, \`update\`, \`error\`, \`created_at\`)
+      VALUES (?, ?, ?, ?, ?, NOW())
+    `;
+
+    pool.query(
+      insertSql,
+      [admin_id, module, action, result, update, error],
+      (err) => {
+        if (err) {
+          console.error("Database insertion error:", err);
+          return callback({ status: false, message: "Database error" }, null);
+        }
+
+        callback(null, {
+          status: true,
+          message: "Admin login log entry added successfully",
+        });
+      }
+    );
+  },
 };
 
 module.exports = common;

@@ -42,10 +42,13 @@ exports.newPackage = (req, res) => {
     Package.newPackage(title, description, admin_id, (err, result) => {
       if (err) {
         console.error("Database error:", err);
+        Common.adminActivityLog(admin_id,"Package","Add","failure","Database error: " + err,() => {});
         return res
           .status(500)
           .json({ status: false, message: "Database error" });
       }
+
+      Common.adminActivityLog(admin_id,"Package","Add","success",`{id: ${result.insertId}}`,null,() => {});
 
       // Send a successful response
       res.json({

@@ -33,12 +33,12 @@ exports.login = (req, res) => {
     Admin.validatePassword(username, password, (err, result) => {
       if (err) {
         console.error("Database error:", err);
-        Common.adminLoginLog(user.id, 'auth', 'login', '0', 'Database error: '+err, () => {});
+        Common.adminLoginLog(user.id, 'login', 'login', '0', 'Database error: '+err, () => {});
         return res.status(500).json({ status: false, message: "Database error" });
       }
 
       if (result.length === 0) {
-        Common.adminLoginLog(user.id, 'auth', 'login', '0', 'Incorrect password', () => {});
+        Common.adminLoginLog(user.id, 'login', 'login', '0', 'Incorrect password', () => {});
         return res.status(401).json({ status: false, message: "Incorrect password" });
       }
 
@@ -48,10 +48,10 @@ exports.login = (req, res) => {
       Admin.updateToken(user.id, token, tokenExpiry, (err) => {
         if (err) {
           console.error("Database error:", err);
-          Common.adminLoginLog(user.id, 'auth', 'login', '0', 'Error updating token', () => {});
+          Common.adminLoginLog(user.id, 'login', 'login', '0', 'Error updating token', () => {});
           return res.status(500).json({ status: false, message: "Error updating token" });
         }
-        Common.adminLoginLog(user.id, 'auth', 'login', '1', null, () => {});
+        Common.adminLoginLog(user.id, 'login', 'login', '1', null, () => {});
         // Send the response with the updated user and token
         res.json({ status: true, message: "Login successful", adminData: user, token });
       });
