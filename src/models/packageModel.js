@@ -26,6 +26,17 @@ const Package = {
     });
   },
 
+  getPackageById: (id, callback) => {
+    const sql = `SELECT * FROM \`packages\` WHERE \`id\` = ?`;
+    pool.query(sql, [id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results[0]);
+    });
+  },
+  
   // Method to list all packages
   editPackage: (id, title, description, admin_id, callback) => {
     const sql = `
