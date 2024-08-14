@@ -67,7 +67,7 @@ exports.newPackage = (req, res) => {
       res.json({
         status: true,
         message: "Package created successfully",
-        batchData: result,
+        packages: result,
       });
     });
   });
@@ -119,6 +119,67 @@ exports.list = (req, res) => {
         message: "Packages fetched successfully",
         packages: result,
         totalResults: result.length,
+      });
+    });
+  });
+};
+
+exports.editPackage = (req, res) => {
+  const { id, title, description, admin_id, _token } = req.body;
+
+  let missingFields = [];
+
+  if (!id) missingFields.push("Package ID");
+  if (!title) missingFields.push("Title");
+  if (!description) missingFields.push("Description");
+  if (!admin_id) missingFields.push("Admin ID");
+  if (!_token) missingFields.push("Token");
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  Common.isAdminTokenValid(_token, admin_id, (err, result) => {
+    if (err) {
+      console.error("Error checking token validity:", err);
+      return res.status(500).json(err);
+    }
+
+    if (!result.status) {
+      return res.status(401).json({ status: false, message: result.message });
+    }
+
+    Package.editPackage(id, title, description, admin_id, (err, result) => {
+      if (err) {
+        console.error("Database error:", err);
+        Common.adminActivityLog(
+          admin_id,
+          "Package",
+          "Edit",
+          "0",
+          err.message,
+          () => {}
+        );
+        return res.status(500).json({ status: false, message: err.message });
+      }
+
+      Common.adminActivityLog(
+        admin_id,
+        "Package",
+        "Edit",
+        "1",
+        `{id: ${id}}`,
+        null,
+        () => {}
+      );
+
+      res.json({
+        status: true,
+        message: "Package updated successfully",
+        packages: result,
       });
     });
   });

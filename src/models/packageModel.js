@@ -25,6 +25,22 @@ const Package = {
       callback(null, results);
     });
   },
+
+  // Method to list all packages
+  editPackage: (id, title, description, admin_id, callback) => {
+    const sql = `
+      UPDATE \`packages\`
+      SET \`title\` = ?, \`description\` = ?
+      WHERE \`id\` = ?
+    `;
+    pool.query(sql, [title, description, id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results);
+    });
+  },
 };
 
 module.exports = Package;
