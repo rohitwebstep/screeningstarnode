@@ -67,7 +67,7 @@ exports.login = (req, res) => {
         );
         return res
           .status(500)
-          .json({ status: false, message: "Internal server error" });
+          .json({ status: false, message: err.message });
       }
 
       // If the password is incorrect, log the attempt and return a 401 response
@@ -147,7 +147,7 @@ exports.validateLogin = (req, res) => {
   Admin.validateLogin(admin_id, (err, result) => {
     if (err) {
       console.error('Database error:', err);
-      return res.status(500).json({ status: false, message: 'Internal server error' });
+      return res.status(500).json({ status: false, message: err.message });
     }
 
     if (result.length === 0) {
