@@ -62,7 +62,7 @@ exports.login = (req, res) => {
           "login",
           "login",
           "0",
-          `Database error: ${err.message}`,
+          err.message,
           () => {}
         );
         return res
