@@ -2,7 +2,6 @@ const pool = require('../config/db');
 
 const Admin = {
   findByEmailOrMobile: (username, callback) => {
-    console.log(`Querying findByEmailOrMobile for: ${username}`);
 
     const sql = `
       SELECT \`id\`, \`emp_id\`, \`name\`, \`profile_picture\`, \`email\`, \`mobile\`, \`status\`
@@ -25,8 +24,6 @@ const Admin = {
   },
 
   validatePassword: (username, password, callback) => {
-    console.log(`Querying validatePassword for: ${username}`);
-
     const sql = `
       SELECT \`id\`, \`emp_id\`, \`name\`, \`profile_picture\`, \`email\`, \`mobile\`, \`status\`
       FROM \`admins\`
@@ -49,8 +46,6 @@ const Admin = {
   },
 
   updateToken: (id, token, tokenExpiry, callback) => {
-    console.log(`Updating token for admin ID: ${id}`);
-
     const sql = `
       UPDATE \`admins\`
       SET \`login_token\` = ?, \`token_expiry\` = ?
@@ -72,7 +67,6 @@ const Admin = {
   },
 
   validateLogin: (id, callback) => {
-    console.log(`Querying findById for admin ID: ${id}`);
   
     const sql = `
       SELECT \`id\`, \`emp_id\`, \`name\`, \`profile_picture\`, \`email\`, \`mobile\`, \`status\`, \`login_token\`, \`token_expiry\`
