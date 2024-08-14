@@ -20,10 +20,11 @@ exports.login = async (req, res) => {
 
   try {
     const result = await Admin.findByEmailOrMobile(username);
-    
+    console.log("STEP 1");
     if (result.length === 0) {
       return res.status(404).json({ status: false, message: "User not registered" });
     }
+    console.log("User Found.");
 
     const user = result[0];
     
@@ -33,6 +34,8 @@ exports.login = async (req, res) => {
       await Common.adminLoginLog(user.id, 'login', 'login', '0', 'Incorrect password');
       return res.status(401).json({ status: false, message: "Incorrect password" });
     }
+    console.log("Password Matched 1");
+
 
     const token = generateToken();
     const tokenExpiry = getTokenExpiry();
