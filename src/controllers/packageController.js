@@ -61,7 +61,7 @@ exports.newPackage = (req, res) => {
 };
 
 exports.list = (req, res) => {
-  const { admin_id, _token } = req.body;
+  const { admin_id, _token } = req.query;
 
   // Validate required fields and create a custom message
   let missingFields = [];
