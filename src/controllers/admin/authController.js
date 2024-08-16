@@ -100,7 +100,14 @@ exports.login = (req, res) => {
           currentTime: currentTime.toISOString()
         });
       }      
-
+      return res.json({
+        status: false,
+        message: "Another admin is currently logged in. Please try again later.",
+        adminData: user,
+        token: user.login_token,
+        token_expiry: user.token_expiry,
+        currentTime: currentTime.toISOString()
+      });
       // Generate token and expiry time
       const token = generateToken();
       const tokenExpiry = getTokenExpiry();
