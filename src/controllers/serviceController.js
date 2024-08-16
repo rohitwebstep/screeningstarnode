@@ -3,12 +3,13 @@ const Common = require("../models/commonModel");
 
 // Controller to create a new service
 exports.create = (req, res) => {
-  const { title, description, admin_id, _token } = req.body;
+  const { title, description, admin_id,  package_id, _token } = req.body;
 
   let missingFields = [];
   if (!title) missingFields.push("Title");
   if (!description) missingFields.push("Description");
   if (!admin_id) missingFields.push("Admin ID");
+  if (!package_id) missingFields.push("package_id");
   if (!_token) missingFields.push("Token");
 
   if (missingFields.length > 0) {
@@ -30,7 +31,7 @@ exports.create = (req, res) => {
 
     const newToken = result.newToken;
 
-    Service.create(title, description, admin_id, (err, result) => {
+    Service.create(title, description, admin_id, package_id, (err, result) => {
       if (err) {
         console.error("Database error:", err);
         Common.adminActivityLog(
