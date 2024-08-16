@@ -86,18 +86,20 @@ exports.login = (req, res) => {
       }
 
       // Check if the user already has a token and if it's expired
-      const currentTime = new Date().toISOString();
-      if (user.login_token && user.token_expiry > currentTime) {
+      const currentTime = new Date(); // Get the current time as a Date object
+      const tokenExpiryTime = new Date(user.token_expiry); // Convert the token expiry time to a Date object
+      
+      if (user.login_token && tokenExpiryTime > currentTime) {
         // Token is still valid
         return res.json({
           status: false,
           message: "Another admin is currently logged in. Please try again later.",
           adminData: user,
           token: user.login_token,
-          token_expiry : user.token_expiry,
-          currentTime
+          token_expiry: user.token_expiry,
+          currentTime: currentTime.toISOString()
         });
-      }
+      }      
 
       // Generate token and expiry time
       const token = generateToken();
