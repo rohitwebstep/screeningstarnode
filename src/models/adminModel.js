@@ -4,7 +4,7 @@ const Admin = {
   findByEmailOrMobile: (username, callback) => {
 
     const sql = `
-      SELECT \`id\`, \`emp_id\`, \`name\`, \`profile_picture\`, \`email\`, \`mobile\`, \`status\`
+      SELECT \`id\`, \`emp_id\`, \`name\`, \`profile_picture\`, \`email\`, \`mobile\`, \`status\`, \`token_expiry\`
       FROM \`admins\`
       WHERE \`email\` = ? OR \`mobile\` = ?
     `;
