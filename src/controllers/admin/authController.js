@@ -128,32 +128,47 @@ exports.login = (req, res) => {
 
 // Admin logout handler
 exports.logout = (req, res) => {
-  const { admin_id } = req.query;
-  const missingFields = [];
+  const { admin_id, _token } = req.query;
 
-  // Validate required fields
+  // Validate required fields and create a custom message
+  let missingFields = [];
+
   if (!admin_id) {
-    missingFields.push('Admin ID');
+    missingFields.push("Admin ID");
+  }
+  if (!_token) {
+    missingFields.push("Token");
   }
 
-  // If there are missing fields, return an error response
   if (missingFields.length > 0) {
     return res.status(400).json({
       status: false,
-      message: `Missing required fields: ${missingFields.join(', ')}`,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
 
-  // Update the token in the database to null
-  Admin.logout(admin_id, (err) => {
+  // Validate the admin token
+  Common.isAdminTokenValid(_token, admin_id, (err, result) => {
     if (err) {
-      console.error('Database error:', err);
-      return res.status(500).json({ status: false, message: `Error logging out: ${err.message}` });
+      console.error("Error checking token validity:", err);
+      return res.status(500).json(err);
     }
 
-    res.json({
-      status: true,
-      message: 'Logout successful',
+    if (!result.status) {
+      return res.status(401).json({ status: false, message: result.message });
+    }
+
+    // Update the token in the database to null
+    Admin.logout(admin_id, (err) => {
+      if (err) {
+        console.error('Database error:', err);
+        return res.status(500).json({ status: false, message: `Error logging out: ${err.message}` });
+      }
+
+      res.json({
+        status: true,
+        message: 'Logout successful',
+      });
     });
   });
 };
