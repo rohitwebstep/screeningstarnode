@@ -110,13 +110,13 @@ exports.login = (req, res) => {
 
         // Log successful login and return the response
         Common.adminLoginLog(admin.id, "login", "1", null, () => { });
+        const { login_token, token_expiry, ...adminDataWithoutToken } = admin;
+
         res.json({
           status: true,
           message: "Login successful",
-          adminData: admin,
-          token,
-          currentTime: currentTime.toISOString(), // Return current time as ISO string
-          tokenExpiry: newTokenExpiry
+          adminData: adminDataWithoutToken,
+          token
         });
       });
     });
