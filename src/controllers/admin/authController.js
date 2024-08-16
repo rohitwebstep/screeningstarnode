@@ -126,7 +126,6 @@ exports.login = (req, res) => {
   });
 };
 
-
 // Admin login validation handler
 exports.validateLogin = (req, res) => {
   const { admin_id, _token } = req.body;
