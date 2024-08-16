@@ -94,6 +94,7 @@ exports.login = (req, res) => {
           message: "Another admin is currently logged in. Please try again later.",
           adminData: user,
           token: user.login_token,
+          currentTime: currentTime
         });
       }
 
@@ -128,6 +129,7 @@ exports.login = (req, res) => {
           message: "Login successful",
           adminData: user,
           token,
+          currentTime
         });
       });
     });
