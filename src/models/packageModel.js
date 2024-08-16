@@ -1,7 +1,7 @@
 const pool = require("../config/db");
 
 const Package = {
-  new: (title, description, admin_id, callback) => {
+  create: (title, description, admin_id, callback) => {
     const sql = `
       INSERT INTO \`packages\` (\`title\`, \`description\`, \`admin_id\`)
       VALUES (?, ?, ?)
@@ -14,7 +14,7 @@ const Package = {
       callback(null, results);
     });
   },
-  // Method to list all packages
+
   list: (callback) => {
     const sql = `SELECT * FROM \`packages\``;
     pool.query(sql, (err, results) => {
@@ -37,8 +37,7 @@ const Package = {
     });
   },
 
-  // Method to list all packages
-  edit: (id, title, description, callback) => {
+  update: (id, title, description, callback) => {
     const sql = `
       UPDATE \`packages\`
       SET \`title\` = ?, \`description\` = ?
@@ -53,7 +52,6 @@ const Package = {
     });
   },
 
-  // Method to delete packages
   delete: (id, callback) => {
     const sql = `
         DELETE FROM \`packages\`
