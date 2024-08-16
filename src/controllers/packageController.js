@@ -38,6 +38,8 @@ exports.new = (req, res) => {
       return res.status(401).json({ status: false, message: result.message });
     }
 
+    newToken = result.newToken;
+
     // Call the model to create a new package if the token is valid
     Package.new(title, description, admin_id, (err, result) => {
       if (err) {
@@ -68,6 +70,7 @@ exports.new = (req, res) => {
         status: true,
         message: "Package created successfully",
         packages: result,
+        token: newToken
       });
     });
   });
@@ -104,6 +107,8 @@ exports.list = (req, res) => {
       return res.status(401).json({ status: false, message: result.message });
     }
 
+    newToken = result.newToken;
+
     // Call the model to list all packages if the token is valid
     Package.list((err, result) => {
       if (err) {
@@ -119,6 +124,7 @@ exports.list = (req, res) => {
         message: "Packages fetched successfully",
         packages: result,
         totalResults: result.length,
+        token: newToken
       });
     });
   });
@@ -151,6 +157,8 @@ exports.edit = (req, res) => {
     if (!result.status) {
       return res.status(401).json({ status: false, message: result.message });
     }
+
+    newToken = result.newToken;
 
     // Fetch current package data
     Package.getPackageById(id, (err, currentPackage) => {
@@ -202,6 +210,7 @@ exports.edit = (req, res) => {
           status: true,
           message: "Package updated successfully",
           packages: result,
+          token: newToken
         });
       });
     });
@@ -242,6 +251,8 @@ exports.delete = (req, res) => {
       return res.status(401).json({ status: false, message: result.message });
     }
 
+    newToken = result.newToken;
+    
     // Fetch current package data
     Package.getPackageById(id, (err, currentPackage) => {
       if (err) {
@@ -276,6 +287,7 @@ exports.delete = (req, res) => {
         res.json({
           status: true,
           message: "Package deleted successfully",
+          token: newToken
         });
       });
     });
