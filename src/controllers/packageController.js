@@ -108,7 +108,7 @@ exports.list = (req, res) => {
     }
 
     newToken = result.newToken;
-
+    console.log('New Token - '+newToken);
     // Call the model to list all packages if the token is valid
     Package.list((err, result) => {
       if (err) {
