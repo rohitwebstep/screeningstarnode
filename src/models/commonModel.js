@@ -88,11 +88,6 @@ const common = {
   },
 
   adminActivityLog: (admin_id, module, action, result, update, error, callback) => {
-    if (typeof callback !== 'function') {
-      console.error('Callback is not a function');
-      return;
-    }
-
     const insertSql = `
       INSERT INTO \`admin_activity_logs\` (\`admin_id\`, \`module\`, \`action\`, \`result\`, \`update\`, \`error\`, \`created_at\`)
       VALUES (?, ?, ?, ?, ?, ?, NOW())
