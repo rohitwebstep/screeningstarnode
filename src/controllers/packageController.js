@@ -1,7 +1,7 @@
 const Package = require("../models/packageModel");
 const Common = require("../models/commonModel");
 
-exports.newPackage = (req, res) => {
+exports.new = (req, res) => {
   const { title, description, admin_id, _token } = req.body;
 
   // Validate required fields and create a custom message
@@ -39,7 +39,7 @@ exports.newPackage = (req, res) => {
     }
 
     // Call the model to create a new package if the token is valid
-    Package.newPackage(title, description, admin_id, (err, result) => {
+    Package.new(title, description, admin_id, (err, result) => {
       if (err) {
         console.error("Database error:", err);
         Common.adminActivityLog(
@@ -48,7 +48,7 @@ exports.newPackage = (req, res) => {
           "Add",
           "0",
           err.message,
-          () => {}
+          () => { }
         );
         return res.status(500).json({ status: false, message: err.message });
       }
@@ -60,7 +60,7 @@ exports.newPackage = (req, res) => {
         "1",
         `{id: ${result.insertId}}`,
         null,
-        () => {}
+        () => { }
       );
 
       // Send a successful response
@@ -110,7 +110,7 @@ exports.list = (req, res) => {
         console.error("Database error:", err);
         return res
           .status(500)
-          .json({ status: false, message: "Database error" });
+          .json({ status: false, message: err.message });
       }
 
       // Send a successful response
@@ -124,7 +124,7 @@ exports.list = (req, res) => {
   });
 };
 
-exports.editPackage = (req, res) => {
+exports.edit = (req, res) => {
   const { id, title, description, admin_id, _token } = req.body;
 
   let missingFields = [];
@@ -174,7 +174,7 @@ exports.editPackage = (req, res) => {
         };
       }
 
-      Package.editPackage(id, title, description, admin_id, (err, result) => {
+      Package.edit(id, title, description, (err, result) => {
         if (err) {
           console.error("Database error:", err);
           Common.adminActivityLog(
@@ -183,7 +183,7 @@ exports.editPackage = (req, res) => {
             "Edit",
             "0",
             err.message,
-            () => {}
+            () => { }
           );
           return res.status(500).json({ status: false, message: err.message });
         }
@@ -195,13 +195,87 @@ exports.editPackage = (req, res) => {
           "1",
           JSON.stringify({ id, ...changes }),
           null,
-          () => {}
+          () => { }
         );
 
         res.json({
           status: true,
           message: "Package updated successfully",
           packages: result,
+        });
+      });
+    });
+  });
+};
+
+exports.delete = (req, res) => {
+  const { id, admin_id, _token } = req.query;
+
+  // Validate required fields and create a custom message
+  let missingFields = [];
+
+  if (!id) {
+    missingFields.push("Package ID");
+  }
+  if (!admin_id) {
+    missingFields.push("Admin ID");
+  }
+  if (!_token) {
+    missingFields.push("Token");
+  }
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  // Validate the admin token
+  Common.isAdminTokenValid(_token, admin_id, (err, result) => {
+    if (err) {
+      console.error("Error checking token validity:", err);
+      return res.status(500).json(err);
+    }
+
+    if (!result.status) {
+      return res.status(401).json({ status: false, message: result.message });
+    }
+
+    // Fetch current package data
+    Package.getPackageById(id, (err, currentPackage) => {
+      if (err) {
+        console.error("Error fetching package data:", err);
+        return res.status(500).json(err);
+      }
+
+      // Call the model to delete the package if the token is valid
+      Package.delete(id, (err, result) => {
+        if (err) {
+          console.error("Database error:", err);
+          Common.adminActivityLog(
+            admin_id,
+            "Package",
+            "Delete",
+            "0",
+            JSON.stringify({ id, ...currentPackage }),
+            () => { }
+          );
+          return res.status(500).json({ status: false, message: err.message });
+        }
+
+        Common.adminActivityLog(
+          admin_id,
+          "Package",
+          "Delete",
+          "1",
+          JSON.stringify(currentPackage),
+          () => { }
+        );
+
+        res.json({
+          status: true,
+          message: "Package deleted successfully",
         });
       });
     });
