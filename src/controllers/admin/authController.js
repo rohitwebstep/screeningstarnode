@@ -77,10 +77,11 @@ exports.login = (req, res) => {
         return res.status(401).json({ status: false, message: "Incorrect password" });
       }
 
-      // Check if the admin already has a token and if it's expired
-      const currentTime = new Date().toISOString(); // Current time as ISO string
-      const tokenExpiry = admin.token_expiry;
+      // Get current time and token expiry
+      const currentTime = new Date(); // Current time as Date object
+      const tokenExpiry = new Date(admin.token_expiry); // Convert token_expiry to Date object
 
+      // Check if the existing token is still valid
       if (admin.login_token && tokenExpiry > currentTime) {
         // Token is still valid
         return res.status(400).json({
@@ -89,9 +90,9 @@ exports.login = (req, res) => {
         });
       }
 
-      // Generate token and expiry time
+      // Generate new token and expiry time
       const token = generateToken();
-      const newTokenExpiry = getTokenExpiry();
+      const newTokenExpiry = getTokenExpiry(); // This will be an ISO string
 
       // Update the token in the database
       Admin.updateToken(admin.id, token, newTokenExpiry, (err) => {
@@ -118,8 +119,8 @@ exports.login = (req, res) => {
           message: "Login successful",
           adminData: admin,
           token,
-          currentTime,
-          tokenExpiry
+          currentTime: currentTime.toISOString(), // Return current time as ISO string
+          tokenExpiry: newTokenExpiry
         });
       });
     });
