@@ -3,7 +3,9 @@ const router = express.Router();
 const serviceController = require('../controllers/serviceController');
 
 // Authentication routes
-router.post('/add', serviceController.newService);
+router.post('/create', serviceController.create);
 router.get('/list', serviceController.list);
+router.put('/update', serviceController.update);
+router.delete('/delete', serviceController.delete);
 
 module.exports = router;
