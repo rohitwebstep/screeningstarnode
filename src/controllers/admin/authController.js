@@ -9,7 +9,7 @@ const isEmail = (username) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username);
 const generateToken = () => crypto.randomBytes(32).toString("hex");
 
 // Utility function to get token expiry time (1 hour from current time)
-const getTokenExpiry = () => new Date(Date.now() + 360000066666666666666666666).toISOString();
+const getTokenExpiry = () => new Date(Date.now() + 86400000).toISOString();
 
 // Admin login handler
 exports.login = (req, res) => {
