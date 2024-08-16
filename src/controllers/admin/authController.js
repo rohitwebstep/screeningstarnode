@@ -78,12 +78,18 @@ exports.login = (req, res) => {
       }
 
       // Get current time and token expiry
-      const currentTime = new Date(); // Current time as Date object
+      const currentTime = new Date(); // Current time
       const tokenExpiry = new Date(admin.token_expiry); // Convert token_expiry to Date object
+
+      // Print values for debugging
+      console.log("Current Time:", currentTime.toISOString());
+      console.log("Token Expiry:", tokenExpiry.toISOString());
+      console.log("Admin Login Token:", admin.login_token);
 
       // Check if the existing token is still valid
       if (admin.login_token && tokenExpiry > currentTime) {
         // Token is still valid
+        console.log("Token is still valid. Blocking login attempt.");
         return res.status(400).json({
           status: false,
           message: "Another admin is currently logged in. Please try again later."
@@ -93,6 +99,10 @@ exports.login = (req, res) => {
       // Generate new token and expiry time
       const token = generateToken();
       const newTokenExpiry = getTokenExpiry(); // This will be an ISO string
+
+      // Print values for debugging
+      console.log("New Token:", token);
+      console.log("New Token Expiry:", newTokenExpiry);
 
       // Update the token in the database
       Admin.updateToken(admin.id, token, newTokenExpiry, (err) => {
