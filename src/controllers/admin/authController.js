@@ -117,7 +117,9 @@ exports.login = (req, res) => {
           status: true,
           message: "Login successful",
           adminData: admin,
-          token
+          token,
+          currentTime,
+          tokenExpiry
         });
       });
     });
