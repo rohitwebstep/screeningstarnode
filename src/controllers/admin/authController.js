@@ -102,7 +102,7 @@ exports.login = (req, res) => {
             "login",
             "login",
             "0",
-            "Error updating token: "+err.message,
+            "Error updating token: " + err.message,
             () => { }
           );
           return res.status(500).json({
@@ -122,6 +122,38 @@ exports.login = (req, res) => {
           tokenExpiry: newTokenExpiry
         });
       });
+    });
+  });
+};
+
+// Admin logout handler
+exports.logout = (req, res) => {
+  const { admin_id } = req.query;
+  const missingFields = [];
+
+  // Validate required fields
+  if (!admin_id) {
+    missingFields.push('Admin ID');
+  }
+
+  // If there are missing fields, return an error response
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(', ')}`,
+    });
+  }
+
+  // Update the token in the database to null
+  Admin.logout(admin_id, (err) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).json({ status: false, message: `Error logging out: ${err.message}` });
+    }
+
+    res.json({
+      status: true,
+      message: 'Logout successful',
     });
   });
 };

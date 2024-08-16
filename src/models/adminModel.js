@@ -67,27 +67,48 @@ const Admin = {
   },
 
   validateLogin: (id, callback) => {
-  
+
     const sql = `
       SELECT \`login_token\`
       FROM \`admins\`
       WHERE \`id\` = ?
     `;
-  
+
     pool.query(sql, [id], (err, results) => {
       if (err) {
         console.error('Database query error:', err);
         return callback({ message: 'Database query error', error: err }, null);
       }
-  
+
       if (results.length === 0) {
         return callback({ message: 'Admin not found' }, null);
       }
-  
+
+      callback(null, results);
+    });
+  },
+
+  // Clear login token and token expiry
+  logout: (id, callback) => {
+    const sql = `
+        UPDATE \`admins\`
+        SET \`login_token\` = NULL, \`token_expiry\` = NULL
+        WHERE \`id\` = ?
+      `;
+
+    pool.query(sql, [id], (err, results) => {
+      if (err) {
+        console.error('Database query error:', err);
+        return callback({ message: 'Database update error', error: err }, null);
+      }
+
+      if (results.affectedRows === 0) {
+        return callback({ message: 'Token clear failed. Admin not found or no changes made.' }, null);
+      }
+
       callback(null, results);
     });
   }
-  
 };
 
 module.exports = Admin;
