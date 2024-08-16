@@ -101,7 +101,7 @@ exports.login = (req, res) => {
         });
       }else{
         return res.json({
-          status: false+' 1',
+          status: false+' 2',
           message: "Another admin is currently logged in. Please try again later.",
           adminData: admin,
           token: admin.login_token,
