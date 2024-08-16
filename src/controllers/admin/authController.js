@@ -63,7 +63,7 @@ exports.login = (req, res) => {
           "login",
           "0",
           err.message,
-          () => {}
+          () => { }
         );
         return res
           .status(500)
@@ -78,11 +78,23 @@ exports.login = (req, res) => {
           "login",
           "0",
           "Incorrect password",
-          () => {}
+          () => { }
         );
         return res
           .status(401)
           .json({ status: false, message: "Incorrect password" });
+      }
+
+      // Check if the user already has a token and if it's expired
+      const currentTime = new Date().toISOString();
+      if (user.login_token && user.token_expiry > currentTime) {
+        // Token is still valid
+        return res.json({
+          status: true,
+          message: "Login successful, but token is still valid",
+          adminData: user,
+          token: user.login_token,
+        });
       }
 
       // Generate token and expiry time
@@ -99,7 +111,7 @@ exports.login = (req, res) => {
             "login",
             "0",
             "Error updating token",
-            () => {}
+            () => { }
           );
           return res
             .status(500)
@@ -110,7 +122,7 @@ exports.login = (req, res) => {
         }
 
         // Log successful login and return the response
-        Common.adminLoginLog(user.id, "login", "login", "1", null, () => {});
+        Common.adminLoginLog(user.id, "login", "login", "1", null, () => { });
         res.json({
           status: true,
           message: "Login successful",
