@@ -1,7 +1,7 @@
 const pool = require("../config/db");
 
 const Package = {
-  newPackage: (title, description, admin_id, callback) => {
+  new: (title, description, admin_id, callback) => {
     const sql = `
       INSERT INTO \`packages\` (\`title\`, \`description\`, \`admin_id\`)
       VALUES (?, ?, ?)
@@ -36,15 +36,30 @@ const Package = {
       callback(null, results[0]);
     });
   },
-  
+
   // Method to list all packages
-  editPackage: (id, title, description, admin_id, callback) => {
+  edit: (id, title, description, callback) => {
     const sql = `
       UPDATE \`packages\`
       SET \`title\` = ?, \`description\` = ?
       WHERE \`id\` = ?
     `;
     pool.query(sql, [title, description, id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results);
+    });
+  },
+
+  // Method to delete packages
+  delete: (id, callback) => {
+    const sql = `
+        DELETE FROM \`packages\`
+        WHERE \`id\` = ?
+      `;
+    pool.query(sql, [id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback(err, null);

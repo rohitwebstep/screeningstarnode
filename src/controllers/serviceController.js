@@ -50,7 +50,7 @@ exports.newService = (req, res) => {
       // Send a successful response
       res.json({
         status: true,
-        message: "Package created successfully",
+        message: "Service created successfully",
         serviceData: result,
       });
     });
@@ -58,7 +58,7 @@ exports.newService = (req, res) => {
 };
 
 exports.list = (req, res) => {
-  const { admin_id, _token } = req.body;
+  const { admin_id, _token } = req.query;
 
   // Validate required fields and create a custom message
   let missingFields = [];
@@ -94,14 +94,15 @@ exports.list = (req, res) => {
         console.error("Database error:", err);
         return res
           .status(500)
-          .json({ status: false, message: "Database error" });
+          .json({ status: false, message: err.message });
       }
 
       // Send a successful response
       res.json({
         status: true,
         message: "Services fetched successfully",
-        serviceData: result,
+        services: result,
+        totalResults: result.length,
       });
     });
   });
