@@ -38,6 +38,8 @@ exports.newService = (req, res) => {
       return res.status(401).json({ status: false, message: result.message });
     }
 
+    newToken = result.newToken;
+
     // Call the model to create a new service if the token is valid
     Service.newService(title, description, admin_id, (err, result) => {
       if (err) {
@@ -52,6 +54,7 @@ exports.newService = (req, res) => {
         status: true,
         message: "Service created successfully",
         serviceData: result,
+        token: newToken
       });
     });
   });
@@ -88,6 +91,8 @@ exports.list = (req, res) => {
       return res.status(401).json({ status: false, message: result.message });
     }
 
+    newToken = result.newToken;
+
     // Call the model to list all services if the token is valid
     Service.list((err, result) => {
       if (err) {
@@ -103,6 +108,7 @@ exports.list = (req, res) => {
         message: "Services fetched successfully",
         services: result,
         totalResults: result.length,
+        token: newToken
       });
     });
   });
