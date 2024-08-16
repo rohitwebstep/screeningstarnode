@@ -73,7 +73,7 @@ const common = {
   adminLoginLog: (admin_id, action, result, error, callback) => {
     const insertSql = `
       INSERT INTO \`admin_login_logs\` (\`admin_id\`, \`action\`, \`result\`, \`error\`, \`created_at\`)
-      VALUES (?, ?, ?, ?, ?, NOW())
+      VALUES (?, ?, ?, ?, NOW())
     `;
 
     pool.query(insertSql, [admin_id, action, result, error], (err) => {
