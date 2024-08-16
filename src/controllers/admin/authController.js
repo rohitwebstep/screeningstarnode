@@ -36,7 +36,7 @@ exports.login = (req, res) => {
   Admin.findByEmailOrMobile(username, (err, result) => {
     if (err) {
       console.error("Database error:", err);
-      return res.status(500).json({ status: false, message: "Internal server error" });
+      return res.status(500).json({ status: false, message: err.message });
     }
 
     // If no admin found, return a 404 response
@@ -102,7 +102,7 @@ exports.login = (req, res) => {
             "login",
             "login",
             "0",
-            "Error updating token",
+            "Error updating token: "+err.message,
             () => { }
           );
           return res.status(500).json({
