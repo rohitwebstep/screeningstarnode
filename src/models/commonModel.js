@@ -70,13 +70,13 @@ const common = {
     });
   },
 
-  adminLoginLog: (admin_id, module, action, result, error, callback) => {
+  adminLoginLog: (admin_id, action, result, error, callback) => {
     const insertSql = `
-      INSERT INTO \`admin_login_logs\` (\`admin_id\`, \`module\`, \`action\`, \`result\`, \`error\`, \`created_at\`)
+      INSERT INTO \`admin_login_logs\` (\`admin_id\`, \`action\`, \`result\`, \`error\`, \`created_at\`)
       VALUES (?, ?, ?, ?, ?, NOW())
     `;
 
-    pool.query(insertSql, [admin_id, module, action, result, error], (err) => {
+    pool.query(insertSql, [admin_id, action, result, error], (err) => {
       if (err) {
         console.error("Database insertion error:", err);
         return callback({ status: false, message: "Database error" }, null);

@@ -56,7 +56,6 @@ exports.login = (req, res) => {
         Common.adminLoginLog(
           admin.id,
           "login",
-          "login",
           "0",
           err.message,
           () => { }
@@ -68,7 +67,6 @@ exports.login = (req, res) => {
       if (!isValid) {
         Common.adminLoginLog(
           admin.id,
-          "login",
           "login",
           "0",
           "Incorrect password",
@@ -100,7 +98,6 @@ exports.login = (req, res) => {
           Common.adminLoginLog(
             admin.id,
             "login",
-            "login",
             "0",
             "Error updating token: " + err.message,
             () => { }
@@ -112,7 +109,7 @@ exports.login = (req, res) => {
         }
 
         // Log successful login and return the response
-        Common.adminLoginLog(admin.id, "login", "login", "1", null, () => { });
+        Common.adminLoginLog(admin.id, "login", "1", null, () => { });
         res.json({
           status: true,
           message: "Login successful",
