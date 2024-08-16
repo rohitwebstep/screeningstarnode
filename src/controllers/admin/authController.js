@@ -36,19 +36,15 @@ exports.login = (req, res) => {
   Admin.findByEmailOrMobile(username, (err, result) => {
     if (err) {
       console.error("Database error:", err);
-      return res
-        .status(500)
-        .json({ status: false, message: "Internal server error" });
+      return res.status(500).json({ status: false, message: "Internal server error" });
     }
 
     // If no admin found, return a 404 response
     if (result.length === 0) {
-      return res
-        .status(404)
-        .json({
-          status: false,
-          message: "Admin not found with the provided email or mobile number",
-        });
+      return res.status(404).json({
+        status: false,
+        message: "Admin not found with the provided email or mobile number",
+      });
     }
 
     const admin = result[0];
@@ -65,9 +61,7 @@ exports.login = (req, res) => {
           err.message,
           () => { }
         );
-        return res
-          .status(500)
-          .json({ status: false, message: err.message });
+        return res.status(500).json({ status: false, message: err.message });
       }
 
       // If the password is incorrect, log the attempt and return a 401 response
@@ -80,39 +74,27 @@ exports.login = (req, res) => {
           "Incorrect password",
           () => { }
         );
-        return res
-          .status(401)
-          .json({ status: false, message: "Incorrect password" });
+        return res.status(401).json({ status: false, message: "Incorrect password" });
       }
 
       // Check if the admin already has a token and if it's expired
       const currentTime = new Date().toISOString(); // Current time as ISO string
-      if (admin.login_token && admin.token_expiry > currentTime) {
+      const tokenExpiry = admin.token_expiry;
+
+      if (admin.login_token && tokenExpiry > currentTime) {
         // Token is still valid
-        return res.json({
-          status: false + ' 1',
-          message: "Another admin is currently logged in. Please try again later.",
-          adminData: admin,
-          token: admin.login_token,
-          token_expiry: admin.token_expiry,
-          currentTime
-        });
-      } else {
-        return res.json({
-          status: false+' 2',
-          message: "Another admin is currently logged in. Please try again later.",
-          adminData: admin,
-          token: admin.login_token,
-          token_expiry: admin.token_expiry,
-          currentTime
+        return res.status(400).json({
+          status: false,
+          message: "Another admin is currently logged in. Please try again later."
         });
       }
+
       // Generate token and expiry time
       const token = generateToken();
-      const tokenExpiry = getTokenExpiry();
+      const newTokenExpiry = getTokenExpiry();
 
       // Update the token in the database
-      Admin.updateToken(admin.id, token, tokenExpiry, (err) => {
+      Admin.updateToken(admin.id, token, newTokenExpiry, (err) => {
         if (err) {
           console.error("Database error:", err);
           Common.adminLoginLog(
@@ -123,12 +105,10 @@ exports.login = (req, res) => {
             "Error updating token",
             () => { }
           );
-          return res
-            .status(500)
-            .json({
-              status: false,
-              message: `Error updating token: ${err.message}`,
-            });
+          return res.status(500).json({
+            status: false,
+            message: `Error updating token: ${err.message}`,
+          });
         }
 
         // Log successful login and return the response
@@ -137,14 +117,13 @@ exports.login = (req, res) => {
           status: true,
           message: "Login successful",
           adminData: admin,
-          token,
-          token_expiry : admin.token_expiry,
-          currentTime
+          token
         });
       });
     });
   });
 };
+
 
 // Admin login validation handler
 exports.validateLogin = (req, res) => {
