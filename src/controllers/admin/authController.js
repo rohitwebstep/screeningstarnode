@@ -90,8 +90,8 @@ exports.login = (req, res) => {
       if (user.login_token && user.token_expiry > currentTime) {
         // Token is still valid
         return res.json({
-          status: true,
-          message: "Login successful, but token is still valid",
+          status: false,
+          message: "Another admin is currently logged in. Please try again later.",
           adminData: user,
           token: user.login_token,
         });
