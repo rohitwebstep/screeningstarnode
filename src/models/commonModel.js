@@ -6,6 +6,11 @@ const getTokenExpiry = () => new Date(Date.now() + 3600000).toISOString();
 
 const common = {
   isAdminTokenValid: (_token, admin_id, callback) => {
+    if (typeof callback !== 'function') {
+      console.error('Callback is not a function');
+      return;
+    }
+
     const sql = `
       SELECT \`login_token\`, \`token_expiry\`
       FROM \`admins\`
@@ -27,17 +32,12 @@ const common = {
       const currentTime = new Date();
 
       if (_token !== currentToken) {
-        return callback(
-          { status: false, message: "Invalid token provided" },
-          null
-        );
+        return callback({ status: false, message: "Invalid token provided" }, null);
       }
 
       if (tokenExpiry > currentTime) {
-        // Token is valid and matches the provided token
         callback(null, { status: true, message: "Token is valid" });
       } else {
-        // Token is expired, generate and save a new one
         const newToken = generateToken();
         const newTokenExpiry = getTokenExpiry();
 
@@ -47,30 +47,28 @@ const common = {
           WHERE \`id\` = ?
         `;
 
-        pool.query(
-          updateSql,
-          [newToken, newTokenExpiry, admin_id],
-          (updateErr) => {
-            if (updateErr) {
-              console.error("Error updating token:", updateErr);
-              return callback(
-                { status: false, message: "Error updating token" },
-                null
-              );
-            }
-
-            callback(null, {
-              status: true,
-              message: "Token was expired and has been refreshed",
-              newToken,
-            });
+        pool.query(updateSql, [newToken, newTokenExpiry, admin_id], (updateErr) => {
+          if (updateErr) {
+            console.error("Error updating token:", updateErr);
+            return callback({ status: false, message: "Error updating token" }, null);
           }
-        );
+
+          callback(null, {
+            status: true,
+            message: "Token was expired and has been refreshed",
+            newToken,
+          });
+        });
       }
     });
   },
 
   adminLoginLog: (admin_id, action, result, error, callback) => {
+    if (typeof callback !== 'function') {
+      console.error('Callback is not a function');
+      return;
+    }
+
     const insertSql = `
       INSERT INTO \`admin_login_logs\` (\`admin_id\`, \`action\`, \`result\`, \`error\`, \`created_at\`)
       VALUES (?, ?, ?, ?, NOW())
@@ -90,6 +88,11 @@ const common = {
   },
 
   adminActivityLog: (admin_id, module, action, result, update, error, callback) => {
+    if (typeof callback !== 'function') {
+      console.error('Callback is not a function');
+      return;
+    }
+
     const insertSql = `
       INSERT INTO \`admin_activity_logs\` (\`admin_id\`, \`module\`, \`action\`, \`result\`, \`update\`, \`error\`, \`created_at\`)
       VALUES (?, ?, ?, ?, ?, ?, NOW())
@@ -107,7 +110,6 @@ const common = {
       });
     });
   },
-  
 };
 
 module.exports = common;
