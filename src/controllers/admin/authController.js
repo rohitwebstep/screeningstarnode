@@ -87,7 +87,7 @@ exports.login = (req, res) => {
       console.log("Admin Login Token:", admin.login_token);
 
       // Check if the existing token is still valid
-      if (admin.login_token && tokenExpiry > currentTime) {
+      if (admin.tokenExpiry && tokenExpiry > currentTime) {
         // Token is still valid
         console.log("Token is still valid. Blocking login attempt.");
         return res.status(400).json({
