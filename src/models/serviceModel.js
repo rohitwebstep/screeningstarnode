@@ -2,16 +2,37 @@ const pool = require("../config/db");
 
 const Service = {
   create: (title, description, admin_id, package_id, callback) => {
-    const sql = `
-      INSERT INTO \`services\` (\`title\`, \`description\`, \`admin_id\`, \`package_id\`)
-      VALUES (?, ?, ?, ?)
+    // Step 1: Check if a service with the same title already exists
+    const checkPackageSql = `
+      SELECT * FROM \`packages\` WHERE \`title\` = ?
     `;
-    pool.query(sql, [title, description, admin_id, package_id], (err, results) => {
+
+    pool.query(checkPackageSql, [title], (err, packageResults) => {
       if (err) {
-        console.error("Database query error:", err);
+        console.error("Error checking service:", err);
         return callback(err, null);
       }
-      callback(null, results);
+
+      // Step 2: If a service with the same title exists, return an error
+      if (packageResults.length > 0) {
+        const error = new Error("Service with the same name already exists");
+        console.error(error.message);
+        return callback(error, null);
+      }
+
+      // Step 3: Insert the new service
+      const insertServiceSql = `
+        INSERT INTO \`services\` (\`title\`, \`description\`, \`admin_id\`, \`package_id\`)
+        VALUES (?, ?, ?, ?)
+      `;
+
+      pool.query(insertServiceSql, [title, description, admin_id, package_id], (err, results) => {
+        if (err) {
+          console.error("Database query error:", err);
+          return callback(err, null);
+        }
+        callback(null, results);
+      });
     });
   },
 
