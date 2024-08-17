@@ -254,6 +254,7 @@ exports.update = (req, res) => {
           JSON.stringify({ id, ...changes }),
           null
         );
+        console.log(`Changes - ${changes}`);
 
         res.json({
           status: true,
