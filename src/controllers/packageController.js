@@ -40,6 +40,7 @@ exports.create = (req, res) => {
           "0",
           null,
           err.message,
+          () => { }
         );
         return res.status(500).json({ status: false, message: err.message });
       }
@@ -50,7 +51,8 @@ exports.create = (req, res) => {
         "Create",
         "1",
         `{id: ${result.insertId}}`,
-        null
+        null,
+        () => { }
       );
 
       res.json({
@@ -216,7 +218,8 @@ exports.update = (req, res) => {
             "Update",
             "0",
             JSON.stringify({ id, ...changes }),
-            err.message
+            err.message,
+            () => { }
           );
           return res.status(500).json({ status: false, message: err.message });
         }
@@ -227,7 +230,8 @@ exports.update = (req, res) => {
           "Update",
           "1",
           JSON.stringify({ id, ...changes }),
-          null
+          null,
+          () => { }
         );
 
         res.json({
@@ -284,7 +288,8 @@ exports.delete = (req, res) => {
             "Delete",
             "0",
             JSON.stringify({ id, ...currentPackage }),
-            err.message
+            err.message,
+            () => { }
           );
           return res.status(500).json({ status: false, message: err.message });
         }
@@ -295,7 +300,8 @@ exports.delete = (req, res) => {
           "Delete",
           "1",
           null,
-          JSON.stringify(currentPackage)
+          JSON.stringify(currentPackage),
+          () => { }
         );
 
         res.json({
