@@ -5,6 +5,7 @@ const serviceController = require('../controllers/serviceController');
 // Authentication routes
 router.post('/create', serviceController.create);
 router.get('/list', serviceController.list);
+router.get('/service-info', serviceController.getServiceById);
 router.put('/update', serviceController.update);
 router.delete('/delete', serviceController.delete);
 

@@ -125,6 +125,55 @@ exports.list = (req, res) => {
   });
 };
 
+exports.getServiceById = (req, res) => {
+  const { id, admin_id, _token } = req.query;
+  let missingFields = [];
+  if (!id) missingFields.push("Service ID");
+  if (!admin_id) missingFields.push("Admin ID");
+  if (!_token) missingFields.push("Token");
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  Common.isAdminTokenValid(_token, admin_id, (err, result) => {
+    if (err) {
+      console.error("Error checking token validity:", err);
+      return res.status(500).json(err);
+    }
+
+    if (!result.status) {
+      return res.status(401).json({ status: false, message: result.message });
+    }
+
+    const newToken = result.newToken;
+
+    Service.getServiceById(id, (err, currentService) => {
+      if (err) {
+        console.error("Error fetching service data:", err);
+        return res.status(500).json(err);
+      }
+
+      if (!currentService) {
+        return res.status(404).json({
+          status: false,
+          message: "Service not found",
+        });
+      }
+
+      res.json({
+        status: true,
+        message: "Service retrieved successfully",
+        service: currentService,
+        token: newToken
+      });
+    });
+  });
+};
+
 // Controller to update a service
 exports.update = (req, res) => {
   const { id, title, description, admin_id, package_id, _token } = req.body;
