@@ -40,7 +40,8 @@ exports.create = (req, res) => {
           "Create",
           "0",
           null,
-          err.message
+          err.message,
+          () => { }
         );
         return res.status(500).json({ status: false, message: err.message });
       }
@@ -51,7 +52,8 @@ exports.create = (req, res) => {
         "Create",
         "1",
         `{id: ${result.insertId}}`,
-        null
+        null,
+        () => { }
       );
 
       res.json({
@@ -100,7 +102,8 @@ exports.list = (req, res) => {
           "List",
           "0",
           null,
-          err.message
+          err.message,
+          () => { }
         );
         return res.status(500).json({ status: false, message: err.message });
       }
@@ -111,7 +114,8 @@ exports.list = (req, res) => {
         "List",
         "1",
         null,
-        null
+        null,
+        () => { }
       );
 
       res.json({
@@ -241,7 +245,8 @@ exports.update = (req, res) => {
             "Update",
             "0",
             JSON.stringify({ id, ...changes }),
-            err.message
+            err.message,
+            () => { }
           );
           return res.status(500).json({ status: false, message: err.message });
         }
@@ -252,7 +257,8 @@ exports.update = (req, res) => {
           "Update",
           "1",
           JSON.stringify({ id, ...changes }),
-          null
+          null,
+          () => { }
         );
 
         res.json({
@@ -309,7 +315,8 @@ exports.delete = (req, res) => {
             "Delete",
             "0",
             JSON.stringify({ id, ...currentService }),
-            err.message
+            err.message,
+            () => { }
           );
           return res.status(500).json({ status: false, message: err.message });
         }
@@ -320,7 +327,8 @@ exports.delete = (req, res) => {
           "Delete",
           "1",
           JSON.stringify(currentService),
-          null
+          null,
+          () => { }
         );
 
         res.json({
