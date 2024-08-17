@@ -9,7 +9,7 @@ exports.create = (req, res) => {
   if (!title) missingFields.push("Title");
   if (!description) missingFields.push("Description");
   if (!admin_id) missingFields.push("Admin ID");
-  if (!package_id) missingFields.push("package_id");
+  if (!package_id) missingFields.push("Package ID");
   if (!_token) missingFields.push("Token");
 
   if (missingFields.length > 0) {
@@ -39,8 +39,8 @@ exports.create = (req, res) => {
           "Service",
           "Create",
           "0",
-          err.message,
-          () => { }
+          null,
+          err.message
         );
         return res.status(500).json({ status: false, message: err.message });
       }
@@ -51,8 +51,7 @@ exports.create = (req, res) => {
         "Create",
         "1",
         `{id: ${result.insertId}}`,
-        null,
-        () => { }
+        null
       );
 
       res.json({
@@ -95,8 +94,25 @@ exports.list = (req, res) => {
     Service.list((err, result) => {
       if (err) {
         console.error("Database error:", err);
+        Common.adminActivityLog(
+          admin_id,
+          "Service",
+          "List",
+          "0",
+          null,
+          err.message
+        );
         return res.status(500).json({ status: false, message: err.message });
       }
+
+      Common.adminActivityLog(
+        admin_id,
+        "Service",
+        "List",
+        "1",
+        null,
+        null
+      );
 
       res.json({
         status: true,
@@ -140,7 +156,7 @@ exports.update = (req, res) => {
 
     const newToken = result.newToken;
 
-    Service.getPackageById(id, (err, currentService) => {
+    Service.getServiceById(id, (err, currentService) => {
       if (err) {
         console.error("Error fetching service data:", err);
         return res.status(500).json(err);
@@ -175,8 +191,8 @@ exports.update = (req, res) => {
             "Service",
             "Update",
             "0",
-            err.message,
-            () => { }
+            JSON.stringify({ id, ...changes }),
+            err.message
           );
           return res.status(500).json({ status: false, message: err.message });
         }
@@ -187,7 +203,7 @@ exports.update = (req, res) => {
           "Update",
           "1",
           JSON.stringify({ id, ...changes }),
-          () => { }
+          null
         );
 
         res.json({
@@ -229,7 +245,7 @@ exports.delete = (req, res) => {
 
     const newToken = result.newToken;
 
-    Service.getPackageById(id, (err, currentService) => {
+    Service.getServiceById(id, (err, currentService) => {
       if (err) {
         console.error("Error fetching service data:", err);
         return res.status(500).json(err);
@@ -244,7 +260,7 @@ exports.delete = (req, res) => {
             "Delete",
             "0",
             JSON.stringify({ id, ...currentService }),
-            () => { }
+            err.message
           );
           return res.status(500).json({ status: false, message: err.message });
         }
@@ -255,7 +271,7 @@ exports.delete = (req, res) => {
           "Delete",
           "1",
           JSON.stringify(currentService),
-          () => { }
+          null
         );
 
         res.json({

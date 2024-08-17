@@ -1,10 +1,19 @@
 const crypto = require("crypto");
 const pool = require("../config/db");
 
+// Generates a new random token
 const generateToken = () => crypto.randomBytes(32).toString("hex");
+
+// Returns the expiry time for the token (1 hour from now)
 const getTokenExpiry = () => new Date(Date.now() + 3600000).toISOString();
 
 const common = {
+  /**
+   * Validates the admin's token and refreshes it if expired.
+   * @param {string} _token - Provided token
+   * @param {number} admin_id - Admin ID
+   * @param {function} callback - Callback function
+   */
   isAdminTokenValid: (_token, admin_id, callback) => {
     if (typeof callback !== 'function') {
       console.error('Callback is not a function');
@@ -63,6 +72,14 @@ const common = {
     });
   },
 
+  /**
+   * Logs admin login activities.
+   * @param {number} admin_id - Admin ID
+   * @param {string} action - Action performed
+   * @param {string} result - Result of the action
+   * @param {string} error - Error message if any
+   * @param {function} callback - Callback function
+   */
   adminLoginLog: (admin_id, action, result, error, callback) => {
     if (typeof callback !== 'function') {
       console.error('Callback is not a function');
@@ -87,18 +104,33 @@ const common = {
     });
   },
 
+  /**
+   * Logs other admin activities.
+   * @param {number} admin_id - Admin ID
+   * @param {string} module - Module name
+   * @param {string} action - Action performed
+   * @param {string} result - Result of the action
+   * @param {string} update - Update description
+   * @param {string} error - Error message if any
+   * @param {function} callback - Callback function
+   */
   adminActivityLog: (admin_id, module, action, result, update, error, callback) => {
+    if (typeof callback !== 'function') {
+      console.error('Callback is not a function');
+      return;
+    }
+
     const insertSql = `
       INSERT INTO \`admin_activity_logs\` (\`admin_id\`, \`module\`, \`action\`, \`result\`, \`update\`, \`error\`, \`created_at\`)
       VALUES (?, ?, ?, ?, ?, ?, NOW())
     `;
-  
+
     pool.query(insertSql, [admin_id, module, action, result, update, error], (err) => {
       if (err) {
         console.error("Database insertion error:", err);
         return callback({ status: false, message: "Database error" }, null);
       }
-  
+
       callback(null, {
         status: true,
         message: "Admin activity log entry added successfully",
