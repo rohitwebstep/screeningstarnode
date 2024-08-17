@@ -5,6 +5,7 @@ const packageController = require('../controllers/packageController');
 // Authentication routes
 router.post('/create', packageController.create);
 router.get('/list', packageController.list);
+router.get('/package-info', packageController.getPackageById);
 router.put('/update', packageController.update);
 router.delete('/delete', packageController.delete);
 
