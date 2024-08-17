@@ -3,7 +3,7 @@ const Common = require("../models/commonModel");
 
 // Controller to create a new service
 exports.create = (req, res) => {
-  const { title, description, admin_id,  package_id, _token } = req.body;
+  const { title, description, admin_id, package_id, _token } = req.body;
 
   let missingFields = [];
   if (!title) missingFields.push("Title");
@@ -111,12 +111,13 @@ exports.list = (req, res) => {
 
 // Controller to update a service
 exports.update = (req, res) => {
-  const { id, title, description, admin_id, _token } = req.body;
+  const { id, title, description, admin_id, package_id, _token } = req.body;
 
   let missingFields = [];
   if (!id) missingFields.push("Service ID");
   if (!title) missingFields.push("Title");
   if (!description) missingFields.push("Description");
+  if (!package_id) missingFields.push("Package ID");
   if (!admin_id) missingFields.push("Admin ID");
   if (!_token) missingFields.push("Token");
 
@@ -159,7 +160,14 @@ exports.update = (req, res) => {
         };
       }
 
-      Service.update(id, title, description, (err, result) => {
+      if (currentService.package_id !== package_id) {
+        changes.package_id = {
+          old: currentService.package_id,
+          new: package_id,
+        };
+      }
+
+      Service.update(id, title, description, package_id, (err, result) => {
         if (err) {
           console.error("Database error:", err);
           Common.adminActivityLog(
