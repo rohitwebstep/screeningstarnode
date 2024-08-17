@@ -120,17 +120,20 @@ const common = {
       return;
     }
 
+    console.log('Starting adminActivityLog function');
+    console.log(`Parameters received: admin_id=${admin_id}, module=${module}, action=${action}, result=${result}, update=${update}, error=${error}`);
+
     const insertSql = `
       INSERT INTO \`admin_activity_logs\` (\`admin_id\`, \`module\`, \`action\`, \`result\`, \`update\`, \`error\`, \`created_at\`)
       VALUES (?, ?, ?, ?, ?, ?, NOW())
     `;
-
+    console.log('SQL Query:', insertSql);
     pool.query(insertSql, [admin_id, module, action, result, update, error], (err) => {
       if (err) {
         console.error("Database insertion error:", err);
         return callback({ status: false, message: "Database error" }, null);
       }
-
+      console.log('Admin activity log entry added successfully');
       callback(null, {
         status: true,
         message: "Admin activity log entry added successfully",
