@@ -76,13 +76,13 @@ const Service = {
     });
   },
 
-  update: (id, title, description, callback) => {
+  update: (id, title, description, package_id, callback) => {
     const sql = `
       UPDATE \`services\`
-      SET \`title\` = ?, \`description\` = ?
+      SET \`title\` = ?, \`description\` = ?, \`package_id\` = ?
       WHERE \`id\` = ?
     `;
-    pool.query(sql, [title, description, id], (err, results) => {
+    pool.query(sql, [title, description, package_id, id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback(err, null);
