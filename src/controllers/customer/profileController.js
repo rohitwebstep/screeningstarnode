@@ -29,7 +29,7 @@ exports.create = (req, res) => {
     client_standard,
     Agreement_Period,
     agr_upload,
-    yes,
+    custom_template,
     branch_name,
     branch_email
   } = req.body;
@@ -141,7 +141,7 @@ exports.create = (req, res) => {
         agreement_expiration_date: date_agreement,
         agreement_duration: Agreement_Period,
         agreement_document: agr_upload,
-        custom_template: yes || 'no',
+        custom_template: custom_template || 'no',
         logo: null,
         custom_billing_address: null,
         status: '0',
