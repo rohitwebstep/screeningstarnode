@@ -55,7 +55,7 @@ const Customer = {
     `;
 
     const valuesCustomerMetas = [
-      metaData.customer_id, metaData.company_name, metaData.address, metaData.phone_number, metaData.email,
+      metaData.customer_id, metaData.company_name, metaData.address, metaData.mobile_number, metaData.email,
       metaData.email2, metaData.email3, metaData.email4, metaData.secondary_username,
       metaData.contact_person_name, metaData.contact_person_title, metaData.escalation_point_contact,
       metaData.single_point_of_contact, metaData.gst_number, metaData.tat_days, metaData.service_description,
