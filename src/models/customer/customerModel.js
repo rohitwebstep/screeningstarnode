@@ -6,7 +6,7 @@ const Customer = {
     const sqlCustomers = `
       INSERT INTO \`customers\` (
         \`client_unique_id\`, \`client_id\`, \`name\`, \`profile_picture\`, \`email\`, 
-        \`email_verified_at\`, \`mobile\`, \`mobile_verified_at\`, \`password\`, 
+        \`email_verified_at\`, \`mobile\`, \`mobile_verified_at\`, \`md5(password)\`, 
         \`reset_password_token\`, \`login_token\`, \`token_expiry\`, \`role\`, 
         \`status\`, \`created_at\`, \`updated_at\`, \`admin_id\`
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
