@@ -18,7 +18,7 @@ const Customer = {
 
     const valuesCustomers = [
       customerData.client_unique_id, customerData.client_id, customerData.name, customerData.profile_picture, customerData.email,
-      customerData.email_verified_at, customerData.mobile, customerData.mobile_verified_at, hashPassword(customerData.password),
+      customerData.email_verified_at, customerData.mobile_number, customerData.mobile_verified_at, hashPassword(customerData.password),
       customerData.reset_password_token, customerData.login_token, customerData.token_expiry, customerData.role,
       customerData.status || '0', new Date(), new Date(), customerData.admin_id
     ];
