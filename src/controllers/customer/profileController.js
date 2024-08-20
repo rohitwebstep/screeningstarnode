@@ -118,10 +118,10 @@ exports.create = (req, res) => {
           "Create",
           "0",
           null,
-          err.message,
+          err.error.message,
           () => { }
         );
-        return res.status(500).json({ status: false, message: err.message });
+        return res.status(500).json({ status: false, message: err.error.message });
       }
 
       const customerId = result.insertId;
@@ -171,10 +171,10 @@ exports.create = (req, res) => {
             "CreateMeta",
             "0",
             `{id: ${customerId}}`,
-            err.message,
+            err.error.message,
             () => { }
           );
-          return res.status(500).json({ status: false, message: err.message });
+          return res.status(500).json({ status: false, message: err.error.message });
         }
 
         console.log("Customer meta created successfully.");
