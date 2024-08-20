@@ -60,14 +60,14 @@ exports.create = (req, res) => {
 
   Object.keys(requiredFields).forEach(field => {
     if (!requiredFields[field]) {
-      missingFields.push(field.replace(/_/g, ''));
+      missingFields.push(field.replace(/_/g, ' '));
     }
   });
 
   if (missingFields.length > 0) {
     return res.status(400).json({
       status: false,
-      message: `Missing required fields: ${missingFields.join(",")}`,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
 
@@ -78,7 +78,7 @@ exports.create = (req, res) => {
     }
 
     if (!result.status) {
-      return res.status(401).json({ status: false, message: result.message+' 1' });
+      return res.status(401).json({ status: false, message: result.message });
     }
 
     const newToken = result.newToken;
@@ -114,7 +114,7 @@ exports.create = (req, res) => {
           err.message,
           () => { }
         );
-        return res.status(500).json({ status: false, message: err.message+' 2' });
+        return res.status(500).json({ status: false, message: 'Database error during customer creation' });
       }
 
       const customerId = result.insertId;
@@ -161,11 +161,11 @@ exports.create = (req, res) => {
             "Customer",
             "CreateMeta",
             "0",
-            `{id:${customerId}}`,
+            `{id: ${customerId}}`,
             err.message,
             () => { }
           );
-          return res.status(500).json({ status: false, message: err.message+' 3' });
+          return res.status(500).json({ status: false, message: 'Database error during customer meta creation' });
         }
 
         AdminCommon.adminActivityLog(
@@ -173,7 +173,7 @@ exports.create = (req, res) => {
           "Customer",
           "Create",
           "1",
-          `{id:${customerId}}`,
+          `{id: ${customerId}}`,
           null,
           () => { }
         );
