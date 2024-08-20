@@ -1,20 +1,24 @@
+const crypto = require("crypto");
 const pool = require('../../config/db');
+
+// Function to hash the password using MD5
+const hashPassword = (password) => crypto.createHash('md5').update(password).digest('hex');
 
 const Customer = {
   create: (customerData, callback) => {
     // Insert into customers table
     const sqlCustomers = `
       INSERT INTO \`customers\` (
-        \`client_unique_id\`, \`client_id\`, \`name\`, \`profile_picture\`, \`email\`, 
-        \`email_verified_at\`, \`mobile\`, \`mobile_verified_at\`, \`md5(password)\`, 
-        \`reset_password_token\`, \`login_token\`, \`token_expiry\`, \`role\`, 
+        \`client_unique_id\`, \`client_id\`, \`name\`, \`profile_picture\`, \`email\`,
+        \`email_verified_at\`, \`mobile\`, \`mobile_verified_at\`, \`password\`,
+        \`reset_password_token\`, \`login_token\`, \`token_expiry\`, \`role\`,
         \`status\`, \`created_at\`, \`updated_at\`, \`admin_id\`
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const valuesCustomers = [
       customerData.client_unique_id, customerData.client_id, customerData.name, customerData.profile_picture, customerData.email,
-      customerData.email_verified_at, customerData.mobile, customerData.mobile_verified_at, customerData.password,
+      customerData.email_verified_at, customerData.mobile, customerData.mobile_verified_at, hashPassword(customerData.password),
       customerData.reset_password_token, customerData.login_token, customerData.token_expiry, customerData.role,
       customerData.status || '0', new Date(), new Date(), customerData.admin_id
     ];
@@ -25,20 +29,19 @@ const Customer = {
         return callback({ message: 'Database insertion error for customers', error: err }, null);
       }
 
-      // Get the inserted customer ID for use in customer_metas table
       const customerId = results.insertId;
 
       // Insert into customer_metas table
       const sqlCustomerMetas = `
       INSERT INTO \`customer_metas\` (
-        \`customer_id\`, \`company_name\`, \`address\`, \`phone_number\`, \`email\`, 
-        \`email2\`, \`email3\`, \`email4\`, \`secondary_username\`, 
-        \`contact_person_name\`, \`contact_person_title\`, \`escalation_point_contact\`, 
-        \`single_point_of_contact\`, \`gst_number\`, \`tat_days\`, \`service_description\`, 
-        \`service_fee\`, \`agreement_text\`, \`agreement_expiration_date\`, \`agreement_duration\`, 
-        \`agreement_document\`, \`custom_template\`, \`logo\`, \`custom_billing_address\`, 
-        \`status\`, \`state\`, \`state_code\`, \`additional_login_info\`, 
-        \`standard_operating_procedures\`, \`record_creation_date\`, \`package_category\`, 
+        \`customer_id\`, \`company_name\`, \`address\`, \`phone_number\`, \`email\`,
+        \`email2\`, \`email3\`, \`email4\`, \`secondary_username\`,
+        \`contact_person_name\`, \`contact_person_title\`, \`escalation_point_contact\`,
+        \`single_point_of_contact\`, \`gst_number\`, \`tat_days\`, \`service_description\`,
+        \`service_fee\`, \`agreement_text\`, \`agreement_expiration_date\`, \`agreement_duration\`,
+        \`agreement_document\`, \`custom_template\`, \`logo\`, \`custom_billing_address\`,
+        \`status\`, \`state\`, \`state_code\`, \`additional_login_info\`,
+        \`standard_operating_procedures\`, \`record_creation_date\`, \`package_category\`,
         \`service_codes\`, \`payment_contact_person\`
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
@@ -97,7 +100,7 @@ const Customer = {
       AND \`password\` = MD5(?)
     `;
 
-    pool.query(sql, [username, username, password], (err, results) => {
+    pool.query(sql, [username, username, hashPassword(password)], (err, results) => {
       if (err) {
         console.error('Database query error:', err);
         return callback({ message: 'Database query error', error: err }, null);
@@ -153,7 +156,6 @@ const Customer = {
     });
   },
 
-  // Clear login token and token expiry
   logout: (id, callback) => {
     const sql = `
       UPDATE \`customers\`

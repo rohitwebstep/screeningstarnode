@@ -41,7 +41,6 @@ exports.create = (req, res) => {
     return `${basePassword}@123`;
   };
 
-  const missingFields = [];
   const requiredFields = {
     company_name,
     client_code,
@@ -64,17 +63,13 @@ exports.create = (req, res) => {
     branch_email
   };
 
-  Object.keys(requiredFields).forEach(field => {
-    if (!requiredFields[field]) {
-      missingFields.push(field.replace(/_/g, ' '));
-    }
-  });
+  const missingFields = Object.keys(requiredFields).filter(field => !requiredFields[field]).map(field => field.replace(/_/g, ' '));
 
   if (missingFields.length > 0) {
     console.log("Missing required fields:", missingFields);
     return res.status(400).json({
       status: false,
-      message: `Missing required fields: ${missingFields.join(", ")}`,
+      message: `Missing required fields: ${missingFields.join(", ")}`
     });
   }
 
@@ -113,8 +108,7 @@ exports.create = (req, res) => {
       role,
       status: '0',
       created_at: new Date(),
-      updated_at: new Date(),
-      admin_id
+      updated_at: new Date()
     }, (err, result) => {
       if (err) {
         console.error("Database error while creating customer:", err);
