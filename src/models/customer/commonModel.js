@@ -119,21 +119,15 @@ const common = {
       console.error('Callback is not a function');
       return;
     }
-
-    console.log('Starting customerActivityLog function');
-    console.log(`Parameters received: customer_id=${customer_id}, module=${module}, action=${action}, result=${result}, update=${update}, error=${error}`);
-
     const insertSql = `
       INSERT INTO \`customer_activity_logs\` (\`customer_id\`, \`module\`, \`action\`, \`result\`, \`update\`, \`error\`, \`created_at\`)
       VALUES (?, ?, ?, ?, ?, ?, NOW())
     `;
-    console.log('SQL Query:', insertSql);
     pool.query(insertSql, [customer_id, module, action, result, update, error], (err) => {
       if (err) {
         console.error("Database insertion error:", err);
         return callback({ status: false, message: "Database error" }, null);
       }
-      console.log('Customer activity log entry added successfully');
       callback(null, {
         status: true,
         message: "Customer activity log entry added successfully",
