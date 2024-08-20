@@ -1,14 +1,15 @@
-const Package = require("../models/packageModel");
-const Common = require("../models/commonModel");
+const Service = require("../../models/admin/serviceModel");
+const Common = require("../../models/admin/commonModel");
 
-// Controller to create a new package
+// Controller to create a new service
 exports.create = (req, res) => {
-  const { title, description, admin_id, _token } = req.body;
+  const { title, description, admin_id, package_id, _token } = req.body;
 
   let missingFields = [];
   if (!title) missingFields.push("Title");
   if (!description) missingFields.push("Description");
   if (!admin_id) missingFields.push("Admin ID");
+  if (!package_id) missingFields.push("Package ID");
   if (!_token) missingFields.push("Token");
 
   if (missingFields.length > 0) {
@@ -30,12 +31,12 @@ exports.create = (req, res) => {
 
     const newToken = result.newToken;
 
-    Package.create(title, description, admin_id, (err, result) => {
+    Service.create(title, description, admin_id, package_id, (err, result) => {
       if (err) {
         console.error("Database error:", err);
         Common.adminActivityLog(
           admin_id,
-          "Package",
+          "Service",
           "Create",
           "0",
           null,
@@ -47,7 +48,7 @@ exports.create = (req, res) => {
 
       Common.adminActivityLog(
         admin_id,
-        "Package",
+        "Service",
         "Create",
         "1",
         `{id: ${result.insertId}}`,
@@ -57,15 +58,15 @@ exports.create = (req, res) => {
 
       res.json({
         status: true,
-        message: "Package created successfully",
-        package: result,
+        message: "Service created successfully",
+        service: result,
         token: newToken
       });
     });
   });
 };
 
-// Controller to list all packages
+// Controller to list all services
 exports.list = (req, res) => {
   const { admin_id, _token } = req.query;
 
@@ -92,16 +93,35 @@ exports.list = (req, res) => {
 
     const newToken = result.newToken;
 
-    Package.list((err, result) => {
+    Service.list((err, result) => {
       if (err) {
         console.error("Database error:", err);
+        Common.adminActivityLog(
+          admin_id,
+          "Service",
+          "List",
+          "0",
+          null,
+          err.message,
+          () => { }
+        );
         return res.status(500).json({ status: false, message: err.message });
       }
 
+      Common.adminActivityLog(
+        admin_id,
+        "Service",
+        "List",
+        "1",
+        null,
+        null,
+        () => { }
+      );
+
       res.json({
         status: true,
-        message: "Packages fetched successfully",
-        packages: result,
+        message: "Services fetched successfully",
+        services: result,
         totalResults: result.length,
         token: newToken
       });
@@ -109,11 +129,10 @@ exports.list = (req, res) => {
   });
 };
 
-// Controller to get a package by ID
-exports.getPackageById = (req, res) => {
+exports.getServiceById = (req, res) => {
   const { id, admin_id, _token } = req.query;
   let missingFields = [];
-  if (!id) missingFields.push("Package ID");
+  if (!id) missingFields.push("Service ID");
   if (!admin_id) missingFields.push("Admin ID");
   if (!_token) missingFields.push("Token");
 
@@ -136,37 +155,38 @@ exports.getPackageById = (req, res) => {
 
     const newToken = result.newToken;
 
-    Package.getPackageById(id, (err, currentPackage) => {
+    Service.getServiceById(id, (err, currentService) => {
       if (err) {
-        console.error("Error fetching package data:", err);
+        console.error("Error fetching service data:", err);
         return res.status(500).json(err);
       }
 
-      if (!currentPackage) {
+      if (!currentService) {
         return res.status(404).json({
           status: false,
-          message: "Package not found",
+          message: "Service not found",
         });
       }
 
       res.json({
         status: true,
-        message: "Package retrieved successfully",
-        package: currentPackage,
+        message: "Service retrieved successfully",
+        service: currentService,
         token: newToken
       });
     });
   });
 };
 
-// Controller to update a package
+// Controller to update a service
 exports.update = (req, res) => {
-  const { id, title, description, admin_id, _token } = req.body;
+  const { id, title, description, admin_id, package_id, _token } = req.body;
 
   let missingFields = [];
-  if (!id) missingFields.push("Package ID");
+  if (!id) missingFields.push("Service ID");
   if (!title) missingFields.push("Title");
   if (!description) missingFields.push("Description");
+  if (!package_id) missingFields.push("Package ID");
   if (!admin_id) missingFields.push("Admin ID");
   if (!_token) missingFields.push("Token");
 
@@ -189,32 +209,39 @@ exports.update = (req, res) => {
 
     const newToken = result.newToken;
 
-    Package.getPackageById(id, (err, currentPackage) => {
+    Service.getServiceById(id, (err, currentService) => {
       if (err) {
-        console.error("Error fetching package data:", err);
+        console.error("Error fetching service data:", err);
         return res.status(500).json(err);
       }
 
       const changes = {};
-      if (currentPackage.title !== title) {
+      if (currentService.title !== title) {
         changes.title = {
-          old: currentPackage.title,
+          old: currentService.title,
           new: title,
         };
       }
-      if (currentPackage.description !== description) {
+      if (currentService.description !== description) {
         changes.description = {
-          old: currentPackage.description,
+          old: currentService.description,
           new: description,
         };
       }
 
-      Package.update(id, title, description, (err, result) => {
+      if (currentService.package_id !== package_id) {
+        changes.package_id = {
+          old: currentService.package_id,
+          new: package_id,
+        };
+      }
+
+      Service.update(id, title, description, package_id, (err, result) => {
         if (err) {
           console.error("Database error:", err);
           Common.adminActivityLog(
             admin_id,
-            "Package",
+            "Service",
             "Update",
             "0",
             JSON.stringify({ id, ...changes }),
@@ -226,7 +253,7 @@ exports.update = (req, res) => {
 
         Common.adminActivityLog(
           admin_id,
-          "Package",
+          "Service",
           "Update",
           "1",
           JSON.stringify({ id, ...changes }),
@@ -236,8 +263,8 @@ exports.update = (req, res) => {
 
         res.json({
           status: true,
-          message: "Package updated successfully",
-          package: result,
+          message: "Service updated successfully",
+          service: result,
           token: newToken
         });
       });
@@ -245,12 +272,12 @@ exports.update = (req, res) => {
   });
 };
 
-// Controller to delete a package
+// Controller to delete a service
 exports.delete = (req, res) => {
   const { id, admin_id, _token } = req.query;
 
   let missingFields = [];
-  if (!id) missingFields.push("Package ID");
+  if (!id) missingFields.push("Service ID");
   if (!admin_id) missingFields.push("Admin ID");
   if (!_token) missingFields.push("Token");
 
@@ -273,21 +300,21 @@ exports.delete = (req, res) => {
 
     const newToken = result.newToken;
 
-    Package.getPackageById(id, (err, currentPackage) => {
+    Service.getServiceById(id, (err, currentService) => {
       if (err) {
-        console.error("Error fetching package data:", err);
+        console.error("Error fetching service data:", err);
         return res.status(500).json(err);
       }
 
-      Package.delete(id, (err, result) => {
+      Service.delete(id, (err, result) => {
         if (err) {
           console.error("Database error:", err);
           Common.adminActivityLog(
             admin_id,
-            "Package",
+            "Service",
             "Delete",
             "0",
-            JSON.stringify({ id, ...currentPackage }),
+            JSON.stringify({ id, ...currentService }),
             err.message,
             () => { }
           );
@@ -296,17 +323,17 @@ exports.delete = (req, res) => {
 
         Common.adminActivityLog(
           admin_id,
-          "Package",
+          "Service",
           "Delete",
           "1",
+          JSON.stringify(currentService),
           null,
-          JSON.stringify(currentPackage),
           () => { }
         );
 
         res.json({
           status: true,
-          message: "Package deleted successfully",
+          message: "Service deleted successfully",
           token: newToken
         });
       });

@@ -1,4 +1,4 @@
-const Common = require('../models/commonModel');
+const Common = require('../../models/admin/commonModel');
 
 exports.isAdminTokenValid = (req, res) => {
   const { admin_id } = req.params;

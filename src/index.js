@@ -1,9 +1,10 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const adminRoutes = require('./routes/adminRoutes');
-const packageRoutes = require('./routes/packageRoutes');
-const serviceRoutes = require('./routes/serviceRoutes');
+const adminRoutes = require('./routes/admin/indexRoutes');
+const customerRoutes = require('./routes/customer/indexRoutes');
+const packageRoutes = require('./routes/admin/packageRoutes');
+const serviceRoutes = require('./routes/admin/serviceRoutes');
 require('dotenv').config();  // Ensure you load environment variables
 
 const app = express();
@@ -13,6 +14,7 @@ app.use(cors());
 
 app.use(bodyParser.json());
 app.use('/admin', adminRoutes);
+app.use('/customer', customerRoutes);
 app.use('/package', packageRoutes);
 app.use('/service', serviceRoutes);
 

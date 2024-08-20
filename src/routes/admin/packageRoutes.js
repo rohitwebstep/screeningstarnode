@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const packageController = require('../controllers/packageController');
+const packageController = require('../../controllers/admin/packageController');
 
 // Authentication routes
 router.post('/create', packageController.create);

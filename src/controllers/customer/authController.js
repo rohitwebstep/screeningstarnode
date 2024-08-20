@@ -1,6 +1,6 @@
 const crypto = require("crypto");
-const Admin = require("../../models/admin/adminModel");
-const Common = require("../../models/admin/commonModel");
+const Admin = require("../../models/customer/adminModel");
+const Common = require("../../models/customer/commonModel");
 
 // Utility function to check if a username is an email address
 const isEmail = (username) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username);
