@@ -1,4 +1,4 @@
-const pool = require("../config/db");
+const pool = require("../../config/db");
 
 const Package = {
   create: (title, description, admin_id, callback) => {
