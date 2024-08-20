@@ -49,7 +49,7 @@ const Customer = {
     `;
 
       const valuesCustomerMetas = [
-        customerId, customerData.company_name, customerData.address, customerData.phone_number, customerData.email,
+        customerId, customerData.name, customerData.address, customerData.phone_number, customerData.email,
         customerData.email2, customerData.email3, customerData.email4, customerData.secondary_username,
         customerData.contact_person_name, customerData.contact_person_title, customerData.escalation_point_contact,
         customerData.single_point_of_contact, customerData.gst_number, customerData.tat_days, customerData.service_description,
