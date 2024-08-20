@@ -36,6 +36,11 @@ exports.create = (req, res) => {
 
   console.log("Request body received:", req.body);
 
+  const generatePassword = (companyName) => {
+    const basePassword = companyName.split(' ').map(word => word.toLowerCase()).join('');
+    return `${basePassword}@123`;
+  };
+
   const missingFields = [];
   const requiredFields = {
     company_name,
@@ -88,6 +93,7 @@ exports.create = (req, res) => {
     console.log("Token validated successfully. New token:", result.newToken);
 
     const newToken = result.newToken;
+    const password = generatePassword(company_name);
 
     console.log("Creating new customer record for client_code:", client_code);
     Customer.create({
@@ -100,7 +106,7 @@ exports.create = (req, res) => {
       email_verified_at: null,
       mobile: mobile_number,
       mobile_verified_at: null,
-      password: null,
+      password,
       reset_password_token: null,
       login_token: generateToken(),
       token_expiry: getTokenExpiry(),
@@ -195,7 +201,8 @@ exports.create = (req, res) => {
           data: {
             customer: result,
             meta: metaResult
-          }
+          },
+          _token: newToken
         });
       });
     });
