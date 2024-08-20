@@ -78,7 +78,7 @@ exports.create = (req, res) => {
     }
 
     if (!result.status) {
-      return res.status(401).json({ status: false, message: result.message });
+      return res.status(401).json({ status: false, message: result.message+' 1' });
     }
 
     const newToken = result.newToken;
@@ -114,7 +114,7 @@ exports.create = (req, res) => {
           err.message,
           () => { }
         );
-        return res.status(500).json({ status: false, message: err.message });
+        return res.status(500).json({ status: false, message: err.message+' 2' });
       }
 
       const customerId = result.insertId;
@@ -165,7 +165,7 @@ exports.create = (req, res) => {
             err.message,
             () => { }
           );
-          return res.status(500).json({ status: false, message: err.message });
+          return res.status(500).json({ status: false, message: err.message+' 3' });
         }
 
         AdminCommon.adminActivityLog(
