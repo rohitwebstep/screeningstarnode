@@ -31,8 +31,14 @@ const Customer = {
 
       const customerId = results.insertId;
 
-      // Insert into customer_metas table
-      const sqlCustomerMetas = `
+      // Proceed with creating customer meta
+      callback(null, { insertId: customerId });
+    });
+  },
+
+  createCustomerMeta: (metaData, callback) => {
+    // Insert into customer_metas table
+    const sqlCustomerMetas = `
       INSERT INTO \`customer_metas\` (
         \`customer_id\`, \`company_name\`, \`address\`, \`phone_number\`, \`email\`,
         \`email2\`, \`email3\`, \`email4\`, \`secondary_username\`,
@@ -48,26 +54,25 @@ const Customer = {
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-      const valuesCustomerMetas = [
-        customerId, customerData.name, customerData.address, customerData.mobile_number, customerData.email,
-        customerData.email2, customerData.email3, customerData.email4, customerData.secondary_username,
-        customerData.contact_person_name, customerData.contact_person_title, customerData.escalation_point_contact,
-        customerData.single_point_of_contact, customerData.gst_number, customerData.tat_days, customerData.service_description,
-        customerData.service_fee, customerData.agreement_text, customerData.agreement_expiration_date, customerData.agreement_duration,
-        customerData.agreement_document, customerData.custom_template || 'no', customerData.logo, customerData.custom_billing_address,
-        customerData.status || '0', customerData.state, customerData.state_code, customerData.additional_login_info,
-        customerData.standard_operating_procedures, customerData.record_creation_date, customerData.package_category,
-        customerData.service_codes, customerData.payment_contact_person
-      ];
+    const valuesCustomerMetas = [
+      metaData.customer_id, metaData.company_name, metaData.address, metaData.phone_number, metaData.email,
+      metaData.email2, metaData.email3, metaData.email4, metaData.secondary_username,
+      metaData.contact_person_name, metaData.contact_person_title, metaData.escalation_point_contact,
+      metaData.single_point_of_contact, metaData.gst_number, metaData.tat_days, metaData.service_description,
+      metaData.service_fee, metaData.agreement_text, metaData.agreement_expiration_date, metaData.agreement_duration,
+      metaData.agreement_document, metaData.custom_template || 'no', metaData.logo, metaData.custom_billing_address,
+      metaData.status || '0', metaData.state, metaData.state_code, metaData.additional_login_info,
+      metaData.standard_operating_procedures, metaData.record_creation_date, metaData.package_category,
+      metaData.service_codes, metaData.payment_contact_person
+    ];
 
-      pool.query(sqlCustomerMetas, valuesCustomerMetas, (err, results) => {
-        if (err) {
-          console.error('Database insertion error for customer_metas:', err);
-          return callback({ message: 'Database insertion error for customer_metas', error: err }, null);
-        }
+    pool.query(sqlCustomerMetas, valuesCustomerMetas, (err, results) => {
+      if (err) {
+        console.error('Database insertion error for customer_metas:', err);
+        return callback({ message: 'Database insertion error for customer_metas', error: err }, null);
+      }
 
-        callback(null, results);
-      });
+      callback(null, results);
     });
   },
 
