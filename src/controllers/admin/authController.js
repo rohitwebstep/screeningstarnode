@@ -76,6 +76,13 @@ exports.login = (req, res) => {
       }
 
       if (admin.status === 0) {
+        Common.adminLoginLog(
+          admin.id,
+          "login",
+          "0",
+          "Admin account is not yet verified.",
+          () => { }
+        );
         return res.status(400).json({
           status: false,
           message: "Admin account is not yet verified. Please complete the verification process before proceeding."
@@ -83,6 +90,13 @@ exports.login = (req, res) => {
       }
 
       if (admin.status === 2) {
+        Common.adminLoginLog(
+          admin.id,
+          "login",
+          "0",
+          "Admin account has been suspended.",
+          () => { }
+        );
         return res.status(400).json({
           status: false,
           message: "Admin account has been suspended. Please contact the help desk for further assistance."
@@ -95,6 +109,13 @@ exports.login = (req, res) => {
 
       // Check if the existing token is still valid
       if (admin.login_token && tokenExpiry > currentTime) {
+        Common.adminLoginLog(
+          admin.id,
+          "login",
+          "0",
+          "Another admin is currently logged in.",
+          () => { }
+        );
         return res.status(400).json({
           status: false,
           message: "Another admin is currently logged in. Please try again later."
