@@ -34,8 +34,9 @@ exports.create = (req, res) => {
     branch_email
   } = req.body;
 
-  const missingFields = [];
+  console.log("Request body received:", req.body);
 
+  const missingFields = [];
   const requiredFields = {
     company_name,
     client_code,
@@ -65,24 +66,30 @@ exports.create = (req, res) => {
   });
 
   if (missingFields.length > 0) {
+    console.log("Missing required fields:", missingFields);
     return res.status(400).json({
       status: false,
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
 
+  console.log("Checking admin token validity for admin_id:", admin_id);
   AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
     if (err) {
-      console.error("Error checking token validity: ", err);
+      console.error("Error checking token validity:", err);
       return res.status(500).json(err);
     }
 
     if (!result.status) {
+      console.log("Token validation failed:", result.message);
       return res.status(401).json({ status: false, message: result.message });
     }
 
+    console.log("Token validated successfully. New token:", result.newToken);
+
     const newToken = result.newToken;
 
+    console.log("Creating new customer record for client_code:", client_code);
     Customer.create({
       admin_id,
       client_unique_id: client_code,
@@ -104,7 +111,7 @@ exports.create = (req, res) => {
       admin_id
     }, (err, result) => {
       if (err) {
-        console.error("Database error:", err);
+        console.error("Database error while creating customer:", err);
         AdminCommon.adminActivityLog(
           admin_id,
           "Customer",
@@ -118,7 +125,9 @@ exports.create = (req, res) => {
       }
 
       const customerId = result.insertId;
+      console.log("Customer created successfully with ID:", customerId);
 
+      console.log("Creating customer meta data for customer_id:", customerId);
       Customer.createCustomerMeta({
         customer_id: customerId,
         company_name,
@@ -155,7 +164,7 @@ exports.create = (req, res) => {
         payment_contact_person: contact_person
       }, (err, metaResult) => {
         if (err) {
-          console.error("Database error for customer meta:", err);
+          console.error("Database error while creating customer meta:", err);
           AdminCommon.adminActivityLog(
             admin_id,
             "Customer",
@@ -167,6 +176,8 @@ exports.create = (req, res) => {
           );
           return res.status(500).json({ status: false, message: err.message });
         }
+
+        console.log("Customer meta created successfully.");
 
         AdminCommon.adminActivityLog(
           admin_id,
