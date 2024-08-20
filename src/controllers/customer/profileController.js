@@ -1,10 +1,10 @@
-constcrypto = require("crypto");
-constCustomer = require("../../models/customer/customerModel");
-constAdminCommon = require("../../models/admin/commonModel");
+const crypto = require("crypto");
+const Customer = require("../../models/customer/customerModel");
+const AdminCommon = require("../../models/admin/commonModel");
 
-constisEmail = (username) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username);
-constgenerateToken = () => crypto.randomBytes(32).toString("hex");
-constgetTokenExpiry = () => newDate(Date.now() + 3600000).toISOString();
+const isEmail = (username) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username);
+const generateToken = () => crypto.randomBytes(32).toString("hex");
+const getTokenExpiry = () => new Date(Date.now() + 3600000).toISOString();
 
 exports.create = (req, res) => {
   const {
@@ -34,9 +34,9 @@ exports.create = (req, res) => {
     branch_email
   } = req.body;
 
-  constmissingFields = [];
+  const missingFields = [];
 
-  constrequiredFields = {
+  const requiredFields = {
     company_name,
     client_code,
     package_name,
@@ -65,24 +65,23 @@ exports.create = (req, res) => {
   });
 
   if (missingFields.length > 0) {
-    returnres.status(400).json({
+    return res.status(400).json({
       status: false,
       message: `Missing required fields: ${missingFields.join(",")}`,
     });
   }
 
-
   AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
     if (err) {
       console.error("Error checking token validity: ", err);
-      returnres.status(500).json(err);
+      return res.status(500).json(err);
     }
 
     if (!result.status) {
-      returnres.status(401).json({ status: false, message: result.message });
+      return res.status(401).json({ status: false, message: result.message });
     }
 
-    constnewToken = result.newToken;
+    const newToken = result.newToken;
 
     Customer.create({
       admin_id,
@@ -100,8 +99,8 @@ exports.create = (req, res) => {
       token_expiry: getTokenExpiry(),
       role,
       status: '0',
-      created_at: newDate(),
-      updated_at: newDate(),
+      created_at: new Date(),
+      updated_at: new Date(),
       admin_id
     }, (err, result) => {
       if (err) {
@@ -115,10 +114,10 @@ exports.create = (req, res) => {
           err.message,
           () => { }
         );
-        returnres.status(500).json({ status: false, message: err.message });
+        return res.status(500).json({ status: false, message: err.message });
       }
 
-      constcustomerId = result.insertId;
+      const customerId = result.insertId;
 
       Customer.createCustomerMeta({
         customer_id: customerId,
@@ -150,7 +149,7 @@ exports.create = (req, res) => {
         state_code,
         additional_login_info: null,
         standard_operating_procedures: null,
-        record_creation_date: newDate(),
+        record_creation_date: new Date(),
         package_category: null,
         service_codes: null,
         payment_contact_person: contact_person
@@ -166,7 +165,7 @@ exports.create = (req, res) => {
             err.message,
             () => { }
           );
-          returnres.status(500).json({ status: false, message: err.message });
+          return res.status(500).json({ status: false, message: err.message });
         }
 
         AdminCommon.adminActivityLog(
