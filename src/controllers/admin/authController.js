@@ -75,6 +75,20 @@ exports.login = (req, res) => {
         return res.status(401).json({ status: false, message: "Incorrect password" });
       }
 
+      if (admin.status === 0) {
+        return res.status(400).json({
+          status: false,
+          message: "Admin account is not yet verified. Please complete the verification process before proceeding."
+        });
+      }
+
+      if (admin.status === 2) {
+        return res.status(400).json({
+          status: false,
+          message: "Admin account has been suspended. Please contact the help desk for further assistance."
+        });
+      }
+
       // Get current time and token expiry
       const currentTime = new Date(); // Current time
       const tokenExpiry = new Date(admin.token_expiry); // Convert token_expiry to Date object
