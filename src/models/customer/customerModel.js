@@ -9,7 +9,7 @@ const Customer = {
         \`email_verified_at\`, \`mobile\`, \`mobile_verified_at\`, \`password\`, 
         \`reset_password_token\`, \`login_token\`, \`token_expiry\`, \`role\`, 
         \`status\`, \`created_at\`, \`updated_at\`, \`admin_id\`
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const valuesCustomers = [
@@ -30,20 +30,20 @@ const Customer = {
 
       // Insert into customer_metas table
       const sqlCustomerMetas = `
-        INSERT INTO \`customer_metas\` (
-          \`customer_id\`, \`company_name\`, \`address\`, \`phone_number\`, \`email\`, 
-          \`email2\`, \`email3\`, \`email4\`, \`secondary_username\`, 
-          \`contact_person_name\`, \`contact_person_title\`, \`escalation_point_contact\`, 
-          \`single_point_of_contact\`, \`gst_number\`, \`tat_days\`, \`service_description\`, 
-          \`service_fee\`, \`agreement_text\`, \`agreement_expiration_date\`, \`agreement_duration\`, 
-          \`agreement_document\`, \`custom_template\`, \`logo\`, \`custom_billing_address\`, 
-          \`status\`, \`state\`, \`state_code\`, \`additional_login_info\`, 
-          \`standard_operating_procedures\`, \`record_creation_date\`, \`package_category\`, 
-          \`service_codes\`, \`payment_contact_person\`
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
-                  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
-                  ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `;
+      INSERT INTO \`customer_metas\` (
+        \`customer_id\`, \`company_name\`, \`address\`, \`phone_number\`, \`email\`, 
+        \`email2\`, \`email3\`, \`email4\`, \`secondary_username\`, 
+        \`contact_person_name\`, \`contact_person_title\`, \`escalation_point_contact\`, 
+        \`single_point_of_contact\`, \`gst_number\`, \`tat_days\`, \`service_description\`, 
+        \`service_fee\`, \`agreement_text\`, \`agreement_expiration_date\`, \`agreement_duration\`, 
+        \`agreement_document\`, \`custom_template\`, \`logo\`, \`custom_billing_address\`, 
+        \`status\`, \`state\`, \`state_code\`, \`additional_login_info\`, 
+        \`standard_operating_procedures\`, \`record_creation_date\`, \`package_category\`, 
+        \`service_codes\`, \`payment_contact_person\`
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
 
       const valuesCustomerMetas = [
         customerId, customerData.company_name, customerData.address, customerData.phone_number, customerData.email,
