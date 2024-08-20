@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const Admin = require("../../models/customer/adminModel");
+const Customer = require("../../models/customer/customerModel");
 const Common = require("../../models/customer/commonModel");
 
 // Utility function to check if a username is an email address
@@ -11,7 +11,7 @@ const generateToken = () => crypto.randomBytes(32).toString("hex");
 // Utility function to get token expiry time (1 hour from current time)
 const getTokenExpiry = () => new Date(Date.now() + 3600000).toISOString();
 
-// Admin login handler
+// Customer login handler
 exports.login = (req, res) => {
   const { username, password } = req.body;
   const missingFields = [];
@@ -32,29 +32,29 @@ exports.login = (req, res) => {
     });
   }
 
-  // Find admin by email or mobile number
-  Admin.findByEmailOrMobile(username, (err, result) => {
+  // Find customer by email or mobile number
+  Customer.findByEmailOrMobile(username, (err, result) => {
     if (err) {
       console.error("Database error:", err);
       return res.status(500).json({ status: false, message: err.message });
     }
 
-    // If no admin found, return a 404 response
+    // If no customer found, return a 404 response
     if (result.length === 0) {
       return res.status(404).json({
         status: false,
-        message: "Admin not found with the provided email or mobile number",
+        message: "Customer not found with the provided email or mobile number",
       });
     }
 
-    const admin = result[0];
+    const customer = result[0];
 
     // Validate password
-    Admin.validatePassword(username, password, (err, isValid) => {
+    Customer.validatePassword(username, password, (err, isValid) => {
       if (err) {
         console.error("Database error:", err);
-        Common.adminLoginLog(
-          admin.id,
+        Common.customerLoginLog(
+          customer.id,
           "login",
           "0",
           err.message,
@@ -65,8 +65,8 @@ exports.login = (req, res) => {
 
       // If the password is incorrect, log the attempt and return a 401 response
       if (!isValid) {
-        Common.adminLoginLog(
-          admin.id,
+        Common.customerLoginLog(
+          customer.id,
           "login",
           "0",
           "Incorrect password",
@@ -77,13 +77,13 @@ exports.login = (req, res) => {
 
       // Get current time and token expiry
       const currentTime = new Date(); // Current time
-      const tokenExpiry = new Date(admin.token_expiry); // Convert token_expiry to Date object
+      const tokenExpiry = new Date(customer.token_expiry); // Convert token_expiry to Date object
 
       // Check if the existing token is still valid
-      if (admin.login_token && tokenExpiry > currentTime) {
+      if (customer.login_token && tokenExpiry > currentTime) {
         return res.status(400).json({
           status: false,
-          message: "Another admin is currently logged in. Please try again later."
+          message: "Another customer is currently logged in. Please try again later."
         });
       }
 
@@ -92,11 +92,11 @@ exports.login = (req, res) => {
       const newTokenExpiry = getTokenExpiry(); // This will be an ISO string
 
       // Update the token in the database
-      Admin.updateToken(admin.id, token, newTokenExpiry, (err) => {
+      Customer.updateToken(customer.id, token, newTokenExpiry, (err) => {
         if (err) {
           console.error("Database error:", err);
-          Common.adminLoginLog(
-            admin.id,
+          Common.customerLoginLog(
+            customer.id,
             "login",
             "0",
             "Error updating token: " + err.message,
@@ -109,13 +109,13 @@ exports.login = (req, res) => {
         }
 
         // Log successful login and return the response
-        Common.adminLoginLog(admin.id, "login", "1", null, () => { });
-        const { login_token, token_expiry, ...adminDataWithoutToken } = admin;
+        Common.customerLoginLog(customer.id, "login", "1", null, () => { });
+        const { login_token, token_expiry, ...customerDataWithoutToken } = customer;
 
         res.json({
           status: true,
           message: "Login successful",
-          adminData: adminDataWithoutToken,
+          customerData: customerDataWithoutToken,
           token
         });
       });
@@ -123,15 +123,15 @@ exports.login = (req, res) => {
   });
 };
 
-// Admin logout handler
+// Customer logout handler
 exports.logout = (req, res) => {
-  const { admin_id, _token } = req.query;
+  const { customer_id, _token } = req.query;
 
   // Validate required fields and create a custom message
   let missingFields = [];
 
-  if (!admin_id) {
-    missingFields.push("Admin ID");
+  if (!customer_id) {
+    missingFields.push("Customer ID");
   }
   if (!_token) {
     missingFields.push("Token");
@@ -144,8 +144,8 @@ exports.logout = (req, res) => {
     });
   }
 
-  // Validate the admin token
-  Common.isAdminTokenValid(_token, admin_id, (err, result) => {
+  // Validate the customer token
+  Common.isCustomerTokenValid(_token, customer_id, (err, result) => {
     if (err) {
       console.error("Error checking token validity:", err);
       return res.status(500).json(err);
@@ -156,7 +156,7 @@ exports.logout = (req, res) => {
     }
 
     // Update the token in the database to null
-    Admin.logout(admin_id, (err) => {
+    Customer.logout(customer_id, (err) => {
       if (err) {
         console.error('Database error:', err);
         return res.status(500).json({ status: false, message: `Error logging out: ${err.message}` });
@@ -170,14 +170,14 @@ exports.logout = (req, res) => {
   });
 };
 
-// Admin login validation handler
+// Customer login validation handler
 exports.validateLogin = (req, res) => {
-  const { admin_id, _token } = req.body;
+  const { customer_id, _token } = req.body;
   const missingFields = [];
 
   // Validate required fields
-  if (!admin_id) {
-    missingFields.push('Admin ID');
+  if (!customer_id) {
+    missingFields.push('Customer ID');
   }
   if (!_token) {
     missingFields.push('Token');
@@ -191,19 +191,19 @@ exports.validateLogin = (req, res) => {
     });
   }
 
-  // Fetch the admin record by admin_id to retrieve the saved token and expiry
-  Admin.validateLogin(admin_id, (err, result) => {
+  // Fetch the customer record by customer_id to retrieve the saved token and expiry
+  Customer.validateLogin(customer_id, (err, result) => {
     if (err) {
       console.error('Database error:', err);
       return res.status(500).json({ status: false, message: err.message });
     }
 
     if (result.length === 0) {
-      return res.status(404).json({ status: false, message: 'Admin not found' });
+      return res.status(404).json({ status: false, message: 'Customer not found' });
     }
 
-    const admin = result[0];
-    const isTokenValid = admin.login_token === _token;
+    const customer = result[0];
+    const isTokenValid = customer.login_token === _token;
 
     if (!isTokenValid) {
       return res.status(401).json({ status: false, message: 'Invalid or expired token' });
@@ -212,7 +212,7 @@ exports.validateLogin = (req, res) => {
     res.json({
       status: true,
       message: 'Login validated successfully',
-      result: admin,
+      result: customer,
     });
   });
 };
