@@ -114,7 +114,7 @@ exports.create = (req, res) => {
           err.message,
           () => { }
         );
-        return res.status(500).json({ status: false, message: 'Database error during customer creation' });
+        return res.status(500).json({ status: false, message: err.message });
       }
 
       const customerId = result.insertId;
@@ -165,7 +165,7 @@ exports.create = (req, res) => {
             err.message,
             () => { }
           );
-          return res.status(500).json({ status: false, message: 'Database error during customer meta creation' });
+          return res.status(500).json({ status: false, message: err.message });
         }
 
         AdminCommon.adminActivityLog(
