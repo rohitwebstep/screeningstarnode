@@ -96,27 +96,8 @@ exports.list = (req, res) => {
     Service.list((err, result) => {
       if (err) {
         console.error("Database error:", err);
-        Common.adminActivityLog(
-          admin_id,
-          "Service",
-          "List",
-          "0",
-          null,
-          err.message,
-          () => { }
-        );
         return res.status(500).json({ status: false, message: err.message });
       }
-
-      Common.adminActivityLog(
-        admin_id,
-        "Service",
-        "List",
-        "1",
-        null,
-        null,
-        () => { }
-      );
 
       res.json({
         status: true,
