@@ -92,7 +92,7 @@ exports.create = (req, res) => {
       console.error("Error checking token validity:", err);
       return res
         .status(500)
-        .json({ status: false, message: "Internal server error." });
+        .json({ status: false, message: err.message });
     }
 
     if (!result.status) {
@@ -142,7 +142,7 @@ exports.create = (req, res) => {
           );
           return res
             .status(500)
-            .json({ status: false, message: "Internal server error." });
+            .json({ status: false, message: err.message });
         }
 
         const customerId = result.insertId;
@@ -193,7 +193,7 @@ exports.create = (req, res) => {
               );
               return res
                 .status(500)
-                .json({ status: false, message: "Internal server error." });
+                .json({ status: false, message: err.message });
             }
 
             console.log("Customer meta created successfully.");
