@@ -141,16 +141,6 @@ exports.create = (req, res) => {
         }
 
         const customerId = result.insertId;
-
-        res.json({
-          status: true,
-          message: "Customer created successfully",
-          data: {
-            customer: result,
-          },
-          _token: newToken,
-        });
-
         console.log("Customer created successfully with ID:", customerId);
 
         // Create customer meta data
