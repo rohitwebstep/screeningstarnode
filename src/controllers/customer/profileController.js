@@ -26,6 +26,7 @@ exports.create = (req, res) => {
     Agreement_Period,
     agr_upload,
     additional_login,
+    username,
     branches,
   } = req.body;
 
@@ -66,6 +67,10 @@ exports.create = (req, res) => {
     additional_login,
     branches,
   };
+
+  if (additional_login.toLowerCase() === "yes") {
+    requiredFields.username = username;
+  }
 
   // Check for missing fields
   const missingFields = Object.keys(requiredFields)
@@ -161,13 +166,15 @@ exports.create = (req, res) => {
             single_point_of_contact: client_spoc,
             gst_number: gstin,
             agreement_text: agr_upload,
-            agreement_expiration_date: date_agreement,
+            agreement_date: date_agreement,
             agreement_duration: Agreement_Period,
             agreement_document: agr_upload,
             status: "0",
             state,
             state_code,
-            additional_login_info: additional_login,
+            additional_login,
+            username:
+              additional_login.toLowerCase() === "yes" ? username : null,
             record_creation_date: new Date(),
           },
           (err, metaResult) => {
