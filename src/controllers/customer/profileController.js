@@ -2,11 +2,6 @@ const crypto = require("crypto");
 const Customer = require("../../models/customer/customerModel");
 const AdminCommon = require("../../models/admin/commonModel");
 
-// Utility functions
-const isEmail = (username) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username);
-const generateToken = () => crypto.randomBytes(32).toString("hex");
-const getTokenExpiry = () => new Date(Date.now() + 3600000).toISOString();
-
 exports.create = (req, res) => {
   const {
     admin_id,
@@ -121,8 +116,8 @@ exports.create = (req, res) => {
         mobile_verified_at: null,
         password,
         reset_password_token: null,
-        login_token: generateToken(),
-        token_expiry: getTokenExpiry(),
+        login_token: null,
+        token_expiry: null,
         role,
         status: "0",
         created_at: new Date(),
