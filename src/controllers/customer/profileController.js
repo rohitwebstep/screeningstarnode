@@ -199,7 +199,7 @@ exports.create = (req, res) => {
                 .status(500)
                 .json({
                   status: false,
-                  message: "Failed to create customer meta.",
+                  message: err.message,
                 });
             }
 
