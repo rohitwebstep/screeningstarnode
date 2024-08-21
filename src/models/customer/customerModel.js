@@ -97,8 +97,8 @@ const Customer = {
       metaData.package_category,
       metaData.service_codes,
       metaData.payment_contact_person,
-      metaData.created_at,
-      metaData.updated_at,
+      new Date(),
+      new Date(),
     ];
 
     pool.query(sqlCustomerMetas, valuesCustomerMetas, (err, results) => {
