@@ -90,9 +90,7 @@ exports.create = (req, res) => {
   AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
     if (err) {
       console.error("Error checking token validity:", err);
-      return res
-        .status(500)
-        .json({ status: false, message: err.message });
+      return res.status(500).json({ status: false, message: err.message });
     }
 
     if (!result.status) {
@@ -140,10 +138,10 @@ exports.create = (req, res) => {
             err.message,
             () => {}
           );
-          return res
-            .status(500)
-            .json({ status: false, message: err.message });
+          return res.status(500).json({ status: false, message: err.message });
         }
+
+        return res.status(500).json({ status: false, message: name_of_escalation });
 
         const customerId = result.insertId;
         console.log("Customer created successfully with ID:", customerId);
