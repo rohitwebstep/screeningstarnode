@@ -1,6 +1,6 @@
 const crypto = require("crypto");
-const Customer = require("../../models/customer/customerModel");
-const AdminCommon = require("../../models/admin/commonModel");
+const Customer = require("../../../models/customer/customerModel");
+const AdminCommon = require("../../../models/admin/commonModel");
 
 const isEmail = (username) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username);
 const generateToken = () => crypto.randomBytes(32).toString("hex");
