@@ -29,7 +29,6 @@ exports.create = (req, res) => {
     date_agreement,
     client_standard,
     Agreement_Period,
-    c_logo,
     agr_upload,
     additional_login,
     branches,
@@ -68,7 +67,6 @@ exports.create = (req, res) => {
     date_agreement,
     client_standard,
     Agreement_Period,
-    c_logo,
     agr_upload,
     additional_login,
     branches,
@@ -157,7 +155,7 @@ exports.create = (req, res) => {
           },
           _token: newToken,
         });
-        
+
         console.log("Customer created successfully with ID:", customerId);
 
         // Create customer meta data
