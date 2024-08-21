@@ -41,14 +41,14 @@ const Customer = {
     const sqlCustomerMetas = `
       INSERT INTO \`customer_metas\` (
         \`customer_id\`, \`company_name\`, \`address\`, \`phone_number\`, \`email\`,
-        \`email2\`, \`email3\`, \`email4\`, \`secondary_username\`,
+        \`email2\`, \`email3\`, \`email4\`, \`username\`,
         \`contact_person_name\`, \`contact_person_title\`, \`escalation_point_contact\`,
         \`single_point_of_contact\`, \`gst_number\`, \`tat_days\`, \`service_description\`,
-        \`service_fee\`, \`agreement_text\`, \`agreement_expiration_date\`, \`agreement_duration\`,
-        \`agreement_document\`, \`custom_template\`, \`logo\`, \`custom_billing_address\`,
-        \`status\`, \`state\`, \`state_code\`, \`additional_login_info\`,
-        \`standard_operating_procedures\`, \`record_creation_date\`, \`package_category\`,
-        \`service_codes\`, \`payment_contact_person\`
+        \`service_fee\`, \`agreement_text\`, \`agreement_date\`, \`agreement_duration\`,
+        \`agreement_document\`, \`custom_template\`, \`custom_logo\`, \`custom_address\`,
+        \`status\`, \`state\`, \`state_code\`, \`additional_login\`,
+        \`standard_operating_procedures\`, \`package_category\`,
+        \`service_codes\`, \`payment_contact_person\`, \`created_at\`, \`updated_at\`, 
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -56,12 +56,12 @@ const Customer = {
 
     const valuesCustomerMetas = [
       metaData.customer_id, metaData.company_name, metaData.address, metaData.mobile_number, metaData.email,
-      metaData.email2, metaData.email3, metaData.email4, metaData.secondary_username,
+      metaData.email2, metaData.email3, metaData.email4, metaData.username,
       metaData.contact_person_name, metaData.contact_person_title, metaData.escalation_point_contact,
       metaData.single_point_of_contact, metaData.gst_number, metaData.tat_days, metaData.service_description,
-      metaData.service_fee, metaData.agreement_text, metaData.agreement_expiration_date, metaData.agreement_duration,
-      metaData.agreement_document, metaData.custom_template || 'no', metaData.logo, metaData.custom_billing_address,
-      metaData.status || '0', metaData.state, metaData.state_code, metaData.additional_login_info,
+      metaData.service_fee, metaData.agreement_text, metaData.agreement_date, metaData.agreement_duration,
+      metaData.agreement_document, metaData.custom_template || 'no', metaData.custom_logo, metaData.custom_address,
+      metaData.status || '0', metaData.state, metaData.state_code, metaData.additional_login,
       metaData.standard_operating_procedures, metaData.record_creation_date, metaData.package_category,
       metaData.service_codes, metaData.payment_contact_person
     ];
