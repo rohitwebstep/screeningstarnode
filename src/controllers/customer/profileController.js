@@ -2,6 +2,19 @@ const crypto = require("crypto");
 const Customer = require("../../models/customer/customerModel");
 const AdminCommon = require("../../models/admin/commonModel");
 
+// Helper function to generate a password
+const generatePassword = (companyName) => {
+  const basePassword = companyName
+    .split(" ")
+    .map((word) => word.toLowerCase())
+    .join("");
+  return `${basePassword}@123`;
+};
+
+// Helper function to hash password using MD5
+const hashPassword = (password) =>
+  crypto.createHash("md5").update(password).digest("hex");
+
 exports.create = (req, res) => {
   const {
     admin_id,
@@ -32,15 +45,6 @@ exports.create = (req, res) => {
 
   console.log("Request body received:", req.body);
 
-  // Helper function to generate a password
-  const generatePassword = (companyName) => {
-    const basePassword = companyName
-      .split(" ")
-      .map((word) => word.toLowerCase())
-      .join("");
-    return `${basePassword}@123`;
-  };
-
   // Define required fields
   const requiredFields = {
     admin_id,
@@ -68,7 +72,7 @@ exports.create = (req, res) => {
     branches,
   };
 
-  if (additional_login.toLowerCase() === "yes") {
+  if (additional_login && additional_login.toLowerCase() === "yes") {
     requiredFields.username = username;
   }
 
@@ -117,7 +121,7 @@ exports.create = (req, res) => {
         email_verified_at: null,
         mobile_number,
         mobile_verified_at: null,
-        password,
+        password: hashPassword(password),
         reset_password_token: null,
         login_token: null,
         token_expiry: null,
@@ -138,10 +142,10 @@ exports.create = (req, res) => {
             err.message,
             () => {}
           );
-          return res.status(500).json({ status: false, message: err.message });
+          return res
+            .status(500)
+            .json({ status: false, message: "Failed to create customer." });
         }
-
-        return res.status(500).json({ status: false, message: name_of_escalation });
 
         const customerId = result.insertId;
         console.log("Customer created successfully with ID:", customerId);
@@ -171,7 +175,9 @@ exports.create = (req, res) => {
             state_code,
             additional_login,
             username:
-              additional_login.toLowerCase() === "yes" ? username : null,
+              additional_login && additional_login.toLowerCase() === "yes"
+                ? username
+                : null,
             record_creation_date: new Date(),
           },
           (err, metaResult) => {
@@ -191,7 +197,10 @@ exports.create = (req, res) => {
               );
               return res
                 .status(500)
-                .json({ status: false, message: err.message });
+                .json({
+                  status: false,
+                  message: "Failed to create customer meta.",
+                });
             }
 
             console.log("Customer meta created successfully.");

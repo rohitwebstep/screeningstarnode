@@ -7,7 +7,6 @@ const hashPassword = (password) =>
 
 const Customer = {
   create: (customerData, callback) => {
-    // Insert into customers table
     const sqlCustomers = `
       INSERT INTO \`customers\` (
         \`client_unique_id\`, \`client_id\`, \`name\`, \`profile_picture\`, \`email\`,
@@ -26,7 +25,7 @@ const Customer = {
       customerData.email_verified_at,
       customerData.mobile_number,
       customerData.mobile_verified_at,
-      hashPassword(customerData.password),
+      customerData.password,
       customerData.reset_password_token,
       customerData.login_token,
       customerData.token_expiry,
@@ -47,14 +46,11 @@ const Customer = {
       }
 
       const customerId = results.insertId;
-
-      // Proceed with creating customer meta
       callback(null, { insertId: customerId });
     });
   },
 
   createCustomerMeta: (metaData, callback) => {
-    // Insert into customer_metas table
     const sqlCustomerMetas = `
       INSERT INTO \`customer_metas\` (
         \`customer_id\`, \`company_name\`, \`address\`, \`phone_number\`, \`email\`,
@@ -66,16 +62,14 @@ const Customer = {
         \`status\`, \`state\`, \`state_code\`, \`additional_login\`,
         \`standard_operating_procedures\`, \`package_category\`,
         \`service_codes\`, \`payment_contact_person\`, \`created_at\`, \`updated_at\`
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const valuesCustomerMetas = [
       metaData.customer_id,
       metaData.company_name,
       metaData.address,
-      metaData.mobile_number,
+      metaData.phone_number,
       metaData.email,
       metaData.email2,
       metaData.email3,
@@ -110,7 +104,13 @@ const Customer = {
     pool.query(sqlCustomerMetas, valuesCustomerMetas, (err, results) => {
       if (err) {
         console.error("Database insertion error for customer_metas:", err);
-        return callback({ message: err }, null);
+        return callback(
+          {
+            message: "Database insertion error for customer_metas",
+            error: err,
+          },
+          null
+        );
       }
 
       callback(null, results);
@@ -119,7 +119,7 @@ const Customer = {
 
   findByEmailOrMobile: (username, callback) => {
     const sql = `
-      SELECT \`id\`, \`emp_id\`, \`name\`, \`profile_picture\`, \`email\`, \`mobile\`, \`status\`, \`login_token\`, \`token_expiry\`
+      SELECT \`id\`, \`email\`, \`mobile\`, \`password\`
       FROM \`customers\`
       WHERE \`email\` = ? OR \`mobile\` = ?
     `;
@@ -143,31 +143,30 @@ const Customer = {
 
   validatePassword: (username, password, callback) => {
     const sql = `
-      SELECT \`id\`, \`emp_id\`, \`name\`, \`profile_picture\`, \`email\`, \`mobile\`, \`status\`
-      FROM \`customers\`
-      WHERE (\`email\` = ? OR \`mobile\` = ?)
-      AND \`password\` = MD5(?)
+      SELECT \`id\`, \`password\` FROM \`customers\`
+      WHERE \`email\` = ? OR \`mobile\` = ?
     `;
 
-    pool.query(
-      sql,
-      [username, username, hashPassword(password)],
-      (err, results) => {
-        if (err) {
-          console.error("Database query error:", err);
-          return callback(
-            { message: "Database query error", error: err },
-            null
-          );
-        }
-
-        if (results.length === 0) {
-          return callback({ message: "Incorrect password or username" }, null);
-        }
-
-        callback(null, results);
+    pool.query(sql, [username, username], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback({ message: "Database query error", error: err }, null);
       }
-    );
+
+      if (results.length === 0) {
+        return callback(
+          { message: "No customer found with the provided email or mobile" },
+          null
+        );
+      }
+
+      const customer = results[0];
+      if (hashPassword(password) !== customer.password) {
+        return callback({ message: "Incorrect password" }, null);
+      }
+
+      callback(null, results);
+    });
   },
 
   updateToken: (id, token, tokenExpiry, callback) => {
