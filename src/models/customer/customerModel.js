@@ -69,7 +69,7 @@ const Customer = {
     pool.query(sqlCustomerMetas, valuesCustomerMetas, (err, results) => {
       if (err) {
         console.error('Database insertion error for customer_metas:', err);
-        return callback({ message: 'Database insertion error for customer_metas', error: err }, null);
+        return callback({ message: err }, null);
       }
 
       callback(null, results);
