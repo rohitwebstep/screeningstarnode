@@ -23,13 +23,14 @@ exports.create = (req, res) => {
 
   // Check admin authorization
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
-    if (!result.status) {
-      // Check the status returned by the authorization function
-      return res.status(403).json({
-        status: false,
-        message: result.message, // Return the message from the authorization function
-      });
-    }
+    // if (!result.status) {
+    // Check the status returned by the authorization function
+    return res.status(403).json({
+      status: false,
+      result,
+      message: result.message, // Return the message from the authorization function
+    });
+    // }
 
     // Validate admin token
     Common.isAdminTokenValid(_token, admin_id, (err, tokenValidationResult) => {
@@ -329,14 +330,12 @@ exports.delete = (req, res) => {
 
   // Check admin authorization
   Common.isAdminAuthorizedForAction(admin_id, action, (err, isAuthorized) => {
-    // if (err) {
+    if (err) {
       return res.status(500).json({
         status: false,
-        err,
-        isAuthorized,
         message: `Authorization error: ${err.message}`,
       });
-    // }
+    }
     if (!isAuthorized) {
       return res.status(403).json({
         status: false,
