@@ -1,206 +1,175 @@
 const Package = require("../../models/admin/packageModel");
 const Common = require("../../models/admin/commonModel");
 
-// Controller to create a new package
-exports.create = (req, res) => {
-  const { title, description, admin_id, _token } = req.body;
-
-  let missingFields = [];
-  if (!title) missingFields.push("Title");
-  if (!description) missingFields.push("Description");
-  if (!admin_id) missingFields.push("Admin ID");
-  if (!_token) missingFields.push("Token");
-
-  if (missingFields.length > 0) {
+// Middleware to validate admin and token
+const validateAdminAndToken = async (req, res, next) => {
+  const { admin_id, _token } = req.query;
+  if (!admin_id || !_token) {
     return res.status(400).json({
       status: false,
-      message: `Missing required fields: ${missingFields.join(", ")}`,
+      message: `Missing required fields: ${!admin_id ? "Admin ID" : ""} ${
+        !_token ? "Token" : ""
+      }`,
     });
   }
 
-  Common.isAdminTokenValid(_token, admin_id, (err, result) => {
-    if (err) {
-      console.error("Error checking token validity:", err);
-      return res.status(500).json(err);
-    }
-
+  try {
+    const result = await Common.isAdminTokenValid(_token, admin_id);
     if (!result.status) {
       return res.status(401).json({ status: false, message: result.message });
     }
+    req.newToken = result.newToken;
+    next();
+  } catch (err) {
+    console.error("Error checking token validity:", err);
+    res.status(500).json(err);
+  }
+};
 
-    const newToken = result.newToken;
+// Middleware to authorize admin actions
+const authorizeAdminAction = (action) => async (req, res, next) => {
+  const { admin_id } = req.body; // For `update` method
+  if (!admin_id) {
+    return res
+      .status(400)
+      .json({ status: false, message: "Admin ID is required" });
+  }
 
-    Package.create(title, description, admin_id, (err, result) => {
-      if (err) {
-        console.error("Database error:", err);
-        Common.adminActivityLog(
-          admin_id,
-          "Package",
-          "Create",
-          "0",
-          null,
-          err.message,
-          () => { }
-        );
-        return res.status(500).json({ status: false, message: err.message });
-      }
+  try {
+    const isAuthorized = await Common.isAdminAuthorizedForAction(
+      admin_id,
+      JSON.stringify({ package: action })
+    );
+    if (!isAuthorized) {
+      return res.status(401).json({
+        status: false,
+        message: "Admin isn't authorized for the action.",
+      });
+    }
+    next();
+  } catch (err) {
+    console.error(`Error authorizing admin for action ${action}:`, err);
+    return res.status(500).json({ status: false, message: err.message });
+  }
+};
 
-      Common.adminActivityLog(
+// Controller to create a new package
+exports.create = [
+  validateAdminAndToken,
+  authorizeAdminAction("create"),
+  async (req, res) => {
+    const { title, description, admin_id, _token } = req.body;
+    if (!title || !description || !admin_id || !_token) {
+      return res.status(400).json({
+        status: false,
+        message: `Missing required fields: ${!title ? "Title" : ""} ${
+          !description ? "Description" : ""
+        } ${!admin_id ? "Admin ID" : ""} ${!_token ? "Token" : ""}`,
+      });
+    }
+
+    try {
+      const result = await Package.create(title, description, admin_id);
+      await Common.adminActivityLog(
         admin_id,
         "Package",
         "Create",
         "1",
         `{id: ${result.insertId}}`,
-        null,
-        () => { }
+        null
       );
-
       res.json({
         status: true,
         message: "Package created successfully",
         package: result,
-        token: newToken
+        token: req.newToken,
       });
-    });
-  });
-};
+    } catch (err) {
+      console.error("Database error:", err);
+      await Common.adminActivityLog(
+        admin_id,
+        "Package",
+        "Create",
+        "0",
+        null,
+        err.message
+      );
+      res.status(500).json({ status: false, message: err.message });
+    }
+  },
+];
 
 // Controller to list all packages
-exports.list = (req, res) => {
-  const { admin_id, _token } = req.query;
-
-  let missingFields = [];
-  if (!admin_id) missingFields.push("Admin ID");
-  if (!_token) missingFields.push("Token");
-
-  if (missingFields.length > 0) {
-    return res.status(400).json({
-      status: false,
-      message: `Missing required fields: ${missingFields.join(", ")}`,
-    });
-  }
-
-  Common.isAdminTokenValid(_token, admin_id, (err, result) => {
-    if (err) {
-      console.error("Error checking token validity:", err);
-      return res.status(500).json(err);
-    }
-
-    if (!result.status) {
-      return res.status(401).json({ status: false, message: result.message });
-    }
-
-    const newToken = result.newToken;
-
-    Package.list((err, result) => {
-      if (err) {
-        console.error("Database error:", err);
-        return res.status(500).json({ status: false, message: err.message });
-      }
-
+exports.list = [
+  validateAdminAndToken,
+  async (req, res) => {
+    try {
+      const result = await Package.list();
       res.json({
         status: true,
         message: "Packages fetched successfully",
         packages: result,
         totalResults: result.length,
-        token: newToken
+        token: req.newToken,
       });
-    });
-  });
-};
+    } catch (err) {
+      console.error("Database error:", err);
+      res.status(500).json({ status: false, message: err.message });
+    }
+  },
+];
 
 // Controller to get a package by ID
-exports.getPackageById = (req, res) => {
-  const { id, admin_id, _token } = req.query;
-  let missingFields = [];
-  if (!id) missingFields.push("Package ID");
-  if (!admin_id) missingFields.push("Admin ID");
-  if (!_token) missingFields.push("Token");
-
-  if (missingFields.length > 0) {
-    return res.status(400).json({
-      status: false,
-      message: `Missing required fields: ${missingFields.join(", ")}`,
-    });
-  }
-
-  Common.isAdminTokenValid(_token, admin_id, (err, result) => {
-    if (err) {
-      console.error("Error checking token validity:", err);
-      return res.status(500).json(err);
+exports.getPackageById = [
+  validateAdminAndToken,
+  async (req, res) => {
+    const { id } = req.query;
+    if (!id) {
+      return res
+        .status(400)
+        .json({ status: false, message: "Missing Package ID" });
     }
 
-    if (!result.status) {
-      return res.status(401).json({ status: false, message: result.message });
-    }
-
-    const newToken = result.newToken;
-
-    Package.getPackageById(id, (err, currentPackage) => {
-      if (err) {
-        console.error("Error fetching package data:", err);
-        return res.status(500).json(err);
-      }
-
+    try {
+      const currentPackage = await Package.getPackageById(id);
       if (!currentPackage) {
-        return res.status(404).json({
-          status: false,
-          message: "Package not found",
-        });
+        return res
+          .status(404)
+          .json({ status: false, message: "Package not found" });
       }
-
       res.json({
         status: true,
         message: "Package retrieved successfully",
         package: currentPackage,
-        token: newToken
+        token: req.newToken,
       });
-    });
-  });
-};
+    } catch (err) {
+      console.error("Error fetching package data:", err);
+      res.status(500).json(err);
+    }
+  },
+];
 
 // Controller to update a package
-exports.update = (req, res) => {
-  const { id, title, description, admin_id, _token } = req.body;
-
-  let missingFields = [];
-  if (!id) missingFields.push("Package ID");
-  if (!title) missingFields.push("Title");
-  if (!description) missingFields.push("Description");
-  if (!admin_id) missingFields.push("Admin ID");
-  if (!_token) missingFields.push("Token");
-
-  if (missingFields.length > 0) {
-    return res.status(400).json({
-      status: false,
-      message: `Missing required fields: ${missingFields.join(", ")}`,
-    });
-  }
-
-  Common.isAdminTokenValid(_token, admin_id, (err, result) => {
-    if (err) {
-      console.error("Error checking token validity:", err);
-      return res.status(500).json(err);
+exports.update = [
+  validateAdminAndToken,
+  authorizeAdminAction("update"),
+  async (req, res) => {
+    const { id, title, description, admin_id } = req.body;
+    if (!id || !title || !description || !admin_id) {
+      return res.status(400).json({
+        status: false,
+        message: `Missing required fields: ${!id ? "Package ID" : ""} ${
+          !title ? "Title" : ""
+        } ${!description ? "Description" : ""} ${!admin_id ? "Admin ID" : ""}`,
+      });
     }
 
-    if (!result.status) {
-      return res.status(401).json({ status: false, message: result.message });
-    }
-
-    const newToken = result.newToken;
-
-    Package.getPackageById(id, (err, currentPackage) => {
-      if (err) {
-        console.error("Error fetching package data:", err);
-        return res.status(500).json(err);
-      }
-
+    try {
+      const currentPackage = await Package.getPackageById(id);
       const changes = {};
       if (currentPackage.title !== title) {
-        changes.title = {
-          old: currentPackage.title,
-          new: title,
-        };
+        changes.title = { old: currentPackage.title, new: title };
       }
       if (currentPackage.description !== description) {
         changes.description = {
@@ -209,107 +178,84 @@ exports.update = (req, res) => {
         };
       }
 
-      Package.update(id, title, description, (err, result) => {
-        if (err) {
-          console.error("Database error:", err);
-          Common.adminActivityLog(
-            admin_id,
-            "Package",
-            "Update",
-            "0",
-            JSON.stringify({ id, ...changes }),
-            err.message,
-            () => { }
-          );
-          return res.status(500).json({ status: false, message: err.message });
-        }
-
-        Common.adminActivityLog(
-          admin_id,
-          "Package",
-          "Update",
-          "1",
-          JSON.stringify({ id, ...changes }),
-          null,
-          () => { }
-        );
-
-        res.json({
-          status: true,
-          message: "Package updated successfully",
-          package: result,
-          token: newToken
-        });
+      await Package.update(id, title, description);
+      await Common.adminActivityLog(
+        admin_id,
+        "Package",
+        "Update",
+        "1",
+        JSON.stringify({ id, ...changes }),
+        null
+      );
+      res.json({
+        status: true,
+        message: "Package updated successfully",
+        package: await Package.getPackageById(id),
+        token: req.newToken,
       });
-    });
-  });
-};
+    } catch (err) {
+      console.error("Database error:", err);
+      await Common.adminActivityLog(
+        admin_id,
+        "Package",
+        "Update",
+        "0",
+        JSON.stringify({ id, ...changes }),
+        err.message
+      );
+      res.status(500).json({ status: false, message: err.message });
+    }
+  },
+];
 
 // Controller to delete a package
-exports.delete = (req, res) => {
-  const { id, admin_id, _token } = req.query;
-
-  let missingFields = [];
-  if (!id) missingFields.push("Package ID");
-  if (!admin_id) missingFields.push("Admin ID");
-  if (!_token) missingFields.push("Token");
-
-  if (missingFields.length > 0) {
-    return res.status(400).json({
-      status: false,
-      message: `Missing required fields: ${missingFields.join(", ")}`,
-    });
-  }
-
-  Common.isAdminTokenValid(_token, admin_id, (err, result) => {
-    if (err) {
-      console.error("Error checking token validity:", err);
-      return res.status(500).json(err);
+exports.delete = [
+  validateAdminAndToken,
+  authorizeAdminAction("delete"),
+  async (req, res) => {
+    const { id, admin_id } = req.query;
+    if (!id || !admin_id) {
+      return res.status(400).json({
+        status: false,
+        message: `Missing required fields: ${!id ? "Package ID" : ""} ${
+          !admin_id ? "Admin ID" : ""
+        }`,
+      });
     }
 
-    if (!result.status) {
-      return res.status(401).json({ status: false, message: result.message });
-    }
-
-    const newToken = result.newToken;
-
-    Package.getPackageById(id, (err, currentPackage) => {
-      if (err) {
-        console.error("Error fetching package data:", err);
-        return res.status(500).json(err);
+    try {
+      const currentPackage = await Package.getPackageById(id);
+      if (!currentPackage) {
+        return res
+          .status(404)
+          .json({ status: false, message: "Package not found" });
       }
 
-      Package.delete(id, (err, result) => {
-        if (err) {
-          console.error("Database error:", err);
-          Common.adminActivityLog(
-            admin_id,
-            "Package",
-            "Delete",
-            "0",
-            JSON.stringify({ id, ...currentPackage }),
-            err.message,
-            () => { }
-          );
-          return res.status(500).json({ status: false, message: err.message });
-        }
-
-        Common.adminActivityLog(
-          admin_id,
-          "Package",
-          "Delete",
-          "1",
-          null,
-          JSON.stringify(currentPackage),
-          () => { }
-        );
-
-        res.json({
-          status: true,
-          message: "Package deleted successfully",
-          token: newToken
-        });
+      await Package.delete(id);
+      await Common.adminActivityLog(
+        admin_id,
+        "Package",
+        "Delete",
+        "1",
+        null,
+        JSON.stringify(currentPackage)
+      );
+      res.json({
+        status: true,
+        message: "Package deleted successfully",
+        token: req.newToken,
       });
-    });
-  });
-};
+    } catch (err) {
+      console.error("Database error:", err);
+      await Common.adminActivityLog(
+        admin_id,
+        "Package",
+        "Delete",
+        "0",
+        JSON.stringify({ id, ...currentPackage }),
+        err.message
+      );
+      res.status(500).json({ status: false, message: err.message });
+    }
+  },
+];

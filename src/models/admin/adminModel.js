@@ -1,8 +1,7 @@
-const pool = require('../../config/db');
+const pool = require("../../config/db");
 
 const Admin = {
   findByEmailOrMobile: (username, callback) => {
-
     const sql = `
       SELECT \`id\`, \`emp_id\`, \`name\`, \`profile_picture\`, \`email\`, \`mobile\`, \`status\`, \`login_token\`, \`token_expiry\`
       FROM \`admins\`
@@ -11,12 +10,15 @@ const Admin = {
 
     pool.query(sql, [username, username], (err, results) => {
       if (err) {
-        console.error('Database query error:', err);
-        return callback({ message: 'Database query error', error: err }, null);
+        console.error("Database query error:", err);
+        return callback({ message: "Database query error", error: err }, null);
       }
 
       if (results.length === 0) {
-        return callback({ message: 'No admin found with the provided email or mobile' }, null);
+        return callback(
+          { message: "No admin found with the provided email or mobile" },
+          null
+        );
       }
 
       callback(null, results);
@@ -33,12 +35,12 @@ const Admin = {
 
     pool.query(sql, [username, username, password], (err, results) => {
       if (err) {
-        console.error('Database query error:', err);
-        return callback({ message: 'Database query error', error: err }, null);
+        console.error("Database query error:", err);
+        return callback({ message: "Database query error", error: err }, null);
       }
 
       if (results.length === 0) {
-        return callback({ message: 'Incorrect password or username' }, null);
+        return callback({ message: "Incorrect password or username" }, null);
       }
 
       callback(null, results);
@@ -54,12 +56,17 @@ const Admin = {
 
     pool.query(sql, [token, tokenExpiry, id], (err, results) => {
       if (err) {
-        console.error('Database query error:', err);
-        return callback({ message: 'Database update error', error: err }, null);
+        console.error("Database query error:", err);
+        return callback({ message: "Database update error", error: err }, null);
       }
 
       if (results.affectedRows === 0) {
-        return callback({ message: 'Token update failed. Admin not found or no changes made.' }, null);
+        return callback(
+          {
+            message: "Token update failed. Admin not found or no changes made.",
+          },
+          null
+        );
       }
 
       callback(null, results);
@@ -67,7 +74,6 @@ const Admin = {
   },
 
   validateLogin: (id, callback) => {
-
     const sql = `
       SELECT \`login_token\`
       FROM \`admins\`
@@ -76,12 +82,12 @@ const Admin = {
 
     pool.query(sql, [id], (err, results) => {
       if (err) {
-        console.error('Database query error:', err);
-        return callback({ message: 'Database query error', error: err }, null);
+        console.error("Database query error:", err);
+        return callback({ message: "Database query error", error: err }, null);
       }
 
       if (results.length === 0) {
-        return callback({ message: 'Admin not found' }, null);
+        return callback({ message: "Admin not found" }, null);
       }
 
       callback(null, results);
@@ -98,17 +104,39 @@ const Admin = {
 
     pool.query(sql, [id], (err, results) => {
       if (err) {
-        console.error('Database query error:', err);
-        return callback({ message: 'Database update error', error: err }, null);
+        console.error("Database query error:", err);
+        return callback({ message: "Database update error", error: err }, null);
       }
 
       if (results.affectedRows === 0) {
-        return callback({ message: 'Token clear failed. Admin not found or no changes made.' }, null);
+        return callback(
+          {
+            message: "Token clear failed. Admin not found or no changes made.",
+          },
+          null
+        );
       }
 
       callback(null, results);
     });
-  }
+  },
+  findById: (id, callback) => {
+    const sql = `
+      SELECT \`id\`, \`emp_id\`, \`name\`, \`profile_picture\`, \`email\`, \`mobile\`, \`permissions\`, \`status\`
+      FROM \`admins\`
+      WHERE \`id\` = ?
+    `;
+    pool.query(sql, [id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback({ message: "Database query error", error: err }, null);
+      }
+      if (results.length === 0) {
+        return callback({ message: "Admin not found" }, null);
+      }
+      callback(null, results[0]); // Return the first result (should be one result if ID is unique)
+    });
+  },
 };
 
 module.exports = Admin;
