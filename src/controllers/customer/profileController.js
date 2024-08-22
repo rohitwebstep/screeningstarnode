@@ -95,174 +95,184 @@ exports.create = (req, res) => {
     });
   }
 
-  // Verify admin token
-  AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
-    if (err) {
-      console.error("Error checking token validity:", err);
-      return res.status(500).json({ status: false, message: err.message });
-    }
-
+  const action = JSON.stringify({ customer: "create" });
+  Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
-      return res.status(401).json({ status: false, message: result.message });
+      // Check the status returned by the authorization function
+      return res.status(403).json({
+        status: false,
+        message: result.message, // Return the message from the authorization function
+      });
     }
+    // Verify admin token
+    AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
+      if (err) {
+        console.error("Error checking token validity:", err);
+        return res.status(500).json({ status: false, message: err.message });
+      }
 
-    const newToken = result.newToken;
-    const password = generatePassword(company_name);
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
+      }
 
-    // Create new customer record
-    Customer.create(
-      {
-        admin_id,
-        client_unique_id: client_code,
-        client_id: client_code,
-        name: company_name,
-        address,
-        profile_picture: null,
-        email,
-        email_verified_at: null,
-        mobile_number,
-        mobile_verified_at: null,
-        password: hashPassword(password),
-        reset_password_token: null,
-        login_token: null,
-        token_expiry: null,
-        role,
-        status: "0",
-      },
-      (err, result) => {
-        if (err) {
-          console.error("Database error while creating customer:", err);
-          AdminCommon.adminActivityLog(
-            admin_id,
-            "Customer",
-            "Create",
-            "0",
-            null,
-            err.message,
-            () => {}
-          );
-          return res
-            .status(500)
-            .json({ status: false, message: "Failed to create customer." });
-        }
+      const newToken = result.newToken;
+      const password = generatePassword(company_name);
 
-        const customerId = result.insertId;
-        Customer.createCustomerMeta(
-          {
-            customer_id: customerId,
-            company_name,
-            address,
-            mobile_number,
-            email,
-            email2: cc1_email,
-            email3: cc2_email,
-            contact_person_name: contact_person,
-            role,
-            escalation_point_contact: name_of_escalation,
-            single_point_of_contact: client_spoc,
-            gst_number: gstin,
-            agreement_date: date_agreement,
-            agreement_duration: Agreement_Period,
-            agreement_document,
-            status: "0",
-            state,
-            state_code,
-            additional_login,
-            username:
-              additional_login && additional_login.toLowerCase() === "yes"
-                ? username
-                : null,
-            custom_template,
-            custom_logo:
-              custom_template && custom_template.toLowerCase() === "yes"
-                ? custom_logo
-                : null,
-            custom_address:
-              custom_template && custom_template.toLowerCase() === "yes"
-                ? custom_address
-                : null,
-            record_creation_date: new Date(),
-          },
-          (err, metaResult) => {
-            if (err) {
-              console.error(
-                "Database error while creating customer meta:",
-                err
-              );
-              AdminCommon.adminActivityLog(
-                admin_id,
-                "Customer Meta",
-                "Create",
-                "0",
-                `{id: ${customerId}}`,
-                err.message,
-                () => {}
-              );
-              return res.status(500).json({
-                status: false,
-                message: err.error,
-              });
-            }
-
-            // Iterate over branches array to create branch records
-            const branchCreationPromises = branches.map(
-              (branch, index) =>
-                new Promise((resolve, reject) => {
-                  Branch.create(
-                    {
-                      customer_id: customerId,
-                      name: branch.branch_name,
-                      email: branch.branch_email,
-                      head: index === 0 ? 1 : 0, // Set head to 1 for the first branch, 0 for others
-                    },
-                    (err, branchResult) => {
-                      if (err) {
-                        console.error(
-                          "Error creating branch:",
-                          branch.branch_name,
-                          err
-                        );
-                        return reject(err);
-                      }
-                      resolve(branchResult);
-                    }
-                  );
-                })
+      // Create new customer record
+      Customer.create(
+        {
+          admin_id,
+          client_unique_id: client_code,
+          client_id: client_code,
+          name: company_name,
+          address,
+          profile_picture: null,
+          email,
+          email_verified_at: null,
+          mobile_number,
+          mobile_verified_at: null,
+          password: hashPassword(password),
+          reset_password_token: null,
+          login_token: null,
+          token_expiry: null,
+          role,
+          status: "0",
+        },
+        (err, result) => {
+          if (err) {
+            console.error("Database error while creating customer:", err);
+            AdminCommon.adminActivityLog(
+              admin_id,
+              "Customer",
+              "Create",
+              "0",
+              null,
+              err.message,
+              () => {}
             );
+            return res
+              .status(500)
+              .json({ status: false, message: "Failed to create customer." });
+          }
 
-            Promise.all(branchCreationPromises)
-              .then((branchResults) => {
+          const customerId = result.insertId;
+          Customer.createCustomerMeta(
+            {
+              customer_id: customerId,
+              company_name,
+              address,
+              mobile_number,
+              email,
+              email2: cc1_email,
+              email3: cc2_email,
+              contact_person_name: contact_person,
+              role,
+              escalation_point_contact: name_of_escalation,
+              single_point_of_contact: client_spoc,
+              gst_number: gstin,
+              agreement_date: date_agreement,
+              agreement_duration: Agreement_Period,
+              agreement_document,
+              status: "0",
+              state,
+              state_code,
+              additional_login,
+              username:
+                additional_login && additional_login.toLowerCase() === "yes"
+                  ? username
+                  : null,
+              custom_template,
+              custom_logo:
+                custom_template && custom_template.toLowerCase() === "yes"
+                  ? custom_logo
+                  : null,
+              custom_address:
+                custom_template && custom_template.toLowerCase() === "yes"
+                  ? custom_address
+                  : null,
+              record_creation_date: new Date(),
+            },
+            (err, metaResult) => {
+              if (err) {
+                console.error(
+                  "Database error while creating customer meta:",
+                  err
+                );
                 AdminCommon.adminActivityLog(
                   admin_id,
-                  "Customer",
+                  "Customer Meta",
                   "Create",
-                  "1",
+                  "0",
                   `{id: ${customerId}}`,
-                  null,
+                  err.message,
                   () => {}
                 );
-
-                res.json({
-                  status: true,
-                  message: "Customer and branches created successfully",
-                  data: {
-                    customer: result,
-                    meta: metaResult,
-                    branches: branchResults,
-                  },
-                  _token: newToken,
-                });
-              })
-              .catch((branchError) => {
-                console.error("Error creating branches:", branchError);
-                res.status(500).json({
+                return res.status(500).json({
                   status: false,
-                  message: branchError,
+                  message: err.error,
                 });
-              });
-          }
-        );
-      }
-    );
+              }
+
+              // Iterate over branches array to create branch records
+              const branchCreationPromises = branches.map(
+                (branch, index) =>
+                  new Promise((resolve, reject) => {
+                    Branch.create(
+                      {
+                        customer_id: customerId,
+                        name: branch.branch_name,
+                        email: branch.branch_email,
+                        head: index === 0 ? 1 : 0, // Set head to 1 for the first branch, 0 for others
+                      },
+                      (err, branchResult) => {
+                        if (err) {
+                          console.error(
+                            "Error creating branch:",
+                            branch.branch_name,
+                            err
+                          );
+                          return reject(err);
+                        }
+                        resolve(branchResult);
+                      }
+                    );
+                  })
+              );
+
+              Promise.all(branchCreationPromises)
+                .then((branchResults) => {
+                  AdminCommon.adminActivityLog(
+                    admin_id,
+                    "Customer",
+                    "Create",
+                    "1",
+                    `{id: ${customerId}}`,
+                    null,
+                    () => {}
+                  );
+
+                  res.json({
+                    status: true,
+                    message: "Customer and branches created successfully",
+                    data: {
+                      customer: result,
+                      meta: metaResult,
+                      branches: branchResults,
+                    },
+                    _token: newToken,
+                  });
+                })
+                .catch((branchError) => {
+                  console.error("Error creating branches:", branchError);
+                  res.status(500).json({
+                    status: false,
+                    message: branchError,
+                  });
+                });
+            }
+          );
+        }
+      );
+    });
   });
 };

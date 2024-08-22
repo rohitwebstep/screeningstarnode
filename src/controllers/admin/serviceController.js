@@ -18,48 +18,59 @@ exports.create = (req, res) => {
     });
   }
 
-  Common.isAdminTokenValid(_token, admin_id, (err, result) => {
-    if (err) {
-      console.error("Error checking token validity:", err);
-      return res.status(500).json(err);
-    }
-
+  const action = JSON.stringify({ service: "create" });
+  Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
-      return res.status(401).json({ status: false, message: result.message });
+      // Check the status returned by the authorization function
+      return res.status(403).json({
+        status: false,
+        message: result.message, // Return the message from the authorization function
+      });
     }
 
-    const newToken = result.newToken;
-
-    Service.create(title, description, admin_id, (err, result) => {
+    Common.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
-        console.error("Database error:", err);
+        console.error("Error checking token validity:", err);
+        return res.status(500).json(err);
+      }
+
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
+      }
+
+      const newToken = result.newToken;
+
+      Service.create(title, description, admin_id, (err, result) => {
+        if (err) {
+          console.error("Database error:", err);
+          Common.adminActivityLog(
+            admin_id,
+            "Service",
+            "Create",
+            "0",
+            null,
+            err.message,
+            () => {}
+          );
+          return res.status(500).json({ status: false, message: err.message });
+        }
+
         Common.adminActivityLog(
           admin_id,
           "Service",
           "Create",
-          "0",
+          "1",
+          `{id: ${result.insertId}}`,
           null,
-          err.message,
           () => {}
         );
-        return res.status(500).json({ status: false, message: err.message });
-      }
 
-      Common.adminActivityLog(
-        admin_id,
-        "Service",
-        "Create",
-        "1",
-        `{id: ${result.insertId}}`,
-        null,
-        () => {}
-      );
-
-      res.json({
-        status: true,
-        message: "Service created successfully",
-        service: result,
-        token: newToken,
+        res.json({
+          status: true,
+          message: "Service created successfully",
+          service: result,
+          token: newToken,
+        });
       });
     });
   });
@@ -175,69 +186,80 @@ exports.update = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-
-  Common.isAdminTokenValid(_token, admin_id, (err, result) => {
-    if (err) {
-      console.error("Error checking token validity:", err);
-      return res.status(500).json(err);
-    }
-
+  const action = JSON.stringify({ service: "update" });
+  Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
-      return res.status(401).json({ status: false, message: result.message });
+      // Check the status returned by the authorization function
+      return res.status(403).json({
+        status: false,
+        message: result.message, // Return the message from the authorization function
+      });
     }
-
-    const newToken = result.newToken;
-
-    Service.getServiceById(id, (err, currentService) => {
+    Common.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
-        console.error("Error fetching service data:", err);
+        console.error("Error checking token validity:", err);
         return res.status(500).json(err);
       }
 
-      const changes = {};
-      if (currentService.title !== title) {
-        changes.title = {
-          old: currentService.title,
-          new: title,
-        };
-      }
-      if (currentService.description !== description) {
-        changes.description = {
-          old: currentService.description,
-          new: description,
-        };
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
       }
 
-      Service.update(id, title, description, (err, result) => {
+      const newToken = result.newToken;
+
+      Service.getServiceById(id, (err, currentService) => {
         if (err) {
-          console.error("Database error:", err);
+          console.error("Error fetching service data:", err);
+          return res.status(500).json(err);
+        }
+
+        const changes = {};
+        if (currentService.title !== title) {
+          changes.title = {
+            old: currentService.title,
+            new: title,
+          };
+        }
+        if (currentService.description !== description) {
+          changes.description = {
+            old: currentService.description,
+            new: description,
+          };
+        }
+
+        Service.update(id, title, description, (err, result) => {
+          if (err) {
+            console.error("Database error:", err);
+            Common.adminActivityLog(
+              admin_id,
+              "Service",
+              "Update",
+              "0",
+              JSON.stringify({ id, ...changes }),
+              err.message,
+              () => {}
+            );
+            return res
+              .status(500)
+              .json({ status: false, message: err.message });
+          }
+
           Common.adminActivityLog(
             admin_id,
             "Service",
             "Update",
-            "0",
+            "1",
             JSON.stringify({ id, ...changes }),
-            err.message,
+            null,
             () => {}
           );
-          return res.status(500).json({ status: false, message: err.message });
-        }
 
-        Common.adminActivityLog(
-          admin_id,
-          "Service",
-          "Update",
-          "1",
-          JSON.stringify({ id, ...changes }),
-          null,
-          () => {}
-        );
-
-        res.json({
-          status: true,
-          message: "Service updated successfully",
-          service: result,
-          token: newToken,
+          res.json({
+            status: true,
+            message: "Service updated successfully",
+            service: result,
+            token: newToken,
+          });
         });
       });
     });
@@ -259,54 +281,65 @@ exports.delete = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-
-  Common.isAdminTokenValid(_token, admin_id, (err, result) => {
-    if (err) {
-      console.error("Error checking token validity:", err);
-      return res.status(500).json(err);
-    }
-
+  const action = JSON.stringify({ service: "delete" });
+  Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
-      return res.status(401).json({ status: false, message: result.message });
+      // Check the status returned by the authorization function
+      return res.status(403).json({
+        status: false,
+        message: result.message, // Return the message from the authorization function
+      });
     }
-
-    const newToken = result.newToken;
-
-    Service.getServiceById(id, (err, currentService) => {
+    Common.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
-        console.error("Error fetching service data:", err);
+        console.error("Error checking token validity:", err);
         return res.status(500).json(err);
       }
 
-      Service.delete(id, (err, result) => {
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
+      }
+
+      const newToken = result.newToken;
+
+      Service.getServiceById(id, (err, currentService) => {
         if (err) {
-          console.error("Database error:", err);
+          console.error("Error fetching service data:", err);
+          return res.status(500).json(err);
+        }
+
+        Service.delete(id, (err, result) => {
+          if (err) {
+            console.error("Database error:", err);
+            Common.adminActivityLog(
+              admin_id,
+              "Service",
+              "Delete",
+              "0",
+              JSON.stringify({ id, ...currentService }),
+              err.message,
+              () => {}
+            );
+            return res
+              .status(500)
+              .json({ status: false, message: err.message });
+          }
+
           Common.adminActivityLog(
             admin_id,
             "Service",
             "Delete",
-            "0",
-            JSON.stringify({ id, ...currentService }),
-            err.message,
+            "1",
+            JSON.stringify(currentService),
+            null,
             () => {}
           );
-          return res.status(500).json({ status: false, message: err.message });
-        }
 
-        Common.adminActivityLog(
-          admin_id,
-          "Service",
-          "Delete",
-          "1",
-          JSON.stringify(currentService),
-          null,
-          () => {}
-        );
-
-        res.json({
-          status: true,
-          message: "Service deleted successfully",
-          token: newToken,
+          res.json({
+            status: true,
+            message: "Service deleted successfully",
+            token: newToken,
+          });
         });
       });
     });
