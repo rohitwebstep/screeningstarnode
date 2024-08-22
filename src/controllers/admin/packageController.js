@@ -108,7 +108,7 @@ exports.create = async (req, res) => {
       null,
       err.message
     );
-    res.status(500).json({ status: false, message: err.message });
+    res.status(500).json({ status: false, message: err });
   }
 };
 
