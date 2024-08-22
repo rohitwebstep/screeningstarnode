@@ -23,8 +23,8 @@ exports.create = (req, res) => {
     company_name,
     client_code,
     address,
-    state,
     state_code,
+    state,
     mobile_number,
     email,
     cc1_email,
@@ -36,10 +36,13 @@ exports.create = (req, res) => {
     gstin,
     tat,
     date_agreement,
-    client_standard,
     Agreement_Period,
+    client_standard,
     agreement_document,
     additional_login,
+    custom_template,
+    custom_logo,
+    custom_address,
     username,
     branches,
   } = req.body;
@@ -73,6 +76,11 @@ exports.create = (req, res) => {
 
   if (additional_login && additional_login.toLowerCase() === "yes") {
     requiredFields.username = username;
+  }
+
+  if (custom_template && custom_template.toLowerCase() === "yes") {
+    requiredFields.custom_logo = custom_logo;
+    requiredFields.custom_address = custom_address;
   }
 
   // Check for missing fields
@@ -163,6 +171,15 @@ exports.create = (req, res) => {
             username:
               additional_login && additional_login.toLowerCase() === "yes"
                 ? username
+                : null,
+            custom_template,
+            custom_logo:
+              custom_template && custom_template.toLowerCase() === "yes"
+                ? custom_logo
+                : null,
+            custom_address:
+              custom_template && custom_template.toLowerCase() === "yes"
+                ? custom_address
                 : null,
             record_creation_date: new Date(),
           },
