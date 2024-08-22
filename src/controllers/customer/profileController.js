@@ -161,7 +161,6 @@ exports.create = (req, res) => {
             email,
             email2: cc1_email,
             email3: cc2_email,
-            email4: null,
             contact_person_name: contact_person,
             role,
             escalation_point_contact: name_of_escalation,

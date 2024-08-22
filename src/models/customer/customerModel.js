@@ -54,7 +54,7 @@ const Customer = {
     const sqlCustomerMetas = `
       INSERT INTO \`customer_metas\` (
         \`customer_id\`, \`company_name\`, \`address\`, \`phone_number\`, \`email\`,
-        \`email2\`, \`email3\`, \`email4\`, \`username\`,
+        \`email2\`, \`email3\`, \`username\`,
         \`contact_person_name\`, \`contact_person_title\`, \`escalation_point_contact\`,
         \`single_point_of_contact\`, \`gst_number\`, \`tat_days\`, \`service_description\`,
         \`service_fee\`, \`agreement_date\`, \`agreement_duration\`,
@@ -62,7 +62,7 @@ const Customer = {
         \`status\`, \`state\`, \`state_code\`, \`additional_login\`,
         \`standard_operating_procedures\`, \`package_category\`,
         \`service_codes\`, \`payment_contact_person\`, \`created_at\`, \`updated_at\`
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const valuesCustomerMetas = [
@@ -73,7 +73,6 @@ const Customer = {
       metaData.email,
       metaData.email2,
       metaData.email3,
-      metaData.email4,
       metaData.username,
       metaData.contact_person_name,
       metaData.contact_person_title,
