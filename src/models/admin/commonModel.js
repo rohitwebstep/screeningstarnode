@@ -12,28 +12,19 @@ const common = {
    * Validates the admin's token and refreshes it if expired.
    * @param {string} _token - Provided token
    * @param {number} admin_id - Admin ID
-   * @param {function} callback - Callback function
+   * @returns {Promise<{status: boolean, message: string, newToken?: string}>}
    */
-  isAdminTokenValid: (_token, admin_id, callback) => {
-    if (typeof callback !== "function") {
-      console.error("Callback is not a function");
-      return;
-    }
-
-    const sql = `
-      SELECT \`login_token\`, \`token_expiry\`
-      FROM \`admins\`
-      WHERE \`id\` = ?
-    `;
-
-    pool.query(sql, [admin_id], (err, results) => {
-      if (err) {
-        console.error("Database query error:", err);
-        return callback({ status: false, message: "Database error" }, null);
-      }
+  isAdminTokenValid: async (_token, admin_id) => {
+    try {
+      const sql = `
+        SELECT \`login_token\`, \`token_expiry\`
+        FROM \`admins\`
+        WHERE \`id\` = ?
+      `;
+      const [results] = await pool.query(sql, [admin_id]);
 
       if (results.length === 0) {
-        return callback({ status: false, message: "Admin not found" }, null);
+        return { status: false, message: "Admin not found" };
       }
 
       const currentToken = results[0].login_token;
@@ -41,14 +32,11 @@ const common = {
       const currentTime = new Date();
 
       if (_token !== currentToken) {
-        return callback(
-          { status: false, message: "Invalid token provided" },
-          null
-        );
+        return { status: false, message: "Invalid token provided" };
       }
 
       if (tokenExpiry > currentTime) {
-        callback(null, { status: true, message: "Token is valid" });
+        return { status: true, message: "Token is valid" };
       } else {
         const newToken = generateToken();
         const newTokenExpiry = getTokenExpiry();
@@ -59,27 +47,18 @@ const common = {
           WHERE \`id\` = ?
         `;
 
-        pool.query(
-          updateSql,
-          [newToken, newTokenExpiry, admin_id],
-          (updateErr) => {
-            if (updateErr) {
-              console.error("Error updating token:", updateErr);
-              return callback(
-                { status: false, message: "Error updating token" },
-                null
-              );
-            }
+        await pool.query(updateSql, [newToken, newTokenExpiry, admin_id]);
 
-            callback(null, {
-              status: true,
-              message: "Token was expired and has been refreshed",
-              newToken,
-            });
-          }
-        );
+        return {
+          status: true,
+          message: "Token was expired and has been refreshed",
+          newToken,
+        };
       }
-    });
+    } catch (err) {
+      console.error("Error checking or updating token validity:", err);
+      return { status: false, message: "Database error: " + err.message };
+    }
   },
 
   /**
@@ -88,30 +67,25 @@ const common = {
    * @param {string} action - Action performed
    * @param {string} result - Result of the action
    * @param {string} error - Error message if any
-   * @param {function} callback - Callback function
+   * @returns {Promise<{status: boolean, message: string}>}
    */
-  adminLoginLog: (admin_id, action, result, error, callback) => {
-    if (typeof callback !== "function") {
-      console.error("Callback is not a function");
-      return;
-    }
+  adminLoginLog: async (admin_id, action, result, error) => {
+    try {
+      const insertSql = `
+        INSERT INTO \`admin_login_logs\` (\`admin_id\`, \`action\`, \`result\`, \`error\`, \`created_at\`)
+        VALUES (?, ?, ?, ?, NOW())
+      `;
 
-    const insertSql = `
-      INSERT INTO \`admin_login_logs\` (\`admin_id\`, \`action\`, \`result\`, \`error\`, \`created_at\`)
-      VALUES (?, ?, ?, ?, NOW())
-    `;
+      await pool.query(insertSql, [admin_id, action, result, error]);
 
-    pool.query(insertSql, [admin_id, action, result, error], (err) => {
-      if (err) {
-        console.error("Database insertion error:", err);
-        return callback({ status: false, message: "Database error" }, null);
-      }
-
-      callback(null, {
+      return {
         status: true,
         message: "Admin login log entry added successfully",
-      });
-    });
+      };
+    } catch (err) {
+      console.error("Database insertion error:", err);
+      return { status: false, message: "Database error: " + err.message };
+    }
   },
 
   /**
@@ -122,55 +96,50 @@ const common = {
    * @param {string} result - Result of the action
    * @param {string} update - Update description
    * @param {string} error - Error message if any
-   * @param {function} callback - Callback function
+   * @returns {Promise<{status: boolean, message: string}>}
    */
-  adminActivityLog: (
-    admin_id,
-    module,
-    action,
-    result,
-    update,
-    error,
-    callback
-  ) => {
-    if (typeof callback !== "function") {
-      console.error("Callback is not a function");
-      return;
-    }
+  adminActivityLog: async (admin_id, module, action, result, update, error) => {
+    try {
+      const insertSql = `
+        INSERT INTO \`admin_activity_logs\` (\`admin_id\`, \`module\`, \`action\`, \`result\`, \`update\`, \`error\`, \`created_at\`)
+        VALUES (?, ?, ?, ?, ?, ?, NOW())
+      `;
+      await pool.query(insertSql, [
+        admin_id,
+        module,
+        action,
+        result,
+        update,
+        error,
+      ]);
 
-    const insertSql = `
-      INSERT INTO \`admin_activity_logs\` (\`admin_id\`, \`module\`, \`action\`, \`result\`, \`update\`, \`error\`, \`created_at\`)
-      VALUES (?, ?, ?, ?, ?, ?, NOW())
-    `;
-    pool.query(
-      insertSql,
-      [admin_id, module, action, result, update, error],
-      (err) => {
-        if (err) {
-          console.error("Database insertion error:", err);
-          return callback({ status: false, message: "Database error" }, null);
-        }
-        callback(null, {
-          status: true,
-          message: "Admin activity log entry added successfully",
-        });
-      }
-    );
+      return {
+        status: true,
+        message: "Admin activity log entry added successfully",
+      };
+    } catch (err) {
+      console.error("Database insertion error:", err);
+      return { status: false, message: "Database error: " + err.message };
+    }
   },
 
-  isAdminAuthorizedForAction: (admin_id, action, callback) => {
-    const sql = `
-      SELECT \`permissions\`
-      FROM \`admins\`
-      WHERE \`id\` = ?
-    `;
-    pool.query(sql, [admin_id], (err, results) => {
-      if (err) {
-        console.error("Database query error:", err);
-        return callback({ message: "Database query error", error: err }, null);
-      }
+  /**
+   * Checks if the admin is authorized for a specific action.
+   * @param {number} admin_id - Admin ID
+   * @param {string} action - Action to check authorization for
+   * @returns {Promise<boolean>}
+   */
+  isAdminAuthorizedForAction: async (admin_id, action) => {
+    try {
+      const sql = `
+        SELECT \`permissions\`
+        FROM \`admins\`
+        WHERE \`id\` = ?
+      `;
+      const [results] = await pool.query(sql, [admin_id]);
+
       if (results.length === 0) {
-        return callback({ message: "Admin not found" }, null);
+        throw new Error("Admin not found");
       }
 
       const permissions = JSON.parse(results[0].permissions); // Parse permissions JSON
@@ -180,15 +149,17 @@ const common = {
       const [actionType, actionName] = Object.entries(actionObj)[0] || [];
 
       if (!actionType || !actionName) {
-        return callback(null, false); // Invalid action format
+        return false; // Invalid action format
       }
 
       // Check if the action type exists and if the action name is true
-      const isAuthorized =
-        permissions[actionType] && permissions[actionType][actionName] === true;
-
-      callback(null, isAuthorized);
-    });
+      return (
+        permissions[actionType] && permissions[actionType][actionName] === true
+      );
+    } catch (err) {
+      console.error("Database query error:", err);
+      return false;
+    }
   },
 };
 
