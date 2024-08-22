@@ -53,7 +53,7 @@ const Customer = {
   createCustomerMeta: (metaData, callback) => {
     const sqlCustomerMetas = `
       INSERT INTO \`customer_metas\` (
-        \`customer_id\`, \`company_name\`, \`address\`, \`phone_number\`, \`email\`,
+        \`customer_id\`, \`company_name\`, \`address\`, \`email\`,
         \`email2\`, \`email3\`, \`username\`,
         \`contact_person_name\`, \`contact_person_title\`, \`escalation_point_contact\`,
         \`single_point_of_contact\`, \`gst_number\`, \`tat_days\`, \`service_description\`,
@@ -62,14 +62,13 @@ const Customer = {
         \`status\`, \`state\`, \`state_code\`, \`additional_login\`,
         \`standard_operating_procedures\`, \`package_category\`,
         \`service_codes\`, \`payment_contact_person\`, \`created_at\`, \`updated_at\`
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const valuesCustomerMetas = [
       metaData.customer_id,
       metaData.company_name,
       metaData.address,
-      metaData.phone_number,
       metaData.email,
       metaData.email2,
       metaData.email3,
