@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const Customer = require("../../models/customer/customerModel");
+const Branch = require("../../models/customer/branch/branchModel");
 const AdminCommon = require("../../models/admin/commonModel");
 
 // Helper function to generate a password
@@ -187,42 +188,77 @@ exports.create = (req, res) => {
               );
               AdminCommon.adminActivityLog(
                 admin_id,
-                "Customer",
-                "CreateMeta",
+                "Customer Meta",
+                "Create",
                 "0",
                 `{id: ${customerId}}`,
                 err.message,
                 () => {}
               );
-              return res
-                .status(500)
-                .json({
-                  status: false,
-                  message: err.error,
-                });
+              return res.status(500).json({
+                status: false,
+                message: err.error,
+              });
             }
 
             console.log("Customer meta created successfully.");
 
-            AdminCommon.adminActivityLog(
-              admin_id,
-              "Customer",
-              "Create",
-              "1",
-              `{id: ${customerId}}`,
-              null,
-              () => {}
+            // Iterate over branches array to create branch records
+            const branchCreationPromises = branches.map(
+              (branch) =>
+                new Promise((resolve, reject) => {
+                  Branch.create(
+                    {
+                      customer_id: customerId,
+                      name: branch.branch_name,
+                      email: branch.branch_email,
+                      head: contact_person,
+                    },
+                    (err, branchResult) => {
+                      if (err) {
+                        console.error(
+                          "Error creating branch:",
+                          branch.branch_name,
+                          err
+                        );
+                        return reject(err);
+                      }
+                      resolve(branchResult);
+                    }
+                  );
+                })
             );
 
-            res.json({
-              status: true,
-              message: "Customer created successfully",
-              data: {
-                customer: result,
-                meta: metaResult,
-              },
-              _token: newToken,
-            });
+            Promise.all(branchCreationPromises)
+              .then((branchResults) => {
+                AdminCommon.adminActivityLog(
+                  admin_id,
+                  "Customer",
+                  "Create",
+                  "1",
+                  `{id: ${customerId}}`,
+                  null,
+                  () => {}
+                );
+
+                res.json({
+                  status: true,
+                  message: "Customer and branches created successfully",
+                  data: {
+                    customer: result,
+                    meta: metaResult,
+                    branches: branchResults,
+                  },
+                  _token: newToken,
+                });
+              })
+              .catch((branchError) => {
+                console.error("Error creating branches:", branchError);
+                res.status(500).json({
+                  status: false,
+                  message: "Customer created but failed to create branches.",
+                });
+              });
           }
         );
       }
