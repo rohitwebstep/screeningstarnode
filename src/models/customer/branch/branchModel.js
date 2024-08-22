@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const pool = require("../../config/db");
+const pool = require("../../../config/db");
 
 // Function to hash the password using MD5
 const hashPassword = (password) =>
