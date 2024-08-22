@@ -332,6 +332,8 @@ exports.delete = (req, res) => {
     // if (err) {
       return res.status(500).json({
         status: false,
+        err,
+        isAuthorized,
         message: `Authorization error: ${err.message}`,
       });
     // }
