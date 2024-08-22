@@ -188,6 +188,8 @@ const common = {
       const isAuthorized =
         permissions[actionType] && permissions[actionType][actionName] === true;
 
+        return callback({ permissions, actionObj, actionType, actionName, isAuthorized });
+
       if (isAuthorized) {
         callback({ status: true, message: "Action is authorized" });
       } else {
