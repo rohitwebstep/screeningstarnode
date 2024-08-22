@@ -12,7 +12,7 @@ const Customer = {
         \`client_unique_id\`, \`client_id\`, \`name\`, \`profile_picture\`, \`email\`,
         \`email_verified_at\`, \`mobile\`, \`mobile_verified_at\`, \`password\`,
         \`reset_password_token\`, \`login_token\`, \`token_expiry\`, \`role\`,
-        \`status\`, \`created_at\`, \`updated_at\`, \`admin_id\`
+        \`status\`, \`admin_id\`
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
@@ -31,8 +31,6 @@ const Customer = {
       customerData.token_expiry,
       customerData.role,
       customerData.status || "0",
-      new Date(),
-      new Date(),
       customerData.admin_id,
     ];
 
@@ -61,7 +59,7 @@ const Customer = {
         \`agreement_document\`, \`custom_template\`, \`custom_logo\`, \`custom_address\`,
         \`status\`, \`state\`, \`state_code\`, \`additional_login\`,
         \`standard_operating_procedures\`, \`package_category\`,
-        \`service_codes\`, \`payment_contact_person\`, \`created_at\`, \`updated_at\`
+        \`service_codes\`, \`payment_contact_person\`
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
@@ -95,8 +93,6 @@ const Customer = {
       metaData.package_category,
       metaData.service_codes,
       metaData.payment_contact_person,
-      new Date(),
-      new Date(),
     ];
 
     pool.query(sqlCustomerMetas, valuesCustomerMetas, (err, results) => {
