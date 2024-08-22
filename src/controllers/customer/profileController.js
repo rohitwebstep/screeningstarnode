@@ -232,6 +232,7 @@ exports.create = (req, res) => {
                     customer: result,
                     meta: metaResult,
                     branches: branchResults,
+                    head: index === 0 ? 1 : 0
                   },
                   _token: newToken,
                 });
