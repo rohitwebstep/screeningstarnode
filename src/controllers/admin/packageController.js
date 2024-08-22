@@ -29,12 +29,12 @@ exports.create = (req, res) => {
         message: `Authorization error: ${err.message}`,
       });
     }
-    if (!isAuthorized) {
+    // if (!isAuthorized) {
       return res.status(403).json({
         status: false,
         message: "Admin is not authorized to perform this action.",
       });
-    }
+    // }
 
     // Validate admin token
     Common.isAdminTokenValid(_token, admin_id, (err, tokenValidationResult) => {
