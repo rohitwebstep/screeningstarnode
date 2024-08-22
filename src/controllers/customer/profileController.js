@@ -119,7 +119,7 @@ exports.create = (req, res) => {
         login_token: null,
         token_expiry: null,
         role,
-        status: "0"
+        status: "0",
       },
       (err, result) => {
         if (err) {
@@ -135,7 +135,7 @@ exports.create = (req, res) => {
           );
           return res
             .status(500)
-            .json({ status: false, message: err.error });
+            .json({ status: false, message: "Failed to create customer." });
         }
 
         const customerId = result.insertId;
@@ -240,7 +240,8 @@ exports.create = (req, res) => {
                 console.error("Error creating branches:", branchError);
                 res.status(500).json({
                   status: false,
-                  message: "Customer created but failed to create branches.",
+                  // message: "Customer created but failed to create branches.",
+                  message: branchError,
                 });
               });
           }
