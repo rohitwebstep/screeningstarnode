@@ -145,7 +145,7 @@ exports.create = (req, res) => {
           );
           return res
             .status(500)
-            .json({ status: false, message: "Failed to create customer." });
+            .json({ status: false, message: err.message });
         }
 
         const customerId = result.insertId;
