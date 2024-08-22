@@ -128,8 +128,7 @@ exports.create = (req, res) => {
         token_expiry: null,
         role,
         status: "0",
-        created_at: new Date(),
-        updated_at: new Date(),
+        admin_id
       },
       (err, result) => {
         if (err) {
