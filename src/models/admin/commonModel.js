@@ -174,27 +174,47 @@ const common = {
         return callback({ status: false, message: "Admin not found" });
       }
 
-      const permissions = JSON.parse(results[0].permissions); // Parse permissions JSON
-      const actionObj = JSON.parse(action); // Parse action JSON
+      const permissionsJson = JSON.parse(results[0].permissions);
+      const permissions =
+        typeof permissionsJson === "string"
+          ? JSON.parse(permissionsJson)
+          : permissionsJson;
 
-      // Extract the action type and action name from the action object
+      const actionObj =
+        typeof action === "string" ? JSON.parse(action) : action;
+
+      // Extract action type and action name from the action object
       const [actionType, actionName] = Object.entries(actionObj)[0] || [];
 
+      // Check if action type and action name are valid
       if (!actionType || !actionName) {
+        console.error("Invalid action format");
         return callback({ status: false, message: "Invalid action format" });
       }
 
-      // Check if the action type exists and if the action name is true
-      const isAuthorized =
-        permissions[actionType] && permissions[actionType][actionName] === true;
-
-        return callback({ permissions, actionObj, actionType, actionName, isAuthorized });
-
-      if (isAuthorized) {
-        callback({ status: true, message: "Action is authorized" });
-      } else {
-        callback({ status: false, message: "Action is not authorized" });
+      // Check if the action type exists in the permissions object
+      if (!permissions[actionType]) {
+        console.error("Action type not found in permissions");
+        return callback({
+          status: false,
+          message: "Action type not found in permissions",
+        });
       }
+
+      // Check if the action name is authorized
+      const isAuthorized = permissions[actionType][actionName] === true;
+
+      return callback({
+        permissions,
+        actionObj,
+        actionType,
+        actionName,
+        isAuthorized,
+        status: isAuthorized,
+        message: isAuthorized
+          ? "Action is authorized"
+          : "Action is not authorized",
+      });
     });
   },
 };
