@@ -21,7 +21,7 @@ const validateAdminAndToken = async (admin_id, _token) => {
     return { success: true, newToken: result.newToken };
   } catch (err) {
     console.error("Error checking token validity:", err);
-    return { success: false, status: 500, message: err.message };
+    return { success: false, status: 500, message: err };
   }
 };
 
@@ -50,7 +50,7 @@ const authorizeAdminAction = async (admin_id, action) => {
     return { success: true };
   } catch (err) {
     console.error(`Error authorizing admin for action ${action}:`, err);
-    return { success: false, status: 500, message: err.message };
+    return { success: false, status: 500, message: err };
   }
 };
 
@@ -108,7 +108,7 @@ exports.create = async (req, res) => {
       null,
       err.message
     );
-    res.status(500).json({ status: false, message: err });
+    res.status(500).json({ status: false, message: err.message });
   }
 };
 
