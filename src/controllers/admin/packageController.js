@@ -329,12 +329,12 @@ exports.delete = (req, res) => {
 
   // Check admin authorization
   Common.isAdminAuthorizedForAction(admin_id, action, (err, isAuthorized) => {
-    if (err) {
+    // if (err) {
       return res.status(500).json({
         status: false,
         message: `Authorization error: ${err.message}`,
       });
-    }
+    // }
     if (!isAuthorized) {
       return res.status(403).json({
         status: false,
