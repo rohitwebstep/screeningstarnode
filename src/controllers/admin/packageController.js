@@ -33,7 +33,7 @@ exports.create = (req, res) => {
       return res.status(403).json({
         status: false,
         // message: "Admin is not authorized to perform this action.",
-        message: `Authorization error: ${err.message}`,
+        message: `Authorization error: ${err}`,
       });
     // }
 
