@@ -7,7 +7,7 @@ const validateAdminAndToken = async (req, res, next) => {
   if (!admin_id || !_token) {
     return res.status(400).json({
       status: false,
-      message: `Missing required fields: ${!admin_id ? "Admin ID" : ""} ${
+      message: `Missing required fields 1 : ${!admin_id ? "Admin ID" : ""} ${
         !_token ? "Token" : ""
       }`,
     });
@@ -62,7 +62,7 @@ exports.create = [
     if (!title || !description || !admin_id || !_token) {
       return res.status(400).json({
         status: false,
-        message: `Missing required fields: ${!title ? "Title" : ""} ${
+        message: `Missing required fields 2 : ${!title ? "Title" : ""} ${
           !description ? "Description" : ""
         } ${!admin_id ? "Admin ID" : ""} ${!_token ? "Token" : ""}`,
       });
@@ -159,7 +159,7 @@ exports.update = [
     if (!id || !title || !description || !admin_id) {
       return res.status(400).json({
         status: false,
-        message: `Missing required fields: ${!id ? "Package ID" : ""} ${
+        message: `Missing required fields 3 : ${!id ? "Package ID" : ""} ${
           !title ? "Title" : ""
         } ${!description ? "Description" : ""} ${!admin_id ? "Admin ID" : ""}`,
       });
@@ -217,7 +217,7 @@ exports.delete = [
     if (!id || !admin_id) {
       return res.status(400).json({
         status: false,
-        message: `Missing required fields: ${!id ? "Package ID" : ""} ${
+        message: `Missing required fields 4 : ${!id ? "Package ID" : ""} ${
           !admin_id ? "Admin ID" : ""
         }`,
       });
