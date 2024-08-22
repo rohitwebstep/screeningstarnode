@@ -168,13 +168,10 @@ const common = {
     pool.query(sql, [admin_id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
-        return callback(
-          { status: false, message: "Database query error", error: err },
-          null
-        );
+        return callback({ status: false, message: "Database query error" });
       }
       if (results.length === 0) {
-        return callback({ status: false, message: "Admin not found" }, null);
+        return callback({ status: false, message: "Admin not found" });
       }
 
       const permissions = JSON.parse(results[0].permissions); // Parse permissions JSON
@@ -184,10 +181,7 @@ const common = {
       const [actionType, actionName] = Object.entries(actionObj)[0] || [];
 
       if (!actionType || !actionName) {
-        return callback(
-          { status: false, message: "Invalid action format" },
-          null
-        );
+        return callback({ status: false, message: "Invalid action format" });
       }
 
       // Check if the action type exists and if the action name is true
@@ -195,9 +189,9 @@ const common = {
         permissions[actionType] && permissions[actionType][actionName] === true;
 
       if (isAuthorized) {
-        callback(null, { status: true, message: "Action is authorized" });
+        callback({ status: true, message: "Action is authorized" });
       } else {
-        callback(null, { status: false, message: "Action is not authorized" });
+        callback({ status: false, message: "Action is not authorized" });
       }
     });
   },
