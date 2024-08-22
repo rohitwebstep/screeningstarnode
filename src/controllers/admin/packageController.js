@@ -3,7 +3,7 @@ const Common = require("../../models/admin/commonModel");
 
 // Middleware to validate admin and token
 const validateAdminAndToken = async (req, res, next) => {
-  const { admin_id, _token } = req.query;
+  const { admin_id, _token } = req.body;
   if (!admin_id || !_token) {
     return res.status(400).json({
       status: false,
