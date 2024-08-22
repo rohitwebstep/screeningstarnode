@@ -145,7 +145,7 @@ exports.create = (req, res) => {
           );
           return res
             .status(500)
-            .json({ status: false, message: err.message });
+            .json({ status: false, message: err.error });
         }
 
         const customerId = result.insertId;
