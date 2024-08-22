@@ -5,7 +5,8 @@ const Common = require("../../models/admin/commonModel");
 exports.create = (req, res) => {
   const { title, description, admin_id, _token } = req.body;
 
-  let missingFields = [];
+  // Validate required fields
+  const missingFields = [];
   if (!title) missingFields.push("Title");
   if (!description) missingFields.push("Description");
   if (!admin_id) missingFields.push("Admin ID");
@@ -18,37 +19,46 @@ exports.create = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ customer: "create" });
+  const action = JSON.stringify({ package: "create" });
 
+  // Check admin authorization
   Common.isAdminAuthorizedForAction(admin_id, action, (err, isAuthorized) => {
     if (err) {
-      return res.status(401).json({
+      return res.status(500).json({
         status: false,
-        message: "Error checking authorization: " + err.message,
+        message: `Authorization error: ${err.message}`,
       });
     }
     if (!isAuthorized) {
-      return res.status(401).json({
+      return res.status(403).json({
         status: false,
-        message: "Admin isn't authorized for the action.",
+        message: "Admin is not authorized to perform this action.",
       });
     }
 
-    Common.isAdminTokenValid(_token, admin_id, (err, result) => {
+    // Validate admin token
+    Common.isAdminTokenValid(_token, admin_id, (err, tokenValidationResult) => {
       if (err) {
-        console.error("Error checking token validity:", err);
-        return res.status(500).json(err);
+        console.error("Token validation error:", err);
+        return res.status(500).json({
+          status: false,
+          message: "Internal server error during token validation.",
+        });
       }
 
-      if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message });
+      if (!tokenValidationResult.status) {
+        return res.status(401).json({
+          status: false,
+          message: tokenValidationResult.message,
+        });
       }
 
-      const newToken = result.newToken;
+      const newToken = tokenValidationResult.newToken;
 
+      // Create package
       Package.create(title, description, admin_id, (err, result) => {
         if (err) {
-          console.error("Database error:", err);
+          console.error("Database error during package creation:", err);
           Common.adminActivityLog(
             admin_id,
             "Package",
@@ -58,7 +68,10 @@ exports.create = (req, res) => {
             err.message,
             () => {}
           );
-          return res.status(500).json({ status: false, message: err.message });
+          return res.status(500).json({
+            status: false,
+            message: "Failed to create package. Please try again.",
+          });
         }
 
         Common.adminActivityLog(
@@ -71,9 +84,9 @@ exports.create = (req, res) => {
           () => {}
         );
 
-        res.json({
+        res.status(201).json({
           status: true,
-          message: "Package created successfully",
+          message: "Package created successfully.",
           package: result,
           token: newToken,
         });
@@ -180,7 +193,8 @@ exports.getPackageById = (req, res) => {
 exports.update = (req, res) => {
   const { id, title, description, admin_id, _token } = req.body;
 
-  let missingFields = [];
+  // Validate required fields
+  const missingFields = [];
   if (!id) missingFields.push("Package ID");
   if (!title) missingFields.push("Title");
   if (!description) missingFields.push("Description");
@@ -194,68 +208,105 @@ exports.update = (req, res) => {
     });
   }
 
-  Common.isAdminTokenValid(_token, admin_id, (err, result) => {
+  const action = JSON.stringify({ package: "update" });
+
+  // Check admin authorization
+  Common.isAdminAuthorizedForAction(admin_id, action, (err, isAuthorized) => {
     if (err) {
-      console.error("Error checking token validity:", err);
-      return res.status(500).json(err);
+      return res.status(500).json({
+        status: false,
+        message: `Authorization error: ${err.message}`,
+      });
+    }
+    if (!isAuthorized) {
+      return res.status(403).json({
+        status: false,
+        message: "Admin is not authorized to perform this action.",
+      });
     }
 
-    if (!result.status) {
-      return res.status(401).json({ status: false, message: result.message });
-    }
-
-    const newToken = result.newToken;
-
-    Package.getPackageById(id, (err, currentPackage) => {
+    // Validate admin token
+    Common.isAdminTokenValid(_token, admin_id, (err, tokenValidationResult) => {
       if (err) {
-        console.error("Error fetching package data:", err);
-        return res.status(500).json(err);
+        console.error("Token validation error:", err);
+        return res.status(500).json({
+          status: false,
+          message: "Internal server error during token validation.",
+        });
       }
 
-      const changes = {};
-      if (currentPackage.title !== title) {
-        changes.title = {
-          old: currentPackage.title,
-          new: title,
-        };
-      }
-      if (currentPackage.description !== description) {
-        changes.description = {
-          old: currentPackage.description,
-          new: description,
-        };
+      if (!tokenValidationResult.status) {
+        return res.status(401).json({
+          status: false,
+          message: tokenValidationResult.message,
+        });
       }
 
-      Package.update(id, title, description, (err, result) => {
+      const newToken = tokenValidationResult.newToken;
+
+      // Fetch the current package
+      Package.getPackageById(id, (err, currentPackage) => {
         if (err) {
-          console.error("Database error:", err);
+          console.error("Database error during package retrieval:", err);
+          return res.status(500).json({
+            status: false,
+            message: "Failed to retrieve package. Please try again.",
+          });
+        }
+
+        if (!currentPackage) {
+          return res.status(404).json({
+            status: false,
+            message: "Package not found.",
+          });
+        }
+
+        const changes = {};
+        if (currentPackage.title !== title) {
+          changes.title = { old: currentPackage.title, new: title };
+        }
+        if (currentPackage.description !== description) {
+          changes.description = {
+            old: currentPackage.description,
+            new: description,
+          };
+        }
+
+        // Update the package
+        Package.update(id, title, description, (err, result) => {
+          if (err) {
+            console.error("Database error during package update:", err);
+            Common.adminActivityLog(
+              admin_id,
+              "Package",
+              "Update",
+              "0",
+              JSON.stringify({ id, ...changes }),
+              err.message,
+              () => {}
+            );
+            return res.status(500).json({
+              status: false,
+              message: "Failed to update package. Please try again.",
+            });
+          }
+
           Common.adminActivityLog(
             admin_id,
             "Package",
             "Update",
-            "0",
+            "1",
             JSON.stringify({ id, ...changes }),
-            err.message,
+            null,
             () => {}
           );
-          return res.status(500).json({ status: false, message: err.message });
-        }
 
-        Common.adminActivityLog(
-          admin_id,
-          "Package",
-          "Update",
-          "1",
-          JSON.stringify({ id, ...changes }),
-          null,
-          () => {}
-        );
-
-        res.json({
-          status: true,
-          message: "Package updated successfully",
-          package: result,
-          token: newToken,
+          res.status(200).json({
+            status: true,
+            message: "Package updated successfully.",
+            package: result,
+            token: newToken,
+          });
         });
       });
     });
@@ -266,7 +317,8 @@ exports.update = (req, res) => {
 exports.delete = (req, res) => {
   const { id, admin_id, _token } = req.query;
 
-  let missingFields = [];
+  // Validate required fields
+  const missingFields = [];
   if (!id) missingFields.push("Package ID");
   if (!admin_id) missingFields.push("Admin ID");
   if (!_token) missingFields.push("Token");
@@ -278,53 +330,94 @@ exports.delete = (req, res) => {
     });
   }
 
-  Common.isAdminTokenValid(_token, admin_id, (err, result) => {
+  const action = JSON.stringify({ package: "delete" });
+
+  // Check admin authorization
+  Common.isAdminAuthorizedForAction(admin_id, action, (err, isAuthorized) => {
     if (err) {
-      console.error("Error checking token validity:", err);
-      return res.status(500).json(err);
+      return res.status(500).json({
+        status: false,
+        message: `Authorization error: ${err.message}`,
+      });
+    }
+    if (!isAuthorized) {
+      return res.status(403).json({
+        status: false,
+        message: "Admin is not authorized to perform this action.",
+      });
     }
 
-    if (!result.status) {
-      return res.status(401).json({ status: false, message: result.message });
-    }
-
-    const newToken = result.newToken;
-
-    Package.getPackageById(id, (err, currentPackage) => {
+    // Validate admin token
+    Common.isAdminTokenValid(_token, admin_id, (err, tokenValidationResult) => {
       if (err) {
-        console.error("Error fetching package data:", err);
-        return res.status(500).json(err);
+        console.error("Token validation error:", err);
+        return res.status(500).json({
+          status: false,
+          message: "Internal server error during token validation.",
+        });
       }
 
-      Package.delete(id, (err, result) => {
+      if (!tokenValidationResult.status) {
+        return res.status(401).json({
+          status: false,
+          message: tokenValidationResult.message,
+        });
+      }
+
+      const newToken = tokenValidationResult.newToken;
+
+      // Fetch the current package
+      Package.getPackageById(id, (err, currentPackage) => {
         if (err) {
-          console.error("Database error:", err);
+          console.error("Database error during package retrieval:", err);
+          return res.status(500).json({
+            status: false,
+            message: "Failed to retrieve package. Please try again.",
+          });
+        }
+
+        if (!currentPackage) {
+          return res.status(404).json({
+            status: false,
+            message: "Package not found.",
+          });
+        }
+
+        // Delete the package
+        Package.delete(id, (err, result) => {
+          if (err) {
+            console.error("Database error during package deletion:", err);
+            Common.adminActivityLog(
+              admin_id,
+              "Package",
+              "Delete",
+              "0",
+              JSON.stringify({ id }),
+              err.message,
+              () => {}
+            );
+            return res.status(500).json({
+              status: false,
+              message: "Failed to delete package. Please try again.",
+            });
+          }
+
           Common.adminActivityLog(
             admin_id,
             "Package",
             "Delete",
-            "0",
-            JSON.stringify({ id, ...currentPackage }),
-            err.message,
+            "1",
+            JSON.stringify({ id }),
+            null,
             () => {}
           );
-          return res.status(500).json({ status: false, message: err.message });
-        }
 
-        Common.adminActivityLog(
-          admin_id,
-          "Package",
-          "Delete",
-          "1",
-          null,
-          JSON.stringify(currentPackage),
-          () => {}
-        );
-
-        res.json({
-          status: true,
-          message: "Package deleted successfully",
-          token: newToken,
+          res.status(200).json({
+            status: true,
+            message: "Package deleted successfully.",
+            result,
+            token: newToken,
+          });
         });
       });
     });
