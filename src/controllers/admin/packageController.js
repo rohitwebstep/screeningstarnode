@@ -27,7 +27,6 @@ exports.create = (req, res) => {
       // Check the status returned by the authorization function
       return res.status(403).json({
         status: false,
-        result,
         message: result.message, // Return the message from the authorization function
       });
     }
@@ -207,17 +206,12 @@ exports.update = (req, res) => {
   const action = JSON.stringify({ package: "update" });
 
   // Check admin authorization
-  Common.isAdminAuthorizedForAction(admin_id, action, (err, isAuthorized) => {
-    if (err) {
-      return res.status(500).json({
-        status: false,
-        message: `Authorization error: ${err.message}`,
-      });
-    }
-    if (!isAuthorized) {
+  Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
+    if (!result.status) {
+      // Check the status returned by the authorization function
       return res.status(403).json({
         status: false,
-        message: "Admin is not authorized to perform this action.",
+        message: result.message, // Return the message from the authorization function
       });
     }
 
@@ -329,17 +323,12 @@ exports.delete = (req, res) => {
   const action = JSON.stringify({ package: "delete" });
 
   // Check admin authorization
-  Common.isAdminAuthorizedForAction(admin_id, action, (err, isAuthorized) => {
-    if (err) {
-      return res.status(500).json({
-        status: false,
-        message: `Authorization error: ${err.message}`,
-      });
-    }
-    if (!isAuthorized) {
+  Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
+    if (!result.status) {
+      // Check the status returned by the authorization function
       return res.status(403).json({
         status: false,
-        message: "Admin is not authorized to perform this action.",
+        message: result.message, // Return the message from the authorization function
       });
     }
 
