@@ -1,7 +1,7 @@
 const pool = require("../../config/db");
 
 const Service = {
-  create: (title, description, admin_id, package_id, callback) => {
+  create: (title, description, admin_id, callback) => {
     // Step 1: Check if a package with the same title already exists
     const checkPackageSql = `
       SELECT * FROM \`packages\` WHERE \`title\` = ?
@@ -39,17 +39,21 @@ const Service = {
 
         // Step 5: Insert the new service
         const insertServiceSql = `
-          INSERT INTO \`services\` (\`title\`, \`description\`, \`admin_id\`, \`package_id\`)
+          INSERT INTO \`services\` (\`title\`, \`description\`, \`admin_id\`)
           VALUES (?, ?, ?, ?)
         `;
 
-        pool.query(insertServiceSql, [title, description, admin_id, package_id], (err, results) => {
-          if (err) {
-            console.error("Database query error:", err);
-            return callback(err, null);
+        pool.query(
+          insertServiceSql,
+          [title, description, admin_id],
+          (err, results) => {
+            if (err) {
+              console.error("Database query error:", err);
+              return callback(err, null);
+            }
+            callback(null, results);
           }
-          callback(null, results);
-        });
+        );
       });
     });
   },
@@ -76,13 +80,13 @@ const Service = {
     });
   },
 
-  update: (id, title, description, package_id, callback) => {
+  update: (id, title, description, callback) => {
     const sql = `
       UPDATE \`services\`
-      SET \`title\` = ?, \`description\` = ?, \`package_id\` = ?
+      SET \`title\` = ?, \`description\` = ?
       WHERE \`id\` = ?
     `;
-    pool.query(sql, [title, description, package_id, id], (err, results) => {
+    pool.query(sql, [title, description, id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback(err, null);

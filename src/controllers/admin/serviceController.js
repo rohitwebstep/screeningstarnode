@@ -3,13 +3,12 @@ const Common = require("../../models/admin/commonModel");
 
 // Controller to create a new service
 exports.create = (req, res) => {
-  const { title, description, admin_id, package_id, _token } = req.body;
+  const { title, description, admin_id, _token } = req.body;
 
   let missingFields = [];
   if (!title) missingFields.push("Title");
   if (!description) missingFields.push("Description");
   if (!admin_id) missingFields.push("Admin ID");
-  if (!package_id) missingFields.push("Package ID");
   if (!_token) missingFields.push("Token");
 
   if (missingFields.length > 0) {
@@ -31,7 +30,7 @@ exports.create = (req, res) => {
 
     const newToken = result.newToken;
 
-    Service.create(title, description, admin_id, package_id, (err, result) => {
+    Service.create(title, description, admin_id, (err, result) => {
       if (err) {
         console.error("Database error:", err);
         Common.adminActivityLog(
@@ -41,7 +40,7 @@ exports.create = (req, res) => {
           "0",
           null,
           err.message,
-          () => { }
+          () => {}
         );
         return res.status(500).json({ status: false, message: err.message });
       }
@@ -53,14 +52,14 @@ exports.create = (req, res) => {
         "1",
         `{id: ${result.insertId}}`,
         null,
-        () => { }
+        () => {}
       );
 
       res.json({
         status: true,
         message: "Service created successfully",
         service: result,
-        token: newToken
+        token: newToken,
       });
     });
   });
@@ -104,7 +103,7 @@ exports.list = (req, res) => {
         message: "Services fetched successfully",
         services: result,
         totalResults: result.length,
-        token: newToken
+        token: newToken,
       });
     });
   });
@@ -153,7 +152,7 @@ exports.getServiceById = (req, res) => {
         status: true,
         message: "Service retrieved successfully",
         service: currentService,
-        token: newToken
+        token: newToken,
       });
     });
   });
@@ -161,13 +160,12 @@ exports.getServiceById = (req, res) => {
 
 // Controller to update a service
 exports.update = (req, res) => {
-  const { id, title, description, admin_id, package_id, _token } = req.body;
+  const { id, title, description, admin_id, _token } = req.body;
 
   let missingFields = [];
   if (!id) missingFields.push("Service ID");
   if (!title) missingFields.push("Title");
   if (!description) missingFields.push("Description");
-  if (!package_id) missingFields.push("Package ID");
   if (!admin_id) missingFields.push("Admin ID");
   if (!_token) missingFields.push("Token");
 
@@ -210,14 +208,7 @@ exports.update = (req, res) => {
         };
       }
 
-      if (currentService.package_id !== package_id) {
-        changes.package_id = {
-          old: currentService.package_id,
-          new: package_id,
-        };
-      }
-
-      Service.update(id, title, description, package_id, (err, result) => {
+      Service.update(id, title, description, (err, result) => {
         if (err) {
           console.error("Database error:", err);
           Common.adminActivityLog(
@@ -227,7 +218,7 @@ exports.update = (req, res) => {
             "0",
             JSON.stringify({ id, ...changes }),
             err.message,
-            () => { }
+            () => {}
           );
           return res.status(500).json({ status: false, message: err.message });
         }
@@ -239,14 +230,14 @@ exports.update = (req, res) => {
           "1",
           JSON.stringify({ id, ...changes }),
           null,
-          () => { }
+          () => {}
         );
 
         res.json({
           status: true,
           message: "Service updated successfully",
           service: result,
-          token: newToken
+          token: newToken,
         });
       });
     });
@@ -297,7 +288,7 @@ exports.delete = (req, res) => {
             "0",
             JSON.stringify({ id, ...currentService }),
             err.message,
-            () => { }
+            () => {}
           );
           return res.status(500).json({ status: false, message: err.message });
         }
@@ -309,13 +300,13 @@ exports.delete = (req, res) => {
           "1",
           JSON.stringify(currentService),
           null,
-          () => { }
+          () => {}
         );
 
         res.json({
           status: true,
           message: "Service deleted successfully",
-          token: newToken
+          token: newToken,
         });
       });
     });
