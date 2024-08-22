@@ -189,14 +189,14 @@ exports.create = (req, res) => {
 
             // Iterate over branches array to create branch records
             const branchCreationPromises = branches.map(
-              (branch) =>
+              (branch, index) =>
                 new Promise((resolve, reject) => {
                   Branch.create(
                     {
                       customer_id: customerId,
                       name: branch.branch_name,
                       email: branch.branch_email,
-                      head: contact_person,
+                      head: index === 0 ? 1 : 0, // Set head to 1 for the first branch, 0 for others
                     },
                     (err, branchResult) => {
                       if (err) {
@@ -232,7 +232,6 @@ exports.create = (req, res) => {
                     customer: result,
                     meta: metaResult,
                     branches: branchResults,
-                    head: index === 0 ? 1 : 0,
                   },
                   _token: newToken,
                 });
@@ -241,7 +240,6 @@ exports.create = (req, res) => {
                 console.error("Error creating branches:", branchError);
                 res.status(500).json({
                   status: false,
-                  // message: "Customer created but failed to create branches.",
                   message: branchError,
                 });
               });
