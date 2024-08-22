@@ -44,8 +44,6 @@ exports.create = (req, res) => {
     branches,
   } = req.body;
 
-  console.log("Request body received:", req.body);
-
   // Define required fields
   const requiredFields = {
     admin_id,
@@ -83,7 +81,6 @@ exports.create = (req, res) => {
     .map((field) => field.replace(/_/g, " "));
 
   if (missingFields.length > 0) {
-    console.log("Missing required fields:", missingFields);
     return res.status(400).json({
       status: false,
       message: `Missing required fields: ${missingFields.join(", ")}`,
@@ -91,7 +88,6 @@ exports.create = (req, res) => {
   }
 
   // Verify admin token
-  console.log("Checking admin token validity for admin_id:", admin_id);
   AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
     if (err) {
       console.error("Error checking token validity:", err);
@@ -99,17 +95,13 @@ exports.create = (req, res) => {
     }
 
     if (!result.status) {
-      console.log("Token validation failed:", result.message);
       return res.status(401).json({ status: false, message: result.message });
     }
-
-    console.log("Token validated successfully. New token:", result.newToken);
 
     const newToken = result.newToken;
     const password = generatePassword(company_name);
 
     // Create new customer record
-    console.log("Creating new customer record for client_code:", client_code);
     Customer.create(
       {
         admin_id,
@@ -127,8 +119,7 @@ exports.create = (req, res) => {
         login_token: null,
         token_expiry: null,
         role,
-        status: "0",
-        admin_id
+        status: "0"
       },
       (err, result) => {
         if (err) {
@@ -148,10 +139,6 @@ exports.create = (req, res) => {
         }
 
         const customerId = result.insertId;
-        console.log("Customer created successfully with ID:", customerId);
-
-        // Create customer meta data
-        console.log("Creating customer meta data for customer_id:", customerId);
         Customer.createCustomerMeta(
           {
             customer_id: customerId,
@@ -199,8 +186,6 @@ exports.create = (req, res) => {
                 message: err.error,
               });
             }
-
-            console.log("Customer meta created successfully.");
 
             // Iterate over branches array to create branch records
             const branchCreationPromises = branches.map(

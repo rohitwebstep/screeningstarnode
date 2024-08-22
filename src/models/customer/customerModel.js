@@ -13,7 +13,7 @@ const Customer = {
         \`email_verified_at\`, \`mobile\`, \`mobile_verified_at\`, \`password\`,
         \`reset_password_token\`, \`login_token\`, \`token_expiry\`, \`role\`,
         \`status\`, \`admin_id\`
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const valuesCustomers = [
