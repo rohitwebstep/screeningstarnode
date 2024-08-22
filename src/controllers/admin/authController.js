@@ -75,7 +75,7 @@ exports.login = (req, res) => {
         return res.status(401).json({ status: false, message: "Incorrect password" });
       }
 
-      if (admin.status === 0) {
+      if (admin.status == 0) {
         Common.adminLoginLog(
           admin.id,
           "login",
@@ -89,7 +89,7 @@ exports.login = (req, res) => {
         });
       }
 
-      if (admin.status === 2) {
+      if (admin.status == 2) {
         Common.adminLoginLog(
           admin.id,
           "login",
