@@ -1,5 +1,6 @@
 const Package = require("../../models/admin/packageModel");
 const Common = require("../../models/admin/commonModel");
+const { sendEmail } = require("../../models/mailer/customerMailer");
 
 // Controller to create a new package
 exports.create = (req, res) => {
@@ -79,12 +80,36 @@ exports.create = (req, res) => {
           () => {}
         );
 
-        res.status(201).json({
-          status: true,
-          message: "Package created successfully.",
-          package: result,
-          token: newToken,
-        });
+        // Send email notification
+        sendEmail(
+          "customer",
+          "create",
+          "rohitwebstep@gmail.com",
+          "Demo Company",
+          "123"
+        )
+          .then(() => {
+            res.json({
+              status: true,
+              message:
+                "Customer and branches created successfully, and email sent.",
+              data: {
+                customer: result,
+                meta: metaResult,
+                branches: branchResults,
+              },
+              token: newToken,
+            });
+          })
+          .catch((emailError) => {
+            console.error("Error sending email:", emailError);
+            res.status(201).json({
+              status: true,
+              message: "Package created successfully.",
+              package: result,
+              token: newToken,
+            });
+          });
       });
     });
   });

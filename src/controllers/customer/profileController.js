@@ -2,6 +2,7 @@ const crypto = require("crypto");
 const Customer = require("../../models/customer/customerModel");
 const Branch = require("../../models/customer/branch/branchModel");
 const AdminCommon = require("../../models/admin/commonModel");
+const { sendEmail } = require("../../models/mailer/customerMailer");
 
 // Helper function to generate a password
 const generatePassword = (companyName) => {
@@ -250,17 +251,35 @@ exports.create = (req, res) => {
                     null,
                     () => {}
                   );
-
-                  res.json({
-                    status: true,
-                    message: "Customer and branches created successfully",
-                    data: {
-                      customer: result,
-                      meta: metaResult,
-                      branches: branchResults,
-                    },
-                    _token: newToken,
-                  });
+                  // Send email notification
+                  sendEmail("customer", "create", email, company_name, password)
+                    .then(() => {
+                      res.json({
+                        status: true,
+                        message:
+                          "Customer and branches created successfully, and credentials sent through mail.",
+                        data: {
+                          customer: result,
+                          meta: metaResult,
+                          branches: branchResults,
+                        },
+                        _token: newToken,
+                      });
+                    })
+                    .catch((emailError) => {
+                      console.error("Error sending email:", emailError);
+                      res.json({
+                        status: true,
+                        message:
+                          "Customer and branches created successfully, but failed to send email.",
+                        data: {
+                          customer: result,
+                          meta: metaResult,
+                          branches: branchResults,
+                        },
+                        _token: newToken,
+                      });
+                    });
                 })
                 .catch((branchError) => {
                   console.error("Error creating branches:", branchError);
