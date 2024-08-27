@@ -322,8 +322,7 @@ exports.create = (req, res) => {
                         sendEmail(
                           "customer",
                           "create",
-                          "rohitwebstep@gmail.com",
-                          company_name,
+                          branches, // Pass branch details
                           password
                         )
                           .then(() => {

@@ -1,14 +1,28 @@
 const nodemailer = require("nodemailer");
 const connection = require("../../config/db"); // Import the existing MySQL connection
 
+// Function to generate HTML table from branch details
+const generateTable = (branches, password) => {
+  let table =
+    '<table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse;">';
+  table +=
+    "<tr><th>Sr. No.</th><th>Email</th><th>Name</th><th>Password</th></tr>";
+
+  branches.forEach((branch, index) => {
+    table += `<tr>
+                <td>${index + 1}</td>
+                <td>${branch.branch_email}</td>
+                <td>${branch.branch_name}</td>
+                <td>${password}</td>
+              </tr>`;
+  });
+
+  table += "</table>";
+  return table;
+};
+
 // Function to send email
-async function sendEmail(
-  module,
-  action,
-  recipientEmail,
-  recipientName,
-  password
-) {
+async function sendEmail(module, action, branches, password) {
   try {
     // Fetch email template
     const [emailRows] = await connection
@@ -41,17 +55,21 @@ async function sendEmail(
       },
     });
 
+    // Generate the HTML table from branch details
+    const table = generateTable(branches, password);
+
     // Replace placeholders in the email template
     let template = email.template;
-    template = template
-      .replace(/{{dynamic_email}}/g, recipientEmail)
-      .replace(/{{dynamic_name}}/g, recipientName)
-      .replace(/{{dynamic_password}}/g, password);
+    template = template.replace(/{{table}}/g, table);
 
-    // Send email
+    // Send email to all branch emails
+    const recipientList = branches
+      .map((branch) => `"${branch.branch_name}" <${branch.branch_email}>`)
+      .join(", ");
+
     const info = await transporter.sendMail({
       from: smtp.username,
-      to: recipientEmail,
+      to: recipientList,
       subject: email.title,
       html: template,
     });
