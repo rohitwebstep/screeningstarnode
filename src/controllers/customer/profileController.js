@@ -10,10 +10,6 @@ const generatePassword = (companyName) => {
   return `${firstName}@123`;
 };
 
-// Helper function to hash password using MD5
-const hashPassword = (password) =>
-  crypto.createHash("md5").update(password).digest("hex");
-
 exports.create = (req, res) => {
   const {
     admin_id,

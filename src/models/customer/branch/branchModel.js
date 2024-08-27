@@ -18,7 +18,7 @@ const Branch = {
       BranchData.name,
       BranchData.email,
       BranchData.head,
-      BranchData.password,
+      hashPassword(BranchData.password),
     ];
 
     pool.query(sqlBranch, valuesBranch, (err, results) => {
