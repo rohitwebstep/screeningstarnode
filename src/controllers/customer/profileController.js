@@ -18,6 +18,8 @@ const hashPassword = (password) =>
   crypto.createHash("md5").update(password).digest("hex");
 
 exports.create = (req, res) => {
+  console.log("Request received for customer creation.");
+
   const {
     admin_id,
     _token,
@@ -80,6 +82,8 @@ exports.create = (req, res) => {
     custom_template,
   };
 
+  console.log("Required fields extracted:", requiredFields);
+
   let additional_login_int = 0;
   if (additional_login && additional_login.toLowerCase() === "yes") {
     additional_login_int = 1;
@@ -97,21 +101,28 @@ exports.create = (req, res) => {
     .map((field) => field.replace(/_/g, " "));
 
   if (missingFields.length > 0) {
+    console.log("Missing required fields:", missingFields);
     return res.status(400).json({
       status: false,
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
 
+  console.log("All required fields are present.");
+
   const action = JSON.stringify({ customer: "create" });
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
+    console.log("Admin authorization result:", result);
+
     if (!result.status) {
-      // Check the status returned by the authorization function
       return res.status(403).json({
         status: false,
         message: result.message, // Return the message from the authorization function
       });
     }
+
+    console.log("Admin is authorized for this action.");
+
     // Verify admin token
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
@@ -123,6 +134,7 @@ exports.create = (req, res) => {
         return res.status(401).json({ status: false, message: result.message });
       }
 
+      console.log("Admin token is valid.");
       const newToken = result.newToken;
       const password = generatePassword(company_name);
 
@@ -134,7 +146,7 @@ exports.create = (req, res) => {
           name: company_name,
           address,
           profile_picture: null,
-          emails_json,
+          emails_json: emails,
           mobile_number,
           role,
           status: "0",
@@ -161,7 +173,9 @@ exports.create = (req, res) => {
               .json({ status: false, message: "Failed to create customer." });
           }
 
+          console.log("Customer created successfully. ID:", result.insertId);
           const customerId = result.insertId;
+
           Customer.createCustomerMeta(
             {
               customer_id: customerId,
@@ -170,7 +184,7 @@ exports.create = (req, res) => {
               escalation_point_contact: name_of_escalation,
               single_point_of_contact: client_spoc,
               gst_number: gstin,
-              tat_days,
+              tat_days: tat,
               agreement_date: date_agreement,
               agreement_duration: agreement_period,
               agreement_document,
@@ -208,6 +222,8 @@ exports.create = (req, res) => {
                 });
               }
 
+              console.log("Customer meta created successfully.");
+
               // Iterate over branches array to create branch records
               const branchCreationPromises = branches.map(
                 (branch, index) =>
@@ -228,6 +244,10 @@ exports.create = (req, res) => {
                           );
                           return reject(err);
                         }
+                        console.log(
+                          "Branch created successfully:",
+                          branch.branch_name
+                        );
                         resolve(branchResult);
                       }
                     );
@@ -236,6 +256,7 @@ exports.create = (req, res) => {
 
               Promise.all(branchCreationPromises)
                 .then((branchResults) => {
+                  console.log("All branches created successfully.");
                   AdminCommon.adminActivityLog(
                     admin_id,
                     "Customer",
@@ -245,9 +266,17 @@ exports.create = (req, res) => {
                     null,
                     () => {}
                   );
+
                   // Send email notification
-                  sendEmail("customer", "create", email, company_name, password)
+                  sendEmail(
+                    "customer",
+                    "create",
+                    emails,
+                    company_name,
+                    password
+                  )
                     .then(() => {
+                      console.log("Email sent successfully.");
                       res.json({
                         status: true,
                         message:
