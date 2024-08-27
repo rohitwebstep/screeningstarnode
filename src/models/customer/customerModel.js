@@ -117,6 +117,17 @@ const Customer = {
     });
   },
 
+  list: (callback) => {
+    const sql = `SELECT * FROM \`customers\``;
+    pool.query(sql, (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results);
+    });
+  },
+
   findByEmailOrMobile: (username, callback) => {
     const sql = `
       SELECT \`id\`, \`email\`, \`mobile\`, \`password\`
@@ -185,7 +196,8 @@ const Customer = {
       if (results.affectedRows === 0) {
         return callback(
           {
-            message: "Token update failed. Customer not found or no changes made.",
+            message:
+              "Token update failed. Customer not found or no changes made.",
           },
           null
         );
