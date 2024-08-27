@@ -82,8 +82,6 @@ exports.create = (req, res) => {
     custom_template,
   };
 
-  console.log("Required fields extracted:", requiredFields);
-
   let additional_login_int = 0;
   if (additional_login && additional_login.toLowerCase() === "yes") {
     additional_login_int = 1;
@@ -101,27 +99,19 @@ exports.create = (req, res) => {
     .map((field) => field.replace(/_/g, " "));
 
   if (missingFields.length > 0) {
-    console.log("Missing required fields:", missingFields);
     return res.status(400).json({
       status: false,
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-
-  console.log("All required fields are present.");
-
   const action = JSON.stringify({ customer: "create" });
   AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
-    console.log("Admin authorization result:", result);
-
     if (!result.status) {
       return res.status(403).json({
         status: false,
         message: result.message, // Return the message from the authorization function
       });
     }
-
-    console.log("Admin is authorized for this action.");
 
     // Verify admin token
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
@@ -134,7 +124,6 @@ exports.create = (req, res) => {
         return res.status(401).json({ status: false, message: result.message });
       }
 
-      console.log("Admin token is valid.");
       const newToken = result.newToken;
       const password = generatePassword(company_name);
 
@@ -146,7 +135,7 @@ exports.create = (req, res) => {
           name: company_name,
           address,
           profile_picture: null,
-          emails_json: emails,
+          emails_json: JSON.stringify(emails),
           mobile_number,
           role,
           status: "0",

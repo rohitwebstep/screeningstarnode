@@ -8,8 +8,7 @@ const hashPassword = (password) =>
 const Customer = {
   create: (customerData, callback) => {
     const sqlCustomers = `
-      INSERT INTO \`customers\` (
-        \`client_unique_id\`, \`name\`, \`additional_login\`, \`username\`, \`profile_picture\`, \`emails\`, \`mobile\`, \`status\`, \`admin_id\`
+      INSERT INTO \`customers\` (\`client_unique_id\`, \`name\`, \`additional_login\`, \`username\`, \`profile_picture\`, \`emails\`, \`mobile\`, \`status\`, \`admin_id\`
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
