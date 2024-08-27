@@ -159,7 +159,7 @@ exports.create = (req, res) => {
             );
             return res
               .status(500)
-              .json({ status: false, message: "Failed to create customer. "+err.message });
+              .json({ status: false, message: err.message });
           }
 
           console.log("Customer created successfully. ID:", result.insertId);

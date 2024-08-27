@@ -28,7 +28,7 @@ const Customer = {
       if (err) {
         console.error("Database insertion error for customers:", err);
         return callback(
-          { message: "Database insertion error for customers", error: err },
+          { message: err },
           null
         );
       }
