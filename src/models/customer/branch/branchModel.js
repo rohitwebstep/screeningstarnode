@@ -9,7 +9,7 @@ const Branch = {
   create: (BranchData, callback) => {
     const sqlBranch = `
       INSERT INTO \`branches\` (
-        \`customer_id\`, \`name\`, \`email\`, \`is_head\`
+        \`customer_id\`, \`name\`, \`email\`, \`is_head\`, \`password\`
       ) VALUES (?, ?, ?, ?)
     `;
 
@@ -18,6 +18,7 @@ const Branch = {
       BranchData.name,
       BranchData.email,
       BranchData.head,
+      BranchData.password,
     ];
 
     pool.query(sqlBranch, valuesBranch, (err, results) => {
