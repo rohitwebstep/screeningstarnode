@@ -22,7 +22,7 @@ const generateTable = (branches, password) => {
 };
 
 // Function to send email
-async function sendEmail(module, action, branches, password) {
+async function sendEmail(module, action, name, branches, password) {
   try {
     // Fetch email template
     const [emailRows] = await connection
@@ -64,7 +64,9 @@ async function sendEmail(module, action, branches, password) {
 
     // Replace placeholders in the email template
     let template = email.template;
-    template = template.replace(/{{table}}/g, table);
+    template = template
+      .replace(/{{dynamic_name}}/g, name)
+      .replace(/{{table}}/g, table);
 
     // Send email to all branch emails
     const recipientList = branches

@@ -322,7 +322,8 @@ exports.create = (req, res) => {
                         sendEmail(
                           "customer",
                           "create",
-                          branches, // Pass branch details
+                          company_name,
+                          branches,
                           password
                         )
                           .then(() => {
