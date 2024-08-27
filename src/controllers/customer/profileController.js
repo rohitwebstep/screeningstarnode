@@ -111,7 +111,7 @@ exports.create = (req, res) => {
   console.log("All required fields are present.");
 
   const action = JSON.stringify({ customer: "create" });
-  Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
+  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
     console.log("Admin authorization result:", result);
 
     if (!result.status) {
