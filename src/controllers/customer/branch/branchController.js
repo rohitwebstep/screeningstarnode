@@ -169,11 +169,6 @@ exports.create = (req, res) => {
             status: "0",
             state,
             state_code,
-            additional_login_info: null,
-            standard_operating_procedures: null,
-            record_creation_date: new Date(),
-            package_category: null,
-            service_codes: null,
             payment_contact_person: contact_person,
           },
           (err, metaResult) => {
