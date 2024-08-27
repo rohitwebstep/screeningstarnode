@@ -42,7 +42,7 @@ const Customer = {
 
   create: (customerData, callback) => {
     const sqlCustomers = `
-      INSERT INTO \`customers\` (\`client_unique_id\`, \`name\`, \`additional_login\`, \`username\`, \`profile_picture\`, \`emails\`, \`mobile\`, \`status\`, \`admin_id\`
+      INSERT INTO \`customers\` (\`client_unique_id\`, \`name\`, \`additional_login\`, \`username\`, \`profile_picture\`, \`emails\`, \`mobile\`, \`services\`, \`status\`, \`admin_id\`
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
@@ -54,6 +54,7 @@ const Customer = {
       customerData.profile_picture,
       customerData.emails_json,
       customerData.mobile_number,
+      customerData.services,
       customerData.status || "0",
       customerData.admin_id,
     ];
@@ -78,7 +79,7 @@ const Customer = {
         \`agreement_date\`, \`agreement_duration\`, \`agreement_document\`, \`custom_template\`,
         \`custom_logo\`, \`custom_address\`, \`state\`, \`state_code\`, 
         \`payment_contact_person\`
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const valuesCustomerMetas = [
