@@ -10,5 +10,6 @@ router.post("/verify-admin-login", authController.validateLogin);
 
 // Profile routes
 router.post("/create", profileController.create);
+router.get("/list", profileController.list);
 
 module.exports = router;

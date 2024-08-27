@@ -90,31 +90,39 @@ exports.list = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-
-  Common.isAdminTokenValid(_token, admin_id, (err, result) => {
-    if (err) {
-      console.error("Error checking token validity:", err);
-      return res.status(500).json(err);
-    }
-
+  const action = JSON.stringify({ service: "list" });
+  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
-      return res.status(401).json({ status: false, message: result.message });
+      return res.status(403).json({
+        status: false,
+        message: result.message, // Return the message from the authorization function
+      });
     }
-
-    const newToken = result.newToken;
-
-    Service.list((err, result) => {
+    Common.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
-        console.error("Database error:", err);
-        return res.status(500).json({ status: false, message: err.message });
+        console.error("Error checking token validity:", err);
+        return res.status(500).json(err);
       }
 
-      res.json({
-        status: true,
-        message: "Services fetched successfully",
-        services: result,
-        totalResults: result.length,
-        token: newToken,
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
+      }
+
+      const newToken = result.newToken;
+
+      Service.list((err, result) => {
+        if (err) {
+          console.error("Database error:", err);
+          return res.status(500).json({ status: false, message: err.message });
+        }
+
+        res.json({
+          status: true,
+          message: "Services fetched successfully",
+          services: result,
+          totalResults: result.length,
+          token: newToken,
+        });
       });
     });
   });
@@ -133,37 +141,45 @@ exports.getServiceById = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-
-  Common.isAdminTokenValid(_token, admin_id, (err, result) => {
-    if (err) {
-      console.error("Error checking token validity:", err);
-      return res.status(500).json(err);
-    }
-
+  const action = JSON.stringify({ service: "list" });
+  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
-      return res.status(401).json({ status: false, message: result.message });
+      return res.status(403).json({
+        status: false,
+        message: result.message, // Return the message from the authorization function
+      });
     }
-
-    const newToken = result.newToken;
-
-    Service.getServiceById(id, (err, currentService) => {
+    Common.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
-        console.error("Error fetching service data:", err);
+        console.error("Error checking token validity:", err);
         return res.status(500).json(err);
       }
 
-      if (!currentService) {
-        return res.status(404).json({
-          status: false,
-          message: "Service not found",
-        });
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
       }
 
-      res.json({
-        status: true,
-        message: "Service retrieved successfully",
-        service: currentService,
-        token: newToken,
+      const newToken = result.newToken;
+
+      Service.getServiceById(id, (err, currentService) => {
+        if (err) {
+          console.error("Error fetching service data:", err);
+          return res.status(500).json(err);
+        }
+
+        if (!currentService) {
+          return res.status(404).json({
+            status: false,
+            message: "Service not found",
+          });
+        }
+
+        res.json({
+          status: true,
+          message: "Service retrieved successfully",
+          service: currentService,
+          token: newToken,
+        });
       });
     });
   });
