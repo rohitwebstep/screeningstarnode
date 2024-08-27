@@ -322,7 +322,7 @@ exports.create = (req, res) => {
                         sendEmail(
                           "customer",
                           "create",
-                          emails,
+                          "rohitwebstep@gmail.com",
                           company_name,
                           password
                         )
