@@ -128,6 +128,20 @@ const Customer = {
     });
   },
 
+  delete: (id, callback) => {
+    const sql = `
+        DELETE FROM \`customers\`
+        WHERE \`id\` = ?
+      `;
+    pool.query(sql, [id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results);
+    });
+  },
+
   findByEmailOrMobile: (username, callback) => {
     const sql = `
       SELECT \`id\`, \`email\`, \`mobile\`, \`password\`
