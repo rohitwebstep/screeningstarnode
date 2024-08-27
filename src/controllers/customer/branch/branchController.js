@@ -35,8 +35,6 @@ exports.create = (req, res) => {
     branch_email,
   } = req.body;
 
-  console.log("Request body received:", req.body);
-
   const generatePassword = (companyName) => {
     const basePassword = companyName
       .split(" ")
@@ -73,14 +71,12 @@ exports.create = (req, res) => {
     .map((field) => field.replace(/_/g, " "));
 
   if (missingFields.length > 0) {
-    console.log("Missing required fields:", missingFields);
     return res.status(400).json({
       status: false,
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
 
-  console.log("Checking admin token validity for admin_id:", admin_id);
   AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
     if (err) {
       console.error("Error checking token validity:", err);
@@ -88,16 +84,12 @@ exports.create = (req, res) => {
     }
 
     if (!result.status) {
-      console.log("Token validation failed:", result.message);
       return res.status(401).json({ status: false, message: result.message });
     }
-
-    console.log("Token validated successfully. New token:", result.newToken);
 
     const newToken = result.newToken;
     const password = generatePassword(company_name);
 
-    console.log("Creating new customer record for client_code:", client_code);
     Customer.create(
       {
         admin_id,
@@ -137,9 +129,6 @@ exports.create = (req, res) => {
         }
 
         const customerId = result.insertId;
-        console.log("Customer created successfully with ID:", customerId);
-
-        console.log("Creating customer meta data for customer_id:", customerId);
         Customer.createCustomerMeta(
           {
             customer_id: customerId,
@@ -190,8 +179,6 @@ exports.create = (req, res) => {
                 .status(500)
                 .json({ status: false, message: err.error.message });
             }
-
-            console.log("Customer meta created successfully.");
 
             AdminCommon.adminActivityLog(
               admin_id,
