@@ -43,7 +43,7 @@ const Customer = {
     const sqlCustomerMetas = `
       INSERT INTO \`customer_metas\` (
         \`customer_id\`, \`address\`,
-        \`contact_person_name\`, \`contact_person_title\`, \`escalation_point_contact\`,
+        \`contact_person_name\`, \`escalation_point_contact\`,
         \`single_point_of_contact\`, \`gst_number\`, \`tat_days\`, \`service_description\`,
         \`agreement_date\`, \`agreement_duration\`, \`agreement_document\`, \`custom_template\`,
         \`custom_logo\`, \`custom_address\`, \`state\`, \`state_code\`, 
@@ -56,7 +56,6 @@ const Customer = {
       metaData.customer_id,
       metaData.address,
       metaData.contact_person_name,
-      metaData.contact_person_title,
       metaData.escalation_point_contact,
       metaData.single_point_of_contact,
       metaData.gst_number,
