@@ -6,11 +6,8 @@ const { sendEmail } = require("../../models/mailer/customerMailer");
 
 // Helper function to generate a password
 const generatePassword = (companyName) => {
-  const basePassword = companyName
-    .split(" ")
-    .map((word) => word.toLowerCase())
-    .join("");
-  return `${basePassword}@123`;
+  const firstName = companyName.split(" ")[0];
+  return `${firstName}@123`;
 };
 
 // Helper function to hash password using MD5
@@ -262,6 +259,7 @@ exports.create = (req, res) => {
                     name: branches[0].branch_name,
                     email: branches[0].branch_email,
                     head: 1,
+                    password,
                   },
                   (err, headBranchResult) => {
                     if (err) {
@@ -286,6 +284,7 @@ exports.create = (req, res) => {
                               email: branch.branch_email,
                               head: 0,
                               head_id: headBranchId,
+                              password,
                             },
                             (err, branchResult) => {
                               if (err) {
