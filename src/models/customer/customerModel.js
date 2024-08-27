@@ -185,8 +185,7 @@ const Customer = {
       if (results.affectedRows === 0) {
         return callback(
           {
-            message:
-              "Token update failed. Customer not found or no changes made.",
+            message: "Token update failed. Customer not found or no changes made.",
           },
           null
         );
