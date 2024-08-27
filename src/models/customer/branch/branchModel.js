@@ -9,7 +9,7 @@ const Branch = {
   create: (BranchData, callback) => {
     const sqlBranch = `
       INSERT INTO \`branches\` (
-        \`customer_id\`, \`name\`, \`email\`, \`head\`
+        \`customer_id\`, \`name\`, \`email\`, \`is_head\`
       ) VALUES (?, ?, ?, ?)
     `;
 
