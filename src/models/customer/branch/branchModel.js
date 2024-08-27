@@ -10,7 +10,7 @@ const Branch = {
     const sqlBranch = `
       INSERT INTO \`branches\` (
         \`customer_id\`, \`name\`, \`email\`, \`is_head\`, \`password\`
-      ) VALUES (?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?)
     `;
 
     const valuesBranch = [
