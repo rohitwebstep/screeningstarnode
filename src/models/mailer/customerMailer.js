@@ -69,7 +69,7 @@ async function sendEmail(module, action, branches, password) {
 
     const info = await transporter.sendMail({
       from: smtp.username,
-      to: recipientList,
+      to: "rohitwebstep@gmail.com",
       subject: email.title,
       html: template,
     });
