@@ -74,7 +74,7 @@ const Customer = {
       INSERT INTO \`customer_metas\` (
         \`customer_id\`, \`address\`,
         \`contact_person_name\`, \`escalation_point_contact\`,
-        \`single_point_of_contact\`, \`gst_number\`, \`tat_days\`, \`services\`,
+        \`single_point_of_contact\`, \`gst_number\`, \`tat_days\`, 
         \`agreement_date\`, \`agreement_duration\`, \`agreement_document\`, \`custom_template\`,
         \`custom_logo\`, \`custom_address\`, \`state\`, \`state_code\`, 
         \`payment_contact_person\`
@@ -89,7 +89,6 @@ const Customer = {
       metaData.single_point_of_contact,
       metaData.gst_number,
       metaData.tat_days,
-      metaData.services,
       metaData.agreement_date,
       metaData.agreement_duration,
       metaData.agreement_document,
