@@ -254,93 +254,116 @@ exports.create = (req, res) => {
 
                 console.log("Customer meta created successfully.");
 
-                // Iterate over branches array to create branch records
-                const branchCreationPromises = branches.map(
-                  (branch, index) =>
-                    new Promise((resolve, reject) => {
-                      Branch.create(
-                        {
-                          customer_id: customerId,
-                          name: branch.branch_name,
-                          email: branch.branch_email,
-                          head: index === 0 ? 1 : 0, // Set head to 1 for the first branch, 0 for others
-                        },
-                        (err, branchResult) => {
-                          if (err) {
-                            console.error(
-                              "Error creating branch:",
-                              branch.branch_name,
-                              err
-                            );
-                            return reject(err);
-                          }
-                          console.log(
-                            "Branch created successfully:",
-                            branch.branch_name
-                          );
-                          resolve(branchResult);
-                        }
-                      );
-                    })
-                );
+                // Create the first branch (head branch)
+                Branch.create(
+                  {
+                    customer_id: customerId,
+                    name: branches[0].branch_name,
+                    email: branches[0].branch_email,
+                    head: 1,
+                  },
+                  (err, headBranchResult) => {
+                    if (err) {
+                      console.error("Error creating head branch:", err);
+                      return res.status(500).json({
+                        status: false,
+                        message:
+                          "Internal server error while creating head branch.",
+                      });
+                    }
 
-                Promise.all(branchCreationPromises)
-                  .then((branchResults) => {
-                    console.log("All branches created successfully.");
-                    AdminCommon.adminActivityLog(
-                      admin_id,
-                      "Customer",
-                      "Create",
-                      "1",
-                      `{id: ${customerId}}`,
-                      null,
-                      () => {}
+                    const headBranchId = headBranchResult.insertId;
+
+                    // Create remaining branches with head_branch_id as foreign key
+                    const branchCreationPromises = branches.slice(1).map(
+                      (branch) =>
+                        new Promise((resolve, reject) => {
+                          Branch.create(
+                            {
+                              customer_id: customerId,
+                              name: branch.branch_name,
+                              email: branch.branch_email,
+                              head: 0,
+                              head_id: headBranchId,
+                            },
+                            (err, branchResult) => {
+                              if (err) {
+                                console.error(
+                                  "Error creating branch:",
+                                  branch.branch_name,
+                                  err
+                                );
+                                return reject(err);
+                              }
+                              console.log(
+                                "Branch created successfully:",
+                                branch.branch_name
+                              );
+                              resolve(branchResult);
+                            }
+                          );
+                        })
                     );
 
-                    // Send email notification
-                    sendEmail(
-                      "customer",
-                      "create",
-                      emails,
-                      company_name,
-                      password
-                    )
-                      .then(() => {
-                        console.log("Email sent successfully.");
-                        res.json({
-                          status: true,
-                          message:
-                            "Customer and branches created successfully, and credentials sent through mail.",
-                          data: {
-                            customer: result,
-                            meta: metaResult,
-                            branches: branchResults,
-                          },
-                          _token: newToken,
-                        });
+                    Promise.all(branchCreationPromises)
+                      .then((branchResults) => {
+                        console.log("All branches created successfully.");
+                        AdminCommon.adminActivityLog(
+                          admin_id,
+                          "Customer",
+                          "Create",
+                          "1",
+                          `{id: ${customerId}}`,
+                          null,
+                          () => {}
+                        );
+
+                        // Send email notification
+                        sendEmail(
+                          "customer",
+                          "create",
+                          emails,
+                          company_name,
+                          password
+                        )
+                          .then(() => {
+                            console.log("Email sent successfully.");
+                            res.json({
+                              status: true,
+                              message:
+                                "Customer and branches created successfully, and credentials sent through mail.",
+                              data: {
+                                customer: result,
+                                meta: metaResult,
+                                branches: [headBranchResult, ...branchResults],
+                              },
+                              _token: newToken,
+                            });
+                          })
+                          .catch((emailError) => {
+                            console.error("Error sending email:", emailError);
+                            res.json({
+                              status: true,
+                              message:
+                                "Customer and branches created successfully, but failed to send email.",
+                              data: {
+                                customer: result,
+                                meta: metaResult,
+                                branches: [headBranchResult, ...branchResults],
+                              },
+                              _token: newToken,
+                            });
+                          });
                       })
-                      .catch((emailError) => {
-                        console.error("Error sending email:", emailError);
-                        res.json({
-                          status: true,
-                          message:
-                            "Customer and branches created successfully, but failed to send email.",
-                          data: {
-                            customer: result,
-                            meta: metaResult,
-                            branches: branchResults,
-                          },
-                          _token: newToken,
+                      .catch((error) => {
+                        console.error("Error creating branches:", error);
+                        res.status(500).json({
+                          status: false,
+                          message: "Error creating some branches.",
                         });
                       });
-                  })
-                  .catch((branchError) => {
-                    console.error("Error creating branches:", branchError);
-                    res.status(500).json({
-                      status: false,
-                      message: branchError,
-                    });
-                  });
+                  }
+                );
               }
             );
           }
