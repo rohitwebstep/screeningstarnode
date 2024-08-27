@@ -48,7 +48,7 @@ const Customer = {
         \`custom_logo\`, \`custom_address\`, \`state\`, \`state_code\`, 
         \`standard_operating_procedures\`,
         \`payment_contact_person\`
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const valuesCustomerMetas = [
