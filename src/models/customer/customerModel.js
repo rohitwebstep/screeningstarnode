@@ -27,10 +27,7 @@ const Customer = {
     pool.query(sqlCustomers, valuesCustomers, (err, results) => {
       if (err) {
         console.error("Database insertion error for customers:", err);
-        return callback(
-          { message: err },
-          null
-        );
+        return callback({ message: err }, null);
       }
 
       const customerId = results.insertId;
@@ -46,9 +43,8 @@ const Customer = {
         \`single_point_of_contact\`, \`gst_number\`, \`tat_days\`, \`service_description\`,
         \`agreement_date\`, \`agreement_duration\`, \`agreement_document\`, \`custom_template\`,
         \`custom_logo\`, \`custom_address\`, \`state\`, \`state_code\`, 
-        \`standard_operating_procedures\`,
         \`payment_contact_person\`
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const valuesCustomerMetas = [
@@ -68,7 +64,6 @@ const Customer = {
       metaData.custom_address,
       metaData.state,
       metaData.state_code,
-      metaData.standard_operating_procedures,
       metaData.payment_contact_person,
     ];
 
