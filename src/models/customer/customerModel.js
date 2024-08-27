@@ -43,7 +43,7 @@ const Customer = {
   create: (customerData, callback) => {
     const sqlCustomers = `
       INSERT INTO \`customers\` (\`client_unique_id\`, \`name\`, \`additional_login\`, \`username\`, \`profile_picture\`, \`emails\`, \`mobile\`, \`services\`, \`status\`, \`admin_id\`
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const valuesCustomers = [
