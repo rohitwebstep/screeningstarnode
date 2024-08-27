@@ -9,27 +9,18 @@ const Customer = {
   create: (customerData, callback) => {
     const sqlCustomers = `
       INSERT INTO \`customers\` (
-        \`client_unique_id\`, \`client_id\`, \`name\`, \`profile_picture\`, \`email\`,
-        \`email_verified_at\`, \`mobile\`, \`mobile_verified_at\`, \`password\`,
-        \`reset_password_token\`, \`login_token\`, \`token_expiry\`, \`role\`,
-        \`status\`, \`admin_id\`
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        \`client_unique_id\`, \`name\`, \`additional_login\`, \`username\`, \`profile_picture\`, \`emails\`, \`mobile\`, \`status\`, \`admin_id\`
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const valuesCustomers = [
       customerData.client_unique_id,
-      customerData.client_id,
       customerData.name,
+      customerData.additional_login,
+      customerData.username,
       customerData.profile_picture,
-      customerData.email,
-      customerData.email_verified_at,
+      customerData.emails_json,
       customerData.mobile_number,
-      customerData.mobile_verified_at,
-      customerData.password,
-      customerData.reset_password_token,
-      customerData.login_token,
-      customerData.token_expiry,
-      customerData.role,
       customerData.status || "0",
       customerData.admin_id,
     ];
@@ -51,26 +42,19 @@ const Customer = {
   createCustomerMeta: (metaData, callback) => {
     const sqlCustomerMetas = `
       INSERT INTO \`customer_metas\` (
-        \`customer_id\`, \`company_name\`, \`address\`, \`email\`,
-        \`email2\`, \`email3\`, \`username\`,
+        \`customer_id\`, \`address\`,
         \`contact_person_name\`, \`contact_person_title\`, \`escalation_point_contact\`,
         \`single_point_of_contact\`, \`gst_number\`, \`tat_days\`, \`service_description\`,
-        \`service_fee\`, \`agreement_date\`, \`agreement_duration\`,
-        \`agreement_document\`, \`custom_template\`, \`custom_logo\`, \`custom_address\`,
-        \`status\`, \`state\`, \`state_code\`, \`additional_login\`,
-        \`standard_operating_procedures\`, \`package_category\`,
-        \`service_codes\`, \`payment_contact_person\`
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        \`agreement_date\`, \`agreement_duration\`, \`agreement_document\`, \`custom_template\`,
+        \`custom_logo\`, \`custom_address\`, \`state\`, \`state_code\`, 
+        \`standard_operating_procedures\`,
+        \`payment_contact_person\`
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const valuesCustomerMetas = [
       metaData.customer_id,
-      metaData.company_name,
       metaData.address,
-      metaData.email,
-      metaData.email2,
-      metaData.email3,
-      metaData.username,
       metaData.contact_person_name,
       metaData.contact_person_title,
       metaData.escalation_point_contact,
@@ -78,20 +62,15 @@ const Customer = {
       metaData.gst_number,
       metaData.tat_days,
       metaData.service_description,
-      metaData.service_fee,
       metaData.agreement_date,
       metaData.agreement_duration,
       metaData.agreement_document,
       metaData.custom_template || "no",
       metaData.custom_logo,
       metaData.custom_address,
-      metaData.status || "0",
       metaData.state,
       metaData.state_code,
-      metaData.additional_login,
       metaData.standard_operating_procedures,
-      metaData.package_category,
-      metaData.service_codes,
       metaData.payment_contact_person,
     ];
 
