@@ -33,6 +33,7 @@ async function sendEmail(module, action, branches, password) {
       );
     if (emailRows.length === 0) throw new Error("Email template not found");
     const email = emailRows[0];
+    console.log("Email template fetched:", email);
 
     // Fetch SMTP credentials
     const [smtpRows] = await connection
@@ -43,6 +44,7 @@ async function sendEmail(module, action, branches, password) {
       );
     if (smtpRows.length === 0) throw new Error("SMTP credentials not found");
     const smtp = smtpRows[0];
+    console.log("SMTP credentials fetched:", smtp);
 
     // Create transporter
     const transporter = nodemailer.createTransport({
@@ -54,9 +56,11 @@ async function sendEmail(module, action, branches, password) {
         pass: smtp.password,
       },
     });
+    console.log("Transporter created.");
 
     // Generate the HTML table from branch details
     const table = generateTable(branches, password);
+    console.log("Generated HTML table:", table);
 
     // Replace placeholders in the email template
     let template = email.template;
@@ -66,10 +70,11 @@ async function sendEmail(module, action, branches, password) {
     const recipientList = branches
       .map((branch) => `"${branch.branch_name}" <${branch.branch_email}>`)
       .join(", ");
+    console.log("Sending email to:", recipientList);
 
     const info = await transporter.sendMail({
       from: smtp.username,
-      to: "rohitwebstep@gmail.com",
+      to: recipientList,
       subject: email.title,
       html: template,
     });
