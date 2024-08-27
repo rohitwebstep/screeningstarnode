@@ -6,6 +6,40 @@ const hashPassword = (password) =>
   crypto.createHash("md5").update(password).digest("hex");
 
 const Customer = {
+  checkUniqueId: (clientUniqueId, callback) => {
+    const sql = `
+      SELECT COUNT(*) AS count
+      FROM \`customers\`
+      WHERE \`client_unique_id\` = ?
+    `;
+    pool.query(sql, [clientUniqueId], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback({ message: "Database query error", error: err }, null);
+      }
+
+      const count = results[0].count;
+      callback(null, count > 0);
+    });
+  },
+
+  checkUsername: (username, callback) => {
+    const sql = `
+      SELECT COUNT(*) AS count
+      FROM \`customers\`
+      WHERE \`username\` = ?
+    `;
+    pool.query(sql, [username], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback({ message: "Database query error", error: err }, null);
+      }
+
+      const count = results[0].count;
+      callback(null, count > 0);
+    });
+  },
+
   create: (customerData, callback) => {
     const sqlCustomers = `
       INSERT INTO \`customers\` (\`client_unique_id\`, \`name\`, \`additional_login\`, \`username\`, \`profile_picture\`, \`emails\`, \`mobile\`, \`status\`, \`admin_id\`
