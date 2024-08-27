@@ -15,8 +15,6 @@ const hashPassword = (password) =>
   crypto.createHash("md5").update(password).digest("hex");
 
 exports.create = (req, res) => {
-  console.log("Request received for customer creation.");
-
   const {
     admin_id,
     _token,
@@ -201,7 +199,6 @@ exports.create = (req, res) => {
                 .json({ status: false, message: err.message });
             }
 
-            console.log("Customer created successfully. ID:", result.insertId);
             const customerId = result.insertId;
 
             Customer.createCustomerMeta(
@@ -250,8 +247,6 @@ exports.create = (req, res) => {
                   });
                 }
 
-                console.log("Customer meta created successfully.");
-
                 // Create the first branch (head branch)
                 Branch.create(
                   {
@@ -295,10 +290,6 @@ exports.create = (req, res) => {
                                 );
                                 return reject(err);
                               }
-                              console.log(
-                                "Branch created successfully:",
-                                branch.branch_name
-                              );
                               resolve(branchResult);
                             }
                           );
@@ -307,7 +298,6 @@ exports.create = (req, res) => {
 
                     Promise.all(branchCreationPromises)
                       .then((branchResults) => {
-                        console.log("All branches created successfully.");
                         AdminCommon.adminActivityLog(
                           admin_id,
                           "Customer",
@@ -327,7 +317,6 @@ exports.create = (req, res) => {
                           password
                         )
                           .then(() => {
-                            console.log("Email sent successfully.");
                             res.json({
                               status: true,
                               message:
