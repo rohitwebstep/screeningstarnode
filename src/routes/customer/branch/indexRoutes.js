@@ -4,7 +4,7 @@ const branchController = require("../../../controllers/customer/branch/branchCon
 const authController = require("../../../controllers/customer/branch/authController");
 
 // Basic routes
-router.post('/login', authController.login);
-router.post('/logout', authController.logout);
+router.post("/login", authController.login);
+router.get("/logout", authController.logout);
 
 module.exports = router;
