@@ -1,10 +1,12 @@
-const Common = require('../../models/admin/commonModel');
+const Common = require("../../models/admin/commonModel");
 
 exports.isAdminTokenValid = (req, res) => {
   const { admin_id } = req.params;
 
   if (!admin_id) {
-    return res.status(400).json({ status: false, message: "Admin ID is required" });
+    return res
+      .status(400)
+      .json({ status: false, message: "Admin ID is required" });
   }
 
   // Convert admin_id to a number to ensure correct type handling
@@ -12,7 +14,7 @@ exports.isAdminTokenValid = (req, res) => {
 
   Common.isAdminTokenValid(adminId, (err, result) => {
     if (err) {
-      console.error('Error checking token validity:', err);
+      console.error("Error checking token validity:", err);
       return res.status(500).json(err);
     }
 

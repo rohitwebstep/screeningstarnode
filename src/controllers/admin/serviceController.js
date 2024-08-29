@@ -91,7 +91,7 @@ exports.list = (req, res) => {
     });
   }
   const action = JSON.stringify({ service: "list" });
-  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
+  Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
         status: false,
@@ -142,7 +142,7 @@ exports.getServiceById = (req, res) => {
     });
   }
   const action = JSON.stringify({ service: "list" });
-  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
+  Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
         status: false,
