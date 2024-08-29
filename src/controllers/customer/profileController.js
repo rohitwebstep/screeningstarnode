@@ -2,7 +2,7 @@ const crypto = require("crypto");
 const Customer = require("../../models/customer/customerModel");
 const Branch = require("../../models/customer/branch/branchModel");
 const AdminCommon = require("../../models/admin/commonModel");
-const { sendEmail } = require("../../models/mailer/customerMailer");
+const { sendEmail } = require("../../mailer/customerMailer");
 
 // Helper function to generate a password
 const generatePassword = (companyName) => {
