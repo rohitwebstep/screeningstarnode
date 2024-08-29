@@ -1,5 +1,5 @@
 const nodemailer = require("nodemailer");
-const connection = require("../../config/db"); // Import the existing MySQL connection
+const connection = require("../config/db"); // Import the existing MySQL connection
 
 // Function to generate HTML table from branch details
 const generateTable = (branches, password) => {
