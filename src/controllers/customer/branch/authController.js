@@ -1,6 +1,6 @@
 const crypto = require("crypto");
-const Admin = require("../../models/admin/adminModel");
-const Common = require("../../models/admin/commonModel");
+const Branch = require("../../../models/customer/branch/branchModel");
+const Common = require("../../../models/branch/commonModel");
 
 // Utility function to generate a random token
 const generateToken = () => crypto.randomBytes(32).toString("hex");
@@ -8,7 +8,7 @@ const generateToken = () => crypto.randomBytes(32).toString("hex");
 // Utility function to get token expiry time (1 hour from current time)
 const getTokenExpiry = () => new Date(Date.now() + 3600000).toISOString();
 
-// Admin login handler
+// Branch login handler
 exports.login = (req, res) => {
   const { username, password } = req.body;
   const missingFields = [];
@@ -29,93 +29,92 @@ exports.login = (req, res) => {
     });
   }
 
-  // Find admin by email or mobile number
-  Admin.findByEmailOrMobile(username, (err, result) => {
+  // Find branch by email or mobile number
+  Branch.findByEmailOrMobile(username, (err, result) => {
     if (err) {
       console.error("Database error:", err);
       return res.status(500).json({ status: false, message: err.message });
     }
 
-    // If no admin found, return a 404 response
+    // If no branch found, return a 404 response
     if (result.length === 0) {
       return res.status(404).json({
         status: false,
-        message: "Admin not found with the provided email or mobile number",
+        message: "Branch not found with the provided email or mobile number",
       });
     }
 
-    const admin = result[0];
+    const branch = result[0];
 
     // Validate password
-    Admin.validatePassword(username, password, (err, isValid) => {
+    Branch.validatePassword(username, password, (err, isValid) => {
       if (err) {
         console.error("Database error:", err);
-        Common.adminLoginLog(
-          admin.id,
-          "login",
-          "0",
-          err.message,
-          () => { }
-        );
+        Common.branchLoginLog(branch.id, "login", "0", err.message, () => {});
         return res.status(500).json({ status: false, message: err.message });
       }
 
       // If the password is incorrect, log the attempt and return a 401 response
       if (!isValid) {
-        Common.adminLoginLog(
-          admin.id,
+        Common.branchLoginLog(
+          branch.id,
           "login",
           "0",
           "Incorrect password",
-          () => { }
+          () => {}
         );
-        return res.status(401).json({ status: false, message: "Incorrect password" });
+        return res
+          .status(401)
+          .json({ status: false, message: "Incorrect password" });
       }
 
-      if (admin.status == 0) {
-        Common.adminLoginLog(
-          admin.id,
+      if (branch.status == 0) {
+        Common.branchLoginLog(
+          branch.id,
           "login",
           "0",
-          "Admin account is not yet verified.",
-          () => { }
+          "Branch account is not yet verified.",
+          () => {}
         );
         return res.status(400).json({
           status: false,
-          message: "Admin account is not yet verified. Please complete the verification process before proceeding."
+          message:
+            "Branch account is not yet verified. Please complete the verification process before proceeding.",
         });
       }
 
-      if (admin.status == 2) {
-        Common.adminLoginLog(
-          admin.id,
+      if (branch.status == 2) {
+        Common.branchLoginLog(
+          branch.id,
           "login",
           "0",
-          "Admin account has been suspended.",
-          () => { }
+          "Branch account has been suspended.",
+          () => {}
         );
         return res.status(400).json({
           status: false,
-          message: "Admin account has been suspended. Please contact the help desk for further assistance."
+          message:
+            "Branch account has been suspended. Please contact the help desk for further assistance.",
         });
       }
 
       // Get current time and token expiry
       const currentTime = new Date(); // Current time
-      const tokenExpiry = new Date(admin.token_expiry); // Convert token_expiry to Date object
+      const tokenExpiry = new Date(branch.token_expiry); // Convert token_expiry to Date object
 
       // Check if the existing token is still valid
-      if (admin.login_token && tokenExpiry > currentTime) {
-        Common.adminLoginLog(
-          admin.id,
+      if (branch.login_token && tokenExpiry > currentTime) {
+        Common.branchLoginLog(
+          branch.id,
           "login",
           "0",
-          "Another admin is currently logged in.",
-          () => { }
+          "Another branch is currently logged in.",
+          () => {}
         );
         return res.status(400).json({
           status: false,
-          message: "Another admin is currently logged in. Please try again later."
+          message:
+            "Another branch is currently logged in. Please try again later.",
         });
       }
 
@@ -124,15 +123,15 @@ exports.login = (req, res) => {
       const newTokenExpiry = getTokenExpiry(); // This will be an ISO string
 
       // Update the token in the database
-      Admin.updateToken(admin.id, token, newTokenExpiry, (err) => {
+      Branch.updateToken(branch.id, token, newTokenExpiry, (err) => {
         if (err) {
           console.error("Database error:", err);
-          Common.adminLoginLog(
-            admin.id,
+          Common.branchLoginLog(
+            branch.id,
             "login",
             "0",
             "Error updating token: " + err.message,
-            () => { }
+            () => {}
           );
           return res.status(500).json({
             status: false,
@@ -141,21 +140,21 @@ exports.login = (req, res) => {
         }
 
         // Log successful login and return the response
-        Common.adminLoginLog(admin.id, "login", "1", null, () => { });
-        const { login_token, token_expiry, ...adminDataWithoutToken } = admin;
+        Common.branchLoginLog(branch.id, "login", "1", null, () => {});
+        const { login_token, token_expiry, ...branchDataWithoutToken } = branch;
 
         res.json({
           status: true,
           message: "Login successful",
-          adminData: adminDataWithoutToken,
-          token
+          branchData: branchDataWithoutToken,
+          token,
         });
       });
     });
   });
 };
 
-// Admin logout handler
+// Branch logout handler
 exports.logout = (req, res) => {
   const { admin_id, _token } = req.query;
 
@@ -163,7 +162,7 @@ exports.logout = (req, res) => {
   let missingFields = [];
 
   if (!admin_id) {
-    missingFields.push("Admin ID");
+    missingFields.push("Branch ID");
   }
   if (!_token) {
     missingFields.push("Token");
@@ -176,7 +175,7 @@ exports.logout = (req, res) => {
     });
   }
 
-  // Validate the admin token
+  // Validate the branch token
   Common.isAdminTokenValid(_token, admin_id, (err, result) => {
     if (err) {
       console.error("Error checking token validity:", err);
@@ -188,63 +187,70 @@ exports.logout = (req, res) => {
     }
 
     // Update the token in the database to null
-    Admin.logout(admin_id, (err) => {
+    Branch.logout(admin_id, (err) => {
       if (err) {
-        console.error('Database error:', err);
-        return res.status(500).json({ status: false, message: `Error logging out: ${err.message}` });
+        console.error("Database error:", err);
+        return res.status(500).json({
+          status: false,
+          message: `Error logging out: ${err.message}`,
+        });
       }
 
       res.json({
         status: true,
-        message: 'Logout successful',
+        message: "Logout successful",
       });
     });
   });
 };
 
-// Admin login validation handler
+// Branch login validation handler
 exports.validateLogin = (req, res) => {
   const { admin_id, _token } = req.body;
   const missingFields = [];
 
   // Validate required fields
   if (!admin_id) {
-    missingFields.push('Admin ID');
+    missingFields.push("Branch ID");
   }
   if (!_token) {
-    missingFields.push('Token');
+    missingFields.push("Token");
   }
 
   // If there are missing fields, return an error response
   if (missingFields.length > 0) {
     return res.status(400).json({
       status: false,
-      message: `Missing required fields: ${missingFields.join(', ')}`,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
 
-  // Fetch the admin record by admin_id to retrieve the saved token and expiry
-  Admin.validateLogin(admin_id, (err, result) => {
+  // Fetch the branch record by admin_id to retrieve the saved token and expiry
+  Branch.validateLogin(admin_id, (err, result) => {
     if (err) {
-      console.error('Database error:', err);
+      console.error("Database error:", err);
       return res.status(500).json({ status: false, message: err.message });
     }
 
     if (result.length === 0) {
-      return res.status(404).json({ status: false, message: 'Admin not found' });
+      return res
+        .status(404)
+        .json({ status: false, message: "Branch not found" });
     }
 
-    const admin = result[0];
-    const isTokenValid = admin.login_token === _token;
+    const branch = result[0];
+    const isTokenValid = branch.login_token === _token;
 
     if (!isTokenValid) {
-      return res.status(401).json({ status: false, message: 'Invalid or expired token' });
+      return res
+        .status(401)
+        .json({ status: false, message: "Invalid or expired token" });
     }
 
     res.json({
       status: true,
-      message: 'Login validated successfully',
-      result: admin,
+      message: "Login validated successfully",
+      result: branch,
     });
   });
 };
