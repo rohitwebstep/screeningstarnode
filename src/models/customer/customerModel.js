@@ -42,8 +42,8 @@ const Customer = {
 
   create: (customerData, callback) => {
     const sqlCustomers = `
-      INSERT INTO \`customers\` (\`client_unique_id\`, \`name\`, \`additional_login\`, \`username\`, \`profile_picture\`, \`emails\`, \`mobile\`, \`services\`, \`status\`, \`admin_id\`
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO \`customers\` (\`client_unique_id\`, \`name\`, \`additional_login\`, \`username\`, \`profile_picture\`, \`emails\`, \`mobile\`, \`services\`, \`admin_id\`
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const valuesCustomers = [
@@ -55,7 +55,6 @@ const Customer = {
       customerData.emails_json,
       customerData.mobile_number,
       customerData.services,
-      customerData.status || "0",
       customerData.admin_id,
     ];
 

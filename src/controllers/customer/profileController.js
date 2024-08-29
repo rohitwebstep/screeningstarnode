@@ -171,7 +171,6 @@ exports.create = (req, res) => {
             mobile_number,
             role,
             services: JSON.stringify(clientData),
-            status: "0",
             additional_login: additional_login_int,
             username:
               additional_login && additional_login.toLowerCase() === "yes"
