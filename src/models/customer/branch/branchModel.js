@@ -3,7 +3,7 @@ const pool = require("../../../config/db");
 const Branch = {
   findByEmailOrMobile: (username, callback) => {
     const sql = `
-      SELECT \`id\`, \`emp_id\`, \`name\`, \`profile_picture\`, \`email\`, \`mobile\`, \`status\`, \`login_token\`, \`token_expiry\`
+      SELECT \`id\`, \`name\`, \`email\`, \`mobile\`, \`status\`, \`login_token\`, \`token_expiry\`
       FROM \`branches\`
       WHERE \`email\` = ? OR \`mobile\` = ?
     `;
@@ -27,7 +27,7 @@ const Branch = {
 
   validatePassword: (username, password, callback) => {
     const sql = `
-      SELECT \`id\`, \`emp_id\`, \`name\`, \`profile_picture\`, \`email\`, \`mobile\`, \`status\`
+      SELECT \`id\`, \`name\`, \`email\`, \`status\`
       FROM \`branches\`
       WHERE (\`email\` = ? OR \`mobile\` = ?)
       AND \`password\` = MD5(?)
@@ -123,7 +123,7 @@ const Branch = {
   },
   findById: (id, callback) => {
     const sql = `
-      SELECT \`id\`, \`emp_id\`, \`name\`, \`profile_picture\`, \`email\`, \`mobile\`, \`permissions\`, \`status\`
+      SELECT \`id\`, \`name\`, \`email\`, \`mobile\`, \`permissions\`, \`status\`
       FROM \`branches\`
       WHERE \`id\` = ?
     `;
