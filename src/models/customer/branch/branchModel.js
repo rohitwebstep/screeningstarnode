@@ -3,12 +3,12 @@ const pool = require("../../../config/db");
 const Branch = {
   findByEmailOrMobile: (username, callback) => {
     const sql = `
-      SELECT \`id\`, \`name\`, \`email\`, \`mobile\`, \`status\`, \`login_token\`, \`token_expiry\`
+      SELECT \`id\`, \`name\`, \`email\`, \`status\`, \`login_token\`, \`token_expiry\`
       FROM \`branches\`
-      WHERE \`email\` = ? OR \`mobile\` = ?
+      WHERE \`email\` = ?
     `;
 
-    pool.query(sql, [username, username], (err, results) => {
+    pool.query(sql, [username], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback({ message: "Database query error", error: err }, null);
@@ -16,7 +16,7 @@ const Branch = {
 
       if (results.length === 0) {
         return callback(
-          { message: "No branch found with the provided email or mobile" },
+          { message: "No branch found with the provided email" },
           null
         );
       }
@@ -29,11 +29,11 @@ const Branch = {
     const sql = `
       SELECT \`id\`, \`name\`, \`email\`, \`status\`
       FROM \`branches\`
-      WHERE (\`email\` = ? OR \`mobile\` = ?)
+      WHERE (\`email\` = ?)
       AND \`password\` = MD5(?)
     `;
 
-    pool.query(sql, [username, username, password], (err, results) => {
+    pool.query(sql, [username, password], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback({ message: "Database query error", error: err }, null);
@@ -123,7 +123,7 @@ const Branch = {
   },
   findById: (id, callback) => {
     const sql = `
-      SELECT \`id\`, \`name\`, \`email\`, \`mobile\`, \`permissions\`, \`status\`
+      SELECT \`id\`, \`name\`, \`email\`, \`permissions\`, \`status\`
       FROM \`branches\`
       WHERE \`id\` = ?
     `;
