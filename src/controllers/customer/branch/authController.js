@@ -156,12 +156,12 @@ exports.login = (req, res) => {
 
 // Branch logout handler
 exports.logout = (req, res) => {
-  const { admin_id, _token } = req.query;
+  const { branch_id, _token } = req.query;
 
   // Validate required fields and create a custom message
   let missingFields = [];
 
-  if (!admin_id) {
+  if (!branch_id) {
     missingFields.push("Branch ID");
   }
   if (!_token) {
@@ -176,7 +176,7 @@ exports.logout = (req, res) => {
   }
 
   // Validate the branch token
-  Common.isAdminTokenValid(_token, admin_id, (err, result) => {
+  Common.isAdminTokenValid(_token, branch_id, (err, result) => {
     if (err) {
       console.error("Error checking token validity:", err);
       return res.status(500).json(err);
@@ -187,7 +187,7 @@ exports.logout = (req, res) => {
     }
 
     // Update the token in the database to null
-    Branch.logout(admin_id, (err) => {
+    Branch.logout(branch_id, (err) => {
       if (err) {
         console.error("Database error:", err);
         return res.status(500).json({
@@ -206,11 +206,11 @@ exports.logout = (req, res) => {
 
 // Branch login validation handler
 exports.validateLogin = (req, res) => {
-  const { admin_id, _token } = req.body;
+  const { branch_id, _token } = req.body;
   const missingFields = [];
 
   // Validate required fields
-  if (!admin_id) {
+  if (!branch_id) {
     missingFields.push("Branch ID");
   }
   if (!_token) {
@@ -225,8 +225,8 @@ exports.validateLogin = (req, res) => {
     });
   }
 
-  // Fetch the branch record by admin_id to retrieve the saved token and expiry
-  Branch.validateLogin(admin_id, (err, result) => {
+  // Fetch the branch record by branch_id to retrieve the saved token and expiry
+  Branch.validateLogin(branch_id, (err, result) => {
     return res.status(400).json({
       status: true,
       message: `Request Hit 2`,
