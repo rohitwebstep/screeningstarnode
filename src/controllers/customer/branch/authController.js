@@ -176,7 +176,7 @@ exports.logout = (req, res) => {
   }
 
   // Validate the branch token
-  Common.isAdminTokenValid(_token, branch_id, (err, result) => {
+  Common.isBranchTokenValid(_token, branch_id, (err, result) => {
     if (err) {
       console.error("Error checking token validity:", err);
       return res.status(500).json(err);
