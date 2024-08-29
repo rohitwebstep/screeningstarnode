@@ -1,6 +1,6 @@
 const crypto = require("crypto");
 const Branch = require("../../../models/customer/branch/branchModel");
-const Common = require("../../../models/branch/commonModel");
+const Common = require("../../../models/customer/branch/commonModel");
 
 // Utility function to generate a random token
 const generateToken = () => crypto.randomBytes(32).toString("hex");
