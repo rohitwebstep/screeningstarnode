@@ -290,10 +290,8 @@ exports.create = (req, res) => {
                           );
                         })
                     );
-                    console.log("Step - 1");
                     Promise.all(branchCreationPromises)
                       .then((branchResults) => {
-                        console.log("Step - 2");
 
                         AdminCommon.adminActivityLog(
                           admin_id,
@@ -304,7 +302,6 @@ exports.create = (req, res) => {
                           null,
                           () => {}
                         );
-                        console.log("Step - 3");
                         // Send email notification
                         sendEmail(
                           "customer",
@@ -314,7 +311,6 @@ exports.create = (req, res) => {
                           password
                         )
                           .then(() => {
-                            console.log("Step - 4");
                             res.json({
                               status: true,
                               message:
