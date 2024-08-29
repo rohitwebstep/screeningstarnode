@@ -79,15 +79,10 @@ exports.create = (req, res) => {
           () => {}
         );
 
-        res.json({
+        res.status(201).json({
           status: true,
-          message:
-            "Customer and branches created successfully, and email sent.",
-          data: {
-            customer: result,
-            meta: metaResult,
-            branches: branchResults,
-          },
+          message: "Package created successfully.",
+          package: result,
           token: newToken,
         });
       });
