@@ -10,10 +10,6 @@ const getTokenExpiry = () => new Date(Date.now() + 3600000).toISOString();
 
 // Branch login handler
 exports.login = (req, res) => {
-  return res.status(400).json({
-    status: true,
-    message: `Request Hit`,
-  });
   const { username, password } = req.body;
   const missingFields = [];
 
@@ -243,7 +239,9 @@ exports.validateLogin = (req, res) => {
     }
 
     const branch = result[0];
-    const isTokenValid = branch.login_token === _token;
+    const isTokenValid =
+      branch.login_token === _token &&
+      new Date(branch.token_expiry) > new Date();
 
     if (!isTokenValid) {
       return res
