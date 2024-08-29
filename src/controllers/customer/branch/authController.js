@@ -227,6 +227,10 @@ exports.validateLogin = (req, res) => {
 
   // Fetch the branch record by admin_id to retrieve the saved token and expiry
   Branch.validateLogin(admin_id, (err, result) => {
+    return res.status(400).json({
+      status: true,
+      message: `Request Hit 2`,
+    });
     if (err) {
       console.error("Database error:", err);
       return res.status(500).json({ status: false, message: err.message });
