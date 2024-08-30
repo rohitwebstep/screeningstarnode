@@ -1,4 +1,4 @@
-const Client = require("../../../models/customer/branch/clientModel");
+const Client = require("../../../models/customer/branch/clientApplicationModel");
 const Common = require("../../../models/customer/branch/commonModel");
 const { sendEmail } = require("../../../mailer/clientMailer");
 

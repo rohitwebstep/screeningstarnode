@@ -317,7 +317,7 @@ exports.create = (req, res) => {
                                 meta: metaResult,
                                 branches: [headBranchResult, ...branchResults],
                               },
-                              _token: newToken,
+                              token: newToken,
                             });
                           })
                           .catch((emailError) => {
@@ -331,7 +331,7 @@ exports.create = (req, res) => {
                                 meta: metaResult,
                                 branches: [headBranchResult, ...branchResults],
                               },
-                              _token: newToken,
+                              token: newToken,
                             });
                           });
                       })
