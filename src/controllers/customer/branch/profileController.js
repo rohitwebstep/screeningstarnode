@@ -183,7 +183,7 @@ exports.delete = (req, res) => {
           }
 
           // Check if the branch is the head branch
-          if (currentBranch.is_head === 1) {
+          if (currentBranch.is_head == 1) {
             return res.status(403).json({
               status: false,
               message: "Cannot delete the head branch.",
