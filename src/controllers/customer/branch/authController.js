@@ -50,20 +50,14 @@ exports.login = (req, res) => {
     BranchAuth.validatePassword(username, password, (err, isValid) => {
       if (err) {
         console.error("Database error:", err);
-        Common.branchLoginLog(
-          BranchAuth.id,
-          "login",
-          "0",
-          err.message,
-          () => {}
-        );
+        Common.branchLoginLog(branch.id, "login", "0", err.message, () => {});
         return res.status(500).json({ status: false, message: err.message });
       }
 
       // If the password is incorrect, log the attempt and return a 401 response
       if (!isValid) {
         Common.branchLoginLog(
-          BranchAuth.id,
+          branch.id,
           "login",
           "0",
           "Incorrect password",
@@ -74,9 +68,9 @@ exports.login = (req, res) => {
           .json({ status: false, message: "Incorrect password" });
       }
 
-      if (BranchAuth.status == 0) {
+      if (branch.status == 0) {
         Common.branchLoginLog(
-          BranchAuth.id,
+          branch.id,
           "login",
           "0",
           "Branch account is not yet verified.",
@@ -89,9 +83,9 @@ exports.login = (req, res) => {
         });
       }
 
-      if (BranchAuth.status == 2) {
+      if (branch.status == 2) {
         Common.branchLoginLog(
-          BranchAuth.id,
+          branch.id,
           "login",
           "0",
           "Branch account has been suspended.",
@@ -106,12 +100,12 @@ exports.login = (req, res) => {
 
       // Get current time and token expiry
       const currentTime = new Date(); // Current time
-      const tokenExpiry = new Date(BranchAuth.token_expiry); // Convert token_expiry to Date object
+      const tokenExpiry = new Date(branch.token_expiry); // Convert token_expiry to Date object
 
       // Check if the existing token is still valid
-      if (BranchAuth.login_token && tokenExpiry > currentTime) {
+      if (branch.login_token && tokenExpiry > currentTime) {
         Common.branchLoginLog(
-          BranchAuth.id,
+          branch.id,
           "login",
           "0",
           "Another branch is currently logged in.",
@@ -129,11 +123,11 @@ exports.login = (req, res) => {
       const newTokenExpiry = getTokenExpiry(); // This will be an ISO string
 
       // Update the token in the database
-      BranchAuth.updateToken(BranchAuth.id, token, newTokenExpiry, (err) => {
+      BranchAuth.updateToken(branch.id, token, newTokenExpiry, (err) => {
         if (err) {
           console.error("Database error:", err);
           Common.branchLoginLog(
-            BranchAuth.id,
+            branch.id,
             "login",
             "0",
             "Error updating token: " + err.message,
@@ -146,7 +140,7 @@ exports.login = (req, res) => {
         }
 
         // Log successful login and return the response
-        Common.branchLoginLog(BranchAuth.id, "login", "1", null, () => {});
+        Common.branchLoginLog(branch.id, "login", "1", null, () => {});
         const { login_token, token_expiry, ...branchDataWithoutToken } = branch;
 
         res.json({
@@ -233,10 +227,6 @@ exports.validateLogin = (req, res) => {
 
   // Fetch the branch record by branch_id to retrieve the saved token and expiry
   BranchAuth.validateLogin(branch_id, (err, result) => {
-    return res.status(400).json({
-      status: true,
-      message: `Request Hit 2`,
-    });
     if (err) {
       console.error("Database error:", err);
       return res.status(500).json({ status: false, message: err.message });
@@ -250,8 +240,8 @@ exports.validateLogin = (req, res) => {
 
     const branch = result[0];
     const isTokenValid =
-      BranchAuth.login_token === _token &&
-      new Date(BranchAuth.token_expiry) > new Date();
+      branch.login_token === _token &&
+      new Date(branch.token_expiry) > new Date();
 
     if (!isTokenValid) {
       return res
