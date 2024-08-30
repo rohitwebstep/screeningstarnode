@@ -119,6 +119,7 @@ const Customer = {
     const sql = `
       SELECT 
         customers.*, 
+        customers.id AS main_id, 
         customer_metas.*,
         customer_metas.id AS meta_id
       FROM 
