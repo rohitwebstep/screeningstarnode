@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const clientController = require("../../../controllers/customer/branch/clientController");
+const clientController = require("../../../controllers/customer/branch/client/applicationController");
 
 // Basic routes
 router.post("/create", clientController.create);
