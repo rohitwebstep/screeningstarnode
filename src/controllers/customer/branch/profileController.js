@@ -174,7 +174,7 @@ exports.delete = (req, res) => {
               message: "Failed to retrieve branch. Please try again.",
             });
           }
-
+          console.log(currentBranch);
           if (!currentBranch) {
             return res.status(404).json({
               status: false,
