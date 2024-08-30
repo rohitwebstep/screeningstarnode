@@ -1,84 +1,34 @@
-const crypto = require("crypto");
-const Customer = require("../../models/customer/customerModel");
-const Branch = require("../../models/customer/branch/branchModel");
-const AdminCommon = require("../../models/admin/commonModel");
-const { sendEmail } = require("../../mailer/customerMailer");
-
-// Helper function to generate a password
-const generatePassword = (companyName) => {
-  const firstName = companyName.split(" ")[0];
-  return `${firstName}@123`;
-};
+const Branch = require("../../../../models/customer/branch/branchModel");
+const BranchCommon = require("../../../../models/customer/commonModel");
+const { sendEmail } = require("../../../../mailer/clientApplicationMailer");
 
 exports.create = (req, res) => {
   const {
     admin_id,
     _token,
-    tat,
-    role,
-    state,
-    gstin,
-    emails,
-    address,
-    username,
-    branches,
-    state_code,
-    clientData,
-    agr_upload,
-    client_spoc,
-    client_code,
-    package_name,
-    company_name,
-    mobile_number,
-    contact_person,
-    date_agreement,
-    client_standard,
-    additional_login,
-    agreement_period,
-    name_of_escalation,
-    custom_template,
-    custom_logo,
-    custom_address,
+    name,
+    attach_documents,
+    emp_id,
+    spoc,
+    location,
+    batch_number,
+    sub_client,
+    photo,
   } = req.body;
 
   // Define required fields
   const requiredFields = {
     admin_id,
     _token,
-    tat,
-    role,
-    state,
-    gstin,
-    emails,
-    address,
-    branches,
-    state_code,
-    clientData,
-    agr_upload,
-    client_spoc,
-    client_code,
-    package_name,
-    company_name,
-    mobile_number,
-    contact_person,
-    date_agreement,
-    client_standard,
-    additional_login,
-    agreement_period,
-    name_of_escalation,
-    custom_template,
+    name,
+    attach_documents,
+    employee_id,
+    spoc,
+    location,
+    batch_number,
+    sub_client,
+    photo,
   };
-
-  let additional_login_int = 0;
-  if (additional_login && additional_login.toLowerCase() === "yes") {
-    additional_login_int = 1;
-    requiredFields.username = username;
-  }
-
-  if (custom_template && custom_template.toLowerCase() === "yes") {
-    requiredFields.custom_logo = custom_logo;
-    requiredFields.custom_address = custom_address;
-  }
 
   // Check for missing fields
   const missingFields = Object.keys(requiredFields)
@@ -92,8 +42,8 @@ exports.create = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ customer: "create" });
-  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
+  const action = JSON.stringify({ client_application: "create" });
+  BranchCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
         status: false,
@@ -102,7 +52,7 @@ exports.create = (req, res) => {
     }
 
     // Verify admin token
-    AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
+    BranchCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
         return res.status(500).json({ status: false, message: err.message });
@@ -178,7 +128,7 @@ exports.create = (req, res) => {
           (err, result) => {
             if (err) {
               console.error("Database error while creating customer:", err);
-              AdminCommon.adminActivityLog(
+              BranchCommon.adminActivityLog(
                 admin_id,
                 "Customer",
                 "Create",
@@ -205,6 +155,7 @@ exports.create = (req, res) => {
                 tat_days: tat,
                 agreement_date: date_agreement,
                 agreement_duration: agreement_period,
+                agreement_document,
                 custom_template,
                 custom_logo:
                   custom_template && custom_template.toLowerCase() === "yes"
@@ -224,7 +175,7 @@ exports.create = (req, res) => {
                     "Database error while creating customer meta:",
                     err
                   );
-                  AdminCommon.adminActivityLog(
+                  BranchCommon.adminActivityLog(
                     admin_id,
                     "Customer Meta",
                     "Create",
@@ -289,8 +240,7 @@ exports.create = (req, res) => {
                     );
                     Promise.all(branchCreationPromises)
                       .then((branchResults) => {
-
-                        AdminCommon.adminActivityLog(
+                        BranchCommon.adminActivityLog(
                           admin_id,
                           "Customer",
                           "Create",
@@ -369,7 +319,7 @@ exports.list = (req, res) => {
   }
 
   const action = JSON.stringify({ customer: "view" });
-  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
+  BranchCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
         status: false,
@@ -378,7 +328,7 @@ exports.list = (req, res) => {
     }
 
     // Verify admin token
-    AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
+    BranchCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
         return res.status(500).json({ status: false, message: err.message });
@@ -427,7 +377,7 @@ exports.delete = (req, res) => {
   const action = JSON.stringify({ customer: "delete" });
 
   // Check admin authorization
-  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
+  BranchCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       // Check the status returned by the authorization function
       return res.status(403).json({
@@ -437,7 +387,7 @@ exports.delete = (req, res) => {
     }
 
     // Validate admin token
-    AdminCommon.isAdminTokenValid(
+    BranchCommon.isAdminTokenValid(
       _token,
       admin_id,
       (err, tokenValidationResult) => {
@@ -479,7 +429,7 @@ exports.delete = (req, res) => {
           Customer.delete(id, (err, result) => {
             if (err) {
               console.error("Database error during customer deletion:", err);
-              AdminCommon.adminActivityLog(
+              BranchCommon.adminActivityLog(
                 admin_id,
                 "Customer",
                 "Delete",
@@ -494,7 +444,7 @@ exports.delete = (req, res) => {
               });
             }
 
-            AdminCommon.adminActivityLog(
+            BranchCommon.adminActivityLog(
               admin_id,
               "Customer",
               "Delete",
