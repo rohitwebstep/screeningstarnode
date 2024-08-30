@@ -1,7 +1,5 @@
-const Client = require("../../../../models/clientApplication/branch/clientApplicationModel");
-const BranchCommon = require("../../../../models/clientApplication/branch/commonModel");
-const Common = require("../../../../models/commonModel");
-const { sendEmail } = require("../../../../mailer/clientApplicationMailer");
+const Client = require("../../../../models/customer/branch/clientApplicationModel");
+const BranchCommon = require("../../../../models/customer/branch/commonModel");
 
 exports.create = (req, res) => {
   const {
@@ -100,7 +98,7 @@ exports.create = (req, res) => {
                 "Database error during client application creation:",
                 err
               );
-              Common.branchActivityLog(
+              BranchCommon.branchActivityLog(
                 branch_id,
                 "Client Application",
                 "Create",
@@ -116,7 +114,7 @@ exports.create = (req, res) => {
               });
             }
 
-            Common.branchActivityLog(
+            BranchCommon.branchActivityLog(
               branch_id,
               "Client Application",
               "Create",
