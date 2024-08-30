@@ -137,10 +137,9 @@ exports.delete = (req, res) => {
   // Check admin authorization
   AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
-      // Check the status returned by the authorization function
       return res.status(403).json({
         status: false,
-        message: result.message, // Return the message from the authorization function
+        message: result.message,
       });
     }
 
@@ -180,6 +179,14 @@ exports.delete = (req, res) => {
             return res.status(404).json({
               status: false,
               message: "Branch not found.",
+            });
+          }
+
+          // Check if the branch is the head branch
+          if (currentBranch.is_head === 1) {
+            return res.status(403).json({
+              status: false,
+              message: "Cannot delete the head branch.",
             });
           }
 

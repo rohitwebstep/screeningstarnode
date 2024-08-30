@@ -238,13 +238,13 @@ exports.create = (req, res) => {
                     message: err.error,
                   });
                 }
-
+                const headBranchEmail = emails[0];
                 // Create the first branch (head branch)
                 Branch.create(
                   {
                     customer_id: customerId,
-                    name: branches[0].branch_name,
-                    email: branches[0].branch_email,
+                    name: company_name,
+                    email: headBranchEmail,
                     head: 1,
                     password,
                   },
@@ -261,7 +261,7 @@ exports.create = (req, res) => {
                     const headBranchId = headBranchResult.insertId;
 
                     // Create remaining branches with head_branch_id as foreign key
-                    const branchCreationPromises = branches.slice(1).map(
+                    const branchCreationPromises = branches.map(
                       (branch) =>
                         new Promise((resolve, reject) => {
                           Branch.create(
@@ -289,7 +289,6 @@ exports.create = (req, res) => {
                     );
                     Promise.all(branchCreationPromises)
                       .then((branchResults) => {
-
                         AdminCommon.adminActivityLog(
                           admin_id,
                           "Customer",
