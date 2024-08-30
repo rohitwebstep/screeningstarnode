@@ -119,7 +119,8 @@ const Customer = {
     const sql = `
       SELECT 
         customers.*, 
-        customer_metas.*
+        customer_metas.*,
+        customer_metas.id AS meta_id
       FROM 
         customers
       LEFT JOIN 
