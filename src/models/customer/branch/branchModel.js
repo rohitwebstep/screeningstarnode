@@ -46,7 +46,7 @@ const Branch = {
     });
   },
 
-  listByCustomerID: (callback) => {
+  listByCustomerID: (customer_id, callback) => {
     const sql = `SELECT * FROM \`branches\` WHERE \`customer_id\` = ?`;
     pool.query(sql, [customer_id], (err, results) => {
       if (err) {
