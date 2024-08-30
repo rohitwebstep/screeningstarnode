@@ -10,7 +10,7 @@ const clientApplication = {
     batch_number,
     sub_client,
     photo,
-    admin_id,
+    branch_id,
     callback
   ) => {
     const sql = `
@@ -23,7 +23,7 @@ const clientApplication = {
         \`batch_number\`,
         \`sub_client\`,
         \`photo\`,
-        \`admin_id\`
+        \`branch_id\`
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
@@ -36,7 +36,7 @@ const clientApplication = {
       batch_number,
       sub_client,
       photo,
-      admin_id,
+      branch_id,
     ];
 
     pool.query(sql, values, (err, results) => {
