@@ -9,6 +9,7 @@ router.post("/login", authController.login);
 router.get("/list", profileController.list);
 router.get("/list-by-customer", profileController.listByCustomerID);
 router.get("/logout", authController.logout);
+router.delete("/delete", profileController.delete);
 
 router.use("/client-application", clientRoutes);
 module.exports = router;
