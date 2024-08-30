@@ -116,7 +116,17 @@ const Customer = {
   },
 
   list: (callback) => {
-    const sql = `SELECT * FROM \`customers\``;
+    const sql = `
+      SELECT 
+        customers.*, 
+        customer_metas.*
+      FROM 
+        customers
+      LEFT JOIN 
+        customer_metas 
+      ON 
+        customers.id = customer_metas.customer_id
+    `;
     pool.query(sql, (err, results) => {
       if (err) {
         console.error("Database query error:", err);
