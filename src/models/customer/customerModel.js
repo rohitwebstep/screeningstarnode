@@ -127,6 +127,17 @@ const Customer = {
     });
   },
 
+  getCustomerById: (id, callback) => {
+    const sql = "SELECT * FROM `customers` WHERE `id` = ?";
+    pool.query(sql, [id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results[0]);
+    });
+  },
+
   delete: (id, callback) => {
     const sql = `
         DELETE FROM \`customers\`
