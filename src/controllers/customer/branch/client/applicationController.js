@@ -66,10 +66,10 @@ exports.create = (req, res) => {
       // Check if client_unique_id already exists
       Client.checkUniqueEmpId(employee_id, (err, exists) => {
         if (err) {
-          console.error("Error checking unique ID:", err);
+          console.error("Error checking unique ID:", err.error);
           return res
             .status(500)
-            .json({ status: false, message: "Internal server error" });
+            .json({ status: false, message: err });
         }
 
         if (exists) {
