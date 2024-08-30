@@ -47,8 +47,8 @@ const Branch = {
   },
 
   listByCustomerID: (customer_id, callback) => {
-    const sql = `SELECT * FROM \`branches\` WHERE \`customer_id\` = ?`;
-    pool.query(sql, [customer_id], (err, results) => {
+    const sql = `SELECT * FROM \`branches\` WHERE \`is_head\` = ? \`customer_id\` = ?`;
+    pool.query(sql, [0, customer_id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback(err, null);
