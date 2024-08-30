@@ -7,6 +7,7 @@ const clientRoutes = require("./clientRoutes");
 // Basic routes
 router.post("/login", authController.login);
 router.get("/list", profileController.list);
+router.get("/list-by-customer", profileController.listByCustomerID);
 router.get("/logout", authController.logout);
 
 router.use("/client-application", clientRoutes);
