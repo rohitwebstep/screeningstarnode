@@ -1,14 +1,16 @@
-const Branch = require("../../../../models/customer/branch/branchModel");
-const BranchCommon = require("../../../../models/customer/commonModel");
+const Branch = require("../../../../models/clientApplication/branch/branchModel");
+const Client = require("../../../../models/clientApplication/branch/clientApplicationModel");
+const BranchCommon = require("../../../../models/clientApplication/branch/commonModel");
+const Common = require("../../../../models/commonModel");
 const { sendEmail } = require("../../../../mailer/clientApplicationMailer");
 
 exports.create = (req, res) => {
   const {
-    admin_id,
+    branch_id,
     _token,
     name,
     attach_documents,
-    emp_id,
+    employee_id,
     spoc,
     location,
     batch_number,
@@ -18,7 +20,7 @@ exports.create = (req, res) => {
 
   // Define required fields
   const requiredFields = {
-    admin_id,
+    branch_id,
     _token,
     name,
     attach_documents,
@@ -43,7 +45,7 @@ exports.create = (req, res) => {
   }
 
   const action = JSON.stringify({ client_application: "create" });
-  BranchCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
+  BranchCommon.isBranchAuthorizedForAction(branch_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
         status: false,
@@ -51,8 +53,8 @@ exports.create = (req, res) => {
       });
     }
 
-    // Verify admin token
-    BranchCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
+    // Verify branch token
+    BranchCommon.isBranchTokenValid(_token, branch_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
         return res.status(500).json({ status: false, message: err.message });
@@ -63,10 +65,9 @@ exports.create = (req, res) => {
       }
 
       const newToken = result.newToken;
-      const password = generatePassword(company_name);
 
       // Check if client_unique_id already exists
-      Customer.checkUniqueId(client_code, (err, exists) => {
+      Client.checkUniqueEmpId(employee_id, (err, exists) => {
         if (err) {
           console.error("Error checking unique ID:", err);
           return res
@@ -77,238 +78,74 @@ exports.create = (req, res) => {
         if (exists) {
           return res.status(400).json({
             status: false,
-            message: `Client Unique ID '${client_code}' already exists.`,
+            message: `Client Employee ID '${employee_id}' already exists.`,
           });
         }
 
-        // Check if username is required and exists
-        if (additional_login && additional_login.toLowerCase() === "yes") {
-          Customer.checkUsername(username, (err, exists) => {
-            if (err) {
-              console.error("Error checking username:", err);
-              return res
-                .status(500)
-                .json({ status: false, message: "Internal server error" });
-            }
-
-            if (exists) {
-              return res.status(400).json({
-                status: false,
-                message: `Username '${username}' already exists.`,
-              });
-            }
-
-            // Create new customer record
-            createCustomerRecord();
-          });
-        } else {
-          // Create new customer record
-          createCustomerRecord();
-        }
-      });
-
-      function createCustomerRecord() {
-        Customer.create(
+        // Create Client Application
+        Client.create(
           {
-            admin_id,
-            client_unique_id: client_code,
-            name: company_name,
-            address,
-            profile_picture: null,
-            emails_json: JSON.stringify(emails),
-            mobile_number,
-            role,
-            services: JSON.stringify(clientData),
-            additional_login: additional_login_int,
-            username:
-              additional_login && additional_login.toLowerCase() === "yes"
-                ? username
-                : null,
+            name,
+            attach_documents,
+            employee_id,
+            spoc,
+            location,
+            batch_number,
+            sub_client,
+            photo,
+            branch_id,
           },
           (err, result) => {
             if (err) {
-              console.error("Database error while creating customer:", err);
-              BranchCommon.adminActivityLog(
-                admin_id,
-                "Customer",
+              console.error(
+                "Database error during client application creation:",
+                err
+              );
+              Common.branchActivityLog(
+                branch_id,
+                "Client Application",
                 "Create",
                 "0",
                 null,
                 err.message,
                 () => {}
               );
-              return res
-                .status(500)
-                .json({ status: false, message: err.message });
+              return res.status(500).json({
+                status: false,
+                message:
+                  "Failed to create client application. Please try again.",
+              });
             }
 
-            const customerId = result.insertId;
-
-            Customer.createCustomerMeta(
-              {
-                customer_id: customerId,
-                address,
-                contact_person_name: contact_person,
-                escalation_point_contact: name_of_escalation,
-                single_point_of_contact: client_spoc,
-                gst_number: gstin,
-                tat_days: tat,
-                agreement_date: date_agreement,
-                agreement_duration: agreement_period,
-                agreement_document,
-                custom_template,
-                custom_logo:
-                  custom_template && custom_template.toLowerCase() === "yes"
-                    ? custom_logo
-                    : null,
-                custom_address:
-                  custom_template && custom_template.toLowerCase() === "yes"
-                    ? custom_address
-                    : null,
-                state,
-                state_code,
-                payment_contact_person: null,
-              },
-              (err, metaResult) => {
-                if (err) {
-                  console.error(
-                    "Database error while creating customer meta:",
-                    err
-                  );
-                  BranchCommon.adminActivityLog(
-                    admin_id,
-                    "Customer Meta",
-                    "Create",
-                    "0",
-                    `{id: ${customerId}}`,
-                    err.message,
-                    () => {}
-                  );
-                  return res.status(500).json({
-                    status: false,
-                    message: err.error,
-                  });
-                }
-
-                // Create the first branch (head branch)
-                Branch.create(
-                  {
-                    customer_id: customerId,
-                    name: branches[0].branch_name,
-                    email: branches[0].branch_email,
-                    head: 1,
-                    password,
-                  },
-                  (err, headBranchResult) => {
-                    if (err) {
-                      console.error("Error creating head branch:", err);
-                      return res.status(500).json({
-                        status: false,
-                        message:
-                          "Internal server error while creating head branch.",
-                      });
-                    }
-
-                    const headBranchId = headBranchResult.insertId;
-
-                    // Create remaining branches with head_branch_id as foreign key
-                    const branchCreationPromises = branches.slice(1).map(
-                      (branch) =>
-                        new Promise((resolve, reject) => {
-                          Branch.create(
-                            {
-                              customer_id: customerId,
-                              name: branch.branch_name,
-                              email: branch.branch_email,
-                              head: 0,
-                              head_id: headBranchId,
-                              password,
-                            },
-                            (err, branchResult) => {
-                              if (err) {
-                                console.error(
-                                  "Error creating branch:",
-                                  branch.branch_name,
-                                  err
-                                );
-                                return reject(err);
-                              }
-                              resolve(branchResult);
-                            }
-                          );
-                        })
-                    );
-                    Promise.all(branchCreationPromises)
-                      .then((branchResults) => {
-                        BranchCommon.adminActivityLog(
-                          admin_id,
-                          "Customer",
-                          "Create",
-                          "1",
-                          `{id: ${customerId}}`,
-                          null,
-                          () => {}
-                        );
-                        // Send email notification
-                        sendEmail(
-                          "customer",
-                          "create",
-                          company_name,
-                          branches,
-                          password
-                        )
-                          .then(() => {
-                            res.json({
-                              status: true,
-                              message:
-                                "Customer and branches created successfully, and credentials sent through mail.",
-                              data: {
-                                customer: result,
-                                meta: metaResult,
-                                branches: [headBranchResult, ...branchResults],
-                              },
-                              _token: newToken,
-                            });
-                          })
-                          .catch((emailError) => {
-                            console.error("Error sending email:", emailError);
-                            res.json({
-                              status: true,
-                              message:
-                                "Customer and branches created successfully, but failed to send email.",
-                              data: {
-                                customer: result,
-                                meta: metaResult,
-                                branches: [headBranchResult, ...branchResults],
-                              },
-                              _token: newToken,
-                            });
-                          });
-                      })
-                      .catch((error) => {
-                        console.error("Error creating branches:", error);
-                        res.status(500).json({
-                          status: false,
-                          message: "Error creating some branches.",
-                        });
-                      });
-                  }
-                );
-              }
+            Common.branchActivityLog(
+              branch_id,
+              "Client Application",
+              "Create",
+              "1",
+              `{id: ${result.insertId}}`,
+              null,
+              () => {}
             );
+
+            res.status(201).json({
+              status: true,
+              message: "Client application created successfully.",
+              package: result,
+              token: newToken,
+            });
           }
         );
-      }
+      });
     });
   });
 };
 
-// Controller to list all customers
+// Controller to list all clientApplications
 exports.list = (req, res) => {
-  const { admin_id, _token } = req.query;
+  const { branch_id, _token } = req.query;
 
   let missingFields = [];
-  if (!admin_id) missingFields.push("Admin ID");
+  if (!branch_id) missingFields.push("Branch ID");
   if (!_token) missingFields.push("Token");
 
   if (missingFields.length > 0) {
@@ -318,8 +155,8 @@ exports.list = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ customer: "view" });
-  BranchCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
+  const action = JSON.stringify({ client_application: "view" });
+  BranchCommon.isBranchAuthorizedForAction(branch_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
         status: false,
@@ -327,8 +164,8 @@ exports.list = (req, res) => {
       });
     }
 
-    // Verify admin token
-    BranchCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
+    // Verify branch token
+    BranchCommon.isBranchTokenValid(_token, branch_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
         return res.status(500).json({ status: false, message: err.message });
@@ -340,7 +177,7 @@ exports.list = (req, res) => {
 
       const newToken = result.newToken;
 
-      Customer.list((err, result) => {
+      Client.list((err, result) => {
         if (err) {
           console.error("Database error:", err);
           return res.status(500).json({ status: false, message: err.message });
@@ -348,8 +185,8 @@ exports.list = (req, res) => {
 
         res.json({
           status: true,
-          message: "Customers fetched successfully",
-          customers: result,
+          message: "Branches fetched successfully",
+          clientApplications: result,
           totalResults: result.length,
           token: newToken,
         });
@@ -359,12 +196,12 @@ exports.list = (req, res) => {
 };
 
 exports.delete = (req, res) => {
-  const { id, admin_id, _token } = req.query;
+  const { id, branch_id, _token } = req.query;
 
   // Validate required fields
   const missingFields = [];
-  if (!id) missingFields.push("Customer ID");
-  if (!admin_id) missingFields.push("Admin ID");
+  if (!id) missingFields.push("Branch ID");
+  if (!branch_id) missingFields.push("Branch ID");
   if (!_token) missingFields.push("Token");
 
   if (missingFields.length > 0) {
@@ -374,10 +211,10 @@ exports.delete = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ customer: "delete" });
+  const action = JSON.stringify({ client_application: "delete" });
 
-  // Check admin authorization
-  BranchCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
+  // Check branch authorization
+  BranchCommon.isBranchAuthorizedForAction(branch_id, action, (result) => {
     if (!result.status) {
       // Check the status returned by the authorization function
       return res.status(403).json({
@@ -386,10 +223,10 @@ exports.delete = (req, res) => {
       });
     }
 
-    // Validate admin token
-    BranchCommon.isAdminTokenValid(
+    // Validate branch token
+    BranchCommon.isBranchTokenValid(
       _token,
-      admin_id,
+      branch_id,
       (err, tokenValidationResult) => {
         if (err) {
           console.error("Token validation error:", err);
@@ -408,30 +245,36 @@ exports.delete = (req, res) => {
 
         const newToken = tokenValidationResult.newToken;
 
-        // Fetch the current customer
-        Customer.getCustomerById(id, (err, currentCustomer) => {
+        // Fetch the current clientApplication
+        Client.getClientApplicationById(id, (err, currentBranch) => {
           if (err) {
-            console.error("Database error during customer retrieval:", err);
+            console.error(
+              "Database error during clientApplication retrieval:",
+              err
+            );
             return res.status(500).json({
               status: false,
-              message: "Failed to retrieve customer. Please try again.",
+              message: "Failed to retrieve Client. Please try again.",
             });
           }
 
-          if (!currentCustomer) {
+          if (!currentBranch) {
             return res.status(404).json({
               status: false,
-              message: "Customer not found.",
+              message: "Branch not found.",
             });
           }
 
-          // Delete the customer
-          Customer.delete(id, (err, result) => {
+          // Delete the clientApplication
+          Client.delete(id, (err, result) => {
             if (err) {
-              console.error("Database error during customer deletion:", err);
-              BranchCommon.adminActivityLog(
-                admin_id,
-                "Customer",
+              console.error(
+                "Database error during clientApplication deletion:",
+                err
+              );
+              BranchCommon.branchActivityLog(
+                branch_id,
+                "Branch",
                 "Delete",
                 "0",
                 JSON.stringify({ id }),
@@ -440,13 +283,13 @@ exports.delete = (req, res) => {
               );
               return res.status(500).json({
                 status: false,
-                message: "Failed to delete customer. Please try again.",
+                message: "Failed to delete Client. Please try again.",
               });
             }
 
-            BranchCommon.adminActivityLog(
-              admin_id,
-              "Customer",
+            BranchCommon.branchActivityLog(
+              branch_id,
+              "Branch",
               "Delete",
               "1",
               JSON.stringify({ id }),
@@ -456,7 +299,7 @@ exports.delete = (req, res) => {
 
             res.status(200).json({
               status: true,
-              message: "Customer deleted successfully.",
+              message: "Branch deleted successfully.",
               result,
               token: newToken,
             });
