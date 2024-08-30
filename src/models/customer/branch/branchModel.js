@@ -59,12 +59,18 @@ const Branch = {
 
   getBranchById: (id, callback) => {
     const sql = `SELECT * FROM \`branches\` WHERE \`id\` = ?`;
+
     pool.query(sql, [id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback(err, null);
       }
-      callback(null, results);
+
+      if (results.length === 0) {
+        return callback(null, null);
+      }
+
+      callback(null, results[0]);
     });
   },
 
