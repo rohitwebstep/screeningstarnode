@@ -34,6 +34,17 @@ const Branch = {
       callback(null, { insertId: branchID });
     });
   },
+
+  list: (callback) => {
+    const sql = `SELECT * FROM \`branches\``;
+    pool.query(sql, (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results);
+    });
+  },
 };
 
 module.exports = Branch;
