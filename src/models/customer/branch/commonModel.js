@@ -174,14 +174,46 @@ const common = {
         return callback({ status: false, message: "Branch not found" });
       }
 
-      const permissionsJson = JSON.parse(results[0].permissions);
-      const permissions =
-        typeof permissionsJson === "string"
-          ? JSON.parse(permissionsJson)
-          : permissionsJson;
+      const permissionsRaw = results[0].permissions;
 
-      const actionObj =
-        typeof action === "string" ? JSON.parse(action) : action;
+      // Check if permissions field is empty or null
+      if (!permissionsRaw) {
+        console.error("Permissions field is empty");
+        return callback({
+          status: false,
+          message: "Permissions field is empty",
+        });
+      }
+
+      let permissions;
+      try {
+        // Parse permissions JSON
+        permissions = JSON.parse(permissionsRaw);
+        if (typeof permissions !== "object" || permissions === null) {
+          throw new Error("Parsed permissions are not an object");
+        }
+      } catch (parseError) {
+        console.error("Error parsing permissions JSON:", parseError);
+        return callback({
+          status: false,
+          message: "Invalid permissions format",
+        });
+      }
+
+      let actionObj;
+      try {
+        actionObj = typeof action === "string" ? JSON.parse(action) : action;
+        if (
+          typeof actionObj !== "object" ||
+          actionObj === null ||
+          Array.isArray(actionObj)
+        ) {
+          throw new Error("Action is not a valid object");
+        }
+      } catch (actionError) {
+        console.error("Error parsing action JSON:", actionError);
+        return callback({ status: false, message: "Invalid action format" });
+      }
 
       // Extract action type and action name from the action object
       const [actionType, actionName] = Object.entries(actionObj)[0] || [];
