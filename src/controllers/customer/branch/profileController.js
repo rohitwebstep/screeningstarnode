@@ -174,10 +174,7 @@ exports.delete = (req, res) => {
               message: "Failed to retrieve branch. Please try again.",
             });
           }
-          return res.status(404).json({
-            status: false,
-            currentBranch
-          });
+
           console.log(currentBranch);
           if (!currentBranch) {
             return res.status(404).json({
@@ -193,7 +190,10 @@ exports.delete = (req, res) => {
               message: "Cannot delete the head branch.",
             });
           }
-
+          return res.status(404).json({
+            status: false,
+            currentBranch
+          });
           // Delete the branch
           Branch.delete(id, (err, result) => {
             if (err) {
