@@ -45,6 +45,17 @@ const Branch = {
       callback(null, results);
     });
   },
+
+  listByCustomerID: (callback) => {
+    const sql = `SELECT * FROM \`branches\` WHERE \`customer_id\` = ?`;
+    pool.query(sql, [customer_id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results);
+    });
+  },
 };
 
 module.exports = Branch;

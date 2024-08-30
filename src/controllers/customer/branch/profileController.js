@@ -57,6 +57,65 @@ exports.list = (req, res) => {
   });
 };
 
+// Controller to list perticular customer branches
+exports.listByCustomerID = (req, res) => {
+  const { admin_id, customer_id, _token } = req.query;
+
+  let missingFields = [];
+  if (!admin_id) missingFields.push("Admin ID");
+  if (!customer_id) missingFields.push("Customer ID");
+  if (!_token) missingFields.push("Token");
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  const action = JSON.stringify({ branch: "view" });
+  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (authResult) => {
+    if (!authResult.status) {
+      return res.status(403).json({
+        status: false,
+        message: authResult.message, // Return the message from the authorization function
+      });
+    }
+
+    // Verify admin token
+    AdminCommon.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
+      if (err) {
+        console.error("Error checking token validity:", err);
+        return res.status(500).json({ status: false, message: err.message });
+      }
+
+      if (!tokenResult.status) {
+        return res
+          .status(401)
+          .json({ status: false, message: tokenResult.message });
+      }
+
+      const newToken = tokenResult.newToken;
+
+      // Call the model method with customer_id
+      Branch.listByCustomerID(customer_id, (err, branches) => {
+        if (err) {
+          console.error("Database error:", err);
+          return res.status(500).json({ status: false, message: err.message });
+        }
+
+        res.json({
+          status: true,
+          message: "Branches fetched successfully",
+          branches: branches,
+          totalResults: branches.length,
+          token: newToken,
+        });
+      });
+    });
+  });
+};
+
 exports.delete = (req, res) => {
   const { id, admin_id, _token } = req.query;
 
