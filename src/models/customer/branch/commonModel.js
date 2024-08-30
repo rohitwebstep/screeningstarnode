@@ -181,7 +181,7 @@ const common = {
         console.error("Permissions field is empty");
         return callback({
           status: false,
-          message: "Permissions field is empty",
+          message: "Access Denied",
         });
       }
 
@@ -196,7 +196,7 @@ const common = {
         console.error("Error parsing permissions JSON:", parseError);
         return callback({
           status: false,
-          message: "Invalid permissions format",
+          message: "Access Denied",
         });
       }
 
@@ -212,7 +212,7 @@ const common = {
         }
       } catch (actionError) {
         console.error("Error parsing action JSON:", actionError);
-        return callback({ status: false, message: "Invalid action format" });
+        return callback({ status: false, message: "Access Denied" });
       }
 
       // Extract action type and action name from the action object
@@ -221,7 +221,7 @@ const common = {
       // Check if action type and action name are valid
       if (!actionType || !actionName) {
         console.error("Invalid action format");
-        return callback({ status: false, message: "Invalid action format" });
+        return callback({ status: false, message: "Access Denied" });
       }
 
       // Check if the action type exists in the permissions object
@@ -229,7 +229,7 @@ const common = {
         console.error("Action type not found in permissions");
         return callback({
           status: false,
-          message: "Action type not found in permissions",
+          message: "Access Denied",
         });
       }
 
@@ -238,9 +238,7 @@ const common = {
 
       return callback({
         status: isAuthorized,
-        message: isAuthorized
-          ? "Action is authorized"
-          : "Action is not authorized",
+        message: isAuthorized ? "Authorization Successful" : "Access Denied",
       });
     });
   },
