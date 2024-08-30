@@ -2,9 +2,6 @@ const Client = require("../../../../models/customer/branch/clientApplicationMode
 const BranchCommon = require("../../../../models/customer/branch/commonModel");
 
 exports.create = (req, res) => {
-  return res
-  .status(500)
-  .json({ status: false, message: "Internal server error" });
   const {
     branch_id,
     _token,
