@@ -1,4 +1,3 @@
-const Branch = require("../../../../models/clientApplication/branch/branchModel");
 const Client = require("../../../../models/clientApplication/branch/clientApplicationModel");
 const BranchCommon = require("../../../../models/clientApplication/branch/commonModel");
 const Common = require("../../../../models/commonModel");
