@@ -218,6 +218,7 @@ exports.create = (req, res) => {
                 state,
                 state_code,
                 payment_contact_person: null,
+                client_standard
               },
               (err, metaResult) => {
                 if (err) {
@@ -576,6 +577,7 @@ exports.update = (req, res) => {
               compareAndAddChanges("gst_number", gstin);
               compareAndAddChanges("tat_days", tat);
               compareAndAddChanges("agreement_date", date_agreement);
+              compareAndAddChanges("client_standard", client_standard);
               compareAndAddChanges("agreement_duration", agreement_period);
               compareAndAddChanges("custom_template", custom_template);
               if (custom_template && custom_template.toLowerCase() === "yes") {
@@ -723,6 +725,7 @@ exports.update = (req, res) => {
                         state,
                         state_code,
                         payment_contact_person: null,
+                        client_standard
                       },
                       (err, metaResult) => {
                         if (err) {

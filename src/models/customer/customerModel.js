@@ -150,8 +150,8 @@ const Customer = {
         \`single_point_of_contact\`, \`gst_number\`, \`tat_days\`, 
         \`agreement_date\`, \`agreement_duration\`, \`custom_template\`,
         \`custom_logo\`, \`custom_address\`, \`state\`, \`state_code\`, 
-        \`payment_contact_person\`
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        \`payment_contact_person\`, \`client_standard\`
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const valuesCustomerMetas = [
@@ -170,6 +170,7 @@ const Customer = {
       metaData.state,
       metaData.state_code,
       metaData.payment_contact_person,
+      metaData.client_standard,
     ];
 
     pool.query(sqlCustomerMetas, valuesCustomerMetas, (err, results) => {
@@ -205,7 +206,8 @@ const Customer = {
         \`custom_address\` = ?, 
         \`state\` = ?, 
         \`state_code\` = ?, 
-        \`payment_contact_person\` = ?
+        \`payment_contact_person\` = ?,
+        \`client_standard\` = ?
       WHERE \`customer_id\` = ?
     `;
 
@@ -224,6 +226,7 @@ const Customer = {
       metaData.state,
       metaData.state_code,
       metaData.payment_contact_person,
+      metaData.client_standard,
       customerId,
     ];
 
