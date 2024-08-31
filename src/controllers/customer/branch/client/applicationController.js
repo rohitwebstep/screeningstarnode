@@ -182,7 +182,7 @@ exports.list = (req, res) => {
 
         res.json({
           status: true,
-          message: "Branches fetched successfully",
+          message: "Client Applications fetched successfully",
           clientApplications: result,
           totalResults: result.length,
           token: newToken,
@@ -197,7 +197,7 @@ exports.delete = (req, res) => {
 
   // Validate required fields
   const missingFields = [];
-  if (!id) missingFields.push("Branch ID");
+  if (!id) missingFields.push("Client Application ID");
   if (!branch_id) missingFields.push("Branch ID");
   if (!_token) missingFields.push("Token");
 
@@ -243,7 +243,7 @@ exports.delete = (req, res) => {
         const newToken = tokenValidationResult.newToken;
 
         // Fetch the current clientApplication
-        Client.getClientApplicationById(id, (err, currentBranch) => {
+        Client.getClientApplicationById(id, (err, currentClientApplication) => {
           if (err) {
             console.error(
               "Database error during clientApplication retrieval:",
@@ -256,10 +256,10 @@ exports.delete = (req, res) => {
             });
           }
 
-          if (!currentBranch) {
+          if (!currentClientApplication) {
             return res.status(404).json({
               status: false,
-              message: "Branch not found.",
+              message: "Client Aplication not found.",
               token: newToken,
             });
           }
@@ -273,7 +273,7 @@ exports.delete = (req, res) => {
               );
               BranchCommon.branchActivityLog(
                 branch_id,
-                "Branch",
+                "Client Application",
                 "Delete",
                 "0",
                 JSON.stringify({ id }),
@@ -289,7 +289,7 @@ exports.delete = (req, res) => {
 
             BranchCommon.branchActivityLog(
               branch_id,
-              "Branch",
+              "Client Application",
               "Delete",
               "1",
               JSON.stringify({ id }),
@@ -299,7 +299,7 @@ exports.delete = (req, res) => {
 
             res.status(200).json({
               status: true,
-              message: "Branch deleted successfully.",
+              message: "Client Application deleted successfully.",
               result,
               token: newToken,
             });
