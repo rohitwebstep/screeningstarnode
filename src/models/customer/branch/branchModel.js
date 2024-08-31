@@ -95,7 +95,7 @@ const Branch = {
       SET \`email\` = ?
       WHERE \`is_head\` = ? AND \`customer_id\` = ?
     `;
-    pool.query(sql, [1, email, id], (err, results) => {
+    pool.query(sql, [email, 1, customer_id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback(err, null);
