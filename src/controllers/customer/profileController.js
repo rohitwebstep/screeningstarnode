@@ -736,6 +736,7 @@ exports.update = (req, res) => {
                           Branch.updateHeadBranchEmail(
                             {
                               customer_id,
+                              name: company_name,
                               email: headBranchEmail,
                             },
                             (err, headBranchResult) => {
@@ -751,14 +752,14 @@ exports.update = (req, res) => {
                                   token: newToken,
                                 });
                               }
+                              return res.status(200).json({
+                                status: true,
+                                message: "Customer updated successfully.",
+                                token: newToken,
+                                headBranchResult,
+                              });
                             }
                           );
-
-                          return res.status(200).json({
-                            status: true,
-                            message: "Customer updated successfully.",
-                            token: newToken,
-                          });
                         }
                       }
                     );
