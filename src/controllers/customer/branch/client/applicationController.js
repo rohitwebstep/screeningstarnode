@@ -172,17 +172,19 @@ exports.list = (req, res) => {
 
       const newToken = result.newToken;
 
-      Client.list((err, result) => {
+      Client.list(branch_id, (err, result) => {
         if (err) {
           console.error("Database error:", err);
-          return res
-            .status(500)
-            .json({ status: false, message: err.message, token: newToken });
+          return res.status(500).json({
+            status: false,
+            message: "An error occurred while fetching client applications.",
+            token: newToken,
+          });
         }
 
         res.json({
           status: true,
-          message: "Client Applications fetched successfully",
+          message: "Client applications fetched successfully.",
           clientApplications: result,
           totalResults: result.length,
           token: newToken,

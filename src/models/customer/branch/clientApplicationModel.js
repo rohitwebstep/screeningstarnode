@@ -48,10 +48,10 @@ const clientApplication = {
       callback(null, results);
     });
   },
-
-  list: (callback) => {
-    const sql = `SELECT * FROM \`client_applications\``;
-    pool.query(sql, (err, results) => {
+  
+  list: (branch_id, callback) => {
+    const sql = "SELECT * FROM `client_applications` WHERE `branch_id` = ?";
+    pool.query(sql, [branch_id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback(err, null);
