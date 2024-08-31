@@ -2,6 +2,8 @@ const Client = require("../../../../models/customer/branch/clientApplicationMode
 const BranchCommon = require("../../../../models/customer/branch/commonModel");
 
 exports.create = (req, res) => {
+  console.log("Request received to create a client application.");
+
   const {
     branch_id,
     _token,
@@ -14,6 +16,8 @@ exports.create = (req, res) => {
     sub_client,
     photo,
   } = req.body;
+
+  console.log("Request body:", req.body);
 
   // Define required fields
   const requiredFields = {
@@ -35,6 +39,7 @@ exports.create = (req, res) => {
     .map((field) => field.replace(/_/g, " "));
 
   if (missingFields.length > 0) {
+    console.log("Missing fields:", missingFields);
     return res.status(400).json({
       status: false,
       message: `Missing required fields: ${missingFields.join(", ")}`,
@@ -42,13 +47,18 @@ exports.create = (req, res) => {
   }
 
   const action = JSON.stringify({ client_application: "create" });
+  console.log("Checking branch authorization with action:", action);
+
   BranchCommon.isBranchAuthorizedForAction(branch_id, action, (result) => {
     if (!result.status) {
+      console.log("Branch authorization failed:", result.message);
       return res.status(403).json({
         status: false,
         message: result.message, // Return the message from the authorization function
       });
     }
+
+    console.log("Branch authorization succeeded. Verifying branch token.");
 
     // Verify branch token
     BranchCommon.isBranchTokenValid(_token, branch_id, (err, result) => {
@@ -58,10 +68,12 @@ exports.create = (req, res) => {
       }
 
       if (!result.status) {
+        console.log("Token validation failed:", result.message);
         return res.status(401).json({ status: false, message: result.message });
       }
 
       const newToken = result.newToken;
+      console.log("Token validation succeeded. Checking unique employee ID.");
 
       // Check if client_unique_id already exists
       Client.checkUniqueEmpId(employee_id, (err, exists) => {
@@ -73,12 +85,15 @@ exports.create = (req, res) => {
         }
 
         if (exists) {
+          console.log("Employee ID already exists:", employee_id);
           return res.status(400).json({
             status: false,
             message: `Client Employee ID '${employee_id}' already exists.`,
             token: newToken,
           });
         }
+
+        console.log("Employee ID is unique. Creating client application.");
 
         // Create Client Application
         Client.create(
@@ -115,6 +130,8 @@ exports.create = (req, res) => {
                 token: newToken,
               });
             }
+
+            console.log("Client application created successfully:", result);
 
             BranchCommon.branchActivityLog(
               branch_id,
