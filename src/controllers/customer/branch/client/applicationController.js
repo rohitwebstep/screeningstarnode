@@ -54,13 +54,12 @@ exports.create = (req, res) => {
       console.log("Branch authorization failed:", result.message);
       return res.status(403).json({
         status: false,
-        message: result.message, // Return the message from the authorization function
+        message: result.message,
       });
     }
 
     console.log("Branch authorization succeeded. Verifying branch token.");
 
-    // Verify branch token
     BranchCommon.isBranchTokenValid(_token, branch_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
@@ -75,13 +74,12 @@ exports.create = (req, res) => {
       const newToken = result.newToken;
       console.log("Token validation succeeded. Checking unique employee ID.");
 
-      // Check if client_unique_id already exists
       Client.checkUniqueEmpId(employee_id, (err, exists) => {
         if (err) {
-          console.error("Error checking unique ID:", err.error);
+          console.error("Error checking unique ID:", err);
           return res
             .status(500)
-            .json({ status: false, message: err, token: newToken });
+            .json({ status: false, message: err.message, token: newToken });
         }
 
         if (exists) {
@@ -95,7 +93,6 @@ exports.create = (req, res) => {
 
         console.log("Employee ID is unique. Creating client application.");
 
-        // Create Client Application
         Client.create(
           {
             name,

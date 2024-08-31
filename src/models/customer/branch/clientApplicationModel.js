@@ -1,29 +1,30 @@
 const pool = require("../../../config/db");
 
 const clientApplication = {
-  create: (
-    name,
-    attach_documents,
-    employee_id,
-    spoc,
-    location,
-    batch_number,
-    sub_client,
-    photo,
-    branch_id,
-    callback
-  ) => {
+  create: (data, callback) => {
+    const {
+      name,
+      attach_documents,
+      employee_id,
+      spoc,
+      location,
+      batch_number,
+      sub_client,
+      photo,
+      branch_id,
+    } = data;
+
     const sql = `
-      INSERT INTO \`client_applications\` (
-        \`name\`,
-        \`attach_documents\`,
-        \`employee_id\`,
-        \`spoc\`,
-        \`location\`,
-        \`batch_number\`,
-        \`sub_client\`,
-        \`photo\`,
-        \`branch_id\`
+      INSERT INTO client_applications (
+        name,
+        attach_documents,
+        employee_id,
+        spoc,
+        location,
+        batch_number,
+        sub_client,
+        photo,
+        branch_id
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
