@@ -4,5 +4,6 @@ const clientController = require("../../../controllers/customer/branch/client/ap
 
 // Basic routes
 router.post("/create", clientController.create);
+router.get("/list", clientController.list);
 
 module.exports = router;
