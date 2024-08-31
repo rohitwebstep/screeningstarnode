@@ -255,8 +255,7 @@ exports.create = (req, res) => {
                       console.error("Error creating head branch:", err);
                       return res.status(500).json({
                         status: false,
-                        message:
-                          "Internal server error while creating head branch.",
+                        message: err,
                         token: newToken,
                       });
                     }
