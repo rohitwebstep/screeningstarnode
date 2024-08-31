@@ -74,13 +74,13 @@ const Branch = {
     });
   },
 
-  update: (id, name, email, callback) => {
+  update: (id, name, email, password, callback) => {
     const sql = `
       UPDATE \`branches\`
-      SET \`name\` = ?, \`email\` = ?
+      SET \`name\` = ?, \`email\` = ?, \`password\` = ?
       WHERE \`id\` = ?
     `;
-    pool.query(sql, [name, email, id], (err, results) => {
+    pool.query(sql, [name, email, password, id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback(err, null);
