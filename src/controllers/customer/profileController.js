@@ -593,39 +593,12 @@ exports.update = (req, res) => {
             }
 
             if (client_code !== currentCustomer.client_code) {
-              Customer.checkUniqueId(client_code, (err, exists) => {
-                if (err) {
-                  console.error("Error checking unique ID:", err);
-                  return res.status(500).json({
-                    status: false,
-                    message: "Internal server error",
-                    token: newToken,
-                  });
-                }
-
-                if (exists) {
-                  return res.status(400).json({
-                    status: false,
-                    message: `Client Unique ID '${client_code}' already exists.`,
-                    token: newToken,
-                  });
-                }
-
-                continueUpdate();
-              });
-            } else {
-              continueUpdate();
-            }
-
-            function continueUpdate() {
-              if (
-                additional_login &&
-                additional_login.toLowerCase() === "yes" &&
-                username !== currentCustomer.username
-              ) {
-                Customer.checkUsername(username, (err, exists) => {
+              Customer.checkUniqueIdForUpdate(
+                customer_id,
+                client_code,
+                (err, exists) => {
                   if (err) {
-                    console.error("Error checking username:", err);
+                    console.error("Error checking unique ID:", err);
                     return res.status(500).json({
                       status: false,
                       message: "Internal server error",
@@ -636,13 +609,48 @@ exports.update = (req, res) => {
                   if (exists) {
                     return res.status(400).json({
                       status: false,
-                      message: `Username '${username}' already exists.`,
+                      message: `Client Unique ID '${client_code}' already exists.`,
                       token: newToken,
                     });
                   }
 
-                  updateCustomerRecord();
-                });
+                  continueUpdate();
+                }
+              );
+            } else {
+              continueUpdate();
+            }
+
+            function continueUpdate() {
+              if (
+                additional_login &&
+                additional_login.toLowerCase() === "yes" &&
+                username !== currentCustomer.username
+              ) {
+                Customer.checkUsernameForUpdate(
+                  customer_id,
+                  username,
+                  (err, exists) => {
+                    if (err) {
+                      console.error("Error checking username:", err);
+                      return res.status(500).json({
+                        status: false,
+                        message: "Internal server error",
+                        token: newToken,
+                      });
+                    }
+
+                    if (exists) {
+                      return res.status(400).json({
+                        status: false,
+                        message: `Username '${username}' already exists.`,
+                        token: newToken,
+                      });
+                    }
+
+                    updateCustomerRecord();
+                  }
+                );
               } else {
                 updateCustomerRecord();
               }
