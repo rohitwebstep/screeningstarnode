@@ -69,13 +69,14 @@ exports.create = (req, res) => {
           console.error("Error checking unique ID:", err.error);
           return res
             .status(500)
-            .json({ status: false, message: err });
+            .json({ status: false, message: err, token: newToken });
         }
 
         if (exists) {
           return res.status(400).json({
             status: false,
             message: `Client Employee ID '${employee_id}' already exists.`,
+            token: newToken,
           });
         }
 
@@ -111,6 +112,7 @@ exports.create = (req, res) => {
                 status: false,
                 message:
                   "Failed to create client application. Please try again.",
+                token: newToken,
               });
             }
 
@@ -177,7 +179,9 @@ exports.list = (req, res) => {
       Client.list((err, result) => {
         if (err) {
           console.error("Database error:", err);
-          return res.status(500).json({ status: false, message: err.message });
+          return res
+            .status(500)
+            .json({ status: false, message: err.message, token: newToken });
         }
 
         res.json({
@@ -252,6 +256,7 @@ exports.delete = (req, res) => {
             return res.status(500).json({
               status: false,
               message: "Failed to retrieve Client. Please try again.",
+              token: newToken,
             });
           }
 
@@ -259,6 +264,7 @@ exports.delete = (req, res) => {
             return res.status(404).json({
               status: false,
               message: "Branch not found.",
+              token: newToken,
             });
           }
 
@@ -281,6 +287,7 @@ exports.delete = (req, res) => {
               return res.status(500).json({
                 status: false,
                 message: "Failed to delete Client. Please try again.",
+                token: newToken,
               });
             }
 

@@ -89,6 +89,21 @@ const Branch = {
     });
   },
 
+  updateHeadBranchEmail: (customer_id, email, callback) => {
+    const sql = `
+      UPDATE \`branches\`
+      SET \`email\` = ?
+      WHERE \`is_head\` = ? AND \`customer_id\` = ?
+    `;
+    pool.query(sql, [1, email, id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results);
+    });
+  },
+
   delete: (id, callback) => {
     const sql = `
         DELETE FROM \`branches\`

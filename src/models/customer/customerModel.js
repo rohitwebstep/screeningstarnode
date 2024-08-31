@@ -69,6 +69,45 @@ const Customer = {
     });
   },
 
+  update: (customerId, customerData, callback) => {
+    const sqlUpdateCustomer = `
+      UPDATE \`customers\` 
+      SET 
+        \`client_unique_id\` = ?, 
+        \`name\` = ?, 
+        \`additional_login\` = ?, 
+        \`username\` = ?, 
+        \`profile_picture\` = ?, 
+        \`emails\` = ?, 
+        \`mobile\` = ?, 
+        \`services\` = ?, 
+        \`admin_id\` = ?
+      WHERE \`id\` = ?
+    `;
+
+    const valuesUpdateCustomer = [
+      customerData.client_unique_id,
+      customerData.name,
+      customerData.additional_login,
+      customerData.username,
+      customerData.profile_picture,
+      customerData.emails_json,
+      customerData.mobile_number,
+      customerData.services,
+      customerData.admin_id,
+      customerId,
+    ];
+
+    pool.query(sqlUpdateCustomer, valuesUpdateCustomer, (err, results) => {
+      if (err) {
+        console.error("Database update error for customers:", err);
+        return callback({ message: err }, null);
+      }
+
+      callback(null, results);
+    });
+  },
+
   createCustomerMeta: (metaData, callback) => {
     const sqlCustomerMetas = `
       INSERT INTO \`customer_metas\` (
@@ -115,6 +154,65 @@ const Customer = {
     });
   },
 
+  updateCustomerMetaByCustomerId: (customerId, metaData, callback) => {
+    const sqlUpdateCustomerMetas = `
+      UPDATE \`customer_metas\` 
+      SET 
+        \`address\` = ?, 
+        \`contact_person_name\` = ?, 
+        \`escalation_point_contact\` = ?, 
+        \`single_point_of_contact\` = ?, 
+        \`gst_number\` = ?, 
+        \`tat_days\` = ?, 
+        \`agreement_date\` = ?, 
+        \`agreement_duration\` = ?, 
+        \`custom_template\` = ?, 
+        \`custom_logo\` = ?, 
+        \`custom_address\` = ?, 
+        \`state\` = ?, 
+        \`state_code\` = ?, 
+        \`payment_contact_person\` = ?
+      WHERE \`customer_id\` = ?
+    `;
+
+    const valuesUpdateCustomerMetas = [
+      metaData.address,
+      metaData.contact_person_name,
+      metaData.escalation_point_contact,
+      metaData.single_point_of_contact,
+      metaData.gst_number,
+      metaData.tat_days,
+      metaData.agreement_date,
+      metaData.agreement_duration,
+      metaData.custom_template || "no",
+      metaData.custom_logo || null,
+      metaData.custom_address || null,
+      metaData.state,
+      metaData.state_code,
+      metaData.payment_contact_person,
+      customerId,
+    ];
+
+    pool.query(
+      sqlUpdateCustomerMetas,
+      valuesUpdateCustomerMetas,
+      (err, results) => {
+        if (err) {
+          console.error("Database update error for customer_metas:", err);
+          return callback(
+            {
+              message: "Database update error for customer_metas",
+              error: err,
+            },
+            null
+          );
+        }
+
+        callback(null, results);
+      }
+    );
+  },
+
   list: (callback) => {
     const sql = `
       SELECT 
@@ -154,6 +252,17 @@ const Customer = {
 
   getCustomerById: (id, callback) => {
     const sql = "SELECT * FROM `customers` WHERE `id` = ?";
+    pool.query(sql, [id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results[0]);
+    });
+  },
+
+  getCustomerMetaById: (id, callback) => {
+    const sql = "SELECT * FROM `customer_metas` WHERE `customer_id` = ?";
     pool.query(sql, [id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);

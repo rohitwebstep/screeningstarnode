@@ -66,6 +66,7 @@ exports.create = (req, res) => {
           return res.status(500).json({
             status: false,
             message: "Failed to create package. Please try again.",
+            token: newToken,
           });
         }
 
@@ -127,7 +128,9 @@ exports.list = (req, res) => {
       Package.list((err, result) => {
         if (err) {
           console.error("Database error:", err);
-          return res.status(500).json({ status: false, message: err.message });
+          return res
+            .status(500)
+            .json({ status: false, message: err.message, token: newToken });
         }
 
         res.json({
@@ -171,7 +174,9 @@ exports.getPackageById = (req, res) => {
       }
 
       if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message });
+        return res
+          .status(401)
+          .json({ status: false, message: result.message, token: newToken });
       }
 
       const newToken = result.newToken;
@@ -179,13 +184,16 @@ exports.getPackageById = (req, res) => {
       Package.getPackageById(id, (err, currentPackage) => {
         if (err) {
           console.error("Error fetching package data:", err);
-          return res.status(500).json(err);
+          return res
+            .status(500)
+            .json({ status: false, message: result.err, token: newToken });
         }
 
         if (!currentPackage) {
           return res.status(404).json({
             status: false,
             message: "Package not found",
+            token: newToken,
           });
         }
 
@@ -264,6 +272,7 @@ exports.update = (req, res) => {
           return res.status(404).json({
             status: false,
             message: "Package not found.",
+            token: newToken,
           });
         }
 
@@ -294,6 +303,7 @@ exports.update = (req, res) => {
             return res.status(500).json({
               status: false,
               message: "Failed to update package. Please try again.",
+              token: newToken,
             });
           }
 
@@ -374,6 +384,7 @@ exports.delete = (req, res) => {
           return res.status(500).json({
             status: false,
             message: "Failed to retrieve package. Please try again.",
+            token: newToken,
           });
         }
 
@@ -381,6 +392,7 @@ exports.delete = (req, res) => {
           return res.status(404).json({
             status: false,
             message: "Package not found.",
+            token: newToken,
           });
         }
 
@@ -400,6 +412,7 @@ exports.delete = (req, res) => {
             return res.status(500).json({
               status: false,
               message: "Failed to delete package. Please try again.",
+              token: newToken,
             });
           }
 

@@ -52,7 +52,9 @@ exports.create = (req, res) => {
             err.message,
             () => {}
           );
-          return res.status(500).json({ status: false, message: err.message });
+          return res
+            .status(500)
+            .json({ status: false, message: err.message, token: newToken });
         }
 
         Common.adminActivityLog(
@@ -113,7 +115,9 @@ exports.list = (req, res) => {
       Service.list((err, result) => {
         if (err) {
           console.error("Database error:", err);
-          return res.status(500).json({ status: false, message: err.message });
+          return res
+            .status(500)
+            .json({ status: false, message: err.message, token: newToken });
         }
 
         res.json({
@@ -164,13 +168,18 @@ exports.getServiceById = (req, res) => {
       Service.getServiceById(id, (err, currentService) => {
         if (err) {
           console.error("Error fetching service data:", err);
-          return res.status(500).json(err);
+          return res.status(500).json({
+            status: false,
+            message: err,
+            token: newToken,
+          });
         }
 
         if (!currentService) {
           return res.status(404).json({
             status: false,
             message: "Service not found",
+            token: newToken,
           });
         }
 
@@ -226,7 +235,11 @@ exports.update = (req, res) => {
       Service.getServiceById(id, (err, currentService) => {
         if (err) {
           console.error("Error fetching service data:", err);
-          return res.status(500).json(err);
+          return res.status(500).json({
+            status: false,
+            message: err,
+            token: newToken,
+          });
         }
 
         const changes = {};
@@ -257,7 +270,7 @@ exports.update = (req, res) => {
             );
             return res
               .status(500)
-              .json({ status: false, message: err.message });
+              .json({ status: false, message: err.message, token: newToken });
           }
 
           Common.adminActivityLog(
@@ -321,7 +334,11 @@ exports.delete = (req, res) => {
       Service.getServiceById(id, (err, currentService) => {
         if (err) {
           console.error("Error fetching service data:", err);
-          return res.status(500).json(err);
+          return res.status(500).json({
+            status: false,
+            message: err,
+            token: newToken,
+          });
         }
 
         Service.delete(id, (err, result) => {
@@ -338,7 +355,7 @@ exports.delete = (req, res) => {
             );
             return res
               .status(500)
-              .json({ status: false, message: err.message });
+              .json({ status: false, message: err.message, token: newToken });
           }
 
           Common.adminActivityLog(
