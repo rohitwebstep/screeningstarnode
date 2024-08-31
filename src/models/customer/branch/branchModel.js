@@ -74,6 +74,21 @@ const Branch = {
     });
   },
 
+  update: (id, name, email, callback) => {
+    const sql = `
+      UPDATE \`branches\`
+      SET \`name\` = ?, \`email\` = ?
+      WHERE \`id\` = ?
+    `;
+    pool.query(sql, [name, email, id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results);
+    });
+  },
+
   delete: (id, callback) => {
     const sql = `
         DELETE FROM \`branches\`
