@@ -734,11 +734,9 @@ exports.update = (req, res) => {
                         if (metaResult) {
                           const headBranchEmail = emails[0];
                           Branch.updateHeadBranchEmail(
-                            {
-                              customer_id,
-                              name: company_name,
-                              email: headBranchEmail,
-                            },
+                            customer_id,
+                            company_name,
+                            headBranchEmail,
                             (err, headBranchResult) => {
                               if (err) {
                                 console.error(
