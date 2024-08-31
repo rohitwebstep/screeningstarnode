@@ -122,8 +122,7 @@ exports.create = (req, res) => {
               );
               return res.status(500).json({
                 status: false,
-                message:
-                  "Failed to create client application. Please try again.",
+                message: err.message,
                 token: newToken,
               });
             }
