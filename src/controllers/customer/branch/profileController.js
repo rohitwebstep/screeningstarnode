@@ -116,6 +116,129 @@ exports.listByCustomerID = (req, res) => {
   });
 };
 
+// Controller to update a branch
+exports.update = (req, res) => {
+  const { id, name, email, admin_id, _token } = req.body;
+
+  // Validate required fields
+  const missingFields = [];
+  if (!id) missingFields.push("Branch ID");
+  if (!name) missingFields.push("Name");
+  if (!email) missingFields.push("Email");
+  if (!admin_id) missingFields.push("Admin ID");
+  if (!_token) missingFields.push("Token");
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  const action = JSON.stringify({ branch: "update" });
+
+  // Check admin authorization
+  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
+    if (!result.status) {
+      // Check the status returned by the authorization function
+      return res.status(403).json({
+        status: false,
+        message: result.message, // Return the message from the authorization function
+      });
+    }
+
+    // Validate admin token
+    AdminCommon.isAdminTokenValid(
+      _token,
+      admin_id,
+      (err, tokenValidationResult) => {
+        if (err) {
+          console.error("Token validation error:", err);
+          return res.status(500).json({
+            status: false,
+            message: err.message,
+          });
+        }
+
+        if (!tokenValidationResult.status) {
+          return res.status(401).json({
+            status: false,
+            message: tokenValidationResult.message,
+          });
+        }
+
+        const newToken = tokenValidationResult.newToken;
+
+        // Fetch the current branch
+        Branch.getBranchById(id, (err, currentBranch) => {
+          if (err) {
+            console.error("Database error during branch retrieval:", err);
+            return res.status(500).json({
+              status: false,
+              message: "Failed to retrieve Branch. Please try again.",
+            });
+          }
+
+          if (!currentBranch) {
+            return res.status(404).json({
+              status: false,
+              message: "Branch not found.",
+            });
+          }
+
+          const changes = {};
+          if (currentBranch.name !== name) {
+            changes.name = { old: currentBranch.name, new: name };
+          }
+          if (currentBranch.email !== email) {
+            changes.email = {
+              old: currentBranch.email,
+              new: email,
+            };
+          }
+
+          // Update the branch
+          Branch.update(id, name, email, (err, result) => {
+            if (err) {
+              console.error("Database error during branch update:", err);
+              AdminCommon.adminActivityLog(
+                admin_id,
+                "Branch",
+                "Update",
+                "0",
+                JSON.stringify({ id, ...changes }),
+                err.message,
+                () => {}
+              );
+              return res.status(500).json({
+                status: false,
+                message: "Failed to update Branch. Please try again.",
+              });
+            }
+
+            AdminCommon.adminActivityLog(
+              admin_id,
+              "Branch",
+              "Update",
+              "1",
+              JSON.stringify({ id, ...changes }),
+              null,
+              () => {}
+            );
+
+            res.status(200).json({
+              status: true,
+              message: "Branch updated successfully.",
+              branch: result,
+              token: newToken,
+            });
+          });
+        });
+      }
+    );
+  });
+};
+
 exports.delete = (req, res) => {
   const { id, admin_id, _token } = req.query;
 
