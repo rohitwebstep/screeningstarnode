@@ -2,6 +2,11 @@ const crypto = require("crypto");
 const Branch = require("../../../models/customer/branch/branchModel");
 const AdminCommon = require("../../../models/admin/commonModel");
 
+const generatePassword = (companyName) => {
+  const firstName = companyName.split(" ")[0];
+  return `${firstName}@123`;
+};
+
 // Controller to list all branches
 exports.list = (req, res) => {
   const { admin_id, _token } = req.query;
@@ -172,6 +177,7 @@ exports.update = (req, res) => {
         }
 
         const newToken = tokenValidationResult.newToken;
+        const password = generatePassword(company_name);
 
         // Fetch the current branch
         Branch.getBranchById(id, (err, currentBranch) => {
@@ -213,7 +219,7 @@ exports.update = (req, res) => {
           }
 
           // Update the branch
-          Branch.update(id, name, email, (err, result) => {
+          Branch.update(id, name, email, password, (err, result) => {
             if (err) {
               console.error("Database error during branch update:", err);
               AdminCommon.adminActivityLog(
