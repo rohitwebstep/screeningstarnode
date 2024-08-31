@@ -89,13 +89,13 @@ const Branch = {
     });
   },
 
-  updateHeadBranchEmail: (customer_id, email, callback) => {
+  updateHeadBranchEmail: (customer_id, name, email, callback) => {
     const sql = `
       UPDATE \`branches\`
-      SET \`email\` = ?
+      SET \`name\` = ?, \`email\` = ?
       WHERE \`is_head\` = ? AND \`customer_id\` = ?
     `;
-    pool.query(sql, [email, 1, customer_id], (err, results) => {
+    pool.query(sql, [name, email, "1", customer_id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback(err, null);
