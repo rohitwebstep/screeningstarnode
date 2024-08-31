@@ -115,13 +115,11 @@ exports.create = (req, res) => {
       Customer.checkUniqueId(client_code, (err, exists) => {
         if (err) {
           console.error("Error checking unique ID:", err);
-          return res
-            .status(500)
-            .json({
-              status: false,
-              message: "Internal server error",
-              token: newToken,
-            });
+          return res.status(500).json({
+            status: false,
+            message: "Internal server error",
+            token: newToken,
+          });
         }
 
         if (exists) {
@@ -137,13 +135,11 @@ exports.create = (req, res) => {
           Customer.checkUsername(username, (err, exists) => {
             if (err) {
               console.error("Error checking username:", err);
-              return res
-                .status(500)
-                .json({
-                  status: false,
-                  message: "Internal server error",
-                  token: newToken,
-                });
+              return res.status(500).json({
+                status: false,
+                message: "Internal server error",
+                token: newToken,
+              });
             }
 
             if (exists) {
@@ -421,6 +417,7 @@ exports.update = (req, res) => {
   const {
     admin_id,
     _token,
+    customer_id,
     tat,
     state,
     gstin,
@@ -443,13 +440,13 @@ exports.update = (req, res) => {
     custom_template,
     custom_logo,
     custom_address,
-    customer_id,
   } = req.body;
 
   // Define required fields
   const requiredFields = {
     admin_id,
     _token,
+    customer_id,
     tat,
     state,
     gstin,
@@ -469,7 +466,6 @@ exports.update = (req, res) => {
     agreement_period,
     name_of_escalation,
     custom_template,
-    customer_id,
   };
 
   let additional_login_int = 0;
