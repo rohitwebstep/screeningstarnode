@@ -23,6 +23,23 @@ const Customer = {
     });
   },
 
+  checkUniqueIdForUpdate: (customer_id, clientUniqueId, callback) => {
+    const sql = `
+      SELECT COUNT(*) AS count
+      FROM \`customers\`
+      WHERE \`client_unique_id\` = ? AND \`id\` != ?
+    `;
+    pool.query(sql, [clientUniqueId, customer_id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback({ message: "Database query error", error: err }, null);
+      }
+
+      const count = results[0].count;
+      callback(null, count > 0);
+    });
+  },
+
   checkUsername: (username, callback) => {
     const sql = `
       SELECT COUNT(*) AS count
@@ -30,6 +47,23 @@ const Customer = {
       WHERE \`username\` = ?
     `;
     pool.query(sql, [username], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback({ message: "Database query error", error: err }, null);
+      }
+
+      const count = results[0].count;
+      callback(null, count > 0);
+    });
+  },
+
+  checkUsernameForUpdate: (customer_id, username, callback) => {
+    const sql = `
+      SELECT COUNT(*) AS count
+      FROM \`customers\`
+      WHERE \`username\` = ? AND \`id\` != ?
+    `;
+    pool.query(sql, [username, customer_id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback({ message: "Database query error", error: err }, null);
