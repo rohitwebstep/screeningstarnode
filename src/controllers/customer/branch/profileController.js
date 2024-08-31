@@ -177,7 +177,7 @@ exports.update = (req, res) => {
         }
 
         const newToken = tokenValidationResult.newToken;
-        const password = generatePassword(company_name);
+        const password = generatePassword(name);
 
         // Fetch the current branch
         Branch.getBranchById(id, (err, currentBranch) => {
