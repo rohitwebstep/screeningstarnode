@@ -70,6 +70,7 @@ exports.create = (req, res) => {
             return res.status(500).json({
               status: false,
               message: "Failed to create Client. Please try again.",
+              token: newToken,
             });
           }
 
@@ -156,7 +157,9 @@ exports.list = (req, res) => {
       Client.list((err, result) => {
         if (err) {
           console.error("Database error:", err);
-          return res.status(500).json({ status: false, message: err.message });
+          return res
+            .status(500)
+            .json({ status: false, message: err.message, token: newToken });
         }
 
         res.json({
@@ -208,13 +211,18 @@ exports.getClientById = (req, res) => {
       Client.getClientById(id, (err, currentClient) => {
         if (err) {
           console.error("Error fetching client data:", err);
-          return res.status(500).json(err);
+          return res.status(500).json({
+            status: false,
+            message: err,
+            token: newToken,
+          });
         }
 
         if (!currentClient) {
           return res.status(404).json({
             status: false,
             message: "Client not found",
+            token: newToken,
           });
         }
 
@@ -289,6 +297,7 @@ exports.update = (req, res) => {
             return res.status(500).json({
               status: false,
               message: "Failed to retrieve Client. Please try again.",
+              token: newToken,
             });
           }
 
@@ -296,6 +305,7 @@ exports.update = (req, res) => {
             return res.status(404).json({
               status: false,
               message: "Client not found.",
+              token: newToken,
             });
           }
 
@@ -326,6 +336,7 @@ exports.update = (req, res) => {
               return res.status(500).json({
                 status: false,
                 message: "Failed to update Client. Please try again.",
+                token: newToken,
               });
             }
 
@@ -410,6 +421,7 @@ exports.delete = (req, res) => {
             return res.status(500).json({
               status: false,
               message: "Failed to retrieve Client. Please try again.",
+              token: newToken,
             });
           }
 
@@ -417,6 +429,7 @@ exports.delete = (req, res) => {
             return res.status(404).json({
               status: false,
               message: "Client not found.",
+              token: newToken,
             });
           }
 
@@ -436,6 +449,7 @@ exports.delete = (req, res) => {
               return res.status(500).json({
                 status: false,
                 message: "Failed to delete Client. Please try again.",
+                token: newToken,
               });
             }
 

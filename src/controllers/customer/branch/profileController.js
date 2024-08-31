@@ -42,7 +42,9 @@ exports.list = (req, res) => {
       Branch.list((err, result) => {
         if (err) {
           console.error("Database error:", err);
-          return res.status(500).json({ status: false, message: err.message });
+          return res
+            .status(500)
+            .json({ status: false, message: err.message, token: newToken });
         }
 
         res.json({
@@ -101,7 +103,9 @@ exports.listByCustomerID = (req, res) => {
       Branch.listByCustomerID(customer_id, (err, branches) => {
         if (err) {
           console.error("Database error:", err);
-          return res.status(500).json({ status: false, message: err.message });
+          return res
+            .status(500)
+            .json({ status: false, message: err.message, token: newToken });
         }
 
         res.json({
@@ -176,6 +180,7 @@ exports.update = (req, res) => {
             return res.status(500).json({
               status: false,
               message: "Failed to retrieve Branch. Please try again.",
+              token: newToken,
             });
           }
 
@@ -183,6 +188,7 @@ exports.update = (req, res) => {
             return res.status(404).json({
               status: false,
               message: "Branch not found.",
+              token: newToken,
             });
           }
 
@@ -191,6 +197,7 @@ exports.update = (req, res) => {
             return res.status(403).json({
               status: false,
               message: "Cannot update the head branch.",
+              token: newToken,
             });
           }
 
@@ -221,6 +228,7 @@ exports.update = (req, res) => {
               return res.status(500).json({
                 status: false,
                 message: "Failed to update Branch. Please try again.",
+                token: newToken,
               });
             }
 
@@ -303,6 +311,7 @@ exports.delete = (req, res) => {
             return res.status(500).json({
               status: false,
               message: "Failed to retrieve branch. Please try again.",
+              token: newToken,
             });
           }
 
@@ -310,6 +319,7 @@ exports.delete = (req, res) => {
             return res.status(404).json({
               status: false,
               message: "Branch not found.",
+              token: newToken,
             });
           }
 
@@ -318,6 +328,7 @@ exports.delete = (req, res) => {
             return res.status(403).json({
               status: false,
               message: "Cannot delete the head branch.",
+              token: newToken,
             });
           }
 
@@ -337,6 +348,7 @@ exports.delete = (req, res) => {
               return res.status(500).json({
                 status: false,
                 message: "Failed to delete branch. Please try again.",
+                token: newToken,
               });
             }
 
