@@ -754,7 +754,6 @@ exports.update = (req, res) => {
                                 status: true,
                                 message: "Customer updated successfully.",
                                 token: newToken,
-                                headBranchResult,
                               });
                             }
                           );
