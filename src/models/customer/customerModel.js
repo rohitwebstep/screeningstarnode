@@ -126,7 +126,7 @@ const Customer = {
       customerData.username,
       customerData.profile_picture,
       customerData.emails_json,
-      customerData.mobile_number,
+      customerData.mobile,
       customerData.services,
       customerData.admin_id,
       customerId,
