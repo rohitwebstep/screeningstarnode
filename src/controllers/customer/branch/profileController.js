@@ -186,6 +186,14 @@ exports.update = (req, res) => {
             });
           }
 
+          // Check if the branch is the head branch
+          if (currentBranch.is_head == 1) {
+            return res.status(403).json({
+              status: false,
+              message: "Cannot update the head branch.",
+            });
+          }
+
           const changes = {};
           if (currentBranch.name !== name) {
             changes.name = { old: currentBranch.name, new: name };
