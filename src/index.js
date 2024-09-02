@@ -6,7 +6,6 @@ const customerRoutes = require("./routes/customer/indexRoutes");
 const branchRoutes = require("./routes/customer/branch/indexRoutes");
 const packageRoutes = require("./routes/admin/packageRoutes");
 const serviceRoutes = require("./routes/admin/serviceRoutes");
-
 require("dotenv").config(); // Ensure you load environment variables
 
 const app = express();
