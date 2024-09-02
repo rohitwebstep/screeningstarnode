@@ -1,5 +1,4 @@
 const express = require("express");
-const bodyParser = require("body-parser");
 const cors = require("cors");
 const adminRoutes = require("./routes/admin/indexRoutes");
 const customerRoutes = require("./routes/customer/indexRoutes");
@@ -14,7 +13,10 @@ const port = process.env.PORT || 3000;
 
 app.use(cors());
 
-app.use(bodyParser.json());
+// Use express.json() instead of bodyParser.json()
+app.use(express.json());
+
+// Define routes
 app.use("/admin", adminRoutes);
 app.use("/customer", customerRoutes);
 app.use("/branch", branchRoutes);
