@@ -1,9 +1,18 @@
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
 const Customer = require("../../models/customer/customerModel");
 const Branch = require("../../models/customer/branch/branchModel");
 const AdminCommon = require("../../models/admin/commonModel");
 const { sendEmail } = require("../../mailer/customerMailer");
+
+// Directory where files will be uploaded
+const uploadDirectory = path.join(__dirname, "uploads/customers");
+
+// Ensure the upload directory exists
+if (!fs.existsSync(uploadDirectory)) {
+  fs.mkdirSync(uploadDirectory, { recursive: true });
+}
 
 // Configure multer storage
 const storage = multer.diskStorage({
@@ -56,7 +65,9 @@ exports.imageUpload = (req, res) => {
       });
     }
 
-    const fileUrl = `${req.protocol}://${req.get("host")}/uploads/customers/${req.file.filename}`;
+    const fileUrl = `${req.protocol}://${req.get("host")}/uploads/customers/${
+      req.file.filename
+    }`;
 
     return res.status(200).json({
       status: true,
