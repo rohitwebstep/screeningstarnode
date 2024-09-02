@@ -30,7 +30,14 @@ exports.imageUpload = (req, res) => {
       return res.status(500).json({
         status: false,
         message: `File upload failed: ${err.message}`,
-        req,
+        req: {
+          method: req.method,
+          url: req.url,
+          headers: req.headers,
+          body: req.body,
+          params: req.params,
+          query: req.query,
+        },
       });
     }
 
@@ -38,13 +45,18 @@ exports.imageUpload = (req, res) => {
       return res.status(400).json({
         status: false,
         message: "No file uploaded",
-        req,
+        req: {
+          method: req.method,
+          url: req.url,
+          headers: req.headers,
+          body: req.body,
+          params: req.params,
+          query: req.query,
+        },
       });
     }
 
-    const fileUrl = `${req.protocol}://${req.get("host")}/uploads/customers/${
-      req.file.filename
-    }`;
+    const fileUrl = `${req.protocol}://${req.get("host")}/uploads/customers/${req.file.filename}`;
 
     return res.status(200).json({
       status: true,
@@ -54,7 +66,14 @@ exports.imageUpload = (req, res) => {
         path: req.file.path,
         url: fileUrl,
       },
-      req,
+      req: {
+        method: req.method,
+        url: req.url,
+        headers: req.headers,
+        body: req.body,
+        params: req.params,
+        query: req.query,
+      },
     });
   });
 };
