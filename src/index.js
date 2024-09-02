@@ -24,7 +24,7 @@ app.use("/service", serviceRoutes);
 
 app.use(
   "/uploads/customers",
-  express.static(path.join(__dirname, "uploads/customers"))
+  express.static(path.join(__dirname, "uploads", "customers"))
 );
 
 app.listen(port, () => {
