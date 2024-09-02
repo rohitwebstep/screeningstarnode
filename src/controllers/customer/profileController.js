@@ -30,6 +30,7 @@ exports.imageUpload = (req, res) => {
       return res.status(500).json({
         status: false,
         message: `File upload failed: ${err.message}`,
+        req,
       });
     }
 
@@ -37,6 +38,7 @@ exports.imageUpload = (req, res) => {
       return res.status(400).json({
         status: false,
         message: "No file uploaded",
+        req,
       });
     }
 
@@ -52,6 +54,7 @@ exports.imageUpload = (req, res) => {
         path: req.file.path,
         url: fileUrl,
       },
+      req,
     });
   });
 };
