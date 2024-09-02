@@ -11,10 +11,6 @@ const generatePassword = (companyName) => {
 };
 
 exports.imageUpload = (req, res) => {
-  return res.status(200).json({
-    status: true,
-    message: req.body,
-  });
   const { image } = req.body;
 
   // Define required fields
@@ -33,6 +29,10 @@ exports.imageUpload = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
+  return res.status(200).json({
+    status: true,
+    message: req.body,
+  });
 };
 
 exports.create = (req, res) => {
