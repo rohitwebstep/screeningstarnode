@@ -10,6 +10,27 @@ const generatePassword = (companyName) => {
   return `${firstName}@123`;
 };
 
+exports.imageUpload = (req, res) => {
+  const { image } = req.body;
+
+  // Define required fields
+  const requiredFields = {
+    image,
+  };
+
+  // Check for missing fields
+  const missingFields = Object.keys(requiredFields)
+    .filter((field) => !requiredFields[field])
+    .map((field) => field.replace(/_/g, " "));
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+};
+
 exports.create = (req, res) => {
   const {
     admin_id,
@@ -218,7 +239,7 @@ exports.create = (req, res) => {
                 state,
                 state_code,
                 payment_contact_person: null,
-                client_standard
+                client_standard,
               },
               (err, metaResult) => {
                 if (err) {
@@ -725,7 +746,7 @@ exports.update = (req, res) => {
                         state,
                         state_code,
                         payment_contact_person: null,
-                        client_standard
+                        client_standard,
                       },
                       (err, metaResult) => {
                         if (err) {
