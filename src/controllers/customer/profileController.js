@@ -1,92 +1,12 @@
-const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
 const Customer = require("../../models/customer/customerModel");
 const Branch = require("../../models/customer/branch/branchModel");
 const AdminCommon = require("../../models/admin/commonModel");
 const { sendEmail } = require("../../mailer/customerMailer");
 
-// Directory where files will be uploaded
-const uploadDirectory = path.join(__dirname, "uploads/customers");
-
-// Ensure the upload directory exists
-if (!fs.existsSync(uploadDirectory)) {
-  fs.mkdirSync(uploadDirectory, { recursive: true });
-}
-
-// Configure multer storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "uploads/customers"));
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
-});
-
-const upload = multer({ storage: storage });
-
 // Helper function to generate a password
 const generatePassword = (companyName) => {
   const firstName = companyName.split(" ")[0];
   return `${firstName}@123`;
-};
-
-// Image upload handler function
-exports.imageUpload = (req, res) => {
-  upload.single("image")(req, res, (err) => {
-    if (err) {
-      return res.status(500).json({
-        status: false,
-        message: `File upload failed: ${err.message}`,
-        req: {
-          method: req.method,
-          url: req.url,
-          headers: req.headers,
-          body: req.body,
-          params: req.params,
-          query: req.query,
-        },
-      });
-    }
-
-    if (!req.file) {
-      return res.status(400).json({
-        status: false,
-        message: "No file uploaded",
-        req: {
-          method: req.method,
-          url: req.url,
-          headers: req.headers,
-          body: req.body,
-          params: req.params,
-          query: req.query,
-        },
-      });
-    }
-
-    const fileUrl = `${req.protocol}://${req.get("host")}/uploads/customers/${
-      req.file.filename
-    }`;
-
-    return res.status(200).json({
-      status: true,
-      message: "File uploaded successfully",
-      file: {
-        filename: req.file.filename,
-        path: req.file.path,
-        url: fileUrl,
-      },
-      req: {
-        method: req.method,
-        url: req.url,
-        headers: req.headers,
-        body: req.body,
-        params: req.params,
-        query: req.query,
-      },
-    });
-  });
 };
 
 exports.create = (req, res) => {
