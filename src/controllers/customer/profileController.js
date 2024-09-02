@@ -11,6 +11,10 @@ const generatePassword = (companyName) => {
 };
 
 exports.imageUpload = (req, res) => {
+  return res.status(200).json({
+    status: true,
+    message: req.body,
+  });
   const { image } = req.body;
 
   // Define required fields
