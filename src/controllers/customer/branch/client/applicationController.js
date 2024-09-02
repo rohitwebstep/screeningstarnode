@@ -194,6 +194,149 @@ exports.list = (req, res) => {
   });
 };
 
+exports.update = (req, res) => {
+  const {
+    branch_id,
+    _token,
+    client_application_id,
+    name,
+    attach_documents,
+    employee_id,
+    spoc,
+    location,
+    batch_number,
+    sub_client,
+    photo,
+  } = req.body;
+
+  // Define required fields
+  const requiredFields = {
+    branch_id,
+    _token,
+    client_application_id,
+    name,
+    attach_documents,
+    employee_id,
+    spoc,
+    location,
+    batch_number,
+    sub_client,
+    photo,
+  };
+
+  // Check for missing fields
+  const missingFields = Object.keys(requiredFields)
+    .filter((field) => !requiredFields[field])
+    .map((field) => field.replace(/_/g, " "));
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  const action = JSON.stringify({ client_application: "update" });
+  BranchCommon.isBranchAuthorizedForAction(branch_id, action, (result) => {
+    if (!result.status) {
+      return res.status(403).json({
+        status: false,
+        message: result.message,
+      });
+    }
+
+    BranchCommon.isBranchTokenValid(_token, branch_id, (err, result) => {
+      if (err) {
+        console.error("Error checking token validity:", err);
+        return res.status(500).json({ status: false, message: err.message });
+      }
+
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
+      }
+
+      const newToken = result.newToken;
+
+      Client.checkUniqueEmpIdByClientApplicationID(
+        employee_id,
+        client_application_id,
+        (err, exists) => {
+          if (err) {
+            console.error("Error checking unique ID:", err);
+            return res
+              .status(500)
+              .json({ status: false, message: err.message, token: newToken });
+          }
+
+          if (
+            exists &&
+            exists.client_application_id !== client_application_id
+          ) {
+            return res.status(400).json({
+              status: false,
+              message: `Client Employee ID '${employee_id}' already exists.`,
+              token: newToken,
+            });
+          }
+
+          Client.update(
+            {
+              name,
+              attach_documents,
+              employee_id,
+              spoc,
+              location,
+              batch_number,
+              sub_client,
+              photo,
+            },
+            client_application_id,
+            (err, result) => {
+              if (err) {
+                console.error(
+                  "Database error during client application update:",
+                  err
+                );
+                BranchCommon.branchActivityLog(
+                  branch_id,
+                  "Client Application",
+                  "Update",
+                  "0",
+                  null,
+                  err.message,
+                  () => {}
+                );
+                return res.status(500).json({
+                  status: false,
+                  message: err.message,
+                  token: newToken,
+                });
+              }
+
+              BranchCommon.branchActivityLog(
+                branch_id,
+                "Client Application",
+                "Update",
+                "1",
+                `{id: ${client_id}}`,
+                null,
+                () => {}
+              );
+
+              res.status(200).json({
+                status: true,
+                message: "Client application updated successfully.",
+                package: result,
+                token: newToken,
+              });
+            }
+          );
+        }
+      );
+    });
+  });
+};
+
 exports.delete = (req, res) => {
   const { id, branch_id, _token } = req.query;
 
