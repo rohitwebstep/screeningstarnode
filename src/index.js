@@ -21,7 +21,7 @@ app.use("/customer", customerRoutes);
 app.use("/branch", branchRoutes);
 app.use("/package", packageRoutes);
 app.use("/service", serviceRoutes);
-app.use("/service", uploadRoutes);
+app.use("/uploads", uploadRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
