@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 const Customer = require("../../models/customer/customerModel");
 const Branch = require("../../models/customer/branch/branchModel");
 const AdminCommon = require("../../models/admin/commonModel");
@@ -217,7 +218,7 @@ exports.create = (req, res) => {
                 state,
                 state_code,
                 payment_contact_person: null,
-                client_standard,
+                client_standard
               },
               (err, metaResult) => {
                 if (err) {
@@ -724,7 +725,7 @@ exports.update = (req, res) => {
                         state,
                         state_code,
                         payment_contact_person: null,
-                        client_standard,
+                        client_standard
                       },
                       (err, metaResult) => {
                         if (err) {
