@@ -41,6 +41,17 @@ const Branch = {
     });
   },
 
+  isEmailUsed: (callback) => {
+    const sql = `SELECT * FROM \`branches\``;
+    pool.query(sql, (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results);
+    });
+  },
+
   listByCustomerID: (customer_id, callback) => {
     const sql = `SELECT * FROM \`branches\` WHERE \`customer_id\` = ?`;
     pool.query(sql, [customer_id], (err, results) => {
