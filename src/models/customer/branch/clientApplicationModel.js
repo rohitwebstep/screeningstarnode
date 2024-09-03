@@ -55,9 +55,13 @@ const clientApplication = {
           LIMIT 1
         `;
 
+          // Assuming `client_unique_id` is defined and holds the unique identifier
+          const applicationIdParam = `${client_unique_id}%`;
+
+          // Execute the query
           pool.query(
             getApplicationIdSql,
-            [client_unique_id],
+            [applicationIdParam],
             (err, applicationResults) => {
               if (err) {
                 console.error("Error fetching application ID:", err);
@@ -74,10 +78,17 @@ const clientApplication = {
                 const latest_application_id =
                   applicationResults[0].application_id;
                 const parts = latest_application_id.split("-");
-                const numberPart = parseInt(parts[2], 10);
-                new_application_id = `${parts[0]}-${parts[1]}-${
-                  numberPart + 1
-                }`;
+
+                // Ensure parts array has at least three elements and increment the number part
+                if (parts.length === 3) {
+                  const numberPart = parseInt(parts[2], 10);
+                  new_application_id = `${parts[0]}-${parts[1]}-${
+                    numberPart + 1
+                  }`;
+                } else {
+                  // Fallback if the format is not as expected
+                  new_application_id = `${client_unique_id}-1`;
+                }
               }
 
               callback(null, new_application_id);
