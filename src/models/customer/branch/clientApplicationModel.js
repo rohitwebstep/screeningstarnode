@@ -6,7 +6,7 @@ const clientApplication = {
     const getCustomerIdSql = `
       SELECT \`customer_id\`
       FROM \`branches\`
-      WHERE \`branch_id\` = ?
+      WHERE \`id\` = ?
     `;
 
     pool.query(getCustomerIdSql, [branch_id], (err, branchResults) => {
