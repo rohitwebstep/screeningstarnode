@@ -12,6 +12,8 @@ const clientApplication = {
       sub_client,
       photo,
       branch_id,
+      services,
+      package,
     } = data;
 
     const sql = `
@@ -24,8 +26,10 @@ const clientApplication = {
         batch_number,
         sub_client,
         photo,
-        branch_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        branch_id,
+        services,
+        package,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
@@ -38,6 +42,8 @@ const clientApplication = {
       sub_client,
       photo,
       branch_id,
+      services || "",
+      package || "",
     ];
 
     pool.query(sql, values, (err, results) => {

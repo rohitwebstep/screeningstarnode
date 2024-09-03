@@ -13,6 +13,8 @@ exports.create = (req, res) => {
     batch_number,
     sub_client,
     photo,
+    services,
+    package,
   } = req.body;
 
   // Define required fields
@@ -27,11 +29,13 @@ exports.create = (req, res) => {
     batch_number,
     sub_client,
     photo,
+    services,
+    package,
   };
 
   // Check for missing fields
   const missingFields = Object.keys(requiredFields)
-    .filter((field) => !requiredFields[field] || requiredFields[field] === '')
+    .filter((field) => !requiredFields[field] || requiredFields[field] === "")
     .map((field) => field.replace(/_/g, " "));
 
   if (missingFields.length > 0) {
@@ -89,6 +93,8 @@ exports.create = (req, res) => {
             sub_client,
             photo,
             branch_id,
+            services,
+            package,
           },
           (err, result) => {
             if (err) {
@@ -226,7 +232,7 @@ exports.update = (req, res) => {
 
   // Check for missing fields
   const missingFields = Object.keys(requiredFields)
-    .filter((field) => !requiredFields[field] || requiredFields[field] === '')
+    .filter((field) => !requiredFields[field] || requiredFields[field] === "")
     .map((field) => field.replace(/_/g, " "));
 
   if (missingFields.length > 0) {
