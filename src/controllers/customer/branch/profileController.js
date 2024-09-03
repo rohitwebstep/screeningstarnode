@@ -9,9 +9,10 @@ const generatePassword = (companyName) => {
 
 // Controller to list all branches
 exports.isEmailUsed = (req, res) => {
-  const { admin_id, _token } = req.query;
+  const { email, admin_id, _token } = req.query;
 
   let missingFields = [];
+  if (!email || email === "") missingFields.push("Email");
   if (!admin_id || admin_id === "") missingFields.push("Admin ID");
   if (!_token || _token === "") missingFields.push("Token");
 
@@ -35,21 +36,29 @@ exports.isEmailUsed = (req, res) => {
 
     const newToken = result.newToken;
 
-    Branch.isEmailUsed((err, result) => {
+    Branch.isEmailUsed(email, (err, isUsed) => {
       if (err) {
         console.error("Database error:", err);
-        return res
-          .status(500)
-          .json({ status: false, message: err.message, token: newToken });
+        return res.status(500).json({
+          status: false,
+          message: err.message,
+          token: newToken,
+        });
       }
 
-      res.json({
-        status: true,
-        message: "branches fetched successfully",
-        branches: result,
-        totalResults: result.length,
-        token: newToken,
-      });
+      if (isUsed) {
+        return res.json({
+          status: true,
+          message: "Email is already in use",
+          token: newToken,
+        });
+      } else {
+        return res.json({
+          status: true,
+          message: "Email is available",
+          token: newToken,
+        });
+      }
     });
   });
 };

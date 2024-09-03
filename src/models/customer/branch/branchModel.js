@@ -41,14 +41,16 @@ const Branch = {
     });
   },
 
-  isEmailUsed: (callback) => {
-    const sql = `SELECT * FROM \`branches\``;
-    pool.query(sql, (err, results) => {
+  isEmailUsed: (email, callback) => {
+    const sql = `SELECT * FROM \`branches\` WHERE \`email\` = ?`;
+    pool.query(sql, [email], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback(err, null);
       }
-      callback(null, results);
+      // Return true if the email is found, false otherwise
+      const isUsed = results.length > 0;
+      callback(null, isUsed);
     });
   },
 
