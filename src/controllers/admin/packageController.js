@@ -7,10 +7,10 @@ exports.create = (req, res) => {
 
   // Validate required fields
   const missingFields = [];
-  if (!title?.trim()) missingFields.push("Title");
-  if (!description?.trim()) missingFields.push("Description");
-  if (!admin_id?.trim()) missingFields.push("Admin ID");
-  if (!_token?.trim()) missingFields.push("Token");
+  if (!title || title === "") missingFields.push("Title");
+  if (!description || description === "") missingFields.push("Description");
+  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
+  if (!_token || _token === "") missingFields.push("Token");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -96,8 +96,8 @@ exports.list = (req, res) => {
   const { admin_id, _token } = req.query;
 
   let missingFields = [];
-  if (!admin_id?.trim()) missingFields.push("Admin ID");
-  if (!_token?.trim()) missingFields.push("Token");
+  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
+  if (!_token || _token === "") missingFields.push("Token");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -149,9 +149,9 @@ exports.list = (req, res) => {
 exports.getPackageById = (req, res) => {
   const { id, admin_id, _token } = req.query;
   let missingFields = [];
-  if (!id?.trim()) missingFields.push("Package ID");
-  if (!admin_id?.trim()) missingFields.push("Admin ID");
-  if (!_token?.trim()) missingFields.push("Token");
+  if (!id || id === "") missingFields.push("Package ID");
+  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
+  if (!_token || _token === "") missingFields.push("Token");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -214,11 +214,11 @@ exports.update = (req, res) => {
 
   // Validate required fields
   const missingFields = [];
-  if (!id?.trim()) missingFields.push("Package ID");
-  if (!title?.trim()) missingFields.push("Title");
-  if (!description?.trim()) missingFields.push("Description");
-  if (!admin_id?.trim()) missingFields.push("Admin ID");
-  if (!_token?.trim()) missingFields.push("Token");
+  if (!id || id === "") missingFields.push("Package ID");
+  if (!title || title === "") missingFields.push("Title");
+  if (!description || description === "") missingFields.push("Description");
+  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
+  if (!_token || _token === "") missingFields.push("Token");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -335,9 +335,9 @@ exports.delete = (req, res) => {
 
   // Validate required fields
   const missingFields = [];
-  if (!id?.trim()) missingFields.push("Package ID");
-  if (!admin_id?.trim()) missingFields.push("Admin ID");
-  if (!_token?.trim()) missingFields.push("Token");
+  if (!id || id === "") missingFields.push("Package ID");
+  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
+  if (!_token || _token === "") missingFields.push("Token");
 
   if (missingFields.length > 0) {
     return res.status(400).json({

@@ -79,7 +79,7 @@ exports.create = (req, res) => {
 
   // Check for missing fields
   const missingFields = Object.keys(requiredFields)
-    .filter((field) => !requiredFields[field]?.trim())
+    .filter((field) => !requiredFields[field])
     .map((field) => field.replace(/_/g, " "));
 
   if (missingFields.length > 0) {
@@ -362,8 +362,8 @@ exports.list = (req, res) => {
   const { admin_id, _token } = req.query;
 
   let missingFields = [];
-  if (!admin_id?.trim()) missingFields.push("Admin ID");
-  if (!_token?.trim()) missingFields.push("Token");
+  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
+  if (!_token || _token === "") missingFields.push("Token");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -482,7 +482,7 @@ exports.update = (req, res) => {
 
   // Check for missing fields
   const missingFields = Object.keys(requiredFields)
-    .filter((field) => !requiredFields[field]?.trim())
+    .filter((field) => !requiredFields[field])
     .map((field) => field.replace(/_/g, " "));
 
   if (missingFields.length > 0) {
@@ -787,9 +787,9 @@ exports.delete = (req, res) => {
 
   // Validate required fields
   const missingFields = [];
-  if (!id?.trim()) missingFields.push("Customer ID");
-  if (!admin_id?.trim()) missingFields.push("Admin ID");
-  if (!_token?.trim()) missingFields.push("Token");
+  if (!id || id === "") missingFields.push("Customer ID");
+  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
+  if (!_token || _token === "") missingFields.push("Token");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -898,9 +898,9 @@ exports.customerBasicInfoWithBranchAuth = (req, res) => {
   const { customer_id, branch_id, branch_token } = req.query;
 
   let missingFields = [];
-  if (!customer_id?.trim()) missingFields.push("Customer ID");
-  if (!branch_id?.trim()) missingFields.push("Branch ID");
-  if (!branch_token?.trim()) missingFields.push("Token");
+  if (!customer_id || customer_id === "") missingFields.push("Customer ID");
+  if (!branch_id || branch_id === "") missingFields.push("Branch ID");
+  if (!branch_token || branch_token === "") missingFields.push("Token");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
