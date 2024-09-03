@@ -50,7 +50,7 @@ const clientApplication = {
           const getApplicationIdSql = `
           SELECT \`application_id\`
           FROM \`client_applications\`
-          WHERE \`client_unique_id\` = ?
+          WHERE \`application_id\` LIKE ?
           ORDER BY \`created_at\` DESC
           LIMIT 1
         `;
