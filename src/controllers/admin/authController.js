@@ -14,11 +14,10 @@ exports.login = (req, res) => {
   const missingFields = [];
 
   // Validate required fields
-  if (!username?.trim()) {
+  if (!username || username === "") {
     missingFields.push("Username");
   }
-
-  if (!password?.trim()) {
+  if (!password || password === "") {
     missingFields.push("Password");
   }
 
@@ -162,11 +161,11 @@ exports.logout = (req, res) => {
   // Validate required fields and create a custom message
   let missingFields = [];
 
-  if (!admin_id?.trim()) {
+  if (!admin_id || admin_id === "") {
     missingFields.push("Admin ID");
   }
-  
-  if (!_token?.trim()) {
+
+  if (!_token || _token === "") {
     missingFields.push("Token");
   }
 
@@ -192,12 +191,10 @@ exports.logout = (req, res) => {
     Admin.logout(admin_id, (err) => {
       if (err) {
         console.error("Database error:", err);
-        return res
-          .status(500)
-          .json({
-            status: false,
-            message: `Error logging out: ${err.message}`,
-          });
+        return res.status(500).json({
+          status: false,
+          message: `Error logging out: ${err.message}`,
+        });
       }
 
       res.json({
@@ -214,11 +211,11 @@ exports.validateLogin = (req, res) => {
   const missingFields = [];
 
   // Validate required fields
-  if (!admin_id?.trim()) {
+  if (!admin_id || admin_id === "") {
     missingFields.push("Admin ID");
   }
-  
-  if (!_token?.trim()) {
+
+  if (!_token || _token === "") {
     missingFields.push("Token");
   }
 
