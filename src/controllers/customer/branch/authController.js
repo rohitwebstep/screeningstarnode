@@ -14,12 +14,8 @@ exports.login = (req, res) => {
   const missingFields = [];
 
   // Validate required fields
-  if (!username) {
-    missingFields.push("Username");
-  }
-  if (!password) {
-    missingFields.push("Password");
-  }
+  if (!username?.trim()) missingFields.push("Username");
+  if (!password?.trim()) missingFields.push("Password");
 
   // If there are missing fields, return an error response
   if (missingFields.length > 0) {
@@ -160,13 +156,8 @@ exports.logout = (req, res) => {
 
   // Validate required fields and create a custom message
   let missingFields = [];
-
-  if (!branch_id) {
-    missingFields.push("Branch ID");
-  }
-  if (!_token) {
-    missingFields.push("Token");
-  }
+  if (!branch_id?.trim()) missingFields.push("Branch ID");
+  if (!_token?.trim()) missingFields.push("Token");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -210,12 +201,8 @@ exports.validateLogin = (req, res) => {
   const missingFields = [];
 
   // Validate required fields
-  if (!branch_id) {
-    missingFields.push("Branch ID");
-  }
-  if (!_token) {
-    missingFields.push("Token");
-  }
+  if (!branch_id?.trim()) missingFields.push("Branch ID");
+  if (!_token?.trim()) missingFields.push("Token");
 
   // If there are missing fields, return an error response
   if (missingFields.length > 0) {

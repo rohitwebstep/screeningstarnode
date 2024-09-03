@@ -14,10 +14,11 @@ exports.login = (req, res) => {
   const missingFields = [];
 
   // Validate required fields
-  if (!username) {
+  if (!username?.trim()) {
     missingFields.push("Username");
   }
-  if (!password) {
+
+  if (!password?.trim()) {
     missingFields.push("Password");
   }
 
@@ -50,13 +51,7 @@ exports.login = (req, res) => {
     Admin.validatePassword(username, password, (err, isValid) => {
       if (err) {
         console.error("Database error:", err);
-        Common.adminLoginLog(
-          admin.id,
-          "login",
-          "0",
-          err.message,
-          () => { }
-        );
+        Common.adminLoginLog(admin.id, "login", "0", err.message, () => {});
         return res.status(500).json({ status: false, message: err.message });
       }
 
@@ -67,9 +62,11 @@ exports.login = (req, res) => {
           "login",
           "0",
           "Incorrect password",
-          () => { }
+          () => {}
         );
-        return res.status(401).json({ status: false, message: "Incorrect password" });
+        return res
+          .status(401)
+          .json({ status: false, message: "Incorrect password" });
       }
 
       if (admin.status == 0) {
@@ -78,11 +75,12 @@ exports.login = (req, res) => {
           "login",
           "0",
           "Admin account is not yet verified.",
-          () => { }
+          () => {}
         );
         return res.status(400).json({
           status: false,
-          message: "Admin account is not yet verified. Please complete the verification process before proceeding."
+          message:
+            "Admin account is not yet verified. Please complete the verification process before proceeding.",
         });
       }
 
@@ -92,11 +90,12 @@ exports.login = (req, res) => {
           "login",
           "0",
           "Admin account has been suspended.",
-          () => { }
+          () => {}
         );
         return res.status(400).json({
           status: false,
-          message: "Admin account has been suspended. Please contact the help desk for further assistance."
+          message:
+            "Admin account has been suspended. Please contact the help desk for further assistance.",
         });
       }
 
@@ -111,11 +110,12 @@ exports.login = (req, res) => {
           "login",
           "0",
           "Another admin is currently logged in.",
-          () => { }
+          () => {}
         );
         return res.status(400).json({
           status: false,
-          message: "Another admin is currently logged in. Please try again later."
+          message:
+            "Another admin is currently logged in. Please try again later.",
         });
       }
 
@@ -132,7 +132,7 @@ exports.login = (req, res) => {
             "login",
             "0",
             "Error updating token: " + err.message,
-            () => { }
+            () => {}
           );
           return res.status(500).json({
             status: false,
@@ -141,14 +141,14 @@ exports.login = (req, res) => {
         }
 
         // Log successful login and return the response
-        Common.adminLoginLog(admin.id, "login", "1", null, () => { });
+        Common.adminLoginLog(admin.id, "login", "1", null, () => {});
         const { login_token, token_expiry, ...adminDataWithoutToken } = admin;
 
         res.json({
           status: true,
           message: "Login successful",
           adminData: adminDataWithoutToken,
-          token
+          token,
         });
       });
     });
@@ -162,10 +162,11 @@ exports.logout = (req, res) => {
   // Validate required fields and create a custom message
   let missingFields = [];
 
-  if (!admin_id) {
+  if (!admin_id?.trim()) {
     missingFields.push("Admin ID");
   }
-  if (!_token) {
+  
+  if (!_token?.trim()) {
     missingFields.push("Token");
   }
 
@@ -190,13 +191,18 @@ exports.logout = (req, res) => {
     // Update the token in the database to null
     Admin.logout(admin_id, (err) => {
       if (err) {
-        console.error('Database error:', err);
-        return res.status(500).json({ status: false, message: `Error logging out: ${err.message}` });
+        console.error("Database error:", err);
+        return res
+          .status(500)
+          .json({
+            status: false,
+            message: `Error logging out: ${err.message}`,
+          });
       }
 
       res.json({
         status: true,
-        message: 'Logout successful',
+        message: "Logout successful",
       });
     });
   });
@@ -208,42 +214,47 @@ exports.validateLogin = (req, res) => {
   const missingFields = [];
 
   // Validate required fields
-  if (!admin_id) {
-    missingFields.push('Admin ID');
+  if (!admin_id?.trim()) {
+    missingFields.push("Admin ID");
   }
-  if (!_token) {
-    missingFields.push('Token');
+  
+  if (!_token?.trim()) {
+    missingFields.push("Token");
   }
 
   // If there are missing fields, return an error response
   if (missingFields.length > 0) {
     return res.status(400).json({
       status: false,
-      message: `Missing required fields: ${missingFields.join(', ')}`,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
 
   // Fetch the admin record by admin_id to retrieve the saved token and expiry
   Admin.validateLogin(admin_id, (err, result) => {
     if (err) {
-      console.error('Database error:', err);
+      console.error("Database error:", err);
       return res.status(500).json({ status: false, message: err.message });
     }
 
     if (result.length === 0) {
-      return res.status(404).json({ status: false, message: 'Admin not found' });
+      return res
+        .status(404)
+        .json({ status: false, message: "Admin not found" });
     }
 
     const admin = result[0];
     const isTokenValid = admin.login_token === _token;
 
     if (!isTokenValid) {
-      return res.status(401).json({ status: false, message: 'Invalid or expired token' });
+      return res
+        .status(401)
+        .json({ status: false, message: "Invalid or expired token" });
     }
 
     res.json({
       status: true,
-      message: 'Login validated successfully',
+      message: "Login validated successfully",
       result: admin,
     });
   });
