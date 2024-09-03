@@ -12,8 +12,8 @@ exports.list = (req, res) => {
   const { admin_id, _token } = req.query;
 
   let missingFields = [];
-  if (!admin_id?.trim()) missingFields.push("Admin ID");
-  if (!_token?.trim()) missingFields.push("Token");
+  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
+  if (!_token || _token === "") missingFields.push("Token");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -69,9 +69,9 @@ exports.listByCustomerID = (req, res) => {
   const { admin_id, customer_id, _token } = req.query;
 
   let missingFields = [];
-  if (!admin_id?.trim()) missingFields.push("Admin ID");
-  if (!customer_id?.trim()) missingFields.push("Customer ID");
-  if (!_token?.trim()) missingFields.push("Token");
+  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
+  if (!customer_id || customer_id === "") missingFields.push("Customer ID");
+  if (!_token || _token === "") missingFields.push("Token");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -131,11 +131,11 @@ exports.update = (req, res) => {
 
   // Validate required fields
   const missingFields = [];
-  if (!id?.trim()) missingFields.push("Branch ID");
-  if (!name?.trim()) missingFields.push("Name");
-  if (!email?.trim()) missingFields.push("Email");
-  if (!admin_id?.trim()) missingFields.push("Admin ID");
-  if (!_token?.trim()) missingFields.push("Token");
+  if (!id || id === "") missingFields.push("Branch ID");
+  if (!name || name === "") missingFields.push("Name");
+  if (!email || email === "") missingFields.push("Email");
+  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
+  if (!_token || _token === "") missingFields.push("Token");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -266,9 +266,9 @@ exports.delete = (req, res) => {
 
   // Validate required fields
   const missingFields = [];
-  if (!id?.trim()) missingFields.push("Branch ID");
-  if (!admin_id?.trim()) missingFields.push("Admin ID");
-  if (!_token?.trim()) missingFields.push("Token");
+  if (!id || id === "") missingFields.push("Branch ID");
+  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
+  if (!_token || _token === "") missingFields.push("Token");
 
   if (missingFields.length > 0) {
     return res.status(400).json({

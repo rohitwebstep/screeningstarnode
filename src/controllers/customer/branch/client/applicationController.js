@@ -31,7 +31,7 @@ exports.create = (req, res) => {
 
   // Check for missing fields
   const missingFields = Object.keys(requiredFields)
-    .filter((field) => !requiredFields[field]?.trim())
+    .filter((field) => !requiredFields[field])
     .map((field) => field.replace(/_/g, " "));
 
   if (missingFields.length > 0) {
@@ -226,7 +226,7 @@ exports.update = (req, res) => {
 
   // Check for missing fields
   const missingFields = Object.keys(requiredFields)
-    .filter((field) => !requiredFields[field]?.trim())
+    .filter((field) => !requiredFields[field])
     .map((field) => field.replace(/_/g, " "));
 
   if (missingFields.length > 0) {
