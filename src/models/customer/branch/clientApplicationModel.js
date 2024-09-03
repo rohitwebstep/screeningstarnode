@@ -1,6 +1,94 @@
 const pool = require("../../../config/db");
 
 const clientApplication = {
+  generateApplicationID: (branch_id, callback) => {
+    // Step 1: Fetch customer_id from branches using branch_id
+    const getCustomerIdSql = `
+      SELECT \`customer_id\`
+      FROM \`branches\`
+      WHERE \`branch_id\` = ?
+    `;
+
+    pool.query(getCustomerIdSql, [branch_id], (err, branchResults) => {
+      if (err) {
+        console.error("Error fetching customer_id from branches:", err);
+        return callback(err, null);
+      }
+
+      if (branchResults.length === 0) {
+        return callback(new Error("Branch not found"), null);
+      }
+
+      const customer_id = branchResults[0].customer_id;
+
+      // Step 2: Fetch client_unique_id from customers using customer_id
+      const getClientUniqueIdSql = `
+        SELECT \`client_unique_id\`
+        FROM \`customers\`
+        WHERE \`id\` = ?
+      `;
+
+      pool.query(
+        getClientUniqueIdSql,
+        [customer_id],
+        (err, customerResults) => {
+          if (err) {
+            console.error(
+              "Error fetching client_unique_id from customers:",
+              err
+            );
+            return callback(err, null);
+          }
+
+          if (customerResults.length === 0) {
+            return callback(new Error("Customer not found"), null);
+          }
+
+          const client_unique_id = customerResults[0].client_unique_id;
+
+          // Step 3: Fetch the most recent application_id based on client_unique_id
+          const getApplicationIdSql = `
+          SELECT \`application_id\`
+          FROM \`client_applications\`
+          WHERE \`client_unique_id\` = ?
+          ORDER BY \`created_at\` DESC
+          LIMIT 1
+        `;
+
+          pool.query(
+            getApplicationIdSql,
+            [client_unique_id],
+            (err, applicationResults) => {
+              if (err) {
+                console.error("Error fetching application ID:", err);
+                return callback(err, null);
+              }
+
+              let new_application_id;
+
+              if (applicationResults.length === 0) {
+                // If no applications exist, start with the client_unique_id and '-1'
+                new_application_id = `${client_unique_id}-1`;
+              } else {
+                // Increment the number in the most recent application_id
+                const latest_application_id =
+                  applicationResults[0].application_id;
+                const parts = latest_application_id.split("-");
+                const numberPart = parseInt(parts[2], 10);
+                new_application_id = `${parts[0]}-${parts[1]}-${
+                  numberPart + 1
+                }`;
+              }
+
+              callback(null, new_application_id);
+            }
+          );
+        }
+      );
+    });
+  },
+
+  // Method to create a new client application
   create: (data, callback) => {
     const {
       name,
@@ -16,43 +104,55 @@ const clientApplication = {
       package,
     } = data;
 
-    const sql = `
-      INSERT INTO client_applications (
-        name,
-        attach_documents,
-        employee_id,
-        spoc,
-        location,
-        batch_number,
-        sub_client,
-        photo,
-        branch_id,
-        services,
-        package,
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-
-    const values = [
-      name,
-      attach_documents,
-      employee_id,
-      spoc,
-      location,
-      batch_number,
-      sub_client,
-      photo,
+    // Generate a new application ID
+    clientApplication.generateApplicationID(
       branch_id,
-      services || "",
-      package || "",
-    ];
+      (err, new_application_id) => {
+        if (err) {
+          return callback(err, null);
+        }
 
-    pool.query(sql, values, (err, results) => {
-      if (err) {
-        console.error("Database query error:", err);
-        return callback(err, null);
+        const sql = `
+        INSERT INTO \`client_applications\` (
+          \`application_id\`,
+          \`name\`,
+          \`attach_documents\`,
+          \`employee_id\`,
+          \`spoc\`,
+          \`location\`,
+          \`batch_number\`,
+          \`sub_client\`,
+          \`photo\`,
+          \`branch_id\`,
+          \`services\`,
+          \`package\`
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+
+        const values = [
+          new_application_id,
+          name,
+          attach_documents,
+          employee_id,
+          spoc,
+          location,
+          batch_number,
+          sub_client,
+          photo,
+          branch_id,
+          services || "",
+          package || "",
+        ];
+
+        pool.query(sql, values, (err, results) => {
+          if (err) {
+            console.error("Database query error:", err);
+            return callback(err, null);
+          }
+          callback(null, results);
+        });
       }
-      callback(null, results);
-    });
+    );
   },
 
   list: (branch_id, callback) => {
@@ -84,16 +184,16 @@ const clientApplication = {
   },
 
   checkUniqueEmpIdByClientApplicationID: (
-    applcation_id,
+    application_id,
     clientUniqueEmpId,
     callback
   ) => {
     const sql = `
       SELECT COUNT(*) AS count
       FROM \`client_applications\`
-      WHERE \`employee_id\` = ? AND \`id\` = ?
+      WHERE \`employee_id\` = ? AND id = ?
     `;
-    pool.query(sql, [clientUniqueEmpId, applcation_id], (err, results) => {
+    pool.query(sql, [clientUniqueEmpId, application_id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback({ message: "Database query error", error: err }, null);
@@ -105,7 +205,7 @@ const clientApplication = {
   },
 
   getClientApplicationById: (id, callback) => {
-    const sql = `SELECT * FROM \`client_applications\` WHERE \`id\` = ?`;
+    const sql = "SELECT * FROM `client_applications` WHERE id = ?";
     pool.query(sql, [id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
@@ -128,18 +228,18 @@ const clientApplication = {
     } = data;
 
     const sql = `
-      UPDATE client_applications
+      UPDATE \`client_applications\`
       SET
-        name = ?,
-        attach_documents = ?,
-        employee_id = ?,
-        spoc = ?,
-        location = ?,
-        batch_number = ?,
-        sub_client = ?,
-        photo = ?,
+        \`name\` = ?,
+        \`attach_documents\` = ?,
+        \`employee_id\` = ?,
+        \`spoc\` = ?,
+        \`location\` = ?,
+        \`batch_number\` = ?,
+        \`sub_client\` = ?,
+        \`photo\` = ?
       WHERE
-        id = ?
+        \`id\` = ?
     `;
 
     const values = [
@@ -164,10 +264,7 @@ const clientApplication = {
   },
 
   delete: (id, callback) => {
-    const sql = `
-        DELETE FROM \`client_applications\`
-        WHERE \`id\` = ?
-      `;
+    const sql = "DELETE FROM `client_applications` WHERE `id` = ?";
     pool.query(sql, [id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
