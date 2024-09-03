@@ -79,7 +79,7 @@ exports.create = (req, res) => {
 
   // Check for missing fields
   const missingFields = Object.keys(requiredFields)
-    .filter((field) => !requiredFields[field] || requiredFields[field] === '')
+    .filter((field) => !requiredFields[field] || requiredFields[field] === "")
     .map((field) => field.replace(/_/g, " "));
 
   if (missingFields.length > 0) {
@@ -454,7 +454,6 @@ exports.update = (req, res) => {
     emails,
     address,
     state_code,
-    clientData,
     agr_upload,
     client_spoc,
     client_code,
@@ -482,7 +481,7 @@ exports.update = (req, res) => {
 
   // Check for missing fields
   const missingFields = Object.keys(requiredFields)
-    .filter((field) => !requiredFields[field] || requiredFields[field] === '')
+    .filter((field) => !requiredFields[field] || requiredFields[field] === "")
     .map((field) => field.replace(/_/g, " "));
 
   if (missingFields.length > 0) {
