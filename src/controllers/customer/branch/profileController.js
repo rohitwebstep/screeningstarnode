@@ -48,7 +48,7 @@ exports.isEmailUsed = (req, res) => {
 
       if (isUsed) {
         return res.json({
-          status: true,
+          status: false,
           message: "Email is already in use",
           token: newToken,
         });
