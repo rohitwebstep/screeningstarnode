@@ -8,7 +8,7 @@ const generatePassword = (companyName) => {
 };
 
 // Controller to list all branches
-exports.list = (req, res) => {
+exports.isEmailUsed = (req, res) => {
   const { admin_id, _token } = req.query;
 
   let missingFields = [];
