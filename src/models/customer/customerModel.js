@@ -287,6 +287,42 @@ const Customer = {
     });
   },
 
+  basicInfoByID: (customer_id, callback) => {
+    const sql = `
+      SELECT 
+        customers.client_unique_id,
+        customers.name, 
+        customers.profile_picture, 
+        customers.emails, 
+        customers.mobile, 
+        customers.services, 
+        customers.id, 
+        customer_metas.address,
+        customer_metas.contact_person_name,
+        customer_metas.escalation_point_contact,
+        customer_metas.single_point_of_contact,
+        customer_metas.gst_number,
+        customer_metas.payment_contact_person,
+        customer_metas.id AS meta_id
+      FROM 
+        customers
+      LEFT JOIN 
+        customer_metas 
+      ON 
+        customers.id = customer_metas.customer_id
+      WHERE 
+        customers.id = ?
+    `;
+
+    pool.query(sql, [customer_id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results);
+    });
+  },
+
   getCustomerById: (id, callback) => {
     const sql = "SELECT * FROM `customers` WHERE `id` = ?";
     pool.query(sql, [id], (err, results) => {

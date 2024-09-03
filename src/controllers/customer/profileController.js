@@ -2,6 +2,7 @@ const crypto = require("crypto");
 const Customer = require("../../models/customer/customerModel");
 const Branch = require("../../models/customer/branch/branchModel");
 const AdminCommon = require("../../models/admin/commonModel");
+const BranchCommon = require("../../models/customer/branch/commonModel");
 const { sendEmail } = require("../../mailer/customerMailer");
 
 // Helper function to generate a password
@@ -890,5 +891,52 @@ exports.delete = (req, res) => {
         });
       }
     );
+  });
+};
+
+exports.customerBasicInfoWithBranchAuth = (req, res) => {
+  const { customer_id, branch_id, branch_token } = req.query;
+
+  let missingFields = [];
+  if (!customer_id?.trim()) missingFields.push("Customer ID");
+  if (!branch_id?.trim()) missingFields.push("Branch ID");
+  if (!branch_token?.trim()) missingFields.push("Token");
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  // Verify admin token
+  BranchCommon.isBranchTokenValid(_token, branch_id, (err, result) => {
+    if (err) {
+      console.error("Error checking token validity:", err);
+      return res.status(500).json({ status: false, message: err.message });
+    }
+
+    if (!result.status) {
+      return res.status(401).json({ status: false, message: result.message });
+    }
+
+    const newToken = result.newToken;
+
+    Customer.basicInfoByID(customer_id, (err, result) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res
+          .status(500)
+          .json({ status: false, message: err.message, token: newToken });
+      }
+
+      res.json({
+        status: true,
+        message: "Customer Info fetched successfully",
+        customers: result,
+        totalResults: result.length,
+        token: newToken,
+      });
+    });
   });
 };
