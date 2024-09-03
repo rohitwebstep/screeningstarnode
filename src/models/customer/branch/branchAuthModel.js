@@ -3,7 +3,7 @@ const pool = require("../../../config/db");
 const Branch = {
   findByEmailOrMobile: (username, callback) => {
     const sql = `
-      SELECT \`id\`, \`name\`, \`email\`, \`status\`, \`login_token\`, \`token_expiry\`
+      SELECT \`id\`, \`customer_id\`, \`name\`, \`email\`, \`status\`, \`login_token\`, \`token_expiry\`
       FROM \`branches\`
       WHERE \`email\` = ?
     `;
