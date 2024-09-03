@@ -6,10 +6,10 @@ exports.create = (req, res) => {
   const { title, description, admin_id, _token } = req.body;
 
   let missingFields = [];
-  if (!title) missingFields.push("Title");
-  if (!description) missingFields.push("Description");
-  if (!admin_id) missingFields.push("Admin ID");
-  if (!_token) missingFields.push("Token");
+  if (!title?.trim()) missingFields.push("Title");
+  if (!description?.trim()) missingFields.push("Description");
+  if (!admin_id?.trim()) missingFields.push("Admin ID");
+  if (!_token?.trim()) missingFields.push("Token");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -83,8 +83,8 @@ exports.list = (req, res) => {
   const { admin_id, _token } = req.query;
 
   let missingFields = [];
-  if (!admin_id) missingFields.push("Admin ID");
-  if (!_token) missingFields.push("Token");
+  if (!admin_id?.trim()) missingFields.push("Admin ID");
+  if (!_token?.trim()) missingFields.push("Token");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -135,9 +135,9 @@ exports.list = (req, res) => {
 exports.getServiceById = (req, res) => {
   const { id, admin_id, _token } = req.query;
   let missingFields = [];
-  if (!id) missingFields.push("Service ID");
-  if (!admin_id) missingFields.push("Admin ID");
-  if (!_token) missingFields.push("Token");
+  if (!id?.trim()) missingFields.push("Service ID");
+  if (!admin_id?.trim()) missingFields.push("Admin ID");
+  if (!_token?.trim()) missingFields.push("Token");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -199,11 +199,11 @@ exports.update = (req, res) => {
   const { id, title, description, admin_id, _token } = req.body;
 
   let missingFields = [];
-  if (!id) missingFields.push("Service ID");
-  if (!title) missingFields.push("Title");
-  if (!description) missingFields.push("Description");
-  if (!admin_id) missingFields.push("Admin ID");
-  if (!_token) missingFields.push("Token");
+  if (!id?.trim()) missingFields.push("Service ID");
+  if (!title?.trim()) missingFields.push("Title");
+  if (!description?.trim()) missingFields.push("Description");
+  if (!admin_id?.trim()) missingFields.push("Admin ID");
+  if (!_token?.trim()) missingFields.push("Token");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -300,9 +300,9 @@ exports.delete = (req, res) => {
   const { id, admin_id, _token } = req.query;
 
   let missingFields = [];
-  if (!id) missingFields.push("Service ID");
-  if (!admin_id) missingFields.push("Admin ID");
-  if (!_token) missingFields.push("Token");
+  if (!id?.trim()) missingFields.push("Service ID");
+  if (!admin_id?.trim()) missingFields.push("Admin ID");
+  if (!_token?.trim()) missingFields.push("Token");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
