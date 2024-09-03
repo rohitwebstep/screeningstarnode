@@ -910,7 +910,7 @@ exports.customerBasicInfoWithBranchAuth = (req, res) => {
   }
 
   // Verify admin token
-  BranchCommon.isBranchTokenValid(_token, branch_id, (err, result) => {
+  BranchCommon.isBranchTokenValid(branch_token, branch_id, (err, result) => {
     if (err) {
       console.error("Error checking token validity:", err);
       return res.status(500).json({ status: false, message: err.message });
