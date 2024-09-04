@@ -1,4 +1,4 @@
-const Customer = require("../../../../models/customer/branch/customerApplicationModel");
+const Customer = require("../../../../models/customer/branch/candidateApplicationModel");
 const BranchCommon = require("../../../../models/customer/branch/commonModel");
 
 exports.create = (req, res) => {
