@@ -210,30 +210,24 @@ exports.update = (req, res) => {
   const {
     branch_id,
     _token,
-    candidate_application_id,
     name,
-    attach_documents,
     employee_id,
-    spoc,
-    location,
-    batch_number,
-    sub_client,
-    photo,
+    mobile_number,
+    email,
+    services,
+    package,
   } = req.body;
 
   // Define required fields
   const requiredFields = {
     branch_id,
     _token,
-    candidate_application_id,
     name,
-    attach_documents,
     employee_id,
-    spoc,
-    location,
-    batch_number,
-    sub_client,
-    photo,
+    mobile_number,
+    email,
+    services,
+    package,
   };
 
   // Check for missing fields
@@ -294,13 +288,11 @@ exports.update = (req, res) => {
           Candidate.update(
             {
               name,
-              attach_documents,
               employee_id,
-              spoc,
-              location,
-              batch_number,
-              sub_client,
-              photo,
+              mobile_number,
+              email,
+              services,
+              package,
             },
             candidate_application_id,
             (err, result) => {
