@@ -2,7 +2,7 @@ const pool = require("../../../config/db");
 
 const Branch = {
   isEmailUsedBefore: (email, callback) => {
-    // Step 1: Check if the email exists in customer_applications
+    // Step 1: Check if the email exists in candidate_applications
     const emailCheckSql = `
       SELECT COUNT(*) as count
       FROM \`branches\`
