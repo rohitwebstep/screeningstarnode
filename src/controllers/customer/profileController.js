@@ -251,6 +251,7 @@ exports.create = (req, res) => {
                     email: headBranchEmail,
                     head: 1,
                     password,
+                    mobile_number,
                   },
                   (err, headBranchResult) => {
                     if (err) {

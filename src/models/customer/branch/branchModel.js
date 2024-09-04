@@ -4,8 +4,8 @@ const Branch = {
   create: (BranchData, callback) => {
     const sqlBranch = `
       INSERT INTO \`branches\` (
-        \`customer_id\`, \`name\`, \`email\`, \`is_head\`, \`password\`, \`permissions\`
-      ) VALUES (?, ?, ?, ?, MD5(?), ?)
+        \`customer_id\`, \`name\`, \`email\`, \`is_head\`, \`password\`, \`permissions\`, \`mobile_number\`
+      ) VALUES (?, ?, ?, ?, MD5(?), ?, ?)
     `;
     const permissions = `{"client_application": { "create": true, "update": true, "view": true, "delete": true },"candidate_application": { "create": true, "update": true, "view": true, "delete": true }}`;
     const valuesBranch = [
@@ -14,6 +14,7 @@ const Branch = {
       BranchData.email,
       BranchData.head,
       BranchData.password,
+      BranchData.mobile_number || null,
       permissions,
     ];
 
