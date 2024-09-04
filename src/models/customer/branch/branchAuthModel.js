@@ -76,7 +76,7 @@ const Branch = {
 
   validateLogin: (id, callback) => {
     const sql = `
-      SELECT \`login_token\`
+      SELECT \`login_token\`, \`token_expiry\`
       FROM \`branches\`
       WHERE \`id\` = ?
     `;
