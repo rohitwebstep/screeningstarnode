@@ -324,7 +324,7 @@ exports.update = (req, res) => {
                 "Client Application",
                 "Update",
                 "1",
-                `{id: ${client_id}}`,
+                `{id: ${client_application_id}}`,
                 null,
                 () => {}
               );
