@@ -29,8 +29,6 @@ exports.create = (req, res) => {
     batch_number,
     sub_client,
     photo,
-    services,
-    package,
   };
 
   // Check for missing fields
