@@ -34,8 +34,8 @@ const Branch = {
       BranchData.email,
       BranchData.head,
       BranchData.password,
-      BranchData.mobile_number || null,
       permissions,
+      BranchData.mobile_number || null,
     ];
 
     pool.query(sqlBranch, valuesBranch, (err, results) => {
