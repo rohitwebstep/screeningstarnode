@@ -3,16 +3,16 @@ const pool = require("../../../config/db");
 const clientApplication = {
   // Method to check if an email has been used before
   isEmailUsedBefore: (email, callback) => {
-    // Step 1: Check if the email exists in customer_applications
+    // Step 1: Check if the email exists in candidate_applications
     const emailCheckSql = `
     SELECT COUNT(*) as count
-    FROM \`customer_applications\`
+    FROM \`candidate_applications\`
     WHERE \`email\` = ?
   `;
 
     pool.query(emailCheckSql, [email], (err, emailCheckResults) => {
       if (err) {
-        console.error("Error checking email in customer_applications:", err);
+        console.error("Error checking email in candidate_applications:", err);
         return callback(err, null);
       }
 
