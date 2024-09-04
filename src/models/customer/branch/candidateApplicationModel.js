@@ -125,10 +125,9 @@ const clientApplication = {
     });
   },
 
-  update: (data, client_application_id, callback) => {
+  update: (data, candidate_application_id, callback) => {
     const {
       name,
-      attach_documents,
       employee_id,
       spoc,
       location,
@@ -141,7 +140,6 @@ const clientApplication = {
       UPDATE \`candidate_applications\`
       SET
         \`name\` = ?,
-        \`attach_documents\` = ?,
         \`employee_id\` = ?,
         \`spoc\` = ?,
         \`location\` = ?,
@@ -154,14 +152,13 @@ const clientApplication = {
 
     const values = [
       name,
-      attach_documents,
       employee_id,
       spoc,
       location,
       batch_number,
       sub_client,
       photo,
-      client_application_id,
+      candidate_application_id,
     ];
 
     pool.query(sql, values, (err, results) => {

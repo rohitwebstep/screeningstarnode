@@ -210,7 +210,7 @@ exports.update = (req, res) => {
   const {
     branch_id,
     _token,
-    client_application_id,
+    candidate_application_id,
     name,
     attach_documents,
     employee_id,
@@ -225,7 +225,7 @@ exports.update = (req, res) => {
   const requiredFields = {
     branch_id,
     _token,
-    client_application_id,
+    candidate_application_id,
     name,
     attach_documents,
     employee_id,
@@ -271,7 +271,7 @@ exports.update = (req, res) => {
 
       Candidate.checkUniqueEmpIdByClientApplicationID(
         employee_id,
-        client_application_id,
+        candidate_application_id,
         (err, exists) => {
           if (err) {
             console.error("Error checking unique ID:", err);
@@ -282,7 +282,7 @@ exports.update = (req, res) => {
 
           if (
             exists &&
-            exists.client_application_id !== client_application_id
+            exists.candidate_application_id !== candidate_application_id
           ) {
             return res.status(400).json({
               status: false,
@@ -302,7 +302,7 @@ exports.update = (req, res) => {
               sub_client,
               photo,
             },
-            client_application_id,
+            candidate_application_id,
             (err, result) => {
               if (err) {
                 console.error(
@@ -330,7 +330,7 @@ exports.update = (req, res) => {
                 "Client Application",
                 "Update",
                 "1",
-                `{id: ${client_application_id}}`,
+                `{id: ${candidate_application_id}}`,
                 null,
                 () => {}
               );
