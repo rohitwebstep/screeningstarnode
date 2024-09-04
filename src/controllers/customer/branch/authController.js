@@ -234,16 +234,12 @@ exports.validateLogin = (req, res) => {
       return res.status(401).json({
         status: false,
         message: "Invalid or expired token",
-        _token,
-        result: branch,
       });
     }
 
     res.json({
       status: true,
       message: "Login validated successfully",
-      _token,
-      result: branch,
     });
   });
 };
