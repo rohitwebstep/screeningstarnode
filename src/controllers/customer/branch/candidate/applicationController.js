@@ -37,7 +37,7 @@ exports.create = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ customer_application: "create" });
+  const action = JSON.stringify({ candidate_application: "create" });
   Customer.isEmailUsedBefore(email, (err, emailUsed) => {
     if (err) {
       return res.status(500).json({
