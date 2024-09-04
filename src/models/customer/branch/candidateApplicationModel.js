@@ -126,26 +126,17 @@ const clientApplication = {
   },
 
   update: (data, candidate_application_id, callback) => {
-    const {
-      name,
-      employee_id,
-      spoc,
-      location,
-      batch_number,
-      sub_client,
-      photo,
-    } = data;
+    const { name, employee_id, mobile_number, email, services, package } = data;
 
     const sql = `
       UPDATE \`candidate_applications\`
       SET
         \`name\` = ?,
         \`employee_id\` = ?,
-        \`spoc\` = ?,
-        \`location\` = ?,
-        \`batch_number\` = ?,
-        \`sub_client\` = ?,
-        \`photo\` = ?
+        \`mobile_number\` = ?,
+        \`email\` = ?,
+        \`services\` = ?,
+        \`package\` = ?
       WHERE
         \`id\` = ?
     `;
@@ -153,11 +144,10 @@ const clientApplication = {
     const values = [
       name,
       employee_id,
-      spoc,
-      location,
-      batch_number,
-      sub_client,
-      photo,
+      mobile_number,
+      email,
+      services,
+      package,
       candidate_application_id,
     ];
 
