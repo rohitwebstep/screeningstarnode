@@ -4,7 +4,7 @@ const authController = require("../../../controllers/customer/branch/authControl
 const profileController = require("../../../controllers/customer/branch/profileController");
 const customerController = require("../../../controllers/customer/profileController");
 const clientRoutes = require("./clientRoutes");
-const customerRoutes = require("./customerRoutes");
+const candidateRoutes = require("./candidateRoutes");
 
 // Basic routes
 router.post("/login", authController.login);
@@ -20,5 +20,5 @@ router.put("/update", profileController.update);
 router.delete("/delete", profileController.delete);
 
 router.use("/client-application", clientRoutes);
-router.use("/customer-application", customerRoutes);
+router.use("/candidate-application", candidateRoutes);
 module.exports = router;
