@@ -228,8 +228,6 @@ exports.update = (req, res) => {
     employee_id,
     mobile_number,
     email,
-    services,
-    package,
   };
 
   // Check for missing fields
