@@ -204,11 +204,6 @@ exports.validateLogin = (req, res) => {
   if (!branch_id || branch_id === "") missingFields.push("Branch ID");
   if (!_token || _token === "") missingFields.push("Token");
 
-  return res.status(400).json({
-    status: false,
-    message: req.body,
-  });
-
   // If there are missing fields, return an error response
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -244,6 +239,8 @@ exports.validateLogin = (req, res) => {
     res.json({
       status: true,
       message: "Login validated successfully",
+      login_token,
+      _token,
       result: branch,
     });
   });
