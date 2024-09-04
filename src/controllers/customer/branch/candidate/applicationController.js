@@ -1,4 +1,4 @@
-const Customer = require("../../../../models/customer/branch/candidateApplicationModel");
+const Candidate = require("../../../../models/customer/branch/candidateApplicationModel");
 const BranchCommon = require("../../../../models/customer/branch/commonModel");
 
 exports.create = (req, res) => {
@@ -38,7 +38,7 @@ exports.create = (req, res) => {
   }
 
   const action = JSON.stringify({ candidate_application: "create" });
-  Customer.isEmailUsedBefore(email, (err, emailUsed) => {
+  Candidate.isEmailUsedBefore(email, (err, emailUsed) => {
     if (err) {
       return res.status(500).json({
         status: false,
@@ -75,7 +75,7 @@ exports.create = (req, res) => {
 
         const newToken = result.newToken;
 
-        Customer.checkUniqueEmpId(employee_id, (err, exists) => {
+        Candidate.checkUniqueEmpId(employee_id, (err, exists) => {
           if (err) {
             console.error("Error checking unique ID:", err);
             return res
@@ -91,7 +91,7 @@ exports.create = (req, res) => {
             });
           }
 
-          Customer.create(
+          Candidate.create(
             {
               branch_id,
               name,
@@ -184,7 +184,7 @@ exports.list = (req, res) => {
 
       const newToken = result.newToken;
 
-      Customer.list(branch_id, (err, result) => {
+      Candidate.list(branch_id, (err, result) => {
         if (err) {
           console.error("Database error:", err);
           return res.status(500).json({
@@ -269,7 +269,7 @@ exports.update = (req, res) => {
 
       const newToken = result.newToken;
 
-      Customer.checkUniqueEmpIdByClientApplicationID(
+      Candidate.checkUniqueEmpIdByClientApplicationID(
         employee_id,
         client_application_id,
         (err, exists) => {
@@ -291,7 +291,7 @@ exports.update = (req, res) => {
             });
           }
 
-          Customer.update(
+          Candidate.update(
             {
               name,
               attach_documents,
@@ -400,7 +400,7 @@ exports.delete = (req, res) => {
         const newToken = tokenValidationResult.newToken;
 
         // Fetch the current clientApplication
-        Customer.getClientApplicationById(
+        Candidate.getClientApplicationById(
           id,
           (err, currentClientApplication) => {
             if (err) {
@@ -410,7 +410,7 @@ exports.delete = (req, res) => {
               );
               return res.status(500).json({
                 status: false,
-                message: "Failed to retrieve Customer. Please try again.",
+                message: "Failed to retrieve Candidate. Please try again.",
                 token: newToken,
               });
             }
@@ -424,7 +424,7 @@ exports.delete = (req, res) => {
             }
 
             // Delete the clientApplication
-            Customer.delete(id, (err, result) => {
+            Candidate.delete(id, (err, result) => {
               if (err) {
                 console.error(
                   "Database error during clientApplication deletion:",
@@ -441,7 +441,7 @@ exports.delete = (req, res) => {
                 );
                 return res.status(500).json({
                   status: false,
-                  message: "Failed to delete Customer. Please try again.",
+                  message: "Failed to delete Candidate. Please try again.",
                   token: newToken,
                 });
               }
