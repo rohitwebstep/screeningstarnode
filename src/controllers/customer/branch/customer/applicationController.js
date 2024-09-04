@@ -6,13 +6,9 @@ exports.create = (req, res) => {
     branch_id,
     _token,
     name,
-    attach_documents,
     employee_id,
-    spoc,
-    location,
-    batch_number,
-    sub_client,
-    photo,
+    mobile_number,
+    email,
     services,
     package,
   } = req.body;
@@ -22,13 +18,9 @@ exports.create = (req, res) => {
     branch_id,
     _token,
     name,
-    attach_documents,
     employee_id,
-    spoc,
-    location,
-    batch_number,
-    sub_client,
-    photo,
+    mobile_number,
+    email,
     services,
     package,
   };
@@ -45,97 +37,111 @@ exports.create = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ client_application: "create" });
-  BranchCommon.isBranchAuthorizedForAction(branch_id, action, (result) => {
-    if (!result.status) {
-      return res.status(403).json({
+  const action = JSON.stringify({ customer_application: "create" });
+  Customer.isEmailUsedBefore(email, (err, emailUsed) => {
+    if (err) {
+      return res.status(500).json({
         status: false,
-        message: result.message,
+        message: "Internal Server Error: Unable to check email.",
+        error: err.message,
       });
     }
 
-    BranchCommon.isBranchTokenValid(_token, branch_id, (err, result) => {
-      if (err) {
-        console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
-      }
-
+    if (emailUsed) {
+      return res.status(409).json({
+        status: false,
+        message: "Conflict: The email address has already been used.",
+      });
+    }
+    BranchCommon.isBranchAuthorizedForAction(branch_id, action, (result) => {
       if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message });
+        return res.status(403).json({
+          status: false,
+          message: result.message,
+        });
       }
 
-      const newToken = result.newToken;
-
-      Customer.checkUniqueEmpId(employee_id, (err, exists) => {
+      BranchCommon.isBranchTokenValid(_token, branch_id, (err, result) => {
         if (err) {
-          console.error("Error checking unique ID:", err);
+          console.error("Error checking token validity:", err);
+          return res.status(500).json({ status: false, message: err.message });
+        }
+
+        if (!result.status) {
           return res
-            .status(500)
-            .json({ status: false, message: err.message, token: newToken });
+            .status(401)
+            .json({ status: false, message: result.message });
         }
 
-        if (exists) {
-          return res.status(400).json({
-            status: false,
-            message: `Client Employee ID '${employee_id}' already exists.`,
-            token: newToken,
-          });
-        }
+        const newToken = result.newToken;
 
-        Customer.create(
-          {
-            name,
-            attach_documents,
-            employee_id,
-            spoc,
-            location,
-            batch_number,
-            sub_client,
-            photo,
-            branch_id,
-            services,
-            package,
-          },
-          (err, result) => {
-            if (err) {
-              console.error(
-                "Database error during client application creation:",
-                err
-              );
+        Customer.checkUniqueEmpId(employee_id, (err, exists) => {
+          if (err) {
+            console.error("Error checking unique ID:", err);
+            return res
+              .status(500)
+              .json({ status: false, message: err.message, token: newToken });
+          }
+
+          if (exists) {
+            return res.status(400).json({
+              status: false,
+              message: `Client Employee ID '${employee_id}' already exists.`,
+              token: newToken,
+            });
+          }
+
+          Customer.create(
+            {
+              branch_id,
+              name,
+              employee_id,
+              mobile_number,
+              email,
+              services,
+              package,
+            },
+            (err, result) => {
+              if (err) {
+                console.error(
+                  "Database error during client application creation:",
+                  err
+                );
+                BranchCommon.branchActivityLog(
+                  branch_id,
+                  "Client Application",
+                  "Create",
+                  "0",
+                  null,
+                  err.message,
+                  () => {}
+                );
+                return res.status(500).json({
+                  status: false,
+                  message: err.message,
+                  token: newToken,
+                });
+              }
+
               BranchCommon.branchActivityLog(
                 branch_id,
                 "Client Application",
                 "Create",
-                "0",
+                "1",
+                `{id: ${result.insertId}}`,
                 null,
-                err.message,
                 () => {}
               );
-              return res.status(500).json({
-                status: false,
-                message: err.message,
+
+              res.status(201).json({
+                status: true,
+                message: "Client application created successfully.",
+                package: result,
                 token: newToken,
               });
             }
-
-            BranchCommon.branchActivityLog(
-              branch_id,
-              "Client Application",
-              "Create",
-              "1",
-              `{id: ${result.insertId}}`,
-              null,
-              () => {}
-            );
-
-            res.status(201).json({
-              status: true,
-              message: "Client application created successfully.",
-              package: result,
-              token: newToken,
-            });
-          }
-        );
+          );
+        });
       });
     });
   });
