@@ -1,6 +1,26 @@
 const pool = require("../../../config/db");
 
 const Branch = {
+  isEmailUsedBefore: (email, callback) => {
+    // Step 1: Check if the email exists in customer_applications
+    const emailCheckSql = `
+      SELECT COUNT(*) as count
+      FROM \`branches\`
+      WHERE \`email\` = ?
+    `;
+
+    pool.query(emailCheckSql, [email], (err, emailCheckResults) => {
+      if (err) {
+        console.error("Error checking email in branch:", err);
+        return callback(err, null);
+      }
+
+      // Check if the email exists
+      const emailExists = emailCheckResults[0].count > 0;
+      return callback(null, emailExists);
+    });
+  },
+
   create: (BranchData, callback) => {
     const sqlBranch = `
       INSERT INTO \`branches\` (
