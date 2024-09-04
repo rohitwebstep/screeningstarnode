@@ -455,7 +455,6 @@ exports.update = (req, res) => {
     emails,
     address,
     state_code,
-    agr_upload,
     client_spoc,
     client_code,
     company_name,
