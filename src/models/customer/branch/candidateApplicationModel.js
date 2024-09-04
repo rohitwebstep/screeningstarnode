@@ -35,7 +35,7 @@ const clientApplication = {
     } = data;
 
     const sql = `
-        INSERT INTO \`client_applications\` (
+        INSERT INTO \`candidate_applications\` (
           \`branch_id\`,
           \`name\`,
           \`employee_id\`,
@@ -66,7 +66,7 @@ const clientApplication = {
   },
 
   list: (branch_id, callback) => {
-    const sql = "SELECT * FROM `client_applications` WHERE `branch_id` = ?";
+    const sql = "SELECT * FROM `candidate_applications` WHERE `branch_id` = ?";
     pool.query(sql, [branch_id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
@@ -79,7 +79,7 @@ const clientApplication = {
   checkUniqueEmpId: (clientUniqueEmpId, callback) => {
     const sql = `
       SELECT COUNT(*) AS count
-      FROM \`client_applications\`
+      FROM \`candidate_applications\`
       WHERE \`employee_id\` = ?
     `;
     pool.query(sql, [clientUniqueEmpId], (err, results) => {
@@ -100,7 +100,7 @@ const clientApplication = {
   ) => {
     const sql = `
       SELECT COUNT(*) AS count
-      FROM \`client_applications\`
+      FROM \`candidate_applications\`
       WHERE \`employee_id\` = ? AND id = ?
     `;
     pool.query(sql, [clientUniqueEmpId, application_id], (err, results) => {
@@ -115,7 +115,7 @@ const clientApplication = {
   },
 
   getClientApplicationById: (id, callback) => {
-    const sql = "SELECT * FROM `client_applications` WHERE id = ?";
+    const sql = "SELECT * FROM `candidate_applications` WHERE id = ?";
     pool.query(sql, [id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
@@ -138,7 +138,7 @@ const clientApplication = {
     } = data;
 
     const sql = `
-      UPDATE \`client_applications\`
+      UPDATE \`candidate_applications\`
       SET
         \`name\` = ?,
         \`attach_documents\` = ?,
@@ -174,7 +174,7 @@ const clientApplication = {
   },
 
   delete: (id, callback) => {
-    const sql = "DELETE FROM `client_applications` WHERE `id` = ?";
+    const sql = "DELETE FROM `candidate_applications` WHERE `id` = ?";
     pool.query(sql, [id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
