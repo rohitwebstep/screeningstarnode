@@ -62,8 +62,8 @@ async function sendEmail(module, action, name, services, toArr, ccArr) {
     // Replace placeholders in the email template
     let template = email.template;
     template = template
-      .replace(/{{dynamic_name}}/g, name)
-      .replace(/{{table}}/g, table);
+      .replace(/{{candidate_name}}/g, name)
+      .replace(/{{service_list_table}}/g, table);
 
     // Prepare CC list
     const ccList = ccArr
