@@ -83,37 +83,59 @@ exports.create = (req, res) => {
             null,
             () => {}
           );
+          // Fetch branch and customer emails
+          Common.getBranchandCustomerEmailsForNotification(
+            branch_id,
+            (emailError, emailData) => {
+              if (emailError) {
+                console.error("Error fetching emails:", emailError);
+                return res.status(500).json({
+                  status: false,
+                  message: "Failed to retrieve email addresses.",
+                  token: newToken,
+                });
+              }
 
-          // Send email notification
-          sendEmail(
-            "customer",
-            "create",
-            "rohitwebstep@gmail.com",
-            "Demo Company",
-            "123"
-          )
-            .then(() => {
-              res.json({
-                status: true,
-                message:
-                  "Customer and branches created successfully, and email sent.",
-                data: {
-                  customer: result,
-                  meta: metaResult,
-                  branches: branchResults,
-                },
-                token: newToken,
-              });
-            })
-            .catch((emailError) => {
-              console.error("Error sending email:", emailError);
-              res.status(201).json({
-                status: true,
-                message: "Client created successfully.",
-                client: result,
-                token: newToken,
-              });
-            });
+              const { branch, customer } = emailData;
+
+              const toArr = [{ name: branch.name, email: branch.email }];
+              const ccArr = customer.emails
+                .split(",")
+                .map((email) => ({ name: customer.name, email: email.trim() }));
+
+              // Send email notification
+              sendEmail(
+                "candidate application",
+                "create",
+                title,
+                [], // Pass services array if needed
+                toArr,
+                ccArr
+              )
+                .then(() => {
+                  res.json({
+                    status: true,
+                    message:
+                      "Customer and branches created successfully, and email sent.",
+                    data: {
+                      customer: result,
+                      meta: metaResult,
+                      branches: branchResults,
+                    },
+                    token: newToken,
+                  });
+                })
+                .catch((emailError) => {
+                  console.error("Error sending email:", emailError);
+                  res.status(201).json({
+                    status: true,
+                    message: "Client created successfully.",
+                    client: result,
+                    token: newToken,
+                  });
+                });
+            }
+          );
         });
       }
     );
