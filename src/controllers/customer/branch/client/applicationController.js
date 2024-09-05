@@ -211,6 +211,8 @@ exports.update = (req, res) => {
     batch_number,
     sub_client,
     photo,
+    services,
+    package,
   } = req.body;
 
   // Define required fields
@@ -293,6 +295,8 @@ exports.update = (req, res) => {
               batch_number,
               sub_client,
               photo,
+              services,
+              package,
             },
             client_application_id,
             (err, result) => {
