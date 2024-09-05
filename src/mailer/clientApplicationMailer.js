@@ -70,20 +70,33 @@ async function sendEmail(module, action, name, services, toArr, ccArr) {
       .map((entry) => {
         let emails = [];
 
-        // Check if entry.email is already an array or try to parse it
-        if (Array.isArray(entry.email)) {
-          emails = entry.email;
-        } else {
-          try {
-            emails = JSON.parse(entry.email);
-          } catch (e) {
-            console.error("Error parsing email JSON:", entry.email, e);
-            return ""; // Skip this entry if parsing fails
+        try {
+          // Case 1: If it's already an array, use it
+          if (Array.isArray(entry.email)) {
+            emails = entry.email;
+          } else if (typeof entry.email === "string") {
+            // Case 2: If it's a JSON string, try to parse it
+            // First, remove any unnecessary backslashes
+            const cleanedEmail = entry.email.replace(/\\"/g, '"').trim();
+
+            // Try to parse the cleaned string as JSON
+            if (cleanedEmail.startsWith("[") && cleanedEmail.endsWith("]")) {
+              emails = JSON.parse(cleanedEmail);
+            } else {
+              // Case 3: If it's a plain string email, use it directly
+              emails = [cleanedEmail];
+            }
           }
+        } catch (e) {
+          console.error("Error parsing email JSON:", entry.email, e);
+          return ""; // Skip this entry if parsing fails
         }
 
-        // Return formatted CC list items
-        return emails.map((email) => `"${entry.name}" <${email}>`).join(", ");
+        // Ensure that emails array contains valid items, and format them
+        return emails
+          .filter((email) => email) // Ensure it's a valid non-empty string
+          .map((email) => `"${entry.name}" <${email}>`)
+          .join(", ");
       })
       .filter((cc) => cc !== "") // Remove any empty CCs from failed parses
       .join(", ");
