@@ -333,13 +333,16 @@ exports.update = (req, res) => {
               new: photo,
             };
           }
-          if (currentClientApplication.services !== services) {
+          if (
+            services !== "" &&
+            currentClientApplication.services !== services
+          ) {
             changes.services = {
               old: currentClientApplication.services,
               new: services,
             };
           }
-          if (currentClientApplication.package !== package) {
+          if (package !== "" && currentClientApplication.package !== package) {
             changes.package = {
               old: currentClientApplication.package,
               new: package,

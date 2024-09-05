@@ -306,13 +306,13 @@ exports.update = (req, res) => {
               new: mobile_number,
             };
           }
-          if (currentCandidateApplication.services !== services) {
+          if ( services !== '' && currentCandidateApplication.services !== services) {
             changes.services = {
               old: currentCandidateApplication.services,
               new: services,
             };
           }
-          if (currentCandidateApplication.package !== package) {
+          if ( package !== '' && currentCandidateApplication.package !== package) {
             changes.package = {
               old: currentCandidateApplication.package,
               new: package,
