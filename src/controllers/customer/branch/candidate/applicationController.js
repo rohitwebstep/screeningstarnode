@@ -262,54 +262,71 @@ exports.update = (req, res) => {
       }
 
       const newToken = result.newToken;
-
-      Candidate.checkUniqueEmpIdByCandidateApplicationID(
-        employee_id,
-        candidate_application_id,
-        (err, exists) => {
+      // Fetch the current candidateApplication
+      Candidate.getCandidateApplicationById(
+        id,
+        (err, currentCandidateApplication) => {
           if (err) {
-            console.error("Error checking unique ID:", err);
-            return res
-              .status(500)
-              .json({ status: false, message: err.message, token: newToken });
-          }
-
-          if (
-            exists &&
-            exists.candidate_application_id !== candidate_application_id
-          ) {
-            return res.status(400).json({
+            console.error(
+              "Database error during candidateApplication retrieval:",
+              err
+            );
+            return res.status(500).json({
               status: false,
-              message: `Candidate Employee ID '${employee_id}' already exists.`,
+              message: "Failed to retrieve Candidate. Please try again.",
               token: newToken,
             });
           }
 
-          Candidate.update(
-            {
-              name,
-              employee_id,
-              mobile_number,
-              email,
-              services,
-              package,
-            },
+          if (!currentCandidateApplication) {
+            return res.status(404).json({
+              status: false,
+              message: "Candidate Aplication not found.",
+              token: newToken,
+            });
+          }
+
+          const changes = {};
+          if (currentBranch.name !== name) {
+            changes.name = { old: currentBranch.name, new: name };
+          }
+          if (currentBranch.email !== email) {
+            changes.email = {
+              old: currentBranch.email,
+              new: email,
+            };
+          }
+          if (currentBranch.employee_id !== employee_id) {
+            changes.employee_id = {
+              old: currentBranch.employee_id,
+              new: employee_id,
+            };
+          }
+          if (currentBranch.mobile_number !== mobile_number) {
+            changes.mobile_number = {
+              old: currentBranch.mobile_number,
+              new: mobile_number,
+            };
+          }
+          if (currentBranch.services !== services) {
+            changes.services = {
+              old: currentBranch.services,
+              new: services,
+            };
+          }
+          if (currentBranch.package !== package) {
+            changes.package = {
+              old: currentBranch.package,
+              new: package,
+            };
+          }
+
+          Candidate.checkUniqueEmpIdByCandidateApplicationID(
+            employee_id,
             candidate_application_id,
-            (err, result) => {
+            (err, exists) => {
               if (err) {
-                console.error(
-                  "Database error during candidate application update:",
-                  err
-                );
-                BranchCommon.branchActivityLog(
-                  branch_id,
-                  "Candidate Application",
-                  "Update",
-                  "0",
-                  null,
-                  err.message,
-                  () => {}
-                );
+                console.error("Error checking unique ID:", err);
                 return res.status(500).json({
                   status: false,
                   message: err.message,
@@ -317,22 +334,67 @@ exports.update = (req, res) => {
                 });
               }
 
-              BranchCommon.branchActivityLog(
-                branch_id,
-                "Candidate Application",
-                "Update",
-                "1",
-                `{id: ${candidate_application_id}}`,
-                null,
-                () => {}
-              );
+              if (
+                exists &&
+                exists.candidate_application_id !== candidate_application_id
+              ) {
+                return res.status(400).json({
+                  status: false,
+                  message: `Candidate Employee ID '${employee_id}' already exists.`,
+                  token: newToken,
+                });
+              }
 
-              res.status(200).json({
-                status: true,
-                message: "Candidate application updated successfully.",
-                package: result,
-                token: newToken,
-              });
+              Candidate.update(
+                {
+                  name,
+                  employee_id,
+                  mobile_number,
+                  email,
+                  services,
+                  package,
+                },
+                candidate_application_id,
+                (err, result) => {
+                  if (err) {
+                    console.error(
+                      "Database error during candidate application update:",
+                      err
+                    );
+                    BranchCommon.branchActivityLog(
+                      branch_id,
+                      "Candidate Application",
+                      "Update",
+                      "0",
+                      JSON.stringify({ id, ...changes }),
+                      err.message,
+                      () => {}
+                    );
+                    return res.status(500).json({
+                      status: false,
+                      message: err.message,
+                      token: newToken,
+                    });
+                  }
+
+                  BranchCommon.branchActivityLog(
+                    branch_id,
+                    "Candidate Application",
+                    "Update",
+                    "1",
+                    JSON.stringify({ candidate_application_id, ...changes }),
+                    null,
+                    () => {}
+                  );
+
+                  res.status(200).json({
+                    status: true,
+                    message: "Candidate application updated successfully.",
+                    package: result,
+                    token: newToken,
+                  });
+                }
+              );
             }
           );
         }
