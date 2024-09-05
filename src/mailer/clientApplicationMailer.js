@@ -75,11 +75,15 @@ async function sendEmail(module, action, name, services, toArr, ccArr) {
           if (Array.isArray(entry.email)) {
             emails = entry.email;
           } else if (typeof entry.email === "string") {
-            // Case 2: If it's a JSON string, try to parse it
-            // First, remove any unnecessary backslashes
-            const cleanedEmail = entry.email.replace(/\\"/g, '"').trim();
+            // Case 2: If it's a JSON string (with brackets and quotes), clean and parse it
+            let cleanedEmail = entry.email.trim();
 
-            // Try to parse the cleaned string as JSON
+            // Remove extra quotes and backslashes from the string
+            cleanedEmail = cleanedEmail
+              .replace(/\\"/g, '"')
+              .replace(/^"|"$/g, "");
+
+            // Check if the cleaned email is a JSON array
             if (cleanedEmail.startsWith("[") && cleanedEmail.endsWith("]")) {
               emails = JSON.parse(cleanedEmail);
             } else {
