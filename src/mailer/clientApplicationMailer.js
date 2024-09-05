@@ -65,20 +65,33 @@ async function sendEmail(module, action, services, toArr, ccArr) {
       .replace(/{{dynamic_name}}/g, name)
       .replace(/{{table}}/g, table);
 
+    // Prepare CC list
+    const ccList = ccArr
+      .map((entry) => {
+        // Parse email if it's a JSON string
+        const emails = Array.isArray(entry.email)
+          ? entry.email
+          : JSON.parse(entry.email);
+
+        // Return formatted CC list items
+        return emails.map((email) => `"${entry.name}" <${email}>`).join(", ");
+      })
+      .join(", ");
+
     // Validate recipient email(s)
-    if (!toArr || toArr.length === 0)
+    if (!toArr || toArr.length === 0) {
       throw new Error("No recipient email provided");
+    }
 
     // Prepare recipient list
     const toList = toArr
-      .map((item) => `"${item.name}" <${item.email}>`)
-      .join(", ");
-      
-    const ccList = ccArr
-      .map((itemcc) => `"${itemcc.name}" <${itemcc.email}>`)
+      .map((email) => `"${email.name}" <${email.email}>`)
       .join(", ");
 
-    console.log(toList, ccList);
+    // Debugging: Log the email lists
+    console.log("Recipient List:", toList);
+    console.log("CC List:", ccList);
+
     // Send email
     const info = await transporter.sendMail({
       from: smtp.username,
