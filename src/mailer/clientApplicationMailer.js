@@ -68,14 +68,24 @@ async function sendEmail(module, action, name, services, toArr, ccArr) {
     // Prepare CC list
     const ccList = ccArr
       .map((entry) => {
-        // Parse email if it's a JSON string
-        const emails = Array.isArray(entry.email)
-          ? entry.email
-          : JSON.parse(entry.email);
+        let emails = [];
+
+        // Check if entry.email is already an array or try to parse it
+        if (Array.isArray(entry.email)) {
+          emails = entry.email;
+        } else {
+          try {
+            emails = JSON.parse(entry.email);
+          } catch (e) {
+            console.error("Error parsing email JSON:", entry.email, e);
+            return ""; // Skip this entry if parsing fails
+          }
+        }
 
         // Return formatted CC list items
         return emails.map((email) => `"${entry.name}" <${email}>`).join(", ");
       })
+      .filter((cc) => cc !== "") // Remove any empty CCs from failed parses
       .join(", ");
 
     // Validate recipient email(s)
