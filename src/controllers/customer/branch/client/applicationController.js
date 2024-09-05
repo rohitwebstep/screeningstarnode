@@ -125,13 +125,43 @@ exports.create = (req, res) => {
               null,
               () => {}
             );
+            Common.getBranchandCustomerEmailsForNotification(
+              branch_id,
+              (emailError, emailData) => {
+                if (emailError) {
+                  console.error("Error fetching emails:", emailError);
+                  return res.status(500).json({
+                    status: false,
+                    message: "Failed to retrieve email addresses.",
+                    token: newToken,
+                  });
+                }
 
-            res.status(201).json({
-              status: true,
-              message: "Client application created successfully.",
-              package: result,
-              token: newToken,
-            });
+                const { branch, customer } = emailData;
+
+                const toArr = [{ name: branch.name, email: branch.email }];
+                const ccArr = customer.emails.split(",").map((email) => ({
+                  name: customer.name,
+                  email: email.trim(),
+                }));
+
+                // Send email notification
+                sendEmail(
+                  "candidate application",
+                  "create",
+                  title,
+                  [], // Pass services array if needed
+                  toArr,
+                  ccArr
+                );
+                res.status(201).json({
+                  status: true,
+                  message: "Client application created successfully.",
+                  package: result,
+                  token: newToken,
+                });
+              }
+            );
           }
         );
       });
