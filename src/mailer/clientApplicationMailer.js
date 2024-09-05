@@ -62,8 +62,17 @@ async function sendEmail(module, action, services, toArr, ccArr) {
       .replace(/{{table}}/g, table);
 
     // Prepare CC list
+    // Prepare CC list
     const ccList = ccArr
-      .map((email) => `"${email.name}" <${email.email}>`)
+      .map((entry) => {
+        // Parse email if it's a JSON string
+        const emails = Array.isArray(entry.email)
+          ? entry.email
+          : JSON.parse(entry.email);
+
+        // Return formatted CC list items
+        return emails.map((email) => `"${entry.name}" <${email}>`).join(", ");
+      })
       .join(", ");
 
     // Validate recipient email(s)
