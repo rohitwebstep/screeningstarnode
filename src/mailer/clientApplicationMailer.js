@@ -35,7 +35,7 @@ async function sendEmail(module, action, services, toArr, ccArr) {
     const [smtpRows] = await connection
       .promise()
       .query(
-        "SELECT * FROM smtp_credentials WHERE module = ? AND action = ? AND status = 1",
+        "SELECT * FROM smtp_credentials WHERE module = ? AND action = ? AND status = '1'",
         [module, action]
       );
     if (smtpRows.length === 0) throw new Error("SMTP credentials not found");
