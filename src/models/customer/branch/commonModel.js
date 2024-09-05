@@ -306,6 +306,65 @@ const common = {
       });
     });
   },
+
+  getCustomerNameByBranchID: (branch_id, callback) => {
+    if (typeof callback !== "function") {
+      console.error("Callback is not a function");
+      return;
+    }
+
+    // First query to get customer_id from the branches table
+    const branchSql = `
+      SELECT \`customer_id\`
+      FROM \`branches\`
+      WHERE \`id\` = ?
+    `;
+
+    pool.query(branchSql, [branch_id], (err, branchResults) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback({ status: false, message: "Database error" }, null);
+      }
+
+      if (branchResults.length === 0) {
+        return callback({ status: false, message: "Branch not found" }, null);
+      }
+
+      const branch = branchResults[0];
+      const customerId = branch.customer_id;
+
+      // Second query to get customer name from the customers table
+      const customerSql = `
+        SELECT \`name\`
+        FROM \`customers\`
+        WHERE \`id\` = ?
+      `;
+
+      pool.query(customerSql, [customerId], (err, customerResults) => {
+        if (err) {
+          console.error("Database query error:", err);
+          return callback({ status: false, message: "Database error" }, null);
+        }
+
+        if (customerResults.length === 0) {
+          return callback(
+            { status: false, message: "Customer not found" },
+            null
+          );
+        }
+
+        const customer = customerResults[0];
+
+        // Return the branch ID and customer name
+        callback(null, {
+          status: true,
+          message: "Customer name retrieved successfully",
+          customer_name: customer.name,
+          branch_id: branch_id,
+        });
+      });
+    });
+  },
 };
 
 module.exports = common;
