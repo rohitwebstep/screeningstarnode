@@ -161,6 +161,7 @@ exports.create = (req, res) => {
                 sendEmail(
                   "candidate application",
                   "create",
+                  name,
                   services, // Pass services array
                   toArr,
                   ccArr
