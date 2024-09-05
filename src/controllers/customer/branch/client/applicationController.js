@@ -125,7 +125,7 @@ exports.create = (req, res) => {
               null,
               () => {}
             );
-            Common.getBranchandCustomerEmailsForNotification(
+            BranchCommon.getBranchandCustomerEmailsForNotification(
               branch_id,
               (emailError, emailData) => {
                 if (emailError) {
