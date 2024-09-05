@@ -250,7 +250,7 @@ const clientApplication = {
         \`location\` = ?,
         \`batch_number\` = ?,
         \`sub_client\` = ?,
-        \`photo\` = ?
+        \`photo\` = ?,
         \`services\` = ?,
         \`package\` = ?
       WHERE
