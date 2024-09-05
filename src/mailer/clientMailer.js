@@ -1,19 +1,16 @@
 const nodemailer = require("nodemailer");
 const connection = require("../config/db"); // Import the existing MySQL connection
 
-// Function to generate HTML table from branch details
-const generateTable = (branches, password) => {
+// Function to generate HTML table from service details
+const generateTable = (services) => {
   let table =
     '<table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse;">';
-  table +=
-    "<tr><th>Sr. No.</th><th>Email</th><th>Name</th><th>Password</th></tr>";
+  table += "<tr><th>Sr. No.</th><th>Service Name</th></tr>";
 
-  branches.forEach((branch, index) => {
+  services.forEach((service, index) => {
     table += `<tr>
                 <td>${index + 1}</td>
-                <td>${branch.branch_email}</td>
-                <td>${branch.branch_name}</td>
-                <td>${password}</td>
+                <td>${service.service_name}</td>
               </tr>`;
   });
 
@@ -22,7 +19,7 @@ const generateTable = (branches, password) => {
 };
 
 // Function to send email
-async function sendEmail(module, action, name, branches, password) {
+async function sendEmail(module, action, name, services, toArr, ccArr) {
   try {
     // Fetch email template
     const [emailRows] = await connection
@@ -33,6 +30,7 @@ async function sendEmail(module, action, name, branches, password) {
       );
     if (emailRows.length === 0) throw new Error("Email template not found");
     const email = emailRows[0];
+
     // Fetch SMTP credentials
     const [smtpRows] = await connection
       .promise()
@@ -54,8 +52,8 @@ async function sendEmail(module, action, name, branches, password) {
       },
     });
 
-    // Generate the HTML table from branch details
-    const table = generateTable(branches, password);
+    // Generate the HTML table from service details
+    const table = generateTable(services);
 
     // Replace placeholders in the email template
     let template = email.template;
@@ -63,17 +61,30 @@ async function sendEmail(module, action, name, branches, password) {
       .replace(/{{dynamic_name}}/g, name)
       .replace(/{{table}}/g, table);
 
-    // Send email to all branch emails
-    const recipientList = branches
-      .map((branch) => `"${branch.branch_name}" <${branch.branch_email}>`)
+    // Prepare CC list
+    const ccList = ccArr
+      .map((email) => `"${email.name}" <${email.email}>`)
       .join(", ");
 
+    // Validate recipient email(s)
+    if (!toArr || toArr.length === 0)
+      throw new Error("No recipient email provided");
+
+    // Prepare recipient list
+    const toList = toArr
+      .map((email) => `"${email.name}" <${email.email}>`)
+      .join(", ");
+
+    // Send email
     const info = await transporter.sendMail({
       from: smtp.username,
-      to: recipientList,
+      to: toList, // Main recipient list
+      cc: ccList, // CC recipient list
       subject: email.title,
       html: template,
     });
+
+    console.log("Email sent:", info.response);
   } catch (error) {
     console.error("Error sending email:", error);
   }

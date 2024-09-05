@@ -242,6 +242,70 @@ const common = {
       });
     });
   },
+
+  /**
+   * Retrieves the branch and customer emails for notification purposes.
+   * @param {number} branch_id - The ID of the branch.
+   * @param {function} callback - Callback function.
+   */
+  getBranchandCustomerEmailsForNotification: (branch_id, callback) => {
+    if (typeof callback !== "function") {
+      console.error("Callback is not a function");
+      return;
+    }
+
+    // First query to get branch email and customer_id from the branches table
+    const branchSql = `
+      SELECT \`name\`, \`email\`, \`customer_id\`
+      FROM \`branches\`
+      WHERE \`id\` = ?
+    `;
+
+    pool.query(branchSql, [branch_id], (err, branchResults) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback({ status: false, message: "Database error" }, null);
+      }
+
+      if (branchResults.length === 0) {
+        return callback({ status: false, message: "Branch not found" }, null);
+      }
+
+      const branch = branchResults[0];
+      const customerId = branch.customer_id;
+
+      // Second query to get customer email from the customers table
+      const customerSql = `
+        SELECT \`emails\`, \`name\`
+        FROM \`customers\`
+        WHERE \`id\` = ?
+      `;
+
+      pool.query(customerSql, [customerId], (err, customerResults) => {
+        if (err) {
+          console.error("Database query error:", err);
+          return callback({ status: false, message: "Database error" }, null);
+        }
+
+        if (customerResults.length === 0) {
+          return callback(
+            { status: false, message: "Customer not found" },
+            null
+          );
+        }
+
+        const customer = customerResults[0];
+
+        // Return both branch and customer emails
+        callback(null, {
+          status: true,
+          message: "Emails retrieved successfully",
+          branch,
+          customer,
+        });
+      });
+    });
+  },
 };
 
 module.exports = common;
