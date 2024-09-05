@@ -86,7 +86,7 @@ exports.create = (req, res) => {
           if (exists) {
             return res.status(400).json({
               status: false,
-              message: `Client Employee ID '${employee_id}' already exists.`,
+              message: `Candidate Employee ID '${employee_id}' already exists.`,
               token: newToken,
             });
           }
@@ -104,12 +104,12 @@ exports.create = (req, res) => {
             (err, result) => {
               if (err) {
                 console.error(
-                  "Database error during client application creation:",
+                  "Database error during candidate application creation:",
                   err
                 );
                 BranchCommon.branchActivityLog(
                   branch_id,
-                  "Client Application",
+                  "Candidate Application",
                   "Create",
                   "0",
                   null,
@@ -125,7 +125,7 @@ exports.create = (req, res) => {
 
               BranchCommon.branchActivityLog(
                 branch_id,
-                "Client Application",
+                "Candidate Application",
                 "Create",
                 "1",
                 `{id: ${result.insertId}}`,
@@ -135,7 +135,7 @@ exports.create = (req, res) => {
 
               res.status(201).json({
                 status: true,
-                message: "Client application created successfully.",
+                message: "Candidate application created successfully.",
                 package: result,
                 token: newToken,
               });
@@ -147,7 +147,7 @@ exports.create = (req, res) => {
   });
 };
 
-// Controller to list all clientApplications
+// Controller to list all candidateApplications
 exports.list = (req, res) => {
   const { branch_id, _token } = req.query;
 
@@ -162,7 +162,7 @@ exports.list = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ client_application: "view" });
+  const action = JSON.stringify({ candidate_application: "view" });
   BranchCommon.isBranchAuthorizedForAction(branch_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
@@ -189,15 +189,15 @@ exports.list = (req, res) => {
           console.error("Database error:", err);
           return res.status(500).json({
             status: false,
-            message: "An error occurred while fetching client applications.",
+            message: "An error occurred while fetching candidate applications.",
             token: newToken,
           });
         }
 
         res.json({
           status: true,
-          message: "Client applications fetched successfully.",
-          clientApplications: result,
+          message: "Candidate applications fetched successfully.",
+          candidateApplications: result,
           totalResults: result.length,
           token: newToken,
         });
@@ -242,7 +242,7 @@ exports.update = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ client_application: "update" });
+  const action = JSON.stringify({ candidate_application: "update" });
   BranchCommon.isBranchAuthorizedForAction(branch_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
@@ -263,7 +263,7 @@ exports.update = (req, res) => {
 
       const newToken = result.newToken;
 
-      Candidate.checkUniqueEmpIdByClientApplicationID(
+      Candidate.checkUniqueEmpIdByCandidateApplicationID(
         employee_id,
         candidate_application_id,
         (err, exists) => {
@@ -280,7 +280,7 @@ exports.update = (req, res) => {
           ) {
             return res.status(400).json({
               status: false,
-              message: `Client Employee ID '${employee_id}' already exists.`,
+              message: `Candidate Employee ID '${employee_id}' already exists.`,
               token: newToken,
             });
           }
@@ -298,12 +298,12 @@ exports.update = (req, res) => {
             (err, result) => {
               if (err) {
                 console.error(
-                  "Database error during client application update:",
+                  "Database error during candidate application update:",
                   err
                 );
                 BranchCommon.branchActivityLog(
                   branch_id,
-                  "Client Application",
+                  "Candidate Application",
                   "Update",
                   "0",
                   null,
@@ -319,7 +319,7 @@ exports.update = (req, res) => {
 
               BranchCommon.branchActivityLog(
                 branch_id,
-                "Client Application",
+                "Candidate Application",
                 "Update",
                 "1",
                 `{id: ${candidate_application_id}}`,
@@ -329,7 +329,7 @@ exports.update = (req, res) => {
 
               res.status(200).json({
                 status: true,
-                message: "Client application updated successfully.",
+                message: "Candidate application updated successfully.",
                 package: result,
                 token: newToken,
               });
@@ -346,7 +346,7 @@ exports.delete = (req, res) => {
 
   // Validate required fields
   const missingFields = [];
-  if (!id) missingFields.push("Client Application ID");
+  if (!id) missingFields.push("Candidate Application ID");
   if (!branch_id) missingFields.push("Branch ID");
   if (!_token) missingFields.push("Token");
 
@@ -357,7 +357,7 @@ exports.delete = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ client_application: "delete" });
+  const action = JSON.stringify({ candidate_application: "delete" });
 
   // Check branch authorization
   BranchCommon.isBranchAuthorizedForAction(branch_id, action, (result) => {
@@ -391,13 +391,13 @@ exports.delete = (req, res) => {
 
         const newToken = tokenValidationResult.newToken;
 
-        // Fetch the current clientApplication
-        Candidate.getClientApplicationById(
+        // Fetch the current candidateApplication
+        Candidate.getCandidateApplicationById(
           id,
-          (err, currentClientApplication) => {
+          (err, currentCandidateApplication) => {
             if (err) {
               console.error(
-                "Database error during clientApplication retrieval:",
+                "Database error during candidateApplication retrieval:",
                 err
               );
               return res.status(500).json({
@@ -407,24 +407,24 @@ exports.delete = (req, res) => {
               });
             }
 
-            if (!currentClientApplication) {
+            if (!currentCandidateApplication) {
               return res.status(404).json({
                 status: false,
-                message: "Client Aplication not found.",
+                message: "Candidate Aplication not found.",
                 token: newToken,
               });
             }
 
-            // Delete the clientApplication
+            // Delete the candidateApplication
             Candidate.delete(id, (err, result) => {
               if (err) {
                 console.error(
-                  "Database error during clientApplication deletion:",
+                  "Database error during candidateApplication deletion:",
                   err
                 );
                 BranchCommon.branchActivityLog(
                   branch_id,
-                  "Client Application",
+                  "Candidate Application",
                   "Delete",
                   "0",
                   JSON.stringify({ id }),
@@ -440,7 +440,7 @@ exports.delete = (req, res) => {
 
               BranchCommon.branchActivityLog(
                 branch_id,
-                "Client Application",
+                "Candidate Application",
                 "Delete",
                 "1",
                 JSON.stringify({ id }),
@@ -450,7 +450,7 @@ exports.delete = (req, res) => {
 
               res.status(200).json({
                 status: true,
-                message: "Client Application deleted successfully.",
+                message: "Candidate Application deleted successfully.",
                 result,
                 token: newToken,
               });
