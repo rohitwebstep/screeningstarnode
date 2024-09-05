@@ -262,7 +262,10 @@ exports.update = (req, res) => {
       }
 
       const newToken = result.newToken;
-
+      return res.status(400).json({
+        status: false,
+        message: `There`,
+      });
       // Fetch the current clientApplication
       Client.getClientApplicationById(id, (err, currentClientApplication) => {
         if (err) {
