@@ -3,8 +3,12 @@ const connection = require("../config/db"); // Import the existing MySQL connect
 
 // Function to generate HTML table from service details
 const generateTable = (services) => {
+  if (!Array.isArray(services) || services.length === 0) {
+    return "<p>No services available</p>";
+  }
+
   let table =
-    '<table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse;">';
+    '<table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse; width: 100%;">';
   table += "<tr><th>Sr. No.</th><th>Service Name</th></tr>";
 
   services.forEach((service, index) => {
@@ -84,7 +88,7 @@ async function sendEmail(module, action, services, toArr, ccArr) {
       .map((email) => `"${email.name}" <${email.email}>`)
       .join(", ");
 
-      console.log(toList, ccList);
+    console.log(toList, ccList);
     // Send email
     const info = await transporter.sendMail({
       from: smtp.username,
