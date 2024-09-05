@@ -23,7 +23,7 @@ const generateTable = (services) => {
 };
 
 // Function to send email
-async function sendEmail(module, action, services, toArr, ccArr) {
+async function sendEmail(module, action, name, services, toArr, ccArr) {
   try {
     // Fetch email template
     const [emailRows] = await connection
