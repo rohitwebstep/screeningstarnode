@@ -175,6 +175,8 @@ exports.create = (req, res) => {
                         package,
                       },
                       token: newToken,
+                      toArr,
+                      ccArr
                     });
                   })
                   .catch((emailError) => {
