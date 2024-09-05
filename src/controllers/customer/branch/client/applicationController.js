@@ -394,7 +394,7 @@ exports.update = (req, res) => {
                       "Client Application",
                       "Update",
                       "0",
-                      null,
+                      JSON.stringify({ client_application_id, ...changes }),
                       err.message,
                       () => {}
                     );
@@ -410,7 +410,7 @@ exports.update = (req, res) => {
                     "Client Application",
                     "Update",
                     "1",
-                    `{id: ${client_application_id}}`,
+                    JSON.stringify({ client_application_id, ...changes }),
                     null,
                     () => {}
                   );

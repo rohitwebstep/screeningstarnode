@@ -364,7 +364,7 @@ exports.update = (req, res) => {
                       "Candidate Application",
                       "Update",
                       "0",
-                      JSON.stringify({ id, ...changes }),
+                      JSON.stringify({ candidate_application_id, ...changes }),
                       err.message,
                       () => {}
                     );
