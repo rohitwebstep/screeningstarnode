@@ -264,7 +264,7 @@ exports.update = (req, res) => {
       const newToken = result.newToken;
       // Fetch the current candidateApplication
       Candidate.getCandidateApplicationById(
-        id,
+        candidate_application_id,
         (err, currentCandidateApplication) => {
           if (err) {
             console.error(
