@@ -84,6 +84,7 @@ async function sendEmail(module, action, services, toArr, ccArr) {
       .map((email) => `"${email.name}" <${email.email}>`)
       .join(", ");
 
+      console.log(toList, ccList);
     // Send email
     const info = await transporter.sendMail({
       from: smtp.username,
