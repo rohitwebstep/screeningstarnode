@@ -236,6 +236,8 @@ const clientApplication = {
       batch_number,
       sub_client,
       photo,
+      services,
+      package,
     } = data;
 
     const sql = `
@@ -249,6 +251,8 @@ const clientApplication = {
         \`batch_number\` = ?,
         \`sub_client\` = ?,
         \`photo\` = ?
+        \`services\` = ?,
+        \`package\` = ?
       WHERE
         \`id\` = ?
     `;
@@ -262,6 +266,8 @@ const clientApplication = {
       batch_number,
       sub_client,
       photo,
+      services,
+      package,
       client_application_id,
     ];
 
