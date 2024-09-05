@@ -1,6 +1,6 @@
 const pool = require("../../../config/db");
 
-const clientApplication = {
+const candidateApplication = {
   // Method to check if an email has been used before
   isEmailUsedBefore: (email, callback) => {
     // Step 1: Check if the email exists in candidate_applications
@@ -22,7 +22,7 @@ const clientApplication = {
     });
   },
 
-  // Method to create a new client application
+  // Method to create a new candidate application
   create: (data, callback) => {
     const {
       branch_id,
@@ -76,13 +76,13 @@ const clientApplication = {
     });
   },
 
-  checkUniqueEmpId: (clientUniqueEmpId, callback) => {
+  checkUniqueEmpId: (candidateUniqueEmpId, callback) => {
     const sql = `
       SELECT COUNT(*) AS count
       FROM \`candidate_applications\`
       WHERE \`employee_id\` = ?
     `;
-    pool.query(sql, [clientUniqueEmpId], (err, results) => {
+    pool.query(sql, [candidateUniqueEmpId], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback({ message: "Database query error", error: err }, null);
@@ -93,9 +93,9 @@ const clientApplication = {
     });
   },
 
-  checkUniqueEmpIdByClientApplicationID: (
+  checkUniqueEmpIdByCandidateApplicationID: (
     application_id,
-    clientUniqueEmpId,
+    candidateUniqueEmpId,
     callback
   ) => {
     const sql = `
@@ -103,7 +103,7 @@ const clientApplication = {
       FROM \`candidate_applications\`
       WHERE \`employee_id\` = ? AND id = ?
     `;
-    pool.query(sql, [clientUniqueEmpId, application_id], (err, results) => {
+    pool.query(sql, [candidateUniqueEmpId, application_id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback({ message: "Database query error", error: err }, null);
@@ -114,7 +114,7 @@ const clientApplication = {
     });
   },
 
-  getClientApplicationById: (id, callback) => {
+  getCandidateApplicationById: (id, callback) => {
     const sql = "SELECT * FROM `candidate_applications` WHERE id = ?";
     pool.query(sql, [id], (err, results) => {
       if (err) {
@@ -172,4 +172,4 @@ const clientApplication = {
   },
 };
 
-module.exports = clientApplication;
+module.exports = candidateApplication;
