@@ -285,36 +285,36 @@ exports.update = (req, res) => {
           }
 
           const changes = {};
-          if (currentBranch.name !== name) {
-            changes.name = { old: currentBranch.name, new: name };
+          if (currentCandidateApplication.name !== name) {
+            changes.name = { old: currentCandidateApplication.name, new: name };
           }
-          if (currentBranch.email !== email) {
+          if (currentCandidateApplication.email !== email) {
             changes.email = {
-              old: currentBranch.email,
+              old: currentCandidateApplication.email,
               new: email,
             };
           }
-          if (currentBranch.employee_id !== employee_id) {
+          if (currentCandidateApplication.employee_id !== employee_id) {
             changes.employee_id = {
-              old: currentBranch.employee_id,
+              old: currentCandidateApplication.employee_id,
               new: employee_id,
             };
           }
-          if (currentBranch.mobile_number !== mobile_number) {
+          if (currentCandidateApplication.mobile_number !== mobile_number) {
             changes.mobile_number = {
-              old: currentBranch.mobile_number,
+              old: currentCandidateApplication.mobile_number,
               new: mobile_number,
             };
           }
-          if (currentBranch.services !== services) {
+          if (currentCandidateApplication.services !== services) {
             changes.services = {
-              old: currentBranch.services,
+              old: currentCandidateApplication.services,
               new: services,
             };
           }
-          if (currentBranch.package !== package) {
+          if (currentCandidateApplication.package !== package) {
             changes.package = {
-              old: currentBranch.package,
+              old: currentCandidateApplication.package,
               new: package,
             };
           }
