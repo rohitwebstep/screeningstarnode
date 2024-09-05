@@ -1,5 +1,6 @@
 const Client = require("../../../../models/customer/branch/clientApplicationModel");
 const BranchCommon = require("../../../../models/customer/branch/commonModel");
+const { sendEmail } = require("../../../../mailer/clientApplicationMailer");
 
 exports.create = (req, res) => {
   const {
