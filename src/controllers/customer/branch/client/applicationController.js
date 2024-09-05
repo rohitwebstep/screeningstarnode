@@ -263,84 +263,167 @@ exports.update = (req, res) => {
 
       const newToken = result.newToken;
 
-      Client.checkUniqueEmpIdByClientApplicationID(
-        employee_id,
-        client_application_id,
-        (err, exists) => {
-          if (err) {
-            console.error("Error checking unique ID:", err);
-            return res
-              .status(500)
-              .json({ status: false, message: err.message, token: newToken });
-          }
+      // Fetch the current clientApplication
+      Client.getClientApplicationById(id, (err, currentClientApplication) => {
+        if (err) {
+          console.error(
+            "Database error during clientApplication retrieval:",
+            err
+          );
+          return res.status(500).json({
+            status: false,
+            message: "Failed to retrieve Client. Please try again.",
+            token: newToken,
+          });
+        }
 
-          if (
-            exists &&
-            exists.client_application_id !== client_application_id
-          ) {
-            return res.status(400).json({
-              status: false,
-              message: `Client Employee ID '${employee_id}' already exists.`,
-              token: newToken,
-            });
-          }
+        if (!currentClientApplication) {
+          return res.status(404).json({
+            status: false,
+            message: "Client Aplication not found.",
+            token: newToken,
+          });
+        }
 
-          Client.update(
-            {
-              name,
-              attach_documents,
-              employee_id,
-              spoc,
-              location,
-              batch_number,
-              sub_client,
-              photo,
-              services,
-              package,
-            },
-            client_application_id,
-            (err, result) => {
-              if (err) {
-                console.error(
-                  "Database error during client application update:",
-                  err
-                );
+        const changes = {};
+        if (currentClientApplication.name !== name) {
+          changes.name = { old: currentClientApplication.name, new: name };
+        }
+        if (currentClientApplication.attach_documents !== attach_documents) {
+          changes.attach_documents = {
+            old: currentClientApplication.attach_documents,
+            new: attach_documents,
+          };
+        }
+        if (currentClientApplication.employee_id !== employee_id) {
+          changes.employee_id = {
+            old: currentClientApplication.employee_id,
+            new: employee_id,
+          };
+        }
+        if (currentClientApplication.spoc !== spoc) {
+          changes.spoc = {
+            old: currentClientApplication.spoc,
+            new: spoc,
+          };
+        }
+        if (currentClientApplication.location !== location) {
+          changes.location = {
+            old: currentClientApplication.location,
+            new: location,
+          };
+        }
+        if (currentClientApplication.batch_number !== batch_number) {
+          changes.batch_number = {
+            old: currentClientApplication.batch_number,
+            new: batch_number,
+          };
+        }
+        if (currentClientApplication.sub_client !== sub_client) {
+          changes.sub_client = {
+            old: currentClientApplication.sub_client,
+            new: sub_client,
+          };
+        }
+        if (currentClientApplication.photo !== photo) {
+          changes.photo = {
+            old: currentClientApplication.photo,
+            new: photo,
+          };
+        }
+        if (currentClientApplication.services !== services) {
+          changes.services = {
+            old: currentClientApplication.services,
+            new: services,
+          };
+        }
+        if (currentClientApplication.package !== package) {
+          changes.package = {
+            old: currentClientApplication.package,
+            new: package,
+          };
+        }
+        Client.checkUniqueEmpIdByClientApplicationID(
+          employee_id,
+          client_application_id,
+          (err, exists) => {
+            if (err) {
+              console.error("Error checking unique ID:", err);
+              return res.status(500).json({
+                status: false,
+                message: err.message,
+                token: newToken,
+              });
+            }
+
+            if (
+              exists &&
+              exists.client_application_id !== client_application_id
+            ) {
+              return res.status(400).json({
+                status: false,
+                message: `Client Employee ID '${employee_id}' already exists.`,
+                token: newToken,
+              });
+            }
+
+            Client.update(
+              {
+                name,
+                attach_documents,
+                employee_id,
+                spoc,
+                location,
+                batch_number,
+                sub_client,
+                photo,
+                services,
+                package,
+              },
+              client_application_id,
+              (err, result) => {
+                if (err) {
+                  console.error(
+                    "Database error during client application update:",
+                    err
+                  );
+                  BranchCommon.branchActivityLog(
+                    branch_id,
+                    "Client Application",
+                    "Update",
+                    "0",
+                    null,
+                    err.message,
+                    () => {}
+                  );
+                  return res.status(500).json({
+                    status: false,
+                    message: err.message,
+                    token: newToken,
+                  });
+                }
+
                 BranchCommon.branchActivityLog(
                   branch_id,
                   "Client Application",
                   "Update",
-                  "0",
+                  "1",
+                  `{id: ${client_application_id}}`,
                   null,
-                  err.message,
                   () => {}
                 );
-                return res.status(500).json({
-                  status: false,
-                  message: err.message,
+
+                res.status(200).json({
+                  status: true,
+                  message: "Client application updated successfully.",
+                  package: result,
                   token: newToken,
                 });
               }
-
-              BranchCommon.branchActivityLog(
-                branch_id,
-                "Client Application",
-                "Update",
-                "1",
-                `{id: ${client_application_id}}`,
-                null,
-                () => {}
-              );
-
-              res.status(200).json({
-                status: true,
-                message: "Client application updated successfully.",
-                package: result,
-                token: newToken,
-              });
-            }
-          );
-        }
-      );
+            );
+          }
+        );
+      });
     });
   });
 };
