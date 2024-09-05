@@ -44,6 +44,8 @@ exports.create = (req, res) => {
   }
 
   const action = JSON.stringify({ client_application: "create" });
+
+  // Check branch authorization
   BranchCommon.isBranchAuthorizedForAction(branch_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
@@ -52,6 +54,7 @@ exports.create = (req, res) => {
       });
     }
 
+    // Validate branch token
     BranchCommon.isBranchTokenValid(_token, branch_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
@@ -64,6 +67,7 @@ exports.create = (req, res) => {
 
       const newToken = result.newToken;
 
+      // Check if employee ID is unique
       Client.checkUniqueEmpId(employee_id, (err, exists) => {
         if (err) {
           console.error("Error checking unique ID:", err);
@@ -80,6 +84,7 @@ exports.create = (req, res) => {
           });
         }
 
+        // Create client application
         Client.create(
           {
             name,
@@ -111,7 +116,8 @@ exports.create = (req, res) => {
               );
               return res.status(500).json({
                 status: false,
-                message: err.message,
+                message:
+                  "Failed to create client application. Please try again.",
                 token: newToken,
               });
             }
@@ -125,6 +131,8 @@ exports.create = (req, res) => {
               null,
               () => {}
             );
+
+            // Fetch branch and customer emails for notification
             BranchCommon.getBranchandCustomerEmailsForNotification(
               branch_id,
               (emailError, emailData) => {
@@ -139,27 +147,46 @@ exports.create = (req, res) => {
 
                 const { branch, customer } = emailData;
 
+                // Prepare recipient and CC lists
                 const toArr = [{ name: branch.name, email: branch.email }];
-                const ccArr = customer.emails.split(",").map((email) => ({
-                  name: customer.name,
-                  email: email.trim(),
-                }));
+                const ccArr = customer.emails
+                  .split(",")
+                  .map((email) => ({
+                    name: customer.name,
+                    email: email.trim(),
+                  }));
 
                 // Send email notification
                 sendEmail(
                   "candidate application",
                   "create",
-                  title,
-                  [], // Pass services array if needed
+                  name, // Pass the name instead of title
+                  services, // Pass services array
                   toArr,
                   ccArr
-                );
-                res.status(201).json({
-                  status: true,
-                  message: "Client application created successfully.",
-                  package: result,
-                  token: newToken,
-                });
+                )
+                  .then(() => {
+                    res.status(201).json({
+                      status: true,
+                      message:
+                        "Client application created successfully and email sent.",
+                      data: {
+                        client: result,
+                        package,
+                      },
+                      token: newToken,
+                    });
+                  })
+                  .catch((emailError) => {
+                    console.error("Error sending email:", emailError);
+                    res.status(201).json({
+                      status: true,
+                      message:
+                        "Client application created successfully, but failed to send email.",
+                      client: result,
+                      token: newToken,
+                    });
+                  });
               }
             );
           }
