@@ -3,12 +3,12 @@ const pool = require("../../config/db");
 
 // Function to hash the password using MD5
 const hashPassword = (password) =>
-    crypto.createHash("md5").update(password).digest("hex");
+  crypto.createHash("md5").update(password).digest("hex");
 
 const Customer = {
 
-    list: (callback) => {
-        const sql = `WITH BranchesCTE AS (
+  list: (callback) => {
+    const sql = `WITH BranchesCTE AS (
   SELECT 
     b.id AS branch_id,
     b.customer_id
@@ -58,31 +58,43 @@ ON
   customers.id = application_counts.customer_id;
     `;
 
-        pool.query(sql, (err, results) => {
-            if (err) {
-                console.error("Database query error:", err);
-                return callback(err, null);
-            }
-            callback(null, results);
-        });
-    },
+    pool.query(sql, (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results);
+    });
+  },
 
-    listByCustomerID: (customer_id, callback) => {
-        const sql = `SELECT b.id AS branch_id, b.name AS branch_name, COUNT(ca.id) AS application_count
+  listByCustomerID: (customer_id, callback) => {
+    const sql = `SELECT b.id AS branch_id, b.name AS branch_name, COUNT(ca.id) AS application_count
 FROM client_applications ca
 INNER JOIN branches b ON ca.branch_id = b.id
 WHERE ca.status != 'closed'
 AND b.customer_id = ?
 GROUP BY b.name;
 `;
-        pool.query(sql, [customer_id], (err, results) => {
-            if (err) {
-                console.error("Database query error:", err);
-                return callback(err, null);
-            }
-            callback(null, results);
-        });
-    },
+    pool.query(sql, [customer_id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results);
+    });
+  },
+
+  listByCustomerID: (branch_id, callback) => {
+    const sql = `SELECT * FROM \`client_applications\` WHERE \`status\` != 'closed' AND \`branch_id\` = ?;
+`;
+    pool.query(sql, [branch_id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results);
+    });
+  },
 };
 
 module.exports = Customer;
