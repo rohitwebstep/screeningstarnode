@@ -68,7 +68,7 @@ ON
     },
 
     listByCustomerID: (customer_id, callback) => {
-        const sql = `SELECT b.name AS branch_name, COUNT(ca.id) AS application_count
+        const sql = `SELECT b.id AS branch_id, b.name AS branch_name, COUNT(ca.id) AS application_count
 FROM client_applications ca
 INNER JOIN branches b ON ca.branch_id = b.id
 WHERE ca.status != 'closed'
