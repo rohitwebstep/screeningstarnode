@@ -3,6 +3,6 @@ const router = express.Router();
 const clientMasterTrackerController = require('../../controllers/admin/clientMasterTrackerController');
 
 // Authentication routes
-router.get('/', clientMasterTrackerController.index);
+router.get('/list', clientMasterTrackerController.list);
 
 module.exports = router;

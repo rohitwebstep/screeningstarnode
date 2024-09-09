@@ -6,7 +6,7 @@ const BranchCommon = require("../../models/customer/branch/commonModel");
 const { sendEmail } = require("../../mailer/customerMailer");
 
 // Controller to list all customers
-exports.index = (req, res) => {
+exports.list = (req, res) => {
     const { admin_id, _token } = req.query;
 
     let missingFields = [];
