@@ -84,7 +84,7 @@ GROUP BY b.name;
     });
   },
 
-  listByCustomerID: (branch_id, callback) => {
+  applicationListByBranch: (branch_id, callback) => {
     const sql = `SELECT * FROM \`client_applications\` WHERE \`status\` != 'closed' AND \`branch_id\` = ?;
 `;
     pool.query(sql, [branch_id], (err, results) => {
