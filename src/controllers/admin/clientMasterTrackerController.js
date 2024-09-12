@@ -217,13 +217,14 @@ exports.applicationByID = (req, res) => {
             ClientMasterTrackerModel.applicationByID(application_id, branch_id, (err, application) => {
                 if (err) {
                     console.error("Database error:", err);
-                    return res.status(500).json({ status: false, message: err.message });
+                    return res.status(500).json({ status: false, message: err.message, token: newToken });
                 }
 
                 if (!application) {
                     return res.status(404).json({
                         status: false,
                         message: "Application not found",
+                        token: newToken
                     });
                 }
 
@@ -231,7 +232,74 @@ exports.applicationByID = (req, res) => {
                     status: true,
                     message: "Application fetched successfully",
                     application,
+                    token: newToken
                 });
+            });
+        });
+    });
+};
+
+exports.reportFormJsonByServiceID = (req, res) => {
+    const { service_id, admin_id, _token } = req.query;
+
+    let missingFields = [];
+    if (!service_id || service_id === "" || service_id === undefined) missingFields.push("Service ID");
+    if (!admin_id || admin_id === "" || admin_id === undefined) missingFields.push("Admin ID");
+    if (!_token || _token === "" || _token === undefined) missingFields.push("Token");
+
+    if (missingFields.length > 0) {
+        return res.status(400).json({
+            status: false,
+            message: `Missing required fields: ${missingFields.join(", ")}`,
+        });
+    }
+
+    const action = JSON.stringify({ customer: "view" });
+    AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
+        if (!result.status) {
+            return res.status(403).json({
+                status: false,
+                message: result.message, // Return the message from the authorization function
+            });
+        }
+
+        // Verify admin token
+        AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
+            if (err) {
+                console.error("Error checking token validity:", err);
+                return res.status(500).json({ status: false, message: err.message });
+            }
+
+            if (!result.status) {
+                return res.status(401).json({ status: false, message: result.message });
+            }
+
+            const newToken = result.newToken;
+
+            ClientMasterTrackerModel.reportFormJsonByServiceID(service_id, (err, reportFormJson) => {
+                if (err) {
+                    console.error(newFunction(), err);
+                    return res.status(500).json({ status: false, message: err.message, token: newToken });
+                }
+
+                if (!reportFormJson) {
+                    return res.status(404).json({
+                        status: false,
+                        message: "Report form JSON not found",
+                        token: newToken
+                    });
+                }
+
+                res.json({
+                    status: true,
+                    message: "Report form JSON fetched successfully",
+                    reportFormJson,
+                    token: newToken
+                });
+
+                function newFunction() {
+                    return "Database error:";
+                }
             });
         });
     });
