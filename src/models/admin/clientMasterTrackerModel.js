@@ -95,6 +95,19 @@ GROUP BY b.name;
       callback(null, results);
     });
   },
+
+  applicationByID: (application_id, branch_id, callback) => {
+    // Use a parameterized query to prevent SQL injection
+    const sql = "SELECT * FROM `client_applications` WHERE `id` = ? AND `branch_id` = ?";
+    pool.query(sql, [application_id, branch_id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      // Assuming `results` is an array, and we want the first result
+      callback(null, results[0] || null); // Return single application or null if not found
+    });
+  }
 };
 
 module.exports = Customer;
