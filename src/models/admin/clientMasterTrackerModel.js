@@ -107,6 +107,19 @@ GROUP BY b.name;
       // Assuming `results` is an array, and we want the first result
       callback(null, results[0] || null); // Return single application or null if not found
     });
+  },
+
+  reportFormJsonByServiceID: (service_id, callback) => {
+    // Use a parameterized query to prevent SQL injection
+    const sql = "SELECT \`json\` FROM `report_forms` WHERE `id` = ?";
+    pool.query(sql, [service_id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      // Assuming `results` is an array, and we want the first result
+      callback(null, results[0] || null); // Return single application or null if not found
+    });
   }
 };
 
