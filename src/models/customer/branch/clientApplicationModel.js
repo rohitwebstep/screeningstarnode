@@ -82,8 +82,9 @@ const clientApplication = {
                 // Ensure parts array has at least three elements and increment the number part
                 if (parts.length === 3) {
                   const numberPart = parseInt(parts[2], 10);
-                  new_application_id = `${parts[0]}-${parts[1]}-${numberPart + 1
-                    }`;
+                  new_application_id = `${parts[0]}-${parts[1]}-${
+                    numberPart + 1
+                  }`;
                 } else {
                   // Fallback if the format is not as expected
                   new_application_id = `${client_unique_id}-1`;
@@ -168,17 +169,6 @@ const clientApplication = {
   list: (branch_id, callback) => {
     const sql = "SELECT * FROM `client_applications` WHERE `branch_id` = ?";
     pool.query(sql, [branch_id], (err, results) => {
-      if (err) {
-        console.error("Database query error:", err);
-        return callback(err, null);
-      }
-      callback(null, results);
-    });
-  },
-
-  applicationByID: (application_id, branch_id, callback) => {
-    const sql = "SELECT * FROM `client_applications` WHERE \`id\` = ? AND `branch_id` = ?";
-    pool.query(sql, [application_id, branch_id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback(err, null);

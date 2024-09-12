@@ -113,7 +113,7 @@ exports.create = (req, res) => {
                 "0",
                 null,
                 err.message,
-                () => { }
+                () => {}
               );
               return res.status(500).json({
                 status: false,
@@ -130,7 +130,7 @@ exports.create = (req, res) => {
               "1",
               `{id: ${result.insertId}}`,
               null,
-              () => { }
+              () => {}
             );
 
             // Fetch branch and customer emails for notification
@@ -249,66 +249,6 @@ exports.list = (req, res) => {
         res.json({
           status: true,
           message: "Client applications fetched successfully.",
-          clientApplications: result,
-          totalResults: result.length,
-          token: newToken,
-        });
-      });
-    });
-  });
-};
-
-// Controller to list all clientApplications
-exports.applicationByID = (req, res) => {
-  const { application_id, branch_id, _token } = req.query;
-
-  let missingFields = [];
-  if (!application_id) missingFields.push("Application ID");
-  if (!branch_id) missingFields.push("Branch ID");
-  if (!_token) missingFields.push("Token");
-
-  if (missingFields.length > 0) {
-    return res.status(400).json({
-      status: false,
-      message: `Missing required fields: ${missingFields.join(", ")}`,
-    });
-  }
-
-  const action = JSON.stringify({ client_application: "view" });
-  BranchCommon.isBranchAuthorizedForAction(branch_id, action, (result) => {
-    if (!result.status) {
-      return res.status(403).json({
-        status: false,
-        message: result.message, // Return the message from the authorization function
-      });
-    }
-
-    // Verify branch token
-    BranchCommon.isBranchTokenValid(_token, branch_id, (err, result) => {
-      if (err) {
-        console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
-      }
-
-      if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message });
-      }
-
-      const newToken = result.newToken;
-
-      Client.applicationByID(application_id, branch_id, (err, result) => {
-        if (err) {
-          console.error("Database error:", err);
-          return res.status(500).json({
-            status: false,
-            message: "An error occurred while fetching client application.",
-            token: newToken,
-          });
-        }
-
-        res.json({
-          status: true,
-          message: "Client application fetched successfully.",
           clientApplications: result,
           totalResults: result.length,
           token: newToken,
@@ -519,7 +459,7 @@ exports.update = (req, res) => {
                       "0",
                       JSON.stringify({ client_application_id, ...changes }),
                       err.message,
-                      () => { }
+                      () => {}
                     );
                     return res.status(500).json({
                       status: false,
@@ -535,7 +475,7 @@ exports.update = (req, res) => {
                     "1",
                     JSON.stringify({ client_application_id, ...changes }),
                     null,
-                    () => { }
+                    () => {}
                   );
 
                   res.status(200).json({
@@ -640,7 +580,7 @@ exports.delete = (req, res) => {
                 "0",
                 JSON.stringify({ id }),
                 err.message,
-                () => { }
+                () => {}
               );
               return res.status(500).json({
                 status: false,
@@ -656,7 +596,7 @@ exports.delete = (req, res) => {
               "1",
               JSON.stringify({ id }),
               null,
-              () => { }
+              () => {}
             );
 
             res.status(200).json({
