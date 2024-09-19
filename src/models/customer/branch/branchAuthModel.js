@@ -121,6 +121,7 @@ const Branch = {
       callback(null, results);
     });
   },
+
   findById: (id, callback) => {
     const sql = `
       SELECT \`id\`, \`name\`, \`email\`, \`permissions\`, \`status\`
@@ -138,6 +139,53 @@ const Branch = {
       callback(null, results[0]); // Return the first result (should be one result if ID is unique)
     });
   },
+
+  isBranchActive: (id, callback) => {
+    const sql = `
+      SELECT \`status\`
+      FROM \`branches\`
+      WHERE \`id\` = ?
+    `;
+
+    pool.query(sql, [id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback({ message: "Database query error", error: err }, null);
+      }
+
+      if (results.length === 0) {
+        return callback({ message: "No branch found with the provided ID" }, null);
+      }
+
+      const status = results[0].status;
+      const isActive = status === 1 ? true : false;
+      callback(null, isActive);
+    });
+  },
+
+  isCustomerActive: (customerID, callback) => {
+    const sql = `
+      SELECT \`status\`
+      FROM \`customers\`
+      WHERE \`id\` = ?
+    `;
+
+    pool.query(sql, [customerID], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback({ message: "Database query error", error: err }, null);
+      }
+
+      if (results.length === 0) {
+        return callback({ message: "No customer found with the provided ID" }, null);
+      }
+
+      const status = results[0].status;
+      const isActive = status === 1 ? true : false;
+      callback(null, isActive);
+    });
+  },
+
 };
 
 module.exports = Branch;
