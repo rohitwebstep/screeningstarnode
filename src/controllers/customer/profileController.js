@@ -860,7 +860,7 @@ exports.inactive = (req, res) => {
               "Customer",
               "status",
               "0",
-              JSON.stringify({ id, ...changes }),
+              JSON.stringify({ customer_id, ...changes }),
               err.message,
               () => { }
             );
@@ -876,7 +876,7 @@ exports.inactive = (req, res) => {
             "Customer",
             "status",
             "1",
-            JSON.stringify({ id, ...changes }),
+            JSON.stringify({ customer_id, ...changes }),
             null,
             () => { }
           );
