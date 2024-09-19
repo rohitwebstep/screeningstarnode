@@ -318,11 +318,11 @@ exports.update = (req, res) => {
 };
 
 exports.inactive = (req, res) => {
-  const { id, admin_id, _token } = req.body;
+  const { branch_id, admin_id, _token } = req.query;
 
   // Validate required fields
   const missingFields = [];
-  if (!id || id === "") missingFields.push("Branch ID");
+  if (!branch_id || branch_id === "") missingFields.push("Branch ID");
   if (!admin_id || admin_id === "") missingFields.push("Admin ID");
   if (!_token || _token === "") missingFields.push("Token");
 
@@ -368,7 +368,7 @@ exports.inactive = (req, res) => {
         const newToken = tokenValidationResult.newToken;
 
         // Fetch the current branch
-        Branch.getBranchById(id, (err, currentBranch) => {
+        Branch.getBranchById(branch_id, (err, currentBranch) => {
           if (err) {
             console.error("Database error during branch retrieval:", err);
             return res.status(500).json({
@@ -401,7 +401,7 @@ exports.inactive = (req, res) => {
           }
 
           // Update the branch
-          Branch.inactive(id, (err, result) => {
+          Branch.inactive(branch_id, (err, result) => {
             if (err) {
               console.error("Database error during branch status update:", err);
               AdminCommon.adminActivityLog(
@@ -409,7 +409,7 @@ exports.inactive = (req, res) => {
                 "Branch",
                 "status",
                 "0",
-                JSON.stringify({ id, ...changes }),
+                JSON.stringify({ branch_id, ...changes }),
                 err.message,
                 () => { }
               );
@@ -425,7 +425,7 @@ exports.inactive = (req, res) => {
               "Branch",
               "status",
               "1",
-              JSON.stringify({ id, ...changes }),
+              JSON.stringify({ branch_id, ...changes }),
               null,
               () => { }
             );

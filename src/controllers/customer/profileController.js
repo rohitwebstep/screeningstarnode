@@ -786,7 +786,7 @@ exports.inactive = (req, res) => {
     customer_id,
     admin_id,
     _token,
-  } = req.body;
+  } = req.query;
 
   // Define required fields
   const requiredFields = {
