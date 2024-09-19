@@ -395,7 +395,7 @@ exports.inactiveList = (req, res) => {
 
       const newToken = result.newToken;
 
-      Customer.list((err, result) => {
+      Customer.inactiveList((err, result) => {
         if (err) {
           console.error("Database error:", err);
           return res
