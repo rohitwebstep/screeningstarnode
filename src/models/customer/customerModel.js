@@ -276,6 +276,47 @@ const Customer = {
         ) AS branch_counts
       ON 
         customers.id = branch_counts.customer_id
+      WHERE 
+        customers.status != '0'
+    `;
+
+    pool.query(sql, (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results);
+    });
+  },
+
+  inactiveList: (callback) => {
+    const sql = `
+      SELECT 
+        customers.*, 
+        customers.id AS main_id, 
+        customer_metas.*, 
+        customer_metas.id AS meta_id,
+        COALESCE(branch_counts.branch_count, 0) AS branch_count
+      FROM 
+        customers
+      LEFT JOIN 
+        customer_metas 
+      ON 
+        customers.id = customer_metas.customer_id
+      LEFT JOIN 
+        (
+          SELECT 
+            customer_id, 
+            COUNT(*) AS branch_count
+          FROM 
+            branches
+          GROUP BY 
+            customer_id
+        ) AS branch_counts
+      ON 
+        customers.id = branch_counts.customer_id
+      WHERE 
+        customers.status != '1'
     `;
 
     pool.query(sql, (err, results) => {
