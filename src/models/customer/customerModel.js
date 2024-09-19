@@ -351,7 +351,7 @@ const Customer = {
       SET \`status\` = ?
       WHERE \`id\` = ?
     `;
-    pool.query(sql, [0, id], (err, results) => {
+    pool.query(sql, ['0', id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback(err, null);
