@@ -345,6 +345,21 @@ const Customer = {
     });
   },
 
+  active: (id, callback) => {
+    const sql = `
+      UPDATE \`customers\`
+      SET \`status\` = ?
+      WHERE \`id\` = ?
+    `;
+    pool.query(sql, ['1', id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results);
+    });
+  },
+
   inactive: (id, callback) => {
     const sql = `
       UPDATE \`customers\`
