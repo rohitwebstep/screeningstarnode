@@ -137,10 +137,10 @@ const Branch = {
   inactive: (id, callback) => {
     const sql = `
       UPDATE \`branches\`
-      SET \`status\` = 0
+      SET \`status\` = ?
       WHERE \`id\` = ?
     `;
-    pool.query(sql, [id], (err, results) => {
+    pool.query(sql, [0, id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback(err, null);
