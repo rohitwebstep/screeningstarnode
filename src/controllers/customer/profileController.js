@@ -187,7 +187,7 @@ exports.create = (req, res) => {
                 "0",
                 null,
                 err.message,
-                () => {}
+                () => { }
               );
               return res
                 .status(500)
@@ -234,7 +234,7 @@ exports.create = (req, res) => {
                     "0",
                     `{id: ${customerId}}`,
                     err.message,
-                    () => {}
+                    () => { }
                   );
                   return res.status(500).json({
                     status: false,
@@ -301,7 +301,7 @@ exports.create = (req, res) => {
                           "1",
                           `{id: ${customerId}}`,
                           null,
-                          () => {}
+                          () => { }
                         );
                         // Send email notification
                         sendEmail(
@@ -709,17 +709,17 @@ exports.update = (req, res) => {
                         agreement_duration: agreement_period,
                         custom_template:
                           custom_template &&
-                          custom_template.toLowerCase() === "yes"
+                            custom_template.toLowerCase() === "yes"
                             ? 1
                             : 0,
                         custom_logo:
                           custom_template &&
-                          custom_template.toLowerCase() === "yes"
+                            custom_template.toLowerCase() === "yes"
                             ? custom_logo
                             : null,
                         custom_address:
                           custom_template &&
-                          custom_template.toLowerCase() === "yes"
+                            custom_template.toLowerCase() === "yes"
                             ? custom_address
                             : null,
                         state,
@@ -776,6 +776,119 @@ exports.update = (req, res) => {
             }
           }
         );
+      });
+    });
+  });
+};
+
+exports.inactive = (req, res) => {
+  const {
+    customer_id,
+    admin_id,
+    _token,
+  } = req.body;
+
+  // Define required fields
+  const requiredFields = {
+    customer_id,
+    admin_id,
+    _token,
+  };
+
+  // Check for missing fields
+  const missingFields = Object.keys(requiredFields)
+    .filter((field) => !requiredFields[field] || requiredFields[field] === "")
+    .map((field) => field.replace(/_/g, " "));
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  const action = JSON.stringify({ customer: "status" });
+
+  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
+    if (!result.status) {
+      return res.status(403).json({
+        status: false,
+        message: result.message,
+      });
+    }
+
+    AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
+      if (err) {
+        console.error("Error checking token validity:", err);
+        return res.status(500).json({ status: false, message: err.message });
+      }
+
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
+      }
+
+      const newToken = result.newToken;
+
+      Customer.getCustomerById(customer_id, (err, currentCustomer) => {
+        if (err) {
+          console.error("Database error during customer retrieval:", err);
+          return res.status(500).json({
+            status: false,
+            message: "Failed to retrieve Customer. Please try again.",
+            token: newToken,
+          });
+        }
+
+        if (!currentCustomer) {
+          return res.status(404).json({
+            status: false,
+            message: "Customer not found.",
+            token: newToken,
+          });
+        }
+
+        const changes = {};
+        if (currentCustomer.status !== 0) {
+          changes.status = { old: currentCustomer.status, new: 0 };
+        }
+        // Update the branch
+        Customer.inactive(customer_id, (err, result) => {
+          if (err) {
+            console.error("Database error during customer status update:", err);
+            AdminCommon.adminActivityLog(
+              admin_id,
+              "Customer",
+              "status",
+              "0",
+              JSON.stringify({ id, ...changes }),
+              err.message,
+              () => { }
+            );
+            return res.status(500).json({
+              status: false,
+              message: "Failed to update customer status. Please try again.",
+              token: newToken,
+            });
+          }
+
+          AdminCommon.adminActivityLog(
+            admin_id,
+            "Customer",
+            "status",
+            "1",
+            JSON.stringify({ id, ...changes }),
+            null,
+            () => { }
+          );
+
+          res.status(200).json({
+            status: true,
+            message: "Customer status updated successfully.",
+            customer: result,
+            token: newToken,
+          });
+        });
+
       });
     });
   });
@@ -861,7 +974,7 @@ exports.delete = (req, res) => {
                 "0",
                 JSON.stringify({ id }),
                 err.message,
-                () => {}
+                () => { }
               );
               return res.status(500).json({
                 status: false,
@@ -877,7 +990,7 @@ exports.delete = (req, res) => {
               "1",
               JSON.stringify({ id }),
               null,
-              () => {}
+              () => { }
             );
 
             res.status(200).json({

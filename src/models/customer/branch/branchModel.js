@@ -134,6 +134,21 @@ const Branch = {
     });
   },
 
+  inactive: (id, callback) => {
+    const sql = `
+      UPDATE \`branches\`
+      SET \`status\` = 0
+      WHERE \`id\` = ?
+    `;
+    pool.query(sql, [id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results);
+    });
+  },
+
   delete: (id, callback) => {
     const sql = `
         DELETE FROM \`branches\`
