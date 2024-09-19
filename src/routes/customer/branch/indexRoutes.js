@@ -18,7 +18,7 @@ router.get(
 );
 router.get("/list-by-customer", profileController.listByCustomerID);
 router.put("/update", profileController.update);
-router.put("/inactive", profileController.inactive);
+router.get("/inactive", profileController.inactive);
 
 router.delete("/delete", profileController.delete);
 
