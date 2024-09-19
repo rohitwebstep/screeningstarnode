@@ -52,7 +52,7 @@ exports.login = (req, res) => {
       if (isCustomerActive === false) {
         return res.status(404).json({
           status: false,
-          message: "Branch not inactive",
+          message: "Parent Company not inactive",
         });
       }
       // Find branch by email or mobile number
