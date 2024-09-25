@@ -42,141 +42,157 @@ exports.login = (req, res) => {
 
     const branch = result[0];
 
-    BranchAuth.isCustomerActive(branch.customer_id, (customerErr, isCustomerActive) => {
-      if (customerErr) {
-        console.error("Database error:", customerErr);
-        return res.status(500).json({ status: false, message: customerErr.message });
-      }
-
-      // If branch is not found or is not active, return a 404 response
-      if (isCustomerActive === false) {
-        return res.status(404).json({
-          status: false,
-          message: "Parent Company not inactive",
-        });
-      }
-      // Find branch by email or mobile number
-      BranchAuth.isBranchActive(branch.id, (err, isActive) => {
-        if (err) {
-          console.error("Database error:", err);
-          return res.status(500).json({ status: false, message: err.message });
+    BranchAuth.isCustomerActive(
+      branch.customer_id,
+      (customerErr, isCustomerActive) => {
+        if (customerErr) {
+          console.error("Database error:", customerErr);
+          return res
+            .status(500)
+            .json({ status: false, message: customerErr.message });
         }
 
         // If branch is not found or is not active, return a 404 response
-        if (isActive === false) {
+        if (isCustomerActive === false) {
           return res.status(404).json({
             status: false,
-            message: "Branch not inactive",
+            message: "Parent Company not inactive",
           });
         }
-
-        // Validate password
-        BranchAuth.validatePassword(username, password, (err, isValid) => {
+        // Find branch by email or mobile number
+        BranchAuth.isBranchActive(branch.id, (err, isActive) => {
           if (err) {
             console.error("Database error:", err);
-            Common.branchLoginLog(branch.id, "login", "0", err.message, () => { });
-            return res.status(500).json({ status: false, message: err.message });
-          }
-
-          // If the password is incorrect, log the attempt and return a 401 response
-          if (!isValid) {
-            Common.branchLoginLog(
-              branch.id,
-              "login",
-              "0",
-              "Incorrect password",
-              () => { }
-            );
             return res
-              .status(401)
-              .json({ status: false, message: "Incorrect password" });
+              .status(500)
+              .json({ status: false, message: err.message });
           }
 
-          if (branch.status == 0) {
-            Common.branchLoginLog(
-              branch.id,
-              "login",
-              "0",
-              "Branch account is not yet verified.",
-              () => { }
-            );
-            return res.status(400).json({
+          // If branch is not found or is not active, return a 404 response
+          if (isActive === false) {
+            return res.status(404).json({
               status: false,
-              message:
-                "Branch account is not yet verified. Please complete the verification process before proceeding.",
+              message: "Branch not inactive",
             });
           }
 
-          if (branch.status == 2) {
-            Common.branchLoginLog(
-              branch.id,
-              "login",
-              "0",
-              "Branch account has been suspended.",
-              () => { }
-            );
-            return res.status(400).json({
-              status: false,
-              message:
-                "Branch account has been suspended. Please contact the help desk for further assistance.",
-            });
-          }
-
-          // Get current time and token expiry
-          const currentTime = new Date(); // Current time
-          const tokenExpiry = new Date(branch.token_expiry); // Convert token_expiry to Date object
-
-          // Check if the existing token is still valid
-          if (branch.login_token && tokenExpiry > currentTime) {
-            Common.branchLoginLog(
-              branch.id,
-              "login",
-              "0",
-              "Another branch is currently logged in.",
-              () => { }
-            );
-            return res.status(400).json({
-              status: false,
-              message:
-                "Another branch is currently logged in. Please try again later.",
-            });
-          }
-
-          // Generate new token and expiry time
-          const token = generateToken();
-          const newTokenExpiry = getTokenExpiry(); // This will be an ISO string
-
-          // Update the token in the database
-          BranchAuth.updateToken(branch.id, token, newTokenExpiry, (err) => {
+          // Validate password
+          BranchAuth.validatePassword(username, password, (err, isValid) => {
             if (err) {
               console.error("Database error:", err);
               Common.branchLoginLog(
                 branch.id,
                 "login",
                 "0",
-                "Error updating token: " + err.message,
-                () => { }
+                err.message,
+                () => {}
               );
-              return res.status(500).json({
+              return res
+                .status(500)
+                .json({ status: false, message: err.message });
+            }
+
+            // If the password is incorrect, log the attempt and return a 401 response
+            if (!isValid) {
+              Common.branchLoginLog(
+                branch.id,
+                "login",
+                "0",
+                "Incorrect password",
+                () => {}
+              );
+              return res
+                .status(401)
+                .json({ status: false, message: "Incorrect password" });
+            }
+
+            if (branch.status == 0) {
+              Common.branchLoginLog(
+                branch.id,
+                "login",
+                "0",
+                "Branch account is not yet verified.",
+                () => {}
+              );
+              return res.status(400).json({
                 status: false,
-                message: `Error updating token: ${err.message}`,
+                message:
+                  "Branch account is not yet verified. Please complete the verification process before proceeding.",
               });
             }
 
-            // Log successful login and return the response
-            Common.branchLoginLog(branch.id, "login", "1", null, () => { });
-            const { login_token, token_expiry, ...branchDataWithoutToken } = branch;
+            if (branch.status == 2) {
+              Common.branchLoginLog(
+                branch.id,
+                "login",
+                "0",
+                "Branch account has been suspended.",
+                () => {}
+              );
+              return res.status(400).json({
+                status: false,
+                message:
+                  "Branch account has been suspended. Please contact the help desk for further assistance.",
+              });
+            }
 
-            res.json({
-              status: true,
-              message: "Login successful",
-              branchData: branchDataWithoutToken,
-              token,
+            // Get current time and token expiry
+            const currentTime = new Date(); // Current time
+            const tokenExpiry = new Date(branch.token_expiry); // Convert token_expiry to Date object
+
+            // Check if the existing token is still valid
+            if (branch.login_token && tokenExpiry > currentTime) {
+              Common.branchLoginLog(
+                branch.id,
+                "login",
+                "0",
+                "Another branch is currently logged in.",
+                () => {}
+              );
+              return res.status(400).json({
+                status: false,
+                message:
+                  "Another branch is currently logged in. Please try again later.",
+              });
+            }
+
+            // Generate new token and expiry time
+            const token = generateToken();
+            const newTokenExpiry = getTokenExpiry(); // This will be an ISO string
+
+            // Update the token in the database
+            BranchAuth.updateToken(branch.id, token, newTokenExpiry, (err) => {
+              if (err) {
+                console.error("Database error:", err);
+                Common.branchLoginLog(
+                  branch.id,
+                  "login",
+                  "0",
+                  "Error updating token: " + err.message,
+                  () => {}
+                );
+                return res.status(500).json({
+                  status: false,
+                  message: `Error updating token: ${err.message}`,
+                });
+              }
+
+              // Log successful login and return the response
+              Common.branchLoginLog(branch.id, "login", "1", null, () => {});
+              const { login_token, token_expiry, ...branchDataWithoutToken } =
+                branch;
+
+              res.json({
+                status: true,
+                message: "Login successful",
+                branchData: branchDataWithoutToken,
+                token,
+              });
             });
           });
         });
-      });
-    });
+      }
+    );
   });
 };
 
