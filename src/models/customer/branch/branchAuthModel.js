@@ -32,13 +32,13 @@ const Branch = {
       WHERE \`email\` = ?
       AND (\`password\` = MD5(?) OR \`password\` = ?)
     `;
-  
+
     pool.query(sql, [email, password, password], (err, results) => {
       if (err) {
         console.error("Database query failed:", err);
         return callback({ message: "Internal server error", error: err }, null);
       }
-  
+
       // Return true if a match is found, otherwise return false
       if (results.length > 0) {
         return callback(null, true);
@@ -155,7 +155,10 @@ const Branch = {
       }
 
       if (results.length === 0) {
-        return callback({ message: "No branch found with the provided ID" }, null);
+        return callback(
+          { message: "No branch found with the provided ID" },
+          null
+        );
       }
 
       const status = results[0].status;
@@ -174,19 +177,24 @@ const Branch = {
     pool.query(sql, [customerID], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
-        return callback({ message: "Database query error", error: err }, null);
+        return callback({ message: "Internal server error", error: err }, null);
       }
 
+      // If no customer is found, return appropriate message
       if (results.length === 0) {
-        return callback({ message: "No customer found with the provided ID" }, null);
+        return callback(
+          { message: "No customer found with the provided ID" },
+          null
+        );
       }
 
       const status = results[0].status;
-      const isActive = status == 1 ? true : false;
+
+      // Check if status is either string "1" or number 1
+      const isActive = status == 1; // using loose equality (==) to handle both types
       callback(null, isActive);
     });
   },
-
 };
 
 module.exports = Branch;
