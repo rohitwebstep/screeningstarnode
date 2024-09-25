@@ -182,7 +182,7 @@ const Branch = {
       }
 
       const status = results[0].status;
-      const isActive = status === 1 ? true : false;
+      const isActive = status == 1 ? true : false;
       callback(null, isActive);
     });
   },
