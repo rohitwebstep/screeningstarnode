@@ -56,7 +56,7 @@ exports.login = (req, res) => {
         if (isCustomerActive === false) {
           return res.status(404).json({
             status: false,
-            message: "Parent Company not inactive",
+            message: "Parent Company not active",
           });
         }
         // Find branch by email or mobile number
