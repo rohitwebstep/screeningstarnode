@@ -52,13 +52,14 @@ exports.login = (req, res) => {
             .json({ status: false, message: customerErr.message });
         }
 
-        // If branch is not found or is not active, return a 404 response
-        if (isCustomerActive === false) {
+        // If customer is not active, return a 404 response
+        if (!isCustomerActive) {
           return res.status(404).json({
             status: false,
-            message: "Parent Company not active",
+            message: "Parent Company is not active",
           });
         }
+
         // Find branch by email or mobile number
         BranchAuth.isBranchActive(branch.id, (err, isActive) => {
           if (err) {
