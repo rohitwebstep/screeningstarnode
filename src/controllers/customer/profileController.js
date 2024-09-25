@@ -875,7 +875,7 @@ exports.fetchBranchPassword = (req, res) => {
 
       const newToken = result.newToken;
 
-      Customer.fetchBranchPasswordByEmail(email, (err, result) => {
+      Customer.fetchBranchPasswordByEmail(branch_email, (err, result) => {
         if (err) {
           console.error("Database error:", err);
           return res
