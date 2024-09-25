@@ -55,7 +55,9 @@ LEFT JOIN
       b.customer_id
   ) AS application_counts
 ON 
-  customers.id = application_counts.customer_id;
+  customers.id = application_counts.customer_id
+WHERE 
+  COALESCE(application_counts.application_count, 0) > 0;
     `;
 
     pool.query(sql, (err, results) => {
