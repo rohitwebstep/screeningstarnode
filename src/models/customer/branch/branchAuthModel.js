@@ -144,7 +144,7 @@ const Branch = {
   isBranchActive: (id, callback) => {
     const sql = `
       SELECT \`status\`
-      FROM \`customers\`
+      FROM \`branches\`
       WHERE \`id\` = ?
     `;
 
