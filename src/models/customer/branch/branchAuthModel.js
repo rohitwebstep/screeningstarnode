@@ -25,25 +25,26 @@ const Branch = {
     });
   },
 
-  validatePassword: (username, password, callback) => {
+  validatePassword: (email, password, callback) => {
     const sql = `
-      SELECT \`id\`, \`name\`, \`email\`, \`status\`
+      SELECT \`id\`
       FROM \`branches\`
-      WHERE (\`email\` = ?)
-      AND \`password\` = MD5(?)
+      WHERE \`email\` = ?
+      AND (\`password\` = MD5(?) OR \`password\` = ?)
     `;
-
-    pool.query(sql, [username, password], (err, results) => {
+  
+    pool.query(sql, [email, password, password], (err, results) => {
       if (err) {
-        console.error("Database query error:", err);
-        return callback({ message: "Database query error", error: err }, null);
+        console.error("Database query failed:", err);
+        return callback({ message: "Internal server error", error: err }, null);
       }
-
-      if (results.length === 0) {
-        return callback({ message: "Incorrect password or username" }, null);
+  
+      // Return true if a match is found, otherwise return false
+      if (results.length > 0) {
+        return callback(null, true);
+      } else {
+        return callback(null, false);
       }
-
-      callback(null, results);
     });
   },
 
