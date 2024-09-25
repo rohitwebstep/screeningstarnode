@@ -73,7 +73,7 @@ exports.login = (req, res) => {
           if (isActive === false) {
             return res.status(404).json({
               status: false,
-              message: "Branch not inactive",
+              message: "Branch not active",
             });
           }
 

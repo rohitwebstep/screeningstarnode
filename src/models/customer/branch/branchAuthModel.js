@@ -144,16 +144,17 @@ const Branch = {
   isBranchActive: (id, callback) => {
     const sql = `
       SELECT \`status\`
-      FROM \`branches\`
+      FROM \`customers\`
       WHERE \`id\` = ?
     `;
 
     pool.query(sql, [id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
-        return callback({ message: "Database query error", error: err }, null);
+        return callback({ message: "Internal server error", error: err }, null);
       }
 
+      // If no customer is found, return appropriate message
       if (results.length === 0) {
         return callback(
           { message: "No branch found with the provided ID" },
@@ -162,7 +163,9 @@ const Branch = {
       }
 
       const status = results[0].status;
-      const isActive = status === 1 ? true : false;
+
+      // Check if status is either string "1" or number 1
+      const isActive = status == 1; // using loose equality (==) to handle both types
       callback(null, isActive);
     });
   },
