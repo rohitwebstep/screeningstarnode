@@ -530,6 +530,26 @@ const Customer = {
     });
   },
 
+  fetchBranchPasswordByEmail: (email, callback) => {
+    const sql = `
+      SELECT \`password\` FROM \`branches\` WHERE \`email\` = ?
+    `;
+  
+    pool.query(sql, [email], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      
+      // Check if results exist and are not empty
+      if (results.length > 0 && results[0].password) {
+        return callback(null, results[0].password);  // Return the password
+      } else {
+        return callback(null, false);  // Return false if no result found or empty
+      }
+    });
+  },  
+
   logout: (id, callback) => {
     const sql = `
       UPDATE \`customers\`

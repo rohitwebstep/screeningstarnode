@@ -187,7 +187,7 @@ exports.create = (req, res) => {
                 "0",
                 null,
                 err.message,
-                () => { }
+                () => {}
               );
               return res
                 .status(500)
@@ -234,7 +234,7 @@ exports.create = (req, res) => {
                     "0",
                     `{id: ${customerId}}`,
                     err.message,
-                    () => { }
+                    () => {}
                   );
                   return res.status(500).json({
                     status: false,
@@ -301,7 +301,7 @@ exports.create = (req, res) => {
                           "1",
                           `{id: ${customerId}}`,
                           null,
-                          () => { }
+                          () => {}
                         );
                         // Send email notification
                         sendEmail(
@@ -765,17 +765,17 @@ exports.update = (req, res) => {
                         agreement_duration: agreement_period,
                         custom_template:
                           custom_template &&
-                            custom_template.toLowerCase() === "yes"
+                          custom_template.toLowerCase() === "yes"
                             ? 1
                             : 0,
                         custom_logo:
                           custom_template &&
-                            custom_template.toLowerCase() === "yes"
+                          custom_template.toLowerCase() === "yes"
                             ? custom_logo
                             : null,
                         custom_address:
                           custom_template &&
-                            custom_template.toLowerCase() === "yes"
+                          custom_template.toLowerCase() === "yes"
                             ? custom_address
                             : null,
                         state,
@@ -837,12 +837,73 @@ exports.update = (req, res) => {
   });
 };
 
+// Controller to list all customers
+exports.fetchBranchPassword = (req, res) => {
+  const { admin_id, _token, branch_email } = req.query;
+
+  let missingFields = [];
+  if (!branch_email || branch_email === "") missingFields.push("Branch Email");
+  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
+  if (!_token || _token === "") missingFields.push("Token");
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  const action = JSON.stringify({ branch: "view" });
+  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
+    if (!result.status) {
+      return res.status(403).json({
+        status: false,
+        message: result.message,
+      });
+    }
+
+    // Verify admin token
+    AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
+      if (err) {
+        console.error("Error checking token validity:", err);
+        return res.status(500).json({ status: false, message: err.message });
+      }
+
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
+      }
+
+      const newToken = result.newToken;
+
+      Customer.fetchBranchPasswordByEmail(email, (err, result) => {
+        if (err) {
+          console.error("Database error:", err);
+          return res
+            .status(500)
+            .json({ status: false, message: err.message, token: newToken });
+        }
+
+        if (!result) {
+          return res.status(404).json({
+            status: false,
+            message: "Password not found",
+            token: newToken,
+          });
+        }
+
+        res.json({
+          status: true,
+          message: "Password fetched successfully",
+          password: result,
+          token: newToken,
+        });
+      });
+    });
+  });
+};
+
 exports.active = (req, res) => {
-  const {
-    customer_id,
-    admin_id,
-    _token,
-  } = req.query;
+  const { customer_id, admin_id, _token } = req.query;
 
   // Define required fields
   const requiredFields = {
@@ -918,7 +979,7 @@ exports.active = (req, res) => {
               "0",
               JSON.stringify({ customer_id, ...changes }),
               err.message,
-              () => { }
+              () => {}
             );
             return res.status(500).json({
               status: false,
@@ -934,7 +995,7 @@ exports.active = (req, res) => {
             "1",
             JSON.stringify({ customer_id, ...changes }),
             null,
-            () => { }
+            () => {}
           );
 
           res.status(200).json({
@@ -944,18 +1005,13 @@ exports.active = (req, res) => {
             token: newToken,
           });
         });
-
       });
     });
   });
 };
 
 exports.inactive = (req, res) => {
-  const {
-    customer_id,
-    admin_id,
-    _token,
-  } = req.query;
+  const { customer_id, admin_id, _token } = req.query;
 
   // Define required fields
   const requiredFields = {
@@ -1031,7 +1087,7 @@ exports.inactive = (req, res) => {
               "0",
               JSON.stringify({ customer_id, ...changes }),
               err.message,
-              () => { }
+              () => {}
             );
             return res.status(500).json({
               status: false,
@@ -1047,7 +1103,7 @@ exports.inactive = (req, res) => {
             "1",
             JSON.stringify({ customer_id, ...changes }),
             null,
-            () => { }
+            () => {}
           );
 
           res.status(200).json({
@@ -1057,7 +1113,6 @@ exports.inactive = (req, res) => {
             token: newToken,
           });
         });
-
       });
     });
   });
@@ -1143,7 +1198,7 @@ exports.delete = (req, res) => {
                 "0",
                 JSON.stringify({ id }),
                 err.message,
-                () => { }
+                () => {}
               );
               return res.status(500).json({
                 status: false,
@@ -1159,7 +1214,7 @@ exports.delete = (req, res) => {
               "1",
               JSON.stringify({ id }),
               null,
-              () => { }
+              () => {}
             );
 
             res.status(200).json({
