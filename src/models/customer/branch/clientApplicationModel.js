@@ -160,7 +160,7 @@ const clientApplication = {
             console.error("Database query error:", err);
             return callback(err, null);
           }
-          callback(null, results);
+          callback(null, { results, new_application_id });
         });
       }
     );

@@ -7,7 +7,7 @@ const generateTable = (services) => {
     return "<p>No services available</p>";
   }
 
-  let table ='';
+  let table = "";
 
   services.forEach((service, index) => {
     table += `<tr>
@@ -20,7 +20,16 @@ const generateTable = (services) => {
 };
 
 // Function to send email
-async function sendEmail(module, action, name, services, toArr, ccArr) {
+async function sendEmail(
+  module,
+  action,
+  name,
+  application_id,
+  clientCode,
+  services,
+  toArr,
+  ccArr
+) {
   try {
     // Fetch email template
     const [emailRows] = await connection
@@ -60,6 +69,8 @@ async function sendEmail(module, action, name, services, toArr, ccArr) {
     let template = email.template;
     template = template
       .replace(/{{client_name}}/g, name)
+      .replace(/{{application_id}}/g, application_id)
+      .replace(/{{clientCode}}/g, clientCode)
       .replace(/{{services}}/g, table);
 
     // Prepare CC list

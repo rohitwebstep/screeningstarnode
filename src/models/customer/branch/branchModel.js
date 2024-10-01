@@ -104,6 +104,45 @@ const Branch = {
     });
   },
 
+  getClientUniqueIDByBranchId: (id, callback) => {
+    const sql = "SELECT `customer_id` FROM `branches` WHERE `id` = ?";
+
+    // First query to get customer_id from branches
+    pool.query(sql, [id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+
+      // Check if the result exists and customer_id is valid
+      if (results.length > 0 && results[0].customer_id) {
+        const customerId = results[0].customer_id;
+        const uniqueIdSql =
+          "SELECT `client_unique_id` FROM `customers` WHERE `id` = ?";
+
+        // Second query to get client_unique_id using customer_id
+        pool.query(uniqueIdSql, [customerId], (err, uniqueIdResults) => {
+          if (err) {
+            console.error("Database query error:", err);
+            return callback(err, null);
+          }
+
+          // Check if the client_unique_id exists and is not null or empty
+          if (
+            uniqueIdResults.length > 0 &&
+            uniqueIdResults[0].client_unique_id
+          ) {
+            return callback(null, uniqueIdResults[0].client_unique_id);
+          } else {
+            return callback(null, false); // Return false if not found or invalid
+          }
+        });
+      } else {
+        return callback(null, false); // Return false if no customer_id found
+      }
+    });
+  },
+
   update: (id, name, email, password, callback) => {
     const sql = `
       UPDATE \`branches\`
@@ -140,7 +179,7 @@ const Branch = {
       SET \`status\` = ?
       WHERE \`id\` = ?
     `;
-    pool.query(sql, ['1', id], (err, results) => {
+    pool.query(sql, ["1", id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback(err, null);
@@ -155,7 +194,7 @@ const Branch = {
       SET \`status\` = ?
       WHERE \`id\` = ?
     `;
-    pool.query(sql, ['0', id], (err, results) => {
+    pool.query(sql, ["0", id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback(err, null);

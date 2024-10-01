@@ -1,5 +1,6 @@
 const Client = require("../../../../models/customer/branch/clientApplicationModel");
 const BranchCommon = require("../../../../models/customer/branch/commonModel");
+const Branch = require("../../../../models/customer/branch/branchModel");
 const { sendEmail } = require("../../../../mailer/clientApplicationMailer");
 
 exports.create = (req, res) => {
@@ -150,46 +151,69 @@ exports.create = (req, res) => {
 
                 // Prepare recipient and CC lists
                 const toArr = [{ name: branch.name, email: branch.email }];
-                const ccArr = customer.emails
-                  .split(",")
-                  .map((email) => ({
-                    name: customer.name,
-                    email: email.trim(),
-                  }));
+                const ccArr = customer.emails.split(",").map((email) => ({
+                  name: customer.name,
+                  email: email.trim(),
+                }));
 
-                // Send email notification
-                sendEmail(
-                  "client application",
-                  "create",
-                  name,
-                  services,
-                  toArr,
-                  ccArr
-                )
-                  .then(() => {
-                    res.status(201).json({
-                      status: true,
-                      message:
-                        "Client application created successfully and email sent.",
-                      data: {
-                        client: result,
-                        package,
-                      },
-                      token: newToken,
+                Branch.getClientUniqueIDByBranchId(
+                  branch_id,
+                  (err, clientCode) => {
+                    if (err) {
+                      console.error("Error checking unique ID:", err);
+                      return res.status(500).json({
+                        status: false,
+                        message: err.message,
+                        token: newToken,
+                      });
+                    }
+
+                    // Check if the unique ID exists
+                    if (!clientCode) {
+                      return res.status(400).json({
+                        status: false,
+                        message: `Customer Unique ID not Found`,
+                        token: newToken,
+                      });
+                    }
+
+                    // Send email notification
+                    sendEmail(
+                      "client application",
+                      "create",
+                      name,
+                      result.new_application_id,
+                      clientCode,
+                      services,
                       toArr,
                       ccArr
-                    });
-                  })
-                  .catch((emailError) => {
-                    console.error("Error sending email:", emailError);
-                    res.status(201).json({
-                      status: true,
-                      message:
-                        "Client application created successfully, but failed to send email.",
-                      client: result,
-                      token: newToken,
-                    });
-                  });
+                    )
+                      .then(() => {
+                        res.status(201).json({
+                          status: true,
+                          message:
+                            "Client application created successfully and email sent.",
+                          data: {
+                            client: result,
+                            package,
+                          },
+                          token: newToken,
+                          toArr,
+                          ccArr,
+                        });
+                      })
+                      .catch((emailError) => {
+                        console.error("Error sending email:", emailError);
+                        res.status(201).json({
+                          status: true,
+                          message:
+                            "Client application created successfully, but failed to send email.",
+                          client: result,
+                          token: newToken,
+                        });
+                      });
+                  }
+                );
               }
             );
           }
