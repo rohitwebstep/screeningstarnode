@@ -203,7 +203,7 @@ GROUP BY b.name;
                     "UPDATE cmt_applications SET ? WHERE client_application_id = ?";
                   pool.query(
                     updateSql,
-                    [mainJson, client_application_id, branch_id, customer_id],
+                    [mainJson, client_application_id],
                     (updateErr, updateResult) => {
                       if (updateErr) {
                         console.error("Error updating application:", updateErr);
@@ -262,7 +262,7 @@ GROUP BY b.name;
                 "UPDATE cmt_applications SET ? WHERE client_application_id = ?";
               pool.query(
                 updateSql,
-                [mainJson, client_application_id, branch_id, customer_id],
+                [mainJson, client_application_id],
                 (updateErr, updateResult) => {
                   if (updateErr) {
                     console.error("Error updating application:", updateErr);
