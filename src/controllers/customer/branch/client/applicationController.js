@@ -177,41 +177,65 @@ exports.create = (req, res) => {
                       });
                     }
 
-                    // Send email notification
-                    sendEmail(
-                      "client application",
-                      "create",
-                      name,
-                      result.new_application_id,
-                      clientCode,
-                      services,
-                      toArr,
-                      ccArr
-                    )
-                      .then(() => {
-                        res.status(201).json({
-                          status: true,
-                          message:
-                            "Client application created successfully and email sent.",
-                          data: {
-                            client: result,
-                            package,
-                          },
-                          token: newToken,
+                    Branch.getClientNameByBranchId(
+                      branch_id,
+                      (err, clientName) => {
+                        if (err) {
+                          console.error("Error checking unique ID:", err);
+                          return res.status(500).json({
+                            status: false,
+                            message: err.message,
+                            token: newToken,
+                          });
+                        }
+
+                        // Check if the unique ID exists
+                        if (!clientName) {
+                          return res.status(400).json({
+                            status: false,
+                            message: `Customer Unique ID not Found`,
+                            token: newToken,
+                          });
+                        }
+
+                        // Send email notification
+                        sendEmail(
+                          "client application",
+                          "create",
+                          name,
+                          result.new_application_id,
+                          clientName,
+                          clientCode,
+                          services,
                           toArr,
-                          ccArr,
-                        });
-                      })
-                      .catch((emailError) => {
-                        console.error("Error sending email:", emailError);
-                        res.status(201).json({
-                          status: true,
-                          message:
-                            "Client application created successfully, but failed to send email.",
-                          client: result,
-                          token: newToken,
-                        });
-                      });
+                          ccArr
+                        )
+                          .then(() => {
+                            res.status(201).json({
+                              status: true,
+                              message:
+                                "Client application created successfully and email sent.",
+                              data: {
+                                client: result,
+                                package,
+                              },
+                              token: newToken,
+                              toArr,
+                              ccArr,
+                            });
+                          })
+                          .catch((emailError) => {
+                            console.error("Error sending email:", emailError);
+                            res.status(201).json({
+                              status: true,
+                              message:
+                                "Client application created successfully, but failed to send email.",
+                              client: result,
+                              token: newToken,
+                            });
+                          });
+                      }
+                    );
                   }
                 );
               }
