@@ -136,7 +136,13 @@ GROUP BY b.name;
     });
   },
 
-  update: (mainJson, client_application_id, callback) => {
+  update: (
+    mainJson,
+    client_application_id,
+    branch_id,
+    customer_id,
+    callback
+  ) => {
     const fields = Object.keys(mainJson);
 
     // 1. Check for existing columns in cmt_applications
@@ -197,7 +203,7 @@ GROUP BY b.name;
                     "UPDATE cmt_applications SET ? WHERE client_application_id = ?";
                   pool.query(
                     updateSql,
-                    [mainJson, client_application_id],
+                    [mainJson, client_application_id, branch_id, customer_id],
                     (updateErr, updateResult) => {
                       if (updateErr) {
                         console.error("Error updating application:", updateErr);
@@ -211,7 +217,12 @@ GROUP BY b.name;
                   const insertSql = "INSERT INTO cmt_applications SET ?";
                   pool.query(
                     insertSql,
-                    { ...mainJson, client_application_id },
+                    {
+                      ...mainJson,
+                      client_application_id,
+                      branch_id,
+                      customer_id,
+                    },
                     (insertErr, insertResult) => {
                       if (insertErr) {
                         console.error(
@@ -251,7 +262,7 @@ GROUP BY b.name;
                 "UPDATE cmt_applications SET ? WHERE client_application_id = ?";
               pool.query(
                 updateSql,
-                [mainJson, client_application_id],
+                [mainJson, client_application_id, branch_id, customer_id],
                 (updateErr, updateResult) => {
                   if (updateErr) {
                     console.error("Error updating application:", updateErr);
@@ -265,7 +276,7 @@ GROUP BY b.name;
               const insertSql = "INSERT INTO cmt_applications SET ?";
               pool.query(
                 insertSql,
-                { ...mainJson, client_application_id },
+                { ...mainJson, client_application_id, branch_id, customer_id },
                 (insertErr, insertResult) => {
                   if (insertErr) {
                     console.error("Error inserting application:", insertErr);
