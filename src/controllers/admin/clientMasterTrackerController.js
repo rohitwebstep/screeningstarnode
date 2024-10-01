@@ -539,7 +539,10 @@ exports.update = (req, res) => {
               const changes = {};
               let logStatus = "create";
 
-              if (currentCMTApplication) {
+              if (
+                currentCMTApplication &&
+                Object.keys(currentCMTApplication).length > 0
+              ) {
                 logStatus = "update";
                 const compareAndAddChanges = (key, newValue) => {
                   if (currentCMTApplication[key] !== newValue) {
@@ -566,7 +569,10 @@ exports.update = (req, res) => {
                       err
                     );
 
-                    if (currentCMTApplication) {
+                    if (
+                      currentCMTApplication &&
+                      Object.keys(currentCMTApplication).length > 0
+                    ) {
                       AdminCommon.adminActivityLog(
                         admin_id,
                         "Client Master Tracker",
@@ -594,7 +600,10 @@ exports.update = (req, res) => {
                       token: newToken,
                     });
                   }
-                  if (currentCMTApplication) {
+                  if (
+                    currentCMTApplication &&
+                    Object.keys(currentCMTApplication).length > 0
+                  ) {
                     AdminCommon.adminActivityLog(
                       admin_id,
                       "Client Master Tracker",
