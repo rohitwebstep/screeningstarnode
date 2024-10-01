@@ -331,7 +331,7 @@ exports.reportFormJsonByServiceID = (req, res) => {
 };
 
 exports.update = (req, res) => {
-  const { admin_id, _token, customer_id, branch_id, application_id } = req.body;
+  const { admin_id, _token, customer_id, branch_id, application_id, updated_json } = req.body;
 
   // Define required fields
   const requiredFields = {
@@ -340,6 +340,7 @@ exports.update = (req, res) => {
     customer_id,
     branch_id,
     application_id,
+    updated_json,
   };
 
   // Check for missing fields
@@ -353,69 +354,6 @@ exports.update = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-
-  // Original JSON object
-  let updatedJson = {
-    month_year: "October 2024",
-    initiation_date: "2024-09-25",
-    organization_name: "Tech Corp Ltd",
-    verification_purpose: "Employment Verification",
-    employee_id: "E123456",
-    client_code: "CLT987654",
-    applicant_name: "John Doe",
-    contact_number: "+1-555-1234",
-    contact_number2: "+1-555-5678",
-    father_name: "Michael Doe",
-    dob: "1985-06-15",
-    gender: "Male",
-    marital_status: "Married",
-    nationality: "American",
-    insuff: "None",
-    address: {
-      address: "123 Main Street",
-      landmark: "Near City Park",
-      residence_mobile_number: "+1-555-9876",
-      state: "California",
-    },
-    permanent_address: {
-      permanent_address: "789 Elm Street",
-      permanent_sender_name: "John Doe",
-      permanent_receiver_name: "Mary Doe",
-      permanent_landmark: "Opposite Central Mall",
-      permanent_pin_code: "90210",
-      permanent_state: "California",
-    },
-    insuffDetails: {
-      first_insufficiency_marks: "Documents incomplete",
-      first_insuff_date: "2024-09-30",
-      first_insuff_reopened_date: "2024-10-01",
-      second_insufficiency_marks: "Missing ID proof",
-      second_insuff_date: "2024-10-02",
-      second_insuff_reopened_date: "2024-10-05",
-      third_insufficiency_marks: "Address verification pending",
-      third_insuff_date: "2024-10-07",
-      third_insuff_reopened_date: "2024-10-09",
-      overall_status: "In Progress",
-      report_date: "2024-10-10",
-      report_status: "Pending",
-      report_type: "Background Check",
-      final_verification_status: "Not Verified",
-      is_verify: "No",
-      deadline_date: "2024-10-20",
-      insuff_address: "123 Main Street, California",
-      basic_entry: "Completed",
-      education: "Bachelor's Degree in Computer Science",
-      case_upload: "Uploaded",
-      emp_spoc: "Jane Smith",
-      report_generate_by: "Tech Verifier Team",
-      qc_done_by: "Alan Williams",
-      delay_reason: "Awaiting additional documents",
-    },
-    annexure: {
-      annexure_key_1: "Value 1",
-      annexure_key_2: "Value 2",
-    },
-  };
 
   // Function to flatten JSON and separate annexure
   function flattenJsonWithAnnexure(jsonObj) {
@@ -531,9 +469,9 @@ exports.update = (req, res) => {
                 });
               }
 
-              // Flatten the updatedJson object and separate annexure
+              // Flatten the updated_json object and separate annexure
               let { mainJson, annexureJson } =
-                flattenJsonWithAnnexure(updatedJson);
+                flattenJsonWithAnnexure(updated_json);
 
               // Declare changes outside the conditional block
               const changes = {};
