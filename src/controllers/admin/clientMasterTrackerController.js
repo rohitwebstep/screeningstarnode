@@ -535,9 +535,12 @@ exports.update = (req, res) => {
               let { mainJson, annexureJson } =
                 flattenJsonWithAnnexure(updatedJson);
 
+              // Declare changes outside the conditional block
+              const changes = {};
               let logStatus = "create";
+
               if (currentCMTApplication) {
-                const changes = {};
+                logStatus = "update";
                 const compareAndAddChanges = (key, newValue) => {
                   if (currentCMTApplication[key] !== newValue) {
                     changes[key] = {
@@ -551,7 +554,6 @@ exports.update = (req, res) => {
                 Object.keys(mainJson).forEach((key) =>
                   compareAndAddChanges(key, mainJson[key])
                 );
-                let logStatus = "update";
               }
 
               ClientMasterTrackerModel.update(
@@ -570,7 +572,7 @@ exports.update = (req, res) => {
                         "Client Master Tracker",
                         logStatus,
                         "0",
-                        JSON.stringify(changes),
+                        JSON.stringify({ application_id, ...changes }), // changes is defined here
                         err.message,
                         () => {}
                       );
@@ -598,7 +600,7 @@ exports.update = (req, res) => {
                       "Client Master Tracker",
                       logStatus,
                       "1",
-                      JSON.stringify(changes),
+                      JSON.stringify({ application_id, ...changes }), // changes is defined here
                       err.message,
                       () => {}
                     );
@@ -614,10 +616,9 @@ exports.update = (req, res) => {
                     );
                   }
 
-                  res.status(200).json({
+                  return res.status(200).json({
                     status: true,
                     message: "CMT Application updated successfully.",
-                    package: result,
                     token: newToken,
                   });
                 }
