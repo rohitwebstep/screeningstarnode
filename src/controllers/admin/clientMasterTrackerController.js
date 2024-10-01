@@ -488,7 +488,7 @@ exports.update = (req, res) => {
           });
         }
 
-        if (currentBranch.customer_id !== customer_id) {
+        if (parseInt(currentBranch.customer_id) !== parseInt(customer_id)) {
           return res.status(404).json({
             status: false,
             message: "Branch not found with customer match.",
