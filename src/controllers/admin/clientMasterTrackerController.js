@@ -531,32 +531,28 @@ exports.update = (req, res) => {
                 });
               }
 
-              if (!currentCMTApplication) {
-                return res.status(404).json({
-                  status: false,
-                  message: "CMT Application not found.",
-                  token: newToken,
-                });
+              let logStatus = "create";
+              if (currentCMTApplication) {
+                const changes = {};
+                const compareAndAddChanges = (key, newValue) => {
+                  if (currentCMTApplication[key] !== newValue) {
+                    changes[key] = {
+                      old: currentCMTApplication[key],
+                      new: newValue,
+                    };
+                  }
+                };
+
+                // Flatten the updatedJson object and separate annexure
+                let { mainJson, annexureJson } =
+                  flattenJsonWithAnnexure(updatedJson);
+
+                // Compare and log changes
+                Object.keys(mainJson).forEach((key) =>
+                  compareAndAddChanges(key, mainJson[key])
+                );
+                let logStatus = "update";
               }
-
-              const changes = {};
-              const compareAndAddChanges = (key, newValue) => {
-                if (currentCMTApplication[key] !== newValue) {
-                  changes[key] = {
-                    old: currentCMTApplication[key],
-                    new: newValue,
-                  };
-                }
-              };
-
-              // Flatten the updatedJson object and separate annexure
-              let { mainJson, annexureJson } =
-                flattenJsonWithAnnexure(updatedJson);
-
-              // Compare and log changes
-              Object.keys(mainJson).forEach((key) =>
-                compareAndAddChanges(key, mainJson[key])
-              );
 
               ClientMasterTrackerModel.update(
                 mainJson,
@@ -571,7 +567,7 @@ exports.update = (req, res) => {
                     AdminCommon.adminActivityLog(
                       admin_id,
                       "Client Master Tracker",
-                      "Update",
+                      logStatus,
                       "0",
                       JSON.stringify({ application_id, ...changes }),
                       err.message,
@@ -587,7 +583,7 @@ exports.update = (req, res) => {
                   AdminCommon.adminActivityLog(
                     admin_id,
                     "Client Master Tracker",
-                    "Update",
+                    logStatus,
                     "1",
                     JSON.stringify({ application_id, ...changes }),
                     err.message,
