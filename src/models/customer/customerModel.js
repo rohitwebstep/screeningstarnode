@@ -375,6 +375,23 @@ const Customer = {
     });
   },
 
+  getClientUniqueIDByCustomerId: (id, callback) => {
+    const sql = "SELECT `client_unique_id` FROM `customers` WHERE `id` = ?";
+    pool.query(sql, [id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+
+      // Check if the result exists and `client_unique_id` is not null or empty
+      if (results.length > 0 && results[0].client_unique_id) {
+        return callback(null, results[0].client_unique_id);
+      } else {
+        return callback(null, false); // Return false if not found or invalid
+      }
+    });
+  },
+
   getCustomerMetaById: (id, callback) => {
     const sql = "SELECT * FROM `customer_metas` WHERE `customer_id` = ?";
     pool.query(sql, [id], (err, results) => {
@@ -392,7 +409,7 @@ const Customer = {
       SET \`status\` = ?
       WHERE \`id\` = ?
     `;
-    pool.query(sql, ['1', id], (err, results) => {
+    pool.query(sql, ["1", id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback(err, null);
@@ -407,7 +424,7 @@ const Customer = {
       SET \`status\` = ?
       WHERE \`id\` = ?
     `;
-    pool.query(sql, ['0', id], (err, results) => {
+    pool.query(sql, ["0", id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback(err, null);
@@ -534,21 +551,21 @@ const Customer = {
     const sql = `
       SELECT \`password\` FROM \`branches\` WHERE \`email\` = ?
     `;
-  
+
     pool.query(sql, [email], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback(err, null);
       }
-      
+
       // Check if results exist and are not empty
       if (results.length > 0 && results[0].password) {
-        return callback(null, results[0].password);  // Return the password
+        return callback(null, results[0].password); // Return the password
       } else {
-        return callback(null, false);  // Return false if no result found or empty
+        return callback(null, false); // Return false if no result found or empty
       }
     });
-  },  
+  },
 
   logout: (id, callback) => {
     const sql = `
