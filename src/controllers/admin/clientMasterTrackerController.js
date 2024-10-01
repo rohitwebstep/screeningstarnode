@@ -627,7 +627,12 @@ exports.update = (req, res) => {
 
                   return res.status(200).json({
                     status: true,
-                    message: "CMT Application updated successfully.",
+                    message: `CMT Application ${
+                      currentCMTApplication &&
+                      Object.keys(currentCMTApplication).length > 0
+                        ? "updated"
+                        : "created"
+                    } successfully.`,
                     token: newToken,
                   });
                 }
