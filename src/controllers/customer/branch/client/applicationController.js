@@ -198,14 +198,13 @@ exports.create = (req, res) => {
                             token: newToken,
                           });
                         }
-                        const services = "1,2,3"; // Example services string
-                        const serviceIds = services.split(","); // Split the string into an array
-                        const serviceNames = []; // Array to hold the names of the services
+
+                        const serviceIds = services.split(",");
+                        const serviceNames = [];
 
                         // Loop through each service ID
                         const fetchServiceNames = (index = 0) => {
                           if (index >= serviceIds.length) {
-                            // All services fetched, proceed with the next steps
                             return res.status(200).json({
                               status: true,
                               message: "Services fetched successfully",
@@ -214,7 +213,7 @@ exports.create = (req, res) => {
                             });
                           }
 
-                          const id = serviceIds[index].trim(); // Get the current ID and trim whitespace
+                          const id = serviceIds[index].trim();
 
                           Service.getServiceById(id, (err, currentService) => {
                             if (err) {
@@ -229,12 +228,10 @@ exports.create = (req, res) => {
                               });
                             }
 
-                            if (!currentService) {
-                              return res.status(404).json({
-                                status: false,
-                                message: `Service with ID '${id}' not found`,
-                                token: newToken,
-                              });
+                            // Check if the currentService is valid (not null or empty)
+                            if (!currentService || !currentService.title) {
+                              // Skip to the next service without returning an error
+                              return fetchServiceNames(index + 1);
                             }
 
                             // Add the current service name to the array
