@@ -6,7 +6,6 @@ const hashPassword = (password) =>
   crypto.createHash("md5").update(password).digest("hex");
 
 const Customer = {
-
   list: (callback) => {
     const sql = `WITH BranchesCTE AS (
   SELECT 
@@ -100,7 +99,8 @@ GROUP BY b.name;
 
   applicationByID: (application_id, branch_id, callback) => {
     // Use a parameterized query to prevent SQL injection
-    const sql = "SELECT * FROM `client_applications` WHERE `id` = ? AND `branch_id` = ?";
+    const sql =
+      "SELECT * FROM `client_applications` WHERE `id` = ? AND `branch_id` = ?";
     pool.query(sql, [application_id, branch_id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
@@ -111,9 +111,21 @@ GROUP BY b.name;
     });
   },
 
+  getCMTApplicationById: (client_application_id, callback) => {
+    const sql =
+      "SELECT * FROM `cmt_applications` WHERE `client_application_id` = ?";
+    pool.query(sql, [id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results[0]);
+    });
+  },
+
   reportFormJsonByServiceID: (service_id, callback) => {
     // Use a parameterized query to prevent SQL injection
-    const sql = "SELECT \`json\` FROM `report_forms` WHERE `id` = ?";
+    const sql = "SELECT `json` FROM `report_forms` WHERE `id` = ?";
     pool.query(sql, [service_id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
@@ -122,7 +134,152 @@ GROUP BY b.name;
       // Assuming `results` is an array, and we want the first result
       callback(null, results[0] || null); // Return single application or null if not found
     });
-  }
+  },
+
+  update: (mainJson, application_id, callback) => {
+    const fields = Object.keys(mainJson);
+
+    // 1. Check for existing columns in cmt_applications
+    const checkColumnsSql = `
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_NAME = 'cmt_applications' AND COLUMN_NAME IN (?)`;
+
+    pool.query(checkColumnsSql, [fields], (err, results) => {
+      if (err) {
+        console.error("Error checking columns:", err);
+        return callback(err, null);
+      }
+
+      const existingColumns = results.map((row) => row.COLUMN_NAME);
+      const missingColumns = fields.filter(
+        (field) => !existingColumns.includes(field)
+      );
+
+      // 2. Add missing columns
+      if (missingColumns.length > 0) {
+        const alterQueries = missingColumns.map((column) => {
+          return `ALTER TABLE cmt_applications ADD COLUMN ${column} VARCHAR(255)`; // Adjust data type as necessary
+        });
+
+        // Run all ALTER statements in sequence
+        const alterPromises = alterQueries.map(
+          (query) =>
+            new Promise((resolve, reject) => {
+              pool.query(query, (alterErr) => {
+                if (alterErr) {
+                  console.error("Error adding column:", alterErr);
+                  return reject(alterErr);
+                }
+                resolve();
+              });
+            })
+        );
+
+        Promise.all(alterPromises)
+          .then(() => {
+            // 3. Check if entry exists by application_id
+            const checkEntrySql =
+              "SELECT * FROM cmt_applications WHERE application_id = ?";
+            pool.query(
+              checkEntrySql,
+              [application_id],
+              (entryErr, entryResults) => {
+                if (entryErr) {
+                  console.error("Error checking entry existence:", entryErr);
+                  return callback(entryErr, null);
+                }
+
+                // 4. Insert or update the entry
+                if (entryResults.length > 0) {
+                  // Update existing entry
+                  const updateSql =
+                    "UPDATE cmt_applications SET ? WHERE application_id = ?";
+                  pool.query(
+                    updateSql,
+                    [mainJson, application_id],
+                    (updateErr, updateResult) => {
+                      if (updateErr) {
+                        console.error("Error updating application:", updateErr);
+                        return callback(updateErr, null);
+                      }
+                      callback(null, updateResult);
+                    }
+                  );
+                } else {
+                  // Insert new entry
+                  const insertSql = "INSERT INTO cmt_applications SET ?";
+                  pool.query(
+                    insertSql,
+                    { ...mainJson, application_id },
+                    (insertErr, insertResult) => {
+                      if (insertErr) {
+                        console.error(
+                          "Error inserting application:",
+                          insertErr
+                        );
+                        return callback(insertErr, null);
+                      }
+                      callback(null, insertResult);
+                    }
+                  );
+                }
+              }
+            );
+          })
+          .catch((err) => {
+            console.error("Error executing ALTER statements:", err);
+            callback(err, null);
+          });
+      } else {
+        // If no columns are missing, proceed to check the entry
+        const checkEntrySql =
+          "SELECT * FROM cmt_applications WHERE application_id = ?";
+        pool.query(
+          checkEntrySql,
+          [application_id],
+          (entryErr, entryResults) => {
+            if (entryErr) {
+              console.error("Error checking entry existence:", entryErr);
+              return callback(entryErr, null);
+            }
+
+            // 4. Insert or update the entry
+            if (entryResults.length > 0) {
+              // Update existing entry
+              const updateSql =
+                "UPDATE cmt_applications SET ? WHERE application_id = ?";
+              pool.query(
+                updateSql,
+                [mainJson, application_id],
+                (updateErr, updateResult) => {
+                  if (updateErr) {
+                    console.error("Error updating application:", updateErr);
+                    return callback(updateErr, null);
+                  }
+                  callback(null, updateResult);
+                }
+              );
+            } else {
+              // Insert new entry
+              const insertSql = "INSERT INTO cmt_applications SET ?";
+              pool.query(
+                insertSql,
+                { ...mainJson, application_id },
+                (insertErr, insertResult) => {
+                  if (insertErr) {
+                    console.error("Error inserting application:", insertErr);
+                    return callback(insertErr, null);
+                  }
+                  callback(null, insertResult);
+                }
+              );
+            }
+          }
+        );
+      }
+    });
+  },
 };
 
 module.exports = Customer;
