@@ -331,14 +331,21 @@ exports.reportFormJsonByServiceID = (req, res) => {
 };
 
 exports.update = (req, res) => {
-  const { admin_id, _token, customer_id, branch_id, application_id, updated_json } = req.body;
+  const {
+    admin_id,
+    _token,
+    branch_id,
+    customer_id,
+    application_id,
+    updated_json,
+  } = req.body;
 
   // Define required fields
   const requiredFields = {
     admin_id,
     _token,
-    customer_id,
     branch_id,
+    customer_id,
     application_id,
     updated_json,
   };
@@ -500,6 +507,8 @@ exports.update = (req, res) => {
               ClientMasterTrackerModel.update(
                 mainJson,
                 application_id,
+                branch_id,
+                customer_id,
                 (err, result) => {
                   if (err) {
                     console.error(
