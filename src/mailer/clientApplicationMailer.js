@@ -84,7 +84,7 @@ async function sendEmail(
 
     // Generate the HTML table from service details
     const table = generateTable(services);
-    const docs = generateDocs(docs);
+    const docsHTML = generateDocs(docs);
 
     // Replace placeholders in the email template
     let template = email.template;
@@ -93,7 +93,7 @@ async function sendEmail(
       .replace(/{{client_name}}/g, name)
       .replace(/{{application_id}}/g, application_id)
       .replace(/{{client_code}}/g, client_code)
-      .replace(/{{docs}}/g, docs)
+      .replace(/{{docs}}/g, docsHTML)
       .replace(/{{services}}/g, table);
 
     // Prepare CC list
