@@ -18,6 +18,25 @@ const generateTable = (services) => {
   return rows;
 };
 
+const generateDocs = (docs) => {
+  // Split the input string into an array of document names
+  const services = docs.split(",").map((doc) => doc.trim());
+
+  // Check if the services array is valid
+  if (!Array.isArray(services) || services.length === 0) {
+    return "<p>No documents available</p>";
+  }
+
+  let links = "";
+
+  // Generate <a> tags for each document
+  services.forEach((service, index) => {
+    links += `<a href="#doc${index + 1}"><span>${service}</span></a> `;
+  });
+
+  return links.trim(); // Remove any trailing spaces
+};
+
 // Function to send email
 async function sendEmail(
   module,
@@ -27,6 +46,7 @@ async function sendEmail(
   company_name,
   client_code,
   services,
+  docs,
   toArr,
   ccArr
 ) {
@@ -64,6 +84,7 @@ async function sendEmail(
 
     // Generate the HTML table from service details
     const table = generateTable(services);
+    const docs = generateDocs(docs);
 
     // Replace placeholders in the email template
     let template = email.template;
@@ -72,6 +93,7 @@ async function sendEmail(
       .replace(/{{client_name}}/g, name)
       .replace(/{{application_id}}/g, application_id)
       .replace(/{{client_code}}/g, client_code)
+      .replace(/{{docs}}/g, docs)
       .replace(/{{services}}/g, table);
 
     // Prepare CC list
