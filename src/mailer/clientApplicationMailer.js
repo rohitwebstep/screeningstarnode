@@ -7,15 +7,16 @@ const generateTable = (services) => {
     return "<p>No services available</p>";
   }
 
-  let table = "";
+  let rows = "";
 
   services.forEach((service, index) => {
-    table += `<tr>
-                <td>${service.service_name}</td>
+    rows += `<tr>
+                <td>${index + 1}</td> <!-- Index starting from 1 -->
+                <td>${service}</td> <!-- Directly using the service name -->
               </tr>`;
   });
 
-  return table;
+  return rows;
 };
 
 // Function to send email

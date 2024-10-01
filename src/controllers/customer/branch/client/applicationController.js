@@ -1,6 +1,7 @@
 const Client = require("../../../../models/customer/branch/clientApplicationModel");
 const BranchCommon = require("../../../../models/customer/branch/commonModel");
 const Branch = require("../../../../models/customer/branch/branchModel");
+const Service = require("../../../../models/admin/serviceModel");
 const { sendEmail } = require("../../../../mailer/clientApplicationMailer");
 
 exports.create = (req, res) => {
@@ -197,6 +198,55 @@ exports.create = (req, res) => {
                             token: newToken,
                           });
                         }
+                        const services = "1,2,3"; // Example services string
+                        const serviceIds = services.split(","); // Split the string into an array
+                        const serviceNames = []; // Array to hold the names of the services
+
+                        // Loop through each service ID
+                        const fetchServiceNames = (index = 0) => {
+                          if (index >= serviceIds.length) {
+                            // All services fetched, proceed with the next steps
+                            return res.status(200).json({
+                              status: true,
+                              message: "Services fetched successfully",
+                              serviceNames: serviceNames,
+                              token: newToken,
+                            });
+                          }
+
+                          const id = serviceIds[index].trim(); // Get the current ID and trim whitespace
+
+                          Service.getServiceById(id, (err, currentService) => {
+                            if (err) {
+                              console.error(
+                                "Error fetching service data:",
+                                err
+                              );
+                              return res.status(500).json({
+                                status: false,
+                                message: err,
+                                token: newToken,
+                              });
+                            }
+
+                            if (!currentService) {
+                              return res.status(404).json({
+                                status: false,
+                                message: `Service with ID '${id}' not found`,
+                                token: newToken,
+                              });
+                            }
+
+                            // Add the current service name to the array
+                            serviceNames.push(currentService.title);
+
+                            // Recursively fetch the next service
+                            fetchServiceNames(index + 1);
+                          });
+                        };
+
+                        // Start fetching service names
+                        fetchServiceNames();
 
                         // Send email notification
                         sendEmail(
@@ -206,7 +256,7 @@ exports.create = (req, res) => {
                           result.new_application_id,
                           clientName,
                           clientCode,
-                          services,
+                          serviceNames,
                           toArr,
                           ccArr
                         )
