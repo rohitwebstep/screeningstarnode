@@ -532,7 +532,8 @@ exports.update = (req, res) => {
               }
 
               // Flatten the updatedJson object and separate annexure
-              let { mainJson, annexureJson } = flattenJsonWithAnnexure(updatedJson);
+              let { mainJson, annexureJson } =
+                flattenJsonWithAnnexure(updatedJson);
 
               let logStatus = "create";
               if (currentCMTApplication) {
@@ -563,31 +564,55 @@ exports.update = (req, res) => {
                       err
                     );
 
-                    AdminCommon.adminActivityLog(
-                      admin_id,
-                      "Client Master Tracker",
-                      logStatus,
-                      "0",
-                      JSON.stringify({ application_id, ...changes }),
-                      err.message,
-                      () => {}
-                    );
+                    if (currentCMTApplication) {
+                      AdminCommon.adminActivityLog(
+                        admin_id,
+                        "Client Master Tracker",
+                        logStatus,
+                        "0",
+                        JSON.stringify({ application_id, ...changes }),
+                        err.message,
+                        () => {}
+                      );
+                    } else {
+                      AdminCommon.adminActivityLog(
+                        admin_id,
+                        "Client Master Tracker",
+                        logStatus,
+                        "0",
+                        JSON.stringify(mainJson),
+                        err.message,
+                        () => {}
+                      );
+                    }
+
                     return res.status(500).json({
                       status: false,
                       message: err.message,
                       token: newToken,
                     });
                   }
-
-                  AdminCommon.adminActivityLog(
-                    admin_id,
-                    "Client Master Tracker",
-                    logStatus,
-                    "1",
-                    JSON.stringify({ application_id, ...changes }),
-                    err.message,
-                    () => {}
-                  );
+                  if (currentCMTApplication) {
+                    AdminCommon.adminActivityLog(
+                      admin_id,
+                      "Client Master Tracker",
+                      logStatus,
+                      "1",
+                      JSON.stringify({ application_id, ...changes }),
+                      err.message,
+                      () => {}
+                    );
+                  } else {
+                    AdminCommon.adminActivityLog(
+                      admin_id,
+                      "Client Master Tracker",
+                      logStatus,
+                      "1",
+                      JSON.stringify(mainJson),
+                      err.message,
+                      () => {}
+                    );
+                  }
 
                   res.status(200).json({
                     status: true,
