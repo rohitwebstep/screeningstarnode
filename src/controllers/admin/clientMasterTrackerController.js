@@ -558,46 +558,50 @@ exports.update = (req, res) => {
                 compareAndAddChanges(key, mainJson[key])
               );
 
-              ClientMasterTrackerModel.update(mainJson, application_id, (err, result) => {
-                if (err) {
-                  console.error(
-                    "Database error during CMT application update:",
-                    err
-                  );
+              ClientMasterTrackerModel.update(
+                mainJson,
+                application_id,
+                (err, result) => {
+                  if (err) {
+                    console.error(
+                      "Database error during CMT application update:",
+                      err
+                    );
+
+                    AdminCommon.adminActivityLog(
+                      admin_id,
+                      "Client Master Tracker",
+                      "Update",
+                      "0",
+                      JSON.stringify({ application_id, ...changes }),
+                      err.message,
+                      () => {}
+                    );
+                    return res.status(500).json({
+                      status: false,
+                      message: err.message,
+                      token: newToken,
+                    });
+                  }
 
                   AdminCommon.adminActivityLog(
                     admin_id,
                     "Client Master Tracker",
                     "Update",
-                    "0",
+                    "1",
                     JSON.stringify({ application_id, ...changes }),
                     err.message,
                     () => {}
                   );
-                  return res.status(500).json({
-                    status: false,
-                    message: err.message,
+
+                  res.status(200).json({
+                    status: true,
+                    message: "CMT Application updated successfully.",
+                    package: result,
                     token: newToken,
                   });
                 }
-
-                AdminCommon.adminActivityLog(
-                  admin_id,
-                  "Client Master Tracker",
-                  "Update",
-                  "1",
-                  JSON.stringify({ application_id, ...changes }),
-                  err.message,
-                  () => {}
-                );
-
-                res.status(200).json({
-                  status: true,
-                  message: "CMT Application updated successfully.",
-                  package: result,
-                  token: newToken,
-                });
-              });
+              );
             }
           );
         });
