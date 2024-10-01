@@ -114,7 +114,7 @@ GROUP BY b.name;
   getCMTApplicationById: (client_application_id, callback) => {
     const sql =
       "SELECT * FROM `cmt_applications` WHERE `client_application_id` = ?";
-    pool.query(sql, [id], (err, results) => {
+    pool.query(sql, [client_application_id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback(err, null);
@@ -136,7 +136,7 @@ GROUP BY b.name;
     });
   },
 
-  update: (mainJson, application_id, callback) => {
+  update: (mainJson, client_application_id, callback) => {
     const fields = Object.keys(mainJson);
 
     // 1. Check for existing columns in cmt_applications
@@ -178,12 +178,12 @@ GROUP BY b.name;
 
         Promise.all(alterPromises)
           .then(() => {
-            // 3. Check if entry exists by application_id
+            // 3. Check if entry exists by client_application_id
             const checkEntrySql =
-              "SELECT * FROM cmt_applications WHERE application_id = ?";
+              "SELECT * FROM cmt_applications WHERE client_application_id = ?";
             pool.query(
               checkEntrySql,
-              [application_id],
+              [client_application_id],
               (entryErr, entryResults) => {
                 if (entryErr) {
                   console.error("Error checking entry existence:", entryErr);
@@ -194,10 +194,10 @@ GROUP BY b.name;
                 if (entryResults.length > 0) {
                   // Update existing entry
                   const updateSql =
-                    "UPDATE cmt_applications SET ? WHERE application_id = ?";
+                    "UPDATE cmt_applications SET ? WHERE client_application_id = ?";
                   pool.query(
                     updateSql,
-                    [mainJson, application_id],
+                    [mainJson, client_application_id],
                     (updateErr, updateResult) => {
                       if (updateErr) {
                         console.error("Error updating application:", updateErr);
@@ -211,7 +211,7 @@ GROUP BY b.name;
                   const insertSql = "INSERT INTO cmt_applications SET ?";
                   pool.query(
                     insertSql,
-                    { ...mainJson, application_id },
+                    { ...mainJson, client_application_id },
                     (insertErr, insertResult) => {
                       if (insertErr) {
                         console.error(
@@ -234,10 +234,10 @@ GROUP BY b.name;
       } else {
         // If no columns are missing, proceed to check the entry
         const checkEntrySql =
-          "SELECT * FROM cmt_applications WHERE application_id = ?";
+          "SELECT * FROM cmt_applications WHERE client_application_id = ?";
         pool.query(
           checkEntrySql,
-          [application_id],
+          [client_application_id],
           (entryErr, entryResults) => {
             if (entryErr) {
               console.error("Error checking entry existence:", entryErr);
@@ -248,10 +248,10 @@ GROUP BY b.name;
             if (entryResults.length > 0) {
               // Update existing entry
               const updateSql =
-                "UPDATE cmt_applications SET ? WHERE application_id = ?";
+                "UPDATE cmt_applications SET ? WHERE client_application_id = ?";
               pool.query(
                 updateSql,
-                [mainJson, application_id],
+                [mainJson, client_application_id],
                 (updateErr, updateResult) => {
                   if (updateErr) {
                     console.error("Error updating application:", updateErr);
@@ -265,7 +265,7 @@ GROUP BY b.name;
               const insertSql = "INSERT INTO cmt_applications SET ?";
               pool.query(
                 insertSql,
-                { ...mainJson, application_id },
+                { ...mainJson, client_application_id },
                 (insertErr, insertResult) => {
                   if (insertErr) {
                     console.error("Error inserting application:", insertErr);
