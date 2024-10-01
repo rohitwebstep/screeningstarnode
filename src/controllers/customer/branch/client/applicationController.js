@@ -246,6 +246,7 @@ exports.create = (req, res) => {
                                   token: newToken,
                                 });
                               });
+                            return;
                           }
 
                           const id = serviceIds[index];
