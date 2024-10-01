@@ -7,9 +7,7 @@ const generateTable = (services) => {
     return "<p>No services available</p>";
   }
 
-  let table =
-    '<table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse; width: 100%;">';
-  table += "<tr><th>Sr. No.</th><th>Service Name</th></tr>";
+  let table ='';
 
   services.forEach((service, index) => {
     table += `<tr>
@@ -18,7 +16,6 @@ const generateTable = (services) => {
               </tr>`;
   });
 
-  table += "</table>";
   return table;
 };
 
@@ -62,8 +59,8 @@ async function sendEmail(module, action, name, services, toArr, ccArr) {
     // Replace placeholders in the email template
     let template = email.template;
     template = template
-      .replace(/{{candidate_name}}/g, name)
-      .replace(/{{service_list_table}}/g, table);
+      .replace(/{{client_name}}/g, name)
+      .replace(/{{services}}/g, table);
 
     // Prepare CC list
     const ccList = ccArr

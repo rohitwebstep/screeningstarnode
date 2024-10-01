@@ -159,10 +159,10 @@ exports.create = (req, res) => {
 
                 // Send email notification
                 sendEmail(
-                  "candidate application",
+                  "client application",
                   "create",
                   name,
-                  services, // Pass services array
+                  services,
                   toArr,
                   ccArr
                 )
