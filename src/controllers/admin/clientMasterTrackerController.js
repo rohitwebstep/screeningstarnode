@@ -480,10 +480,18 @@ exports.update = (req, res) => {
           });
         }
 
-        if (!currentBranch || currentBranch.customer_id !== customer_id) {
+        if (!currentBranch) {
           return res.status(404).json({
             status: false,
             message: "Branch not found.",
+            token: newToken,
+          });
+        }
+
+        if (currentBranch.customer_id !== customer_id) {
+          return res.status(404).json({
+            status: false,
+            message: "Branch not found with customer match.",
             token: newToken,
           });
         }
