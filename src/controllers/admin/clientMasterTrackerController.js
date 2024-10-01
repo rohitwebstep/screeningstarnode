@@ -579,7 +579,7 @@ exports.update = (req, res) => {
                         logStatus,
                         "0",
                         JSON.stringify({ application_id, ...changes }), // changes is defined here
-                        err.message,
+                        err,
                         () => {}
                       );
                     } else {
@@ -589,14 +589,14 @@ exports.update = (req, res) => {
                         logStatus,
                         "0",
                         JSON.stringify(mainJson),
-                        err.message,
+                        err,
                         () => {}
                       );
                     }
 
                     return res.status(500).json({
                       status: false,
-                      message: err.message,
+                      message: err,
                       token: newToken,
                     });
                   }
@@ -610,7 +610,7 @@ exports.update = (req, res) => {
                       logStatus,
                       "1",
                       JSON.stringify({ application_id, ...changes }), // changes is defined here
-                      err.message,
+                      err,
                       () => {}
                     );
                   } else {
@@ -620,7 +620,7 @@ exports.update = (req, res) => {
                       logStatus,
                       "1",
                       JSON.stringify(mainJson),
-                      err.message,
+                      err,
                       () => {}
                     );
                   }
