@@ -31,7 +31,8 @@ const generateDocs = (docs) => {
 
   // Generate <a> tags for each document
   services.forEach((service, index) => {
-    links += `<a href="#doc${index + 1}"><span>${service}</span></a> `;
+    // Using the index to create unique identifiers for each document link
+    links += `<a href="${service}"><span>Doc ${index + 1}</span></a> `;
   });
 
   return links.trim(); // Remove any trailing spaces
