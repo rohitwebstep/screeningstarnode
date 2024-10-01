@@ -515,34 +515,91 @@ exports.update = (req, res) => {
             });
           }
 
-          const changes = {};
-          const compareAndAddChanges = (key, newValue) => {
-            if (currentCustomer[key] !== newValue) {
-              changes[key] = {
-                old: currentCustomer[key],
-                new: newValue,
+          ClientMasterTrackerModel.getCMTApplicationById(
+            application_id,
+            (err, currentCMTApplication) => {
+              if (err) {
+                console.error(
+                  "Database error during CMT Application retrieval:",
+                  err
+                );
+                return res.status(500).json({
+                  status: false,
+                  message:
+                    "Failed to retrieve CMT Application. Please try again.",
+                  token: newToken,
+                });
+              }
+
+              if (!currentCMTApplication) {
+                return res.status(404).json({
+                  status: false,
+                  message: "CMT Application not found.",
+                  token: newToken,
+                });
+              }
+
+              const changes = {};
+              const compareAndAddChanges = (key, newValue) => {
+                if (currentCMTApplication[key] !== newValue) {
+                  changes[key] = {
+                    old: currentCMTApplication[key],
+                    new: newValue,
+                  };
+                }
               };
+
+              // Flatten the updatedJson object and separate annexure
+              let { mainJson, annexureJson } =
+                flattenJsonWithAnnexure(updatedJson);
+
+              // Compare and log changes
+              Object.keys(mainJson).forEach((key) =>
+                compareAndAddChanges(key, mainJson[key])
+              );
+
+              ClientMasterTrackerModel.update(mainJson, application_id, (err, result) => {
+                if (err) {
+                  console.error(
+                    "Database error during CMT application update:",
+                    err
+                  );
+
+                  AdminCommon.adminActivityLog(
+                    admin_id,
+                    "Client Master Tracker",
+                    "Update",
+                    "0",
+                    JSON.stringify({ application_id, ...changes }),
+                    err.message,
+                    () => {}
+                  );
+                  return res.status(500).json({
+                    status: false,
+                    message: err.message,
+                    token: newToken,
+                  });
+                }
+
+                AdminCommon.adminActivityLog(
+                  admin_id,
+                  "Client Master Tracker",
+                  "Update",
+                  "1",
+                  JSON.stringify({ application_id, ...changes }),
+                  err.message,
+                  () => {}
+                );
+
+                res.status(200).json({
+                  status: true,
+                  message: "CMT Application updated successfully.",
+                  package: result,
+                  token: newToken,
+                });
+              });
             }
-          };
-
-          // Flatten the updatedJson object and separate annexure
-          let { mainJson, annexureJson } = flattenJsonWithAnnexure(updatedJson);
-
-          // Log the result
-          console.log("Main JSON: ", mainJson);
-          console.log("Annexure JSON: ", annexureJson);
-
-          // Compare and log changes
-          // compareAndAddChanges("client_code", updatedJson.client_code);
-
-          return res.status(200).json({
-            status: true,
-            message: "Update successful.",
-            mainJson,
-            annexureJson,
-            changes,
-            token: newToken,
-          });
+          );
         });
       });
     });
