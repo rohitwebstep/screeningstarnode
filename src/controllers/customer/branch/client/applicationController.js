@@ -207,7 +207,7 @@ exports.create = (req, res) => {
                         const fetchServiceNames = (index = 0) => {
                           if (index >= serviceIds.length) {
                             // Once all services have been processed, send email notification
-                            return sendEmail(
+                            sendEmail(
                               "client application",
                               "create",
                               name,
