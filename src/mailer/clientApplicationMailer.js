@@ -11,7 +11,6 @@ const generateTable = (services) => {
 
   services.forEach((service, index) => {
     table += `<tr>
-                <td>${index + 1}</td>
                 <td>${service.service_name}</td>
               </tr>`;
   });
