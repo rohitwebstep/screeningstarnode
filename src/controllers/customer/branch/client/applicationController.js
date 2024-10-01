@@ -177,12 +177,11 @@ exports.create = (req, res) => {
                         token: newToken,
                       });
                     }
-
                     Branch.getClientNameByBranchId(
                       branch_id,
                       (err, clientName) => {
                         if (err) {
-                          console.error("Error checking unique ID:", err);
+                          console.error("Error checking client name:", err);
                           return res.status(500).json({
                             status: false,
                             message: err.message,
@@ -190,30 +189,66 @@ exports.create = (req, res) => {
                           });
                         }
 
-                        // Check if the unique ID exists
+                        // Check if the client name exists
                         if (!clientName) {
                           return res.status(400).json({
                             status: false,
-                            message: `Customer Unique ID not Found`,
+                            message: "Customer Unique ID not found",
                             token: newToken,
                           });
                         }
 
-                        const serviceIds = services.split(",");
+                        const serviceIds = services
+                          .split(",")
+                          .map((id) => id.trim());
                         const serviceNames = [];
 
-                        // Loop through each service ID
+                        // Function to fetch service names
                         const fetchServiceNames = (index = 0) => {
                           if (index >= serviceIds.length) {
-                            return res.status(200).json({
-                              status: true,
-                              message: "Services fetched successfully",
-                              serviceNames: serviceNames,
-                              token: newToken,
-                            });
+                            // Once all services have been processed, send email notification
+                            return sendEmail(
+                              "client application",
+                              "create",
+                              name,
+                              result.new_application_id,
+                              clientName,
+                              clientCode,
+                              serviceNames,
+                              attach_documents,
+                              toArr,
+                              ccArr
+                            )
+                              .then(() => {
+                                return res.status(201).json({
+                                  status: true,
+                                  message:
+                                    "Client application created successfully and email sent.",
+                                  data: {
+                                    client: result,
+                                    package,
+                                  },
+                                  token: newToken,
+                                  toArr,
+                                  ccArr,
+                                });
+                              })
+                              .catch((emailError) => {
+                                console.error(
+                                  "Error sending email:",
+                                  emailError
+                                );
+                                return res.status(201).json({
+                                  status: true,
+                                  message:
+                                    "Client application created successfully, but failed to send email.",
+                                  client: result,
+                                  token: newToken,
+                                });
+                              });
                           }
 
-                          const id = serviceIds[index].trim();
+                          const id = serviceIds[index];
 
                           Service.getServiceById(id, (err, currentService) => {
                             if (err) {
@@ -228,9 +263,8 @@ exports.create = (req, res) => {
                               });
                             }
 
-                            // Check if the currentService is valid (not null or empty)
+                            // Skip invalid services and continue to the next index
                             if (!currentService || !currentService.title) {
-                              // Skip to the next service without returning an error
                               return fetchServiceNames(index + 1);
                             }
 
@@ -244,43 +278,6 @@ exports.create = (req, res) => {
 
                         // Start fetching service names
                         fetchServiceNames();
-
-                        // Send email notification
-                        sendEmail(
-                          "client application",
-                          "create",
-                          name,
-                          result.new_application_id,
-                          clientName,
-                          clientCode,
-                          serviceNames,
-                          toArr,
-                          ccArr
-                        )
-                          .then(() => {
-                            res.status(201).json({
-                              status: true,
-                              message:
-                                "Client application created successfully and email sent.",
-                              data: {
-                                client: result,
-                                package,
-                              },
-                              token: newToken,
-                              toArr,
-                              ccArr,
-                            });
-                          })
-                          .catch((emailError) => {
-                            console.error("Error sending email:", emailError);
-                            res.status(201).json({
-                              status: true,
-                              message:
-                                "Client application created successfully, but failed to send email.",
-                              client: result,
-                              token: newToken,
-                            });
-                          });
                       }
                     );
                   }
