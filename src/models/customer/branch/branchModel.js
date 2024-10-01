@@ -143,6 +143,41 @@ const Branch = {
     });
   },
 
+  getClientNameByBranchId: (id, callback) => {
+    const sql = "SELECT `customer_id` FROM `branches` WHERE `id` = ?";
+
+    // First query to get customer_id from branches
+    pool.query(sql, [id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+
+      // Check if the result exists and customer_id is valid
+      if (results.length > 0 && results[0].customer_id) {
+        const customerId = results[0].customer_id;
+        const uniqueIdSql = "SELECT `name` FROM `customers` WHERE `id` = ?";
+
+        // Second query to get name using customer_id
+        pool.query(uniqueIdSql, [customerId], (err, uniqueIdResults) => {
+          if (err) {
+            console.error("Database query error:", err);
+            return callback(err, null);
+          }
+
+          // Check if the name exists and is not null or empty
+          if (uniqueIdResults.length > 0 && uniqueIdResults[0].name) {
+            return callback(null, uniqueIdResults[0].name);
+          } else {
+            return callback(null, false); // Return false if not found or invalid
+          }
+        });
+      } else {
+        return callback(null, false); // Return false if no customer_id found
+      }
+    });
+  },
+
   update: (id, name, email, password, callback) => {
     const sql = `
       UPDATE \`branches\`

@@ -25,7 +25,8 @@ async function sendEmail(
   action,
   name,
   application_id,
-  clientCode,
+  company_name,
+  client_code,
   services,
   toArr,
   ccArr
@@ -68,9 +69,10 @@ async function sendEmail(
     // Replace placeholders in the email template
     let template = email.template;
     template = template
+      .replace(/{{company_name}}/g, company_name)
       .replace(/{{client_name}}/g, name)
       .replace(/{{application_id}}/g, application_id)
-      .replace(/{{client_code}}/g, clientCode)
+      .replace(/{{client_code}}/g, client_code)
       .replace(/{{services}}/g, table);
 
     // Prepare CC list
