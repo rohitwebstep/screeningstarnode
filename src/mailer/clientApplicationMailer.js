@@ -70,7 +70,7 @@ async function sendEmail(
     template = template
       .replace(/{{client_name}}/g, name)
       .replace(/{{application_id}}/g, application_id)
-      .replace(/{{clientCode}}/g, clientCode)
+      .replace(/{{client_code}}/g, clientCode)
       .replace(/{{services}}/g, table);
 
     // Prepare CC list
