@@ -1,5 +1,6 @@
 const Candidate = require("../../../../models/customer/branch/candidateApplicationModel");
 const BranchCommon = require("../../../../models/customer/branch/commonModel");
+const { sendEmail } = require("../../../../mailer/clientApplicationMailer");
 
 exports.create = (req, res) => {
   const {
@@ -306,13 +307,19 @@ exports.update = (req, res) => {
               new: mobile_number,
             };
           }
-          if ( services !== '' && currentCandidateApplication.services !== services) {
+          if (
+            services !== "" &&
+            currentCandidateApplication.services !== services
+          ) {
             changes.services = {
               old: currentCandidateApplication.services,
               new: services,
             };
           }
-          if ( package !== '' && currentCandidateApplication.package !== package) {
+          if (
+            package !== "" &&
+            currentCandidateApplication.package !== package
+          ) {
             changes.package = {
               old: currentCandidateApplication.package,
               new: package,
