@@ -531,6 +531,9 @@ exports.update = (req, res) => {
                 });
               }
 
+              // Flatten the updatedJson object and separate annexure
+              let { mainJson, annexureJson } = flattenJsonWithAnnexure(updatedJson);
+
               let logStatus = "create";
               if (currentCMTApplication) {
                 const changes = {};
@@ -542,10 +545,6 @@ exports.update = (req, res) => {
                     };
                   }
                 };
-
-                // Flatten the updatedJson object and separate annexure
-                let { mainJson, annexureJson } =
-                  flattenJsonWithAnnexure(updatedJson);
 
                 // Compare and log changes
                 Object.keys(mainJson).forEach((key) =>
