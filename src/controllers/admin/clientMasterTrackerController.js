@@ -570,7 +570,7 @@ exports.update = (req, res) => {
                         "Client Master Tracker",
                         logStatus,
                         "0",
-                        JSON.stringify({ application_id, ...changes }),
+                        JSON.stringify(changes),
                         err.message,
                         () => {}
                       );
@@ -598,7 +598,7 @@ exports.update = (req, res) => {
                       "Client Master Tracker",
                       logStatus,
                       "1",
-                      JSON.stringify({ application_id, ...changes }),
+                      JSON.stringify(changes),
                       err.message,
                       () => {}
                     );
