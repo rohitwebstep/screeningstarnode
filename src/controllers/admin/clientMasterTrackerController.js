@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const ClientMasterTrackerModel = require("../../models/admin/clientMasterTrackerModel");
+const Customer = require("../../models/customer/customerModel");
 const Branch = require("../../models/customer/branch/branchModel");
 const AdminCommon = require("../../models/admin/commonModel");
 const BranchCommon = require("../../models/customer/branch/commonModel");
@@ -330,10 +331,16 @@ exports.reportFormJsonByServiceID = (req, res) => {
 };
 
 exports.update = (req, res) => {
-  const { admin_id, _token, customer_id, application_id } = req.body;
+  const { admin_id, _token, customer_id, branch_id, application_id } = req.body;
 
   // Define required fields
-  const requiredFields = { admin_id, _token, customer_id, application_id };
+  const requiredFields = {
+    admin_id,
+    _token,
+    customer_id,
+    branch_id,
+    application_id,
+  };
 
   // Check for missing fields
   const missingFields = Object.keys(requiredFields)
@@ -463,16 +470,30 @@ exports.update = (req, res) => {
       }
 
       const newToken = result.newToken;
+      Branch.getBranchById(branch_id, (err, currentBranch) => {
+        if (err) {
+          console.error("Database error during branch retrieval:", err);
+          return res.status(500).json({
+            status: false,
+            message: "Failed to retrieve BranchModel. Please try again.",
+            token: newToken,
+          });
+        }
 
-      ClientMasterTrackerModel.getCustomerById(
-        application_id,
-        (err, currentCustomer) => {
+        if (!currentBranch || currentBranch.customer_id !== customer_id) {
+          return res.status(404).json({
+            status: false,
+            message: "Branch not found.",
+            token: newToken,
+          });
+        }
+
+        Customer.getCustomerById(customer_id, (err, currentCustomer) => {
           if (err) {
             console.error("Database error during customer retrieval:", err);
             return res.status(500).json({
               status: false,
-              message:
-                "Failed to retrieve ClientMasterTrackerModel. Please try again.",
+              message: "Failed to retrieve Customer. Please try again.",
               token: newToken,
             });
           }
@@ -513,8 +534,8 @@ exports.update = (req, res) => {
             changes,
             token: newToken,
           });
-        }
-      );
+        });
+      });
     });
   });
 };
