@@ -198,6 +198,10 @@ GROUP BY b.name;
 
                 // 4. Insert or update the entry
                 if (entryResults.length > 0) {
+                  // Add branch_id and customer_id to mainJson
+                  mainJson.branch_id = branch_id;
+                  mainJson.customer_id = customer_id;
+
                   // Update existing entry
                   const updateSql =
                     "UPDATE cmt_applications SET ? WHERE client_application_id = ?";
@@ -257,6 +261,10 @@ GROUP BY b.name;
 
             // 4. Insert or update the entry
             if (entryResults.length > 0) {
+              // Add branch_id and customer_id to mainJson
+              mainJson.branch_id = branch_id;
+              mainJson.customer_id = customer_id;
+              
               // Update existing entry
               const updateSql =
                 "UPDATE cmt_applications SET ? WHERE client_application_id = ?";
