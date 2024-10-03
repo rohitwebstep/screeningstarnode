@@ -1,6 +1,7 @@
 const Candidate = require("../../../../models/customer/branch/candidateApplicationModel");
 const BranchCommon = require("../../../../models/customer/branch/commonModel");
-const { sendEmail } = require("../../../../mailer/clientApplicationMailer");
+const Service = require("../../../../models/admin/serviceModel");
+const { sendEmail } = require("../../../../mailer/candidateApplicationMailer");
 
 exports.create = (req, res) => {
   const {
@@ -132,12 +133,105 @@ exports.create = (req, res) => {
                 () => {}
               );
 
-              res.status(201).json({
-                status: true,
-                message: "Candidate application created successfully.",
-                package: result,
-                token: newToken,
-              });
+              BranchCommon.getBranchandCustomerEmailsForNotification(
+                branch_id,
+                (emailError, emailData) => {
+                  if (emailError) {
+                    console.error("Error fetching emails:", emailError);
+                    return res.status(500).json({
+                      status: false,
+                      message: "Failed to retrieve email addresses.",
+                      token: newToken,
+                    });
+                  }
+
+                  const { branch, customer } = emailData;
+
+                  // Prepare recipient and CC lists
+                  const toArr = [{ name: branch.name, email: branch.email }];
+                  const ccArr = customer.emails.split(",").map((email) => ({
+                    name: customer.name,
+                    email: email.trim(),
+                  }));
+
+                  const serviceIds = services.split(",").map((id) => id.trim());
+                  const serviceNames = [];
+
+                  // Function to fetch service names
+                  const fetchServiceNames = (index = 0) => {
+                    if (index >= serviceIds.length) {
+                      // Once all services have been processed, send email notification
+                      sendEmail(
+                        "candidate application",
+                        "create",
+                        name,
+                        result.insertId,
+                        "#",
+                        serviceNames,
+                        toArr,
+                        ccArr
+                      )
+                        .then(() => {
+                          return res.status(201).json({
+                            status: true,
+                            message:
+                              "Candidate application created successfully and email sent.",
+                            data: {
+                              candiate: result,
+                              package,
+                            },
+                            token: newToken,
+                            toArr,
+                            ccArr,
+                          });
+                        })
+                        .catch((emailError) => {
+                          console.error("Error sending email:", emailError);
+                          return res.status(201).json({
+                            status: true,
+                            message:
+                              "Candidate application created successfully, but failed to send email.",
+                            candidate: result,
+                            token: newToken,
+                          });
+                        });
+                      return;
+                    }
+
+                    const id = serviceIds[index];
+
+                    Service.getServiceRequiredDocumentsByServiceId(
+                      id,
+                      (err, currentService) => {
+                        if (err) {
+                          console.error("Error fetching service data:", err);
+                          return res.status(500).json({
+                            status: false,
+                            message: err,
+                            token: newToken,
+                          });
+                        }
+
+                        // Skip invalid services and continue to the next index
+                        if (!currentService || !currentService.title) {
+                          return fetchServiceNames(index + 1);
+                        }
+
+                        // Add the current service name to the array
+                        serviceNames.push(
+                          `${currentService.title}: ${currentService.description}`
+                        );
+
+                        // Recursively fetch the next service
+                        fetchServiceNames(index + 1);
+                      }
+                    );
+                  };
+
+                  // Start fetching service names
+                  fetchServiceNames();
+                }
+              );
             }
           );
         });

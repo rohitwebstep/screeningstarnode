@@ -20,19 +20,19 @@ const generateTable = (services) => {
 
 const generateDocs = (docs) => {
   // Split the input string into an array of document names
-  const services = docs.split(",").map((doc) => doc.trim());
+  const docsArr = docs.split(",").map((doc) => doc.trim());
 
-  // Check if the services array is valid
-  if (!Array.isArray(services) || services.length === 0) {
+  // Check if the docsArr array is valid
+  if (!Array.isArray(docsArr) || docsArr.length === 0) {
     return "<p>No documents available</p>";
   }
 
   let links = "";
 
   // Generate <a> tags for each document
-  services.forEach((service, index) => {
+  docsArr.forEach((doc, index) => {
     // Using the index to create unique identifiers for each document link
-    links += `<a href="${service}"><span>Doc ${index + 1}</span></a> `;
+    links += `<a href="${doc}"><span>Doc ${index + 1}</span></a> `;
   });
 
   return links.trim(); // Remove any trailing spaces

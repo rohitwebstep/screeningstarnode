@@ -7,23 +7,30 @@ const generateTable = (services) => {
     return "<p>No services available</p>";
   }
 
-  let table =
-    '<table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse; width: 100%;">';
-  table += "<tr><th>Sr. No.</th><th>Service Name</th></tr>";
+  let rows = "";
 
   services.forEach((service, index) => {
-    table += `<tr>
-                <td>${index + 1}</td>
-                <td>${service.service_name}</td>
+    rows += `<tr>
+                <td>${index + 1}</td> <!-- Using index + 1 for serial number -->
+                <td>${service.title}</td>
+                <td>${service.description}</td>
               </tr>`;
   });
 
-  table += "</table>";
-  return table;
+  return rows;
 };
 
 // Function to send email
-async function sendEmail(module, action, name, services, toArr, ccArr) {
+async function sendEmail(
+  module,
+  action,
+  name,
+  application_id,
+  href,
+  services,
+  toArr,
+  ccArr
+) {
   try {
     // Fetch email template
     const [emailRows] = await connection
@@ -57,13 +64,13 @@ async function sendEmail(module, action, name, services, toArr, ccArr) {
     });
 
     // Generate the HTML table from service details
-    const table = generateTable(services);
+    const table_rows = generateTable(services);
 
     // Replace placeholders in the email template
     let template = email.template;
     template = template
       .replace(/{{candidate_name}}/g, name)
-      .replace(/{{service_list_table}}/g, table);
+      .replace(/{{table_rows}}/g, table_rows);
 
     // Prepare CC list
     const ccList = ccArr
