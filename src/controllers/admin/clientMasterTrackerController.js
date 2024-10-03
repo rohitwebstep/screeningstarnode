@@ -586,6 +586,7 @@ exports.update = (req, res) => {
                                 ? "update"
                                 : "create";
 
+                            console.log(cmtResult);
                             const cmt_id = cmtResult.id;
                             console.log(`ID - ${cmt_id}`);
                             return "Done";
