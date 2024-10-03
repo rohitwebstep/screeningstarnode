@@ -197,6 +197,85 @@ exports.login = (req, res) => {
   });
 };
 
+exports.updatePassword = (req, res) => {
+  const { new_password, branch_id, _token } = req.body;
+
+  // Validate required fields
+  const missingFields = [];
+
+  if (!new_password || new_password === "" || new_password === undefined) {
+    missingFields.push("New Password");
+  }
+
+  if (!branch_id || branch_id === "" || branch_id === undefined) {
+    missingFields.push("Branch ID");
+  }
+
+  if (!_token || _token === "" || _token === undefined) {
+    missingFields.push("Token");
+  }
+
+  // If required fields are missing, return error
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  // Validate branch token
+  Common.isBranchTokenValid(_token, branch_id, (err, result) => {
+    if (err) {
+      console.error("Error checking token validity:", err);
+      return res.status(500).json({ status: false, message: err.message });
+    }
+
+    if (!result.status) {
+      return res.status(401).json({ status: false, message: result.message });
+    }
+
+    const newToken = result.newToken;
+
+    // Check if employee ID is unique
+    BranchAuth.updatePassword(new_password, branch_id, (err, result) => {
+      if (err) {
+        console.error("Database error during password update:", err.message);
+        Common.branchActivityLog(
+          branch_id,
+          "Password",
+          "CreaUpdatete",
+          "o",
+          "Branch attempted to update password",
+          null,
+          () => {}
+        );
+        return res.status(500).json({
+          status: false,
+          message: "Failed to update password. Please try again later.",
+          token: newToken,
+        });
+      }
+
+      Common.branchActivityLog(
+        branch_id,
+        "Password",
+        "CreaUpdatete",
+        "1",
+        "Branch successfully updated password",
+        null,
+        () => {}
+      );
+
+      return res.status(200).json({
+        status: true,
+        message: "Password updated successfully.",
+        data: result,
+        token: newToken,
+      });
+    });
+  });
+};
+
 // Branch logout handler
 exports.logout = (req, res) => {
   const { branch_id, _token } = req.query;
