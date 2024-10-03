@@ -592,6 +592,7 @@ exports.update = (req, res) => {
                             }
 
                             ClientMasterTrackerModel.createOrUpdateAnnexure(
+                              1,
                               application_id,
                               branch_id,
                               customer_id,
