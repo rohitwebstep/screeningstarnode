@@ -152,7 +152,7 @@ GROUP BY b.name;
     });
   },
 
-  update: (
+  createOrUpdate: (
     mainJson,
     client_application_id,
     branch_id,
@@ -314,6 +314,168 @@ GROUP BY b.name;
         );
       }
     });
+  },
+
+  createOrUpdateAnnexure: (
+    client_application_id,
+    branch_id,
+    customer_id,
+    db_table,
+    mainJson,
+    callback
+  ) => {
+    const fields = Object.keys(mainJson);
+
+    // 1. Check if the table exists
+    const checkTableSql = `
+      SELECT COUNT(*) AS count 
+      FROM information_schema.tables 
+      WHERE table_schema = ? AND table_name = ?`;
+
+    pool.query(
+      checkTableSql,
+      [process.env.DB_NAME, db_table],
+      (tableErr, tableResults) => {
+        if (tableErr) {
+          console.error("Error checking table existence:", tableErr);
+          return callback(tableErr, null);
+        }
+
+        if (tableResults[0].count === 0) {
+          // 2. If the table does not exist, create it
+          const createTableSql = `
+        CREATE TABLE \`${db_table}\` (
+          \`id\` bigint(20) NOT NULL AUTO_INCREMENT,
+          \`cmt_id\` bigint(20) NOT NULL,
+          \`client_application_id\` bigint(20) NOT NULL,
+          \`branch_id\` int(11) NOT NULL,
+          \`customer_id\` int(11) NOT NULL,
+          \`created_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+          \`updated_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (\`id\`),
+          KEY \`client_application_id\` (\`client_application_id\`),
+          KEY \`cmt_application_customer_id\` (\`customer_id\`),
+          KEY \`cmt_application_cmt_id\` (\`cmt_id\`),
+          CONSTRAINT \`client_application_id\` FOREIGN KEY (\`client_application_id\`) REFERENCES \`client_applications\` (\`id\`) ON DELETE CASCADE,
+          CONSTRAINT \`cmt_application_customer_id\` FOREIGN KEY (\`customer_id\`) REFERENCES \`customers\` (\`id\`) ON DELETE CASCADE,
+          CONSTRAINT \`cmt_application_cmt_id\` FOREIGN KEY (\`cmt_id\`) REFERENCES \`cmt_applications\` (\`id\`) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`;
+
+          pool.query(createTableSql, (createErr) => {
+            if (createErr) {
+              console.error("Error creating table:", createErr);
+              return callback(createErr, null);
+            }
+            // Proceed to check for existing columns after table creation
+            proceedToCheckColumns();
+          });
+        } else {
+          // 3. If the table exists, check for existing columns
+          proceedToCheckColumns();
+        }
+
+        function proceedToCheckColumns() {
+          const checkColumnsSql = `
+          SELECT COLUMN_NAME 
+          FROM INFORMATION_SCHEMA.COLUMNS 
+          WHERE TABLE_NAME = ? AND COLUMN_NAME IN (?)`;
+
+          pool.query(checkColumnsSql, [db_table, fields], (err, results) => {
+            if (err) {
+              console.error("Error checking columns:", err);
+              return callback(err, null);
+            }
+
+            const existingColumns = results.map((row) => row.COLUMN_NAME);
+            const missingColumns = fields.filter(
+              (field) => !existingColumns.includes(field)
+            );
+
+            // 4. Add missing columns
+            if (missingColumns.length > 0) {
+              const alterQueries = missingColumns.map((column) => {
+                return `ALTER TABLE \`${db_table}\` ADD COLUMN \`${column}\` VARCHAR(255)`; // Adjust data type as necessary
+              });
+
+              // Run all ALTER statements in sequence
+              const alterPromises = alterQueries.map(
+                (query) =>
+                  new Promise((resolve, reject) => {
+                    pool.query(query, (alterErr) => {
+                      if (alterErr) {
+                        console.error("Error adding column:", alterErr);
+                        return reject(alterErr);
+                      }
+                      resolve();
+                    });
+                  })
+              );
+
+              Promise.all(alterPromises)
+                .then(() => checkAndUpdateEntry())
+                .catch((err) => {
+                  console.error("Error executing ALTER statements:", err);
+                  callback(err, null);
+                });
+            } else {
+              // If no columns are missing, proceed to check the entry
+              checkAndUpdateEntry();
+            }
+          });
+        }
+
+        function checkAndUpdateEntry() {
+          // 5. Check if entry exists by client_application_id
+          const checkEntrySql = `SELECT * FROM \`${db_table}\` WHERE client_application_id = ?`;
+          pool.query(
+            checkEntrySql,
+            [client_application_id],
+            (entryErr, entryResults) => {
+              if (entryErr) {
+                console.error("Error checking entry existence:", entryErr);
+                return callback(entryErr, null);
+              }
+
+              // 6. Insert or update the entry
+              if (entryResults.length > 0) {
+                // Update existing entry
+                const updateSql = `UPDATE \`${db_table}\` SET ? WHERE client_application_id = ?`;
+                pool.query(
+                  updateSql,
+                  [mainJson, client_application_id],
+                  (updateErr, updateResult) => {
+                    if (updateErr) {
+                      console.error("Error updating application:", updateErr);
+                      return callback(updateErr, null);
+                    }
+                    callback(null, updateResult);
+                  }
+                );
+              } else {
+                // Insert new entry
+                const insertSql = `INSERT INTO \`${db_table}\` SET ?`;
+                pool.query(
+                  insertSql,
+                  {
+                    ...mainJson,
+                    client_application_id,
+                    branch_id,
+                    customer_id,
+                  },
+                  (insertErr, insertResult) => {
+                    if (insertErr) {
+                      console.error("Error inserting application:", insertErr);
+                      return callback(insertErr, null);
+                    }
+                    callback(null, insertResult);
+                  }
+                );
+              }
+            }
+          );
+        }
+      }
+    );
   },
 };
 
