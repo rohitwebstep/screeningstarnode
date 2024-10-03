@@ -47,6 +47,39 @@ const Admin = {
     });
   },
 
+  updatePassword: (new_password, admin_id, callback) => {
+    const sql = `UPDATE \`admins\` SET \`password\` = MD5(?) WHERE \`id\` = ?`;
+
+    pool.query(sql, [new_password, admin_id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err.message);
+        return callback(
+          {
+            message: "An error occurred while updating the password.",
+            error: err,
+          },
+          null
+        );
+      }
+
+      // Check if the admin_id was found and the update affected any rows
+      if (results.affectedRows === 0) {
+        return callback(
+          {
+            message:
+              "Admin not found or password not updated. Please check the provided details.",
+          },
+          null
+        );
+      }
+
+      callback(null, {
+        message: "Password updated successfully.",
+        affectedRows: results.affectedRows,
+      });
+    });
+  },
+
   updateToken: (id, token, tokenExpiry, callback) => {
     const sql = `
       UPDATE \`admins\`

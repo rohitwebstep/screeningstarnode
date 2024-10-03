@@ -256,3 +256,81 @@ exports.validateLogin = (req, res) => {
     });
   });
 };
+
+exports.updatePassword = (req, res) => {
+  const { new_password, admin_id, _token } = req.body;
+
+  // Validate required fields
+  const missingFields = [];
+  if (!new_password || new_password.trim() === "")
+    missingFields.push("New Password");
+  if (!admin_id || admin_id.trim() === "") missingFields.push("Admin ID");
+  if (!_token || _token.trim() === "") missingFields.push("Token");
+
+  // If required fields are missing, return error
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  // Validate admin token
+  Common.isAdminTokenValid(_token, admin_id, (err, tokenValidationResult) => {
+    if (err) {
+      console.error("Token validation error:", err.message);
+      return res.status(500).json({
+        status: false,
+        message: "Internal server error during token validation.",
+      });
+    }
+
+    if (!tokenValidationResult.status) {
+      return res.status(401).json({
+        status: false,
+        message: tokenValidationResult.message,
+      });
+    }
+
+    const newToken = tokenValidationResult.newToken;
+
+    // Update the password
+    Admin.updatePassword(new_password, admin_id, (err, result) => {
+      if (err) {
+        console.error("Database error during password update:", err.message);
+        Common.adminActivityLog(
+          admin_id,
+          "Password",
+          "Update",
+          "0",
+          "Admin attempted to update password",
+          err.message,
+          () => {}
+        );
+        return res.status(500).json({
+          status: false,
+          message: "Failed to update password. Please try again later.",
+          token: newToken,
+        });
+      }
+
+      // Log the successful password update
+      Common.adminActivityLog(
+        admin_id,
+        "Password",
+        "Update",
+        "1",
+        "Admin successfully updated password",
+        null,
+        () => {}
+      );
+
+      return res.status(200).json({
+        status: true,
+        message: "Password updated successfully.",
+        data: result,
+        token: newToken,
+      });
+    });
+  });
+};
