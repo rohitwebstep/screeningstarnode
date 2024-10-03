@@ -5,7 +5,9 @@ const connection = require("../config/db"); // Import the existing MySQL connect
 const generateTable = (services) => {
   console.log(services);
   if (!Array.isArray(services) || services.length === 0) {
-    return "<p>No services available</p>";
+    return `<tr>
+              <td colspan="3" style="text-align: center;">No instructions available for the selected services.</td>
+            </tr>`;
   }
 
   let rows = "";
