@@ -154,22 +154,22 @@ GROUP BY b.name;
           );
 
           const createTableSql = `
-            CREATE TABLE \`${db_table}\` (
-              \`id\` bigint(20) NOT NULL AUTO_INCREMENT,
-              \`cmt_id\` bigint(20) NOT NULL,
-              \`client_application_id\` bigint(20) NOT NULL,
-              \`branch_id\` int(11) NOT NULL,
-              \`customer_id\` int(11) NOT NULL,
-              \`created_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-              \`updated_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-              PRIMARY KEY (\`id\`),
-              KEY \`client_application_id\` (\`client_application_id\`),
-              KEY \`cmt_application_customer_id\` (\`customer_id\`),
-              KEY \`cmt_application_cmt_id\` (\`cmt_id\`),
-              CONSTRAINT \`fk_client_application_id\` FOREIGN KEY (\`client_application_id\`) REFERENCES \`client_applications\` (\`id\`) ON DELETE CASCADE,
-              CONSTRAINT \`fk_cmt_application_customer_id\` FOREIGN KEY (\`customer_id\`) REFERENCES \`customers\` (\`id\`) ON DELETE CASCADE,
-              CONSTRAINT \`fk_cmt_application_cmt_id\` FOREIGN KEY (\`cmt_id\`) REFERENCES \`cmt_applications\` (\`id\`) ON DELETE CASCADE
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`;
+          CREATE TABLE \`${db_table}\` (
+            \`id\` bigint(20) NOT NULL AUTO_INCREMENT,
+            \`cmt_id\` bigint(20) NOT NULL,
+            \`client_application_id\` bigint(20) NOT NULL,
+            \`branch_id\` int(11) NOT NULL,
+            \`customer_id\` int(11) NOT NULL,
+            \`created_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+            \`updated_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (\`id\`),
+            KEY \`client_application_id\` (\`client_application_id\`),
+            KEY \`cmt_application_customer_id\` (\`customer_id\`),
+            KEY \`cmt_application_cmt_id\` (\`cmt_id\`),
+            CONSTRAINT \`fk_${db_table}_client_application_id\` FOREIGN KEY (\`client_application_id\`) REFERENCES \`client_applications\` (\`id\`) ON DELETE CASCADE,
+            CONSTRAINT \`fk_${db_table}_customer_id\` FOREIGN KEY (\`customer_id\`) REFERENCES \`customers\` (\`id\`) ON DELETE CASCADE,
+            CONSTRAINT \`fk_${db_table}_cmt_id\` FOREIGN KEY (\`cmt_id\`) REFERENCES \`cmt_applications\` (\`id\`) ON DELETE CASCADE
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`;
 
           pool.query(createTableSql, (createErr) => {
             if (createErr) {
@@ -410,22 +410,22 @@ GROUP BY b.name;
           console.log("Table does not exist, creating:", db_table);
 
           const createTableSql = `
-            CREATE TABLE \`${db_table}\` (
-              \`id\` bigint(20) NOT NULL AUTO_INCREMENT,
-              \`cmt_id\` bigint(20) NOT NULL,
-              \`client_application_id\` bigint(20) NOT NULL,
-              \`branch_id\` int(11) NOT NULL,
-              \`customer_id\` int(11) NOT NULL,
-              \`created_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-              \`updated_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-              PRIMARY KEY (\`id\`),
-              KEY \`client_application_id\` (\`client_application_id\`),
-              KEY \`cmt_application_customer_id\` (\`customer_id\`),
-              KEY \`cmt_application_cmt_id\` (\`cmt_id\`),
-              CONSTRAINT \`client_application_id\` FOREIGN KEY (\`client_application_id\`) REFERENCES \`client_applications\` (\`id\`) ON DELETE CASCADE,
-              CONSTRAINT \`cmt_application_customer_id\` FOREIGN KEY (\`customer_id\`) REFERENCES \`customers\` (\`id\`) ON DELETE CASCADE,
-              CONSTRAINT \`cmt_application_cmt_id\` FOREIGN KEY (\`cmt_id\`) REFERENCES \`cmt_applications\` (\`id\`) ON DELETE CASCADE
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`;
+          CREATE TABLE \`${db_table}\` (
+            \`id\` bigint(20) NOT NULL AUTO_INCREMENT,
+            \`cmt_id\` bigint(20) NOT NULL,
+            \`client_application_id\` bigint(20) NOT NULL,
+            \`branch_id\` int(11) NOT NULL,
+            \`customer_id\` int(11) NOT NULL,
+            \`created_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+            \`updated_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (\`id\`),
+            KEY \`client_application_id\` (\`client_application_id\`),
+            KEY \`cmt_application_customer_id\` (\`customer_id\`),
+            KEY \`cmt_application_cmt_id\` (\`cmt_id\`),
+            CONSTRAINT \`fk_${db_table}_client_application_id\` FOREIGN KEY (\`client_application_id\`) REFERENCES \`client_applications\` (\`id\`) ON DELETE CASCADE,
+            CONSTRAINT \`fk_${db_table}_customer_id\` FOREIGN KEY (\`customer_id\`) REFERENCES \`customers\` (\`id\`) ON DELETE CASCADE,
+            CONSTRAINT \`fk_${db_table}_cmt_id\` FOREIGN KEY (\`cmt_id\`) REFERENCES \`cmt_applications\` (\`id\`) ON DELETE CASCADE
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`;
 
           pool.query(createTableSql, (createErr) => {
             if (createErr) {
