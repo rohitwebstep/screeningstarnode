@@ -74,7 +74,8 @@ async function sendEmail(
     let template = email.template;
     template = template
       .replace(/{{candidate_name}}/g, name)
-      .replace(/{{table_rows}}/g, table_rows);
+      .replace(/{{table_rows}}/g, table_rows)
+      .replace(/{{form_href}}/g, href);
 
     // Prepare CC list
     const ccList = ccArr
