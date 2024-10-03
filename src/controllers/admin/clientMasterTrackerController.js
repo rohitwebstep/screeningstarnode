@@ -374,17 +374,16 @@ exports.update = (req, res) => {
           obj[key] !== null &&
           !Array.isArray(obj[key])
         ) {
-          // If it's an object, and key is not 'annexure', flatten it recursively
           if (key === "annexure") {
-            recursiveFlatten(obj[key], true); // Separate annexure section
+            recursiveFlatten(obj[key], true);
           } else {
-            recursiveFlatten(obj[key], isAnnexure); // Normal flattening
+            recursiveFlatten(obj[key], isAnnexure);
           }
         } else {
           if (isAnnexure) {
-            annexureResult[key] = obj[key]; // If it's part of annexure, store in annexure result
+            annexureResult[key] = obj[key];
           } else {
-            result[key] = obj[key]; // Else store in the main result
+            result[key] = obj[key];
           }
         }
       }
