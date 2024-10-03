@@ -485,7 +485,6 @@ exports.update = (req, res) => {
               // Declare changes outside the conditional block
               const changes = {};
               let logStatus = "create";
-              console.log(currentCMTApplication);
               if (
                 currentCMTApplication &&
                 Object.keys(currentCMTApplication).length > 0
@@ -540,7 +539,7 @@ exports.update = (req, res) => {
                       token: newToken,
                     });
                   }
-
+                  console.log(result);
                   const logDataSuccess =
                     currentCMTApplication &&
                     Object.keys(currentCMTApplication).length > 0
@@ -586,8 +585,14 @@ exports.update = (req, res) => {
                                 ? "update"
                                 : "create";
 
+                            if (logStatus == update) {
+                              const cmt_id = currentCMTApplication.id;
+                            } else {
+                              const cmt_id = 1;
+                            }
+
                             ClientMasterTrackerModel.createOrUpdateAnnexure(
-                              1,
+                              cmt_id,
                               application_id,
                               branch_id,
                               customer_id,
