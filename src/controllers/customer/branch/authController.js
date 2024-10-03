@@ -243,7 +243,7 @@ exports.updatePassword = (req, res) => {
         Common.branchActivityLog(
           branch_id,
           "Password",
-          "CreaUpdatete",
+          "Update",
           "o",
           "Branch attempted to update password",
           null,
@@ -259,7 +259,7 @@ exports.updatePassword = (req, res) => {
       Common.branchActivityLog(
         branch_id,
         "Password",
-        "CreaUpdatete",
+        "Update",
         "1",
         "Branch successfully updated password",
         null,
