@@ -150,6 +150,17 @@ GROUP BY b.name;
     });
   },
 
+  filterOptions: (callback) => {
+    const sql = `SELECT DISTINCT \`status\` FROM \`cmt_applications\``;
+    pool.query(sql, (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results);
+    });
+  },
+
   getCMTApplicationById: (client_application_id, callback) => {
     const sql =
       "SELECT * FROM `cmt_applications` WHERE `client_application_id` = ?";
