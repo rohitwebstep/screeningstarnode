@@ -3,6 +3,7 @@ const connection = require("../config/db"); // Import the existing MySQL connect
 
 // Function to generate HTML table from service details
 const generateTable = (services) => {
+  console.log(services);
   if (!Array.isArray(services) || services.length === 0) {
     return "<p>No services available</p>";
   }
