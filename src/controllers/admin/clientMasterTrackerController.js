@@ -524,11 +524,13 @@ exports.update = (req, res) => {
                       };
                     }
                   });
+
+                  console.log(annexureData);
+                  console.log("=====================");
                 });
 
                 return res.status(200).json({
                   status: true,
-                  annexureData,
                   changes,
                   token: newToken,
                 });
