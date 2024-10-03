@@ -152,9 +152,9 @@ GROUP BY b.name;
 
   filterOptions: (callback) => {
     const sql = `
-        SELECT \`status\`, COUNT(*) AS \`count\` 
+        SELECT \`overall_status\`, COUNT(*) AS \`count\` 
         FROM \`cmt_applications\` 
-        GROUP BY \`status\`
+        GROUP BY \`overall_status\`
     `;
     pool.query(sql, (err, results) => {
       if (err) {
