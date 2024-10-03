@@ -342,44 +342,49 @@ GROUP BY b.name;
           return callback(tableErr, null);
         }
 
+        console.log("Table existence check result:", tableResults);
+
         if (tableResults[0].count === 0) {
           // 2. If the table does not exist, create it
+          console.log("Table does not exist, creating:", db_table);
+
           const createTableSql = `
-        CREATE TABLE \`${db_table}\` (
-          \`id\` bigint(20) NOT NULL AUTO_INCREMENT,
-          \`cmt_id\` bigint(20) NOT NULL,
-          \`client_application_id\` bigint(20) NOT NULL,
-          \`branch_id\` int(11) NOT NULL,
-          \`customer_id\` int(11) NOT NULL,
-          \`created_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-          \`updated_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          PRIMARY KEY (\`id\`),
-          KEY \`client_application_id\` (\`client_application_id\`),
-          KEY \`cmt_application_customer_id\` (\`customer_id\`),
-          KEY \`cmt_application_cmt_id\` (\`cmt_id\`),
-          CONSTRAINT \`client_application_id\` FOREIGN KEY (\`client_application_id\`) REFERENCES \`client_applications\` (\`id\`) ON DELETE CASCADE,
-          CONSTRAINT \`cmt_application_customer_id\` FOREIGN KEY (\`customer_id\`) REFERENCES \`customers\` (\`id\`) ON DELETE CASCADE,
-          CONSTRAINT \`cmt_application_cmt_id\` FOREIGN KEY (\`cmt_id\`) REFERENCES \`cmt_applications\` (\`id\`) ON DELETE CASCADE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`;
+            CREATE TABLE \`${db_table}\` (
+              \`id\` bigint(20) NOT NULL AUTO_INCREMENT,
+              \`cmt_id\` bigint(20) NOT NULL,
+              \`client_application_id\` bigint(20) NOT NULL,
+              \`branch_id\` int(11) NOT NULL,
+              \`customer_id\` int(11) NOT NULL,
+              \`created_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+              \`updated_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+              PRIMARY KEY (\`id\`),
+              KEY \`client_application_id\` (\`client_application_id\`),
+              KEY \`cmt_application_customer_id\` (\`customer_id\`),
+              KEY \`cmt_application_cmt_id\` (\`cmt_id\`),
+              CONSTRAINT \`client_application_id\` FOREIGN KEY (\`client_application_id\`) REFERENCES \`client_applications\` (\`id\`) ON DELETE CASCADE,
+              CONSTRAINT \`cmt_application_customer_id\` FOREIGN KEY (\`customer_id\`) REFERENCES \`customers\` (\`id\`) ON DELETE CASCADE,
+              CONSTRAINT \`cmt_application_cmt_id\` FOREIGN KEY (\`cmt_id\`) REFERENCES \`cmt_applications\` (\`id\`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`;
 
           pool.query(createTableSql, (createErr) => {
             if (createErr) {
               console.error("Error creating table:", createErr);
               return callback(createErr, null);
             }
-            // Proceed to check for existing columns after table creation
+            console.log("Table created successfully:", db_table);
             proceedToCheckColumns();
           });
         } else {
           // 3. If the table exists, check for existing columns
+          console.log("Table exists, checking columns:", db_table);
           proceedToCheckColumns();
         }
 
         function proceedToCheckColumns() {
           const checkColumnsSql = `
-          SELECT COLUMN_NAME 
-          FROM INFORMATION_SCHEMA.COLUMNS 
-          WHERE TABLE_NAME = ? AND COLUMN_NAME IN (?)`;
+            SELECT COLUMN_NAME 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_NAME = ? AND COLUMN_NAME IN (?)`;
 
           pool.query(checkColumnsSql, [db_table, fields], (err, results) => {
             if (err) {
@@ -391,6 +396,9 @@ GROUP BY b.name;
             const missingColumns = fields.filter(
               (field) => !existingColumns.includes(field)
             );
+
+            console.log("Existing columns:", existingColumns);
+            console.log("Missing columns:", missingColumns);
 
             // 4. Add missing columns
             if (missingColumns.length > 0) {
@@ -420,6 +428,7 @@ GROUP BY b.name;
                 });
             } else {
               // If no columns are missing, proceed to check the entry
+              console.log("No missing columns, proceeding to check entry.");
               checkAndUpdateEntry();
             }
           });
@@ -437,9 +446,15 @@ GROUP BY b.name;
                 return callback(entryErr, null);
               }
 
+              console.log("Entry check result:", entryResults);
+
               // 6. Insert or update the entry
               if (entryResults.length > 0) {
                 // Update existing entry
+                console.log(
+                  "Updating existing entry for client_application_id:",
+                  client_application_id
+                );
                 const updateSql = `UPDATE \`${db_table}\` SET ? WHERE client_application_id = ?`;
                 pool.query(
                   updateSql,
@@ -449,11 +464,16 @@ GROUP BY b.name;
                       console.error("Error updating application:", updateErr);
                       return callback(updateErr, null);
                     }
+                    console.log("Entry updated successfully:", updateResult);
                     callback(null, updateResult);
                   }
                 );
               } else {
                 // Insert new entry
+                console.log(
+                  "Inserting new entry for client_application_id:",
+                  client_application_id
+                );
                 const insertSql = `INSERT INTO \`${db_table}\` SET ?`;
                 pool.query(
                   insertSql,
@@ -468,6 +488,10 @@ GROUP BY b.name;
                       console.error("Error inserting application:", insertErr);
                       return callback(insertErr, null);
                     }
+                    console.log(
+                      "New entry inserted successfully:",
+                      insertResult
+                    );
                     callback(null, insertResult);
                   }
                 );
