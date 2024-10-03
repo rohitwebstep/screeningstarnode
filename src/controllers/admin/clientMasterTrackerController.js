@@ -582,8 +582,34 @@ exports.update = (req, res) => {
                       const db_table = key ?? null;
                       const subJson = annexureJson[db_table] ?? null;
 
-                      console.log("db_table:", db_table);
-                      console.log("subJson:", subJson);
+                      ClientMasterTrackerModel.getCMTAnnexureByApplicationId(
+                        application_id,
+                        db_table,
+                        (err, currentCMTAnnexure) => {
+                          if (err) {
+                            console.error(
+                              "Database error during CMT Annexure retrieval:",
+                              err
+                            );
+                            return res.status(500).json({
+                              status: false,
+                              message:
+                                "Failed to retrieve CMT Annexure. Please try again.",
+                              token: newToken,
+                            });
+                          }
+
+                          annexureLogStatus = "create";
+                          if (
+                            currentCMTAnnexure &&
+                            Object.keys(currentCMTAnnexure).length > 0
+                          ) {
+                            console.log(currentCMTAnnexure);
+                            console.log(subJson);
+                            annexureLogStatus = "update";
+                          }
+                        }
+                      );
                     }
                   }
 
