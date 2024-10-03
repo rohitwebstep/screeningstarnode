@@ -123,6 +123,22 @@ GROUP BY b.name;
     });
   },
 
+  getCMTAnnexureByApplicationId: (
+    client_application_id,
+    db_table,
+    callback
+  ) => {
+    const sql = `SELECT * FROM \`${db_table}\` WHERE \`client_application_id\` = ?`;
+
+    pool.query(sql, [client_application_id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results.length > 0 ? results[0] : null); // Ensure we return null if no results
+    });
+  },
+
   reportFormJsonByServiceID: (service_id, callback) => {
     // Use a parameterized query to prevent SQL injection
     const sql = "SELECT `json` FROM `report_forms` WHERE `id` = ?";
@@ -264,7 +280,7 @@ GROUP BY b.name;
               // Add branch_id and customer_id to mainJson
               mainJson.branch_id = branch_id;
               mainJson.customer_id = customer_id;
-              
+
               // Update existing entry
               const updateSql =
                 "UPDATE cmt_applications SET ? WHERE client_application_id = ?";
