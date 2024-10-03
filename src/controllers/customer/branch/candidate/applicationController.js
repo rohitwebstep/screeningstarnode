@@ -160,12 +160,6 @@ exports.create = (req, res) => {
                   // Function to fetch service names
                   const fetchServiceNames = (index = 0) => {
                     if (index >= serviceIds.length) {
-                      console.log(serviceNames);
-                      return res.status(201).json({
-                        status: true,
-                        serviceNames,
-                        token: newToken,
-                      });
                       // Once all services have been processed, send email notification
                       sendEmail(
                         "candidate application",
