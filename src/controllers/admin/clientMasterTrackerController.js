@@ -586,13 +586,9 @@ exports.update = (req, res) => {
                                 ? "update"
                                 : "create";
 
-                            let cmt_id;
-
-                            if (logStatus == "update") {
-                              cmt_id = currentCMTApplication.id;
-                            } else if (logStatus == "create") {
-                              cmt_id = cmtResult.id;
-                            }
+                            const cmt_id = cmtResult.id;
+                            console.log(`ID - ${cmt_id}`);
+                            return "Done";
 
                             ClientMasterTrackerModel.createOrUpdateAnnexure(
                               cmt_id,
