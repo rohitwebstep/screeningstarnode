@@ -4,7 +4,6 @@ const Customer = require("../../models/customer/customerModel");
 const Branch = require("../../models/customer/branch/branchModel");
 const AdminCommon = require("../../models/admin/commonModel");
 const BranchCommon = require("../../models/customer/branch/commonModel");
-const { sendEmail } = require("../../mailer/customerMailer");
 
 // Controller to list all customers
 exports.list = (req, res) => {

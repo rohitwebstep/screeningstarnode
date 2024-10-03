@@ -1,5 +1,5 @@
 const nodemailer = require("nodemailer");
-const connection = require("../config/db"); // Import the existing MySQL connection
+const connection = require("../../../../config/db"); // Import the existing MySQL connection
 
 // Function to generate HTML table from service details
 const generateTable = (services) => {
@@ -27,7 +27,7 @@ const generateTable = (services) => {
 };
 
 // Function to send email
-async function sendEmail(
+async function createMail(
   module,
   action,
   name,
@@ -148,4 +148,4 @@ async function sendEmail(
   }
 }
 
-module.exports = { sendEmail };
+module.exports = { createMail };

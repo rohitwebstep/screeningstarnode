@@ -2,7 +2,9 @@ const Client = require("../../../../models/customer/branch/clientApplicationMode
 const BranchCommon = require("../../../../models/customer/branch/commonModel");
 const Branch = require("../../../../models/customer/branch/branchModel");
 const Service = require("../../../../models/admin/serviceModel");
-const { sendEmail } = require("../../../../mailer/clientApplicationMailer");
+const {
+  createMail,
+} = require("../../../../mailer/customer/branch/client/createMail");
 
 exports.create = (req, res) => {
   const {
@@ -210,7 +212,7 @@ exports.create = (req, res) => {
                         const fetchServiceNames = (index = 0) => {
                           if (index >= serviceIds.length) {
                             // Once all services have been processed, send email notification
-                            sendEmail(
+                            createMail(
                               "client application",
                               "create",
                               name,
