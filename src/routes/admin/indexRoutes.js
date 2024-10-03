@@ -4,7 +4,7 @@ const authController = require("../../controllers/admin/authController");
 
 // Authentication routes
 router.post("/login", authController.login);
-router.put("/password-update", authController.passwordUpdate);
+router.put("/update-password", authController.updatePassword);
 router.get("/logout", authController.logout);
 router.post("/verify-admin-login", authController.validateLogin);
 
