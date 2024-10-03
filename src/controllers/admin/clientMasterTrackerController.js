@@ -120,7 +120,7 @@ exports.listByCustomerId = (req, res) => {
 };
 
 exports.applicationListByBranch = (req, res) => {
-  const { branch_id, admin_id, _token } = req.query;
+  const { branch_id, admin_id, _token, status } = req.query;
 
   let missingFields = [];
   if (!branch_id || branch_id === "" || branch_id === undefined)
@@ -159,8 +159,13 @@ exports.applicationListByBranch = (req, res) => {
 
       const newToken = result.newToken;
 
+      if (!status || status === "" || status === undefined) {
+        let status = null;
+      }
+
       ClientMasterTrackerModel.applicationListByBranch(
         branch_id,
+        status,
         (err, result) => {
           if (err) {
             console.error("Database error:", err);

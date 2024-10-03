@@ -85,10 +85,17 @@ GROUP BY b.name;
     });
   },
 
-  applicationListByBranch: (branch_id, callback) => {
-    const sql = `SELECT * FROM \`client_applications\` WHERE \`status\` != 'closed' AND \`branch_id\` = ?;
-`;
-    pool.query(sql, [branch_id], (err, results) => {
+  applicationListByBranch: (branch_id, status, callback) => {
+    let sql = `SELECT * FROM \`client_applications\` WHERE \`branch_id\` = ? AND \`status\` != 'closed'`;
+    const params = [branch_id];
+
+    // Check if status is not null and add the corresponding condition
+    if (status !== null) {
+      sql += ` AND \`status\` = ?`;
+      params.push(status);
+    }
+
+    pool.query(sql, params, (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback(err, null);
