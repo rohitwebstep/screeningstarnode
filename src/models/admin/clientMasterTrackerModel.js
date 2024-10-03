@@ -379,6 +379,7 @@ GROUP BY b.name;
   },
 
   createOrUpdateAnnexure: (
+    cmt_id,
     client_application_id,
     branch_id,
     customer_id,
@@ -543,6 +544,7 @@ GROUP BY b.name;
                     client_application_id,
                     branch_id,
                     customer_id,
+                    cmt_id, // Include cmt_id in the insert statement
                   },
                   (insertErr, insertResult) => {
                     if (insertErr) {
