@@ -592,13 +592,6 @@ exports.update = (req, res) => {
                             } else if (logStatus == "create") {
                               cmt_id = cmtResult.insertId;
                             }
-                            console.log(`ID - ${cmt_id}`);
-                            return res.status(200).json({
-                              status: true,
-                              cmt_id,
-                              cmtResult,
-                              token: newToken,
-                            });
 
                             ClientMasterTrackerModel.createOrUpdateAnnexure(
                               cmt_id,
