@@ -257,7 +257,7 @@ GROUP BY b.name;
     });
   },
 
-  createOrUpdate: (
+  generateReport: (
     mainJson,
     client_application_id,
     branch_id,
