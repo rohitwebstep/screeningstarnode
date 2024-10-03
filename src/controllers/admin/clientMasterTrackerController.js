@@ -506,7 +506,7 @@ exports.update = (req, res) => {
                 );
               }
 
-              ClientMasterTrackerModel.update(
+              ClientMasterTrackerModel.createOrUpdate(
                 mainJson,
                 application_id,
                 branch_id,
@@ -607,22 +607,100 @@ exports.update = (req, res) => {
                             console.log(currentCMTAnnexure);
                             console.log(subJson);
                             annexureLogStatus = "update";
+
+                            ClientMasterTrackerModel.createOrUpdateAnnexure(
+                              application_id,
+                              branch_id,
+                              customer_id,
+                              db_table,
+                              subJson,
+                              (err, result) => {
+                                if (err) {
+                                  console.error(
+                                    "Database error during CMT annexure create or update:",
+                                    err
+                                  );
+
+                                  if (
+                                    currentCMTAnnexure &&
+                                    Object.keys(currentCMTAnnexure).length > 0
+                                  ) {
+                                    AdminCommon.adminActivityLog(
+                                      admin_id,
+                                      "Client Master Tracker",
+                                      annexureLogStatus,
+                                      "0",
+                                      JSON.stringify({
+                                        application_id,
+                                        ...changes,
+                                      }),
+                                      err,
+                                      () => {}
+                                    );
+                                  } else {
+                                    AdminCommon.adminActivityLog(
+                                      admin_id,
+                                      "Client Master Tracker",
+                                      annexureLogStatus,
+                                      "0",
+                                      JSON.stringify(mainJson),
+                                      err,
+                                      () => {}
+                                    );
+                                  }
+
+                                  return res.status(500).json({
+                                    status: false,
+                                    message: err,
+                                    token: newToken,
+                                  });
+                                }
+                                if (
+                                  currentCMTAnnexure &&
+                                  Object.keys(currentCMTAnnexure).length > 0
+                                ) {
+                                  AdminCommon.adminActivityLog(
+                                    admin_id,
+                                    "Client Master Tracker",
+                                    annexureLogStatus,
+                                    "1",
+                                    JSON.stringify({
+                                      application_id,
+                                      ...changes,
+                                    }), // changes is defined here
+                                    err,
+                                    () => {}
+                                  );
+                                } else {
+                                  AdminCommon.adminActivityLog(
+                                    admin_id,
+                                    "Client Master Tracker",
+                                    annexureLogStatus,
+                                    "1",
+                                    JSON.stringify(mainJson),
+                                    err,
+                                    () => {}
+                                  );
+                                }
+
+                                return res.status(200).json({
+                                  status: true,
+                                  message: `CMT Application ${
+                                    currentCMTApplication &&
+                                    Object.keys(currentCMTApplication).length >
+                                      0
+                                      ? "updated"
+                                      : "created"
+                                  } successfully.`,
+                                  token: newToken,
+                                });
+                              }
+                            );
                           }
                         }
                       );
                     }
                   }
-
-                  return res.status(200).json({
-                    status: true,
-                    message: `CMT Application ${
-                      currentCMTApplication &&
-                      Object.keys(currentCMTApplication).length > 0
-                        ? "updated"
-                        : "created"
-                    } successfully.`,
-                    token: newToken,
-                  });
                 }
               );
             }
