@@ -123,6 +123,30 @@ GROUP BY b.name;
     });
   },
 
+  getCMTApplicationIDByClientApplicationId: (
+    client_application_id,
+    callback
+  ) => {
+    if (!client_application_id) {
+      return callback(null, false);
+    }
+
+    const sql =
+      "SELECT `id` FROM `cmt_applications` WHERE `client_application_id` = ?";
+
+    pool.query(sql, [client_application_id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+
+      if (results.length > 0) {
+        return callback(null, results[0].id);
+      }
+      callback(null, false);
+    });
+  },
+
   getCMTAnnexureByApplicationId: (
     client_application_id,
     db_table,

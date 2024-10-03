@@ -244,12 +244,59 @@ exports.applicationByID = (req, res) => {
             });
           }
 
-          res.json({
-            status: true,
-            message: "Application fetched successfully",
-            application,
-            token: newToken,
-          });
+          ClientMasterTrackerModel.getCMTApplicationIDByClientApplicationId(
+            application_id,
+            (err, CMTApplicationID) => {
+              if (err) {
+                console.error("Database error:", err);
+                return res.status(500).json({
+                  status: false,
+                  message: err.message,
+                  token: newToken,
+                });
+              }
+
+              if (!CMTApplicationID) {
+                res.json({
+                  status: true,
+                  message: "Application fetched successfully",
+                  application,
+                  token: newToken,
+                });
+              }
+
+              ClientMasterTrackerModel.getCMTApplicationById(
+                CMTApplicationID,
+                (err, CMTApplicationData) => {
+                  if (err) {
+                    console.error("Database error:", err);
+                    return res.status(500).json({
+                      status: false,
+                      message: err.message,
+                      token: newToken,
+                    });
+                  }
+
+                  if (!CMTApplicationData) {
+                    res.json({
+                      status: true,
+                      message: "Application fetched successfully",
+                      application,
+                      token: newToken,
+                    });
+                  }
+
+                  res.json({
+                    status: true,
+                    message: "Application fetched successfully",
+                    application,
+                    CMTData: CMTApplicationData,
+                    token: newToken,
+                  });
+                }
+              );
+            }
+          );
         }
       );
     });
