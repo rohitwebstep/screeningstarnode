@@ -589,7 +589,12 @@ exports.update = (req, res) => {
                             console.log(cmtResult);
                             const cmt_id = cmtResult.id;
                             console.log(`ID - ${cmt_id}`);
-                            return "Done";
+
+                            return res.status(200).json({
+                              status: true,
+                              cmtResult,
+                              token: newToken,
+                            });
 
                             ClientMasterTrackerModel.createOrUpdateAnnexure(
                               cmt_id,
