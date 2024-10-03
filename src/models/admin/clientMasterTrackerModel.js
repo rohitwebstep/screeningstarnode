@@ -129,7 +129,8 @@ GROUP BY b.name;
     callback
   ) => {
     const sql = `SELECT * FROM \`${db_table}\` WHERE \`client_application_id\` = ?`;
-
+    console.log(sql);
+    console.log("=======");
     pool.query(sql, [client_application_id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);

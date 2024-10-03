@@ -557,22 +557,11 @@ exports.update = (req, res) => {
                     () => {}
                   );
 
-                  return res.status(200).json({
-                    status: true,
-                    message: `CMT Application ${
-                      currentCMTApplication &&
-                      Object.keys(currentCMTApplication).length > 0
-                        ? "updated"
-                        : "created"
-                    } successfully.`,
-                    token: newToken,
-                  });
-                  
                   if (
                     typeof annexureJson === "object" &&
                     annexureJson !== null
                   ) {
-                    const annexurePromises = []; // Store promises for all annexure operations
+                    const annexurePromises = [];
 
                     for (let key in annexureJson) {
                       const db_table = key ?? null;
