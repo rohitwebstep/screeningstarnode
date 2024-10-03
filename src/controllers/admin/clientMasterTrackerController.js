@@ -503,21 +503,27 @@ exports.update = (req, res) => {
                   compareAndAddChanges(key, mainJson[key])
                 );
 
-                // Now process the annexureJson
-                Object.keys(annexureData).forEach((key) => {
-                  // Ensure the nested object exists for the db_table
+                Object.keys(annexureJson).forEach((db_table) => {
+                  const annexureData = annexureJson[db_table];
+
+                  // Ensure the nested object exists for the db_table in changes
                   if (!changes[db_table]) {
                     changes[db_table] = {};
                   }
 
-                  // Insert or Update Logic: Track new entries or modified values
-                  const currentValue = currentCMTApplication[db_table]?.[key];
-                  if (currentValue !== annexureData[key]) {
-                    changes[db_table][key] = {
-                      old: currentValue || null,
-                      new: annexureData[key],
-                    };
-                  }
+                  // Process each key-value pair in annexureData
+                  Object.keys(annexureData).forEach((key) => {
+                    // Get the current value from the existing application data
+                    const currentValue = currentCMTApplication[db_table]?.[key];
+
+                    // Insert or Update Logic: Track new entries or modified values
+                    if (currentValue !== annexureData[key]) {
+                      changes[db_table][key] = {
+                        old: currentValue || null, // Set to null if currentValue is undefined or null
+                        new: annexureData[key], // The new value from annexureData
+                      };
+                    }
+                  });
                 });
 
                 return res.status(200).json({
