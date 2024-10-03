@@ -539,7 +539,6 @@ exports.update = (req, res) => {
                       token: newToken,
                     });
                   }
-                  console.log(result);
                   const logDataSuccess =
                     currentCMTApplication &&
                     Object.keys(currentCMTApplication).length > 0
@@ -585,10 +584,12 @@ exports.update = (req, res) => {
                                 ? "update"
                                 : "create";
 
-                            if (logStatus == update) {
-                              const cmt_id = currentCMTApplication.id;
-                            } else {
-                              const cmt_id = 1;
+                            let cmt_id;
+
+                            if (logStatus === "update") {
+                              cmt_id = currentCMTApplication.id; // Using existing cmt_id for update
+                            } else if (logStatus === "create") {
+                              cmt_id = result.id; // Using newly created result id
                             }
 
                             ClientMasterTrackerModel.createOrUpdateAnnexure(
