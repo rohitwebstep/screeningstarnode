@@ -541,6 +541,7 @@ exports.update = (req, res) => {
                       token: newToken,
                     });
                   }
+
                   const logDataSuccess =
                     currentCMTApplication &&
                     Object.keys(currentCMTApplication).length > 0
@@ -586,12 +587,15 @@ exports.update = (req, res) => {
                                 ? "update"
                                 : "create";
 
-                            console.log(cmtResult);
-                            const cmt_id = cmtResult.id;
+                            if (logStatus == "update") {
+                              cmt_id = currentCMTApplication.id;
+                            } else if (logStatus == "create") {
+                              cmt_id = cmtResult.insertId;
+                            }
                             console.log(`ID - ${cmt_id}`);
-
                             return res.status(200).json({
                               status: true,
+                              cmt_id,
                               cmtResult,
                               token: newToken,
                             });
