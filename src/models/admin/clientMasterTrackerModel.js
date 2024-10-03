@@ -149,7 +149,6 @@ GROUP BY b.name;
         );
 
         if (tableResults[0].count === 0) {
-          // 2. If the table does not exist, create it
           console.log(
             `Table "${db_table}" does not exist. Initiating creation...`
           );
@@ -178,24 +177,26 @@ GROUP BY b.name;
               return callback(createErr);
             }
             console.log(`Table "${db_table}" created successfully.`);
+            fetchData();
           });
         } else {
-          // Proceed to query data from the existing table
           console.log(
             `Table "${db_table}" exists. Proceeding to fetch data...`
           );
+          fetchData();
         }
 
-        const sql = `SELECT * FROM \`${db_table}\` WHERE \`client_application_id\` = ?`;
-        pool.query(sql, [client_application_id], (queryErr, results) => {
-          if (queryErr) {
-            console.error("Error executing query:", queryErr);
-            return callback(queryErr);
-          }
-          // Return the first result or null if no results are found
-          const response = results.length > 0 ? results[0] : null;
-          callback(null, response);
-        });
+        function fetchData() {
+          const sql = `SELECT * FROM \`${db_table}\` WHERE \`client_application_id\` = ?`;
+          pool.query(sql, [client_application_id], (queryErr, results) => {
+            if (queryErr) {
+              console.error("Error executing query:", queryErr);
+              return callback(queryErr);
+            }
+            const response = results.length > 0 ? results[0] : null;
+            callback(null, response);
+          });
+        }
       }
     );
   },
