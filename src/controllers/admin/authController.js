@@ -161,11 +161,10 @@ exports.logout = (req, res) => {
   // Validate required fields and create a custom message
   let missingFields = [];
 
-  if (!admin_id || admin_id === "") {
+  if (!admin_id || admin_id === "" || admin_id === undefined) {
     missingFields.push("Admin ID");
   }
-
-  if (!_token || _token === "") {
+  if (!_token || _token === "" || _token === undefined) {
     missingFields.push("Token");
   }
 
@@ -210,12 +209,11 @@ exports.validateLogin = (req, res) => {
   const { admin_id, _token } = req.body;
   const missingFields = [];
 
-  // Validate required fields
-  if (!admin_id || admin_id === "") {
-    missingFields.push("Admin ID");
+  if (!admin_id || admin_id === "" || admin_id === undefined) {
+    missingFields.push("Admin Id");
   }
 
-  if (!_token || _token === "") {
+  if (!_token || _token === "" || _token === undefined) {
     missingFields.push("Token");
   }
 
@@ -262,10 +260,18 @@ exports.updatePassword = (req, res) => {
 
   // Validate required fields
   const missingFields = [];
-  if (!new_password || new_password.trim() === "")
+
+  if (!new_password || new_password === "" || new_password === undefined) {
     missingFields.push("New Password");
-  if (!admin_id || admin_id.trim() === "") missingFields.push("Admin ID");
-  if (!_token || _token.trim() === "") missingFields.push("Token");
+  }
+
+  if (!admin_id || admin_id === "" || admin_id === undefined) {
+    missingFields.push("Admin ID");
+  }
+
+  if (!_token || _token === "" || _token === undefined) {
+    missingFields.push("Token");
+  }
 
   // If required fields are missing, return error
   if (missingFields.length > 0) {
