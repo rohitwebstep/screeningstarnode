@@ -178,7 +178,6 @@ GROUP BY b.name;
               return callback(createErr);
             }
             console.log(`Table "${db_table}" created successfully.`);
-            proceedToCheckColumns();
           });
         } else {
           // Proceed to query data from the existing table
