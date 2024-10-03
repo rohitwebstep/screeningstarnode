@@ -591,7 +591,7 @@ exports.generateReport = (req, res) => {
     return { mainJson: result, annexureJson: annexureResult };
   }
 
-  const action = JSON.stringify({ cmt_application: "update" });
+  const action = JSON.stringify({ cmt_application: "generate_report" });
 
   AdminCommon.isAdminAuthorizedForAction(admin_id, action, (AuthResult) => {
     if (!AuthResult.status) {
