@@ -398,25 +398,27 @@ exports.update = (req, res) => {
 
   const action = JSON.stringify({ cmt_application: "update" });
 
-  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
-    if (!result.status) {
+  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (AuthResult) => {
+    if (!AuthResult.status) {
       return res.status(403).json({
         status: false,
-        message: result.message,
+        message: AuthResult.message,
       });
     }
 
-    AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
+    AdminCommon.isAdminTokenValid(_token, admin_id, (err, TokenResult) => {
       if (err) {
         console.error("Error checking token validity:", err);
         return res.status(500).json({ status: false, message: err.message });
       }
 
-      if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message });
+      if (!TokenResult.status) {
+        return res
+          .status(401)
+          .json({ status: false, message: TokenResult.message });
       }
 
-      const newToken = result.newToken;
+      const newToken = TokenResult.newToken;
       Branch.getBranchById(branch_id, (err, currentBranch) => {
         if (err) {
           console.error("Database error during branch retrieval:", err);
@@ -510,7 +512,7 @@ exports.update = (req, res) => {
                 application_id,
                 branch_id,
                 customer_id,
-                (err, result) => {
+                (err, cmtResult) => {
                   if (err) {
                     console.error(
                       "Database error during CMT application update:",
@@ -586,10 +588,10 @@ exports.update = (req, res) => {
 
                             let cmt_id;
 
-                            if (logStatus === "update") {
-                              cmt_id = currentCMTApplication.id; // Using existing cmt_id for update
-                            } else if (logStatus === "create") {
-                              cmt_id = result.id; // Using newly created result id
+                            if (logStatus == "update") {
+                              cmt_id = currentCMTApplication.id;
+                            } else if (logStatus == "create") {
+                              cmt_id = cmtResult.id;
                             }
 
                             ClientMasterTrackerModel.createOrUpdateAnnexure(
@@ -599,7 +601,7 @@ exports.update = (req, res) => {
                               customer_id,
                               db_table,
                               subJson,
-                              (err, result) => {
+                              (err, annexureResult) => {
                                 if (err) {
                                   console.error(
                                     "Database error during CMT annexure create or update:",
