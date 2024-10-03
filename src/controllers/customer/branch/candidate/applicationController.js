@@ -1,7 +1,7 @@
 const Candidate = require("../../../../models/customer/branch/candidateApplicationModel");
 const BranchCommon = require("../../../../models/customer/branch/commonModel");
 const Service = require("../../../../models/admin/serviceModel");
-const { sendEmail } = require("../../../../mailer/candidateApplicationMailer");
+const { createMail } = require("../../../../mailer/customer/branch/candidate/createMail");
 
 exports.create = (req, res) => {
   const {
@@ -164,7 +164,7 @@ exports.create = (req, res) => {
                   const fetchServiceNames = (index = 0) => {
                     if (index >= serviceIds.length) {
                       // Once all services have been processed, send email notification
-                      sendEmail(
+                      createMail(
                         "candidate application",
                         "create",
                         name,

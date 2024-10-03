@@ -3,7 +3,7 @@ const Customer = require("../../models/customer/customerModel");
 const Branch = require("../../models/customer/branch/branchModel");
 const AdminCommon = require("../../models/admin/commonModel");
 const BranchCommon = require("../../models/customer/branch/commonModel");
-const { sendEmail } = require("../../mailer/customerMailer");
+const { createMail } = require("../../mailer/customer/createMail");
 
 // Helper function to generate a password
 const generatePassword = (companyName) => {
@@ -304,7 +304,7 @@ exports.create = (req, res) => {
                           () => {}
                         );
                         // Send email notification
-                        sendEmail(
+                        createMail(
                           "customer",
                           "create",
                           company_name,

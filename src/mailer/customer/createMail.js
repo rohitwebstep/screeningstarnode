@@ -1,5 +1,5 @@
 const nodemailer = require("nodemailer");
-const connection = require("../config/db"); // Import the existing MySQL connection
+const connection = require("../../config/db"); // Import the existing MySQL connection
 
 // Function to generate HTML table from branch details
 const generateTable = (branches, password) => {
@@ -22,7 +22,7 @@ const generateTable = (branches, password) => {
 };
 
 // Function to send email
-async function sendEmail(module, action, name, branches, password) {
+async function createMail(module, action, name, branches, password) {
   try {
     // Fetch email template
     const [emailRows] = await connection
@@ -79,4 +79,4 @@ async function sendEmail(module, action, name, branches, password) {
   }
 }
 
-module.exports = { sendEmail };
+module.exports = { createMail };

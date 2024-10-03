@@ -2,7 +2,6 @@ const crypto = require("crypto");
 const externalLoginCredentialsModel = require("../../models/admin/externalLoginCredentialsModel");
 const Customer = require("../../models/customer/customerModel");
 const AdminCommon = require("../../models/admin/commonModel");
-const { sendEmail } = require("../../mailer/customerMailer");
 
 // Controller to list all customers
 exports.list = (req, res) => {
