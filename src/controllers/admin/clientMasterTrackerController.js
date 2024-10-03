@@ -452,7 +452,7 @@ exports.reportFormJsonByServiceID = (req, res) => {
   });
 };
 
-exports.update = (req, res) => {
+exports.generateReport = (req, res) => {
   const {
     admin_id,
     _token,
@@ -629,7 +629,7 @@ exports.update = (req, res) => {
                 );
               }
 
-              ClientMasterTrackerModel.createOrUpdate(
+              ClientMasterTrackerModel.generateReport(
                 mainJson,
                 application_id,
                 branch_id,
