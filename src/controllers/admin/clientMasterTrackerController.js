@@ -502,6 +502,30 @@ exports.update = (req, res) => {
                 Object.keys(mainJson).forEach((key) =>
                   compareAndAddChanges(key, mainJson[key])
                 );
+
+                // Now process the annexureJson
+                Object.keys(annexureData).forEach((key) => {
+                  // Ensure the nested object exists for the db_table
+                  if (!changes[db_table]) {
+                    changes[db_table] = {};
+                  }
+
+                  // Insert or Update Logic: Track new entries or modified values
+                  const currentValue = currentCMTApplication[db_table]?.[key];
+                  if (currentValue !== annexureData[key]) {
+                    changes[db_table][key] = {
+                      old: currentValue || null,
+                      new: annexureData[key],
+                    };
+                  }
+                });
+
+                return res.status(200).json({
+                  status: true,
+                  annexureData,
+                  changes,
+                  token: newToken,
+                });
               }
 
               ClientMasterTrackerModel.update(
