@@ -303,6 +303,82 @@ exports.applicationByID = (req, res) => {
   });
 };
 
+exports.annexureData = (req, res) => {
+  const { application_id, db_table, admin_id, _token } = req.query;
+
+  let missingFields = [];
+  if (!application_id || application_id === "" || application_id === undefined)
+    missingFields.push("Application ID");
+  if (!db_table || db_table === "" || db_table === undefined)
+    missingFields.push("DB Table");
+  if (!admin_id || admin_id === "" || admin_id === undefined)
+    missingFields.push("Admin ID");
+  if (!_token || _token === "" || _token === undefined)
+    missingFields.push("Token");
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  const action = JSON.stringify({ cmt_application: "view" });
+  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
+    if (!result.status) {
+      return res.status(403).json({
+        status: false,
+        message: result.message, // Return the message from the authorization function
+      });
+    }
+
+    // Verify admin token
+    AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
+      if (err) {
+        console.error("Error checking token validity:", err);
+        return res.status(500).json({ status: false, message: err.message });
+      }
+
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
+      }
+
+      const newToken = result.newToken;
+
+      ClientMasterTrackerModel.annexureData(
+        application_id,
+        db_table,
+        (err, annexureData) => {
+          if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({
+              status: false,
+              message: "An error occurred while fetching annexure data.",
+              error: err.message,
+              token: newToken,
+            });
+          }
+
+          if (!annexureData) {
+            return res.status(404).json({
+              status: false,
+              message: "Annexure Data not found.",
+              token: newToken,
+            });
+          }
+
+          res.status(200).json({
+            status: true,
+            message: "Application fetched successfully.",
+            annexureData,
+            token: newToken,
+          });
+        }
+      );
+    });
+  });
+};
+
 exports.reportFormJsonByServiceID = (req, res) => {
   const { service_id, admin_id, _token } = req.query;
 

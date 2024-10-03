@@ -111,6 +111,38 @@ GROUP BY b.name;
     });
   },
 
+  annexureData: (client_application_id, db_table, callback) => {
+    // Check if the table exists in the information schema
+    const checkTableSql = `
+      SELECT COUNT(*) AS count 
+      FROM information_schema.tables 
+      WHERE table_schema = DATABASE() 
+      AND table_name = ?`;
+
+    pool.query(checkTableSql, [db_table], (err, results) => {
+      if (err) {
+        console.error("Database error while checking table existence:", err);
+        return callback(err, null);
+      }
+
+      // If the table does not exist, return an error
+      if (results[0].count === 0) {
+        return callback(new Error("Table does not exist"), null);
+      }
+
+      // Now that we know the table exists, run the original query
+      const sql = `SELECT * FROM \`${db_table}\` WHERE \`client_application_id\` = ?`;
+      pool.query(sql, [client_application_id], (err, results) => {
+        if (err) {
+          console.error("Database query error:", err);
+          return callback(err, null);
+        }
+        // Return the first result or null if not found
+        callback(null, results[0] || null);
+      });
+    });
+  },
+
   getCMTApplicationById: (client_application_id, callback) => {
     const sql =
       "SELECT * FROM `cmt_applications` WHERE `client_application_id` = ?";
