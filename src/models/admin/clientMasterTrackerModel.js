@@ -151,7 +151,11 @@ GROUP BY b.name;
   },
 
   filterOptions: (callback) => {
-    const sql = `SELECT DISTINCT \`status\` FROM \`cmt_applications\``;
+    const sql = `
+        SELECT \`status\`, COUNT(*) AS \`count\` 
+        FROM \`cmt_applications\` 
+        GROUP BY \`status\`
+    `;
     pool.query(sql, (err, results) => {
       if (err) {
         console.error("Database query error:", err);
