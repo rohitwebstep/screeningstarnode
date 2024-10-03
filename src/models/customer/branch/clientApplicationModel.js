@@ -113,6 +113,7 @@ const clientApplication = {
       branch_id,
       services,
       package,
+      customer_id,
     } = data;
 
     // Generate a new application ID
@@ -136,8 +137,9 @@ const clientApplication = {
           \`photo\`,
           \`branch_id\`,
           \`services\`,
-          \`package\`
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          \`package\`,
+          \`customer_id\`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
         const values = [
@@ -153,6 +155,7 @@ const clientApplication = {
           branch_id,
           services || "",
           package || "",
+          customer_id,
         ];
 
         pool.query(sql, values, (err, results) => {
