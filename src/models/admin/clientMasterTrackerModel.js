@@ -128,16 +128,77 @@ GROUP BY b.name;
     db_table,
     callback
   ) => {
-    const sql = `SELECT * FROM \`${db_table}\` WHERE \`client_application_id\` = ?`;
-    console.log(sql);
-    console.log("=======");
-    pool.query(sql, [client_application_id], (err, results) => {
-      if (err) {
-        console.error("Database query error:", err);
-        return callback(err, null);
+    // 1. Check if the table exists
+    const checkTableSql = `
+      SELECT COUNT(*) AS count 
+      FROM information_schema.tables 
+      WHERE table_schema = ? AND table_name = ?`;
+
+    pool.query(
+      checkTableSql,
+      [process.env.DB_NAME, db_table],
+      (tableErr, tableResults) => {
+        if (tableErr) {
+          console.error("Error checking table existence:", tableErr);
+          return callback(tableErr);
+        }
+
+        console.log(
+          `Table existence check result for ${db_table}:`,
+          tableResults
+        );
+
+        if (tableResults[0].count === 0) {
+          // 2. If the table does not exist, create it
+          console.log(
+            `Table "${db_table}" does not exist. Initiating creation...`
+          );
+
+          const createTableSql = `
+            CREATE TABLE \`${db_table}\` (
+              \`id\` bigint(20) NOT NULL AUTO_INCREMENT,
+              \`cmt_id\` bigint(20) NOT NULL,
+              \`client_application_id\` bigint(20) NOT NULL,
+              \`branch_id\` int(11) NOT NULL,
+              \`customer_id\` int(11) NOT NULL,
+              \`created_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+              \`updated_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+              PRIMARY KEY (\`id\`),
+              KEY \`client_application_id\` (\`client_application_id\`),
+              KEY \`cmt_application_customer_id\` (\`customer_id\`),
+              KEY \`cmt_application_cmt_id\` (\`cmt_id\`),
+              CONSTRAINT \`fk_client_application_id\` FOREIGN KEY (\`client_application_id\`) REFERENCES \`client_applications\` (\`id\`) ON DELETE CASCADE,
+              CONSTRAINT \`fk_cmt_application_customer_id\` FOREIGN KEY (\`customer_id\`) REFERENCES \`customers\` (\`id\`) ON DELETE CASCADE,
+              CONSTRAINT \`fk_cmt_application_cmt_id\` FOREIGN KEY (\`cmt_id\`) REFERENCES \`cmt_applications\` (\`id\`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`;
+
+          pool.query(createTableSql, (createErr) => {
+            if (createErr) {
+              console.error(`Error creating table "${db_table}":`, createErr);
+              return callback(createErr);
+            }
+            console.log(`Table "${db_table}" created successfully.`);
+            proceedToCheckColumns();
+          });
+        } else {
+          // Proceed to query data from the existing table
+          console.log(
+            `Table "${db_table}" exists. Proceeding to fetch data...`
+          );
+        }
+
+        const sql = `SELECT * FROM \`${db_table}\` WHERE \`client_application_id\` = ?`;
+        pool.query(sql, [client_application_id], (queryErr, results) => {
+          if (queryErr) {
+            console.error("Error executing query:", queryErr);
+            return callback(queryErr);
+          }
+          // Return the first result or null if no results are found
+          const response = results.length > 0 ? results[0] : null;
+          callback(null, response);
+        });
       }
-      callback(null, results.length > 0 ? results[0] : null); // Ensure we return null if no results
-    });
+    );
   },
 
   reportFormJsonByServiceID: (service_id, callback) => {
