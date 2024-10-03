@@ -48,6 +48,39 @@ const Branch = {
     });
   },
 
+  updatePassword: (new_password, branch_id, callback) => {
+    const sql = `UPDATE \`branches\` SET \`password\` = MD5(?) WHERE \`id\` = ?`;
+
+    pool.query(sql, [new_password, branch_id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err.message);
+        return callback(
+          {
+            message: "An error occurred while updating the password.",
+            error: err,
+          },
+          null
+        );
+      }
+
+      // Check if the branch_id was found and the update affected any rows
+      if (results.affectedRows === 0) {
+        return callback(
+          {
+            message:
+              "Branch not found or password not updated. Please check the provided details.",
+          },
+          null
+        );
+      }
+
+      callback(null, {
+        message: "Password updated successfully.",
+        affectedRows: results.affectedRows,
+      });
+    });
+  },
+
   updateToken: (id, token, tokenExpiry, callback) => {
     const sql = `
       UPDATE \`branches\`
