@@ -8,6 +8,7 @@ exports.create = (req, res) => {
   const {
     branch_id,
     _token,
+    customer_id,
     name,
     attach_documents,
     employee_id,
@@ -24,6 +25,7 @@ exports.create = (req, res) => {
   const requiredFields = {
     branch_id,
     _token,
+    customer_id,
     name,
     attach_documents,
     employee_id,
@@ -101,6 +103,7 @@ exports.create = (req, res) => {
             branch_id,
             services,
             package,
+            customer_id,
           },
           (err, result) => {
             if (err) {

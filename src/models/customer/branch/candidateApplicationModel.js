@@ -32,6 +32,7 @@ const candidateApplication = {
       email,
       services,
       package,
+      customer_id,
     } = data;
 
     const sql = `
@@ -42,8 +43,9 @@ const candidateApplication = {
           \`mobile_number\`,
           \`email\`,
           \`services\`,
-          \`package\`
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+          \`package\`,
+          \`customer_id\`
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
     const values = [
@@ -54,6 +56,7 @@ const candidateApplication = {
       email,
       services || "",
       package || "",
+      customer_id,
     ];
 
     pool.query(sql, values, (err, results) => {
