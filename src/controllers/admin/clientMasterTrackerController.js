@@ -502,7 +502,12 @@ exports.update = (req, res) => {
                 Object.keys(mainJson).forEach((key) =>
                   compareAndAddChanges(key, mainJson[key])
                 );
-
+                console.log(annexureJson);
+                return res.status(200).json({
+                  status: true,
+                  annexureJson,
+                  token: newToken,
+                });
                 Object.keys(annexureJson).forEach((db_table) => {
                   const annexureData = annexureJson[db_table];
 
