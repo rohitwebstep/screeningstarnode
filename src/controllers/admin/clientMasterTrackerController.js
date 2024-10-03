@@ -485,7 +485,7 @@ exports.update = (req, res) => {
               // Declare changes outside the conditional block
               const changes = {};
               let logStatus = "create";
-
+              console.log(currentCMTApplication);
               if (
                 currentCMTApplication &&
                 Object.keys(currentCMTApplication).length > 0
@@ -585,11 +585,6 @@ exports.update = (req, res) => {
                               Object.keys(currentCMTAnnexure).length > 0
                                 ? "update"
                                 : "create";
-
-                            if (annexureLogStatus === "update") {
-                              console.log(currentCMTAnnexure);
-                              console.log(subJson);
-                            }
 
                             ClientMasterTrackerModel.createOrUpdateAnnexure(
                               1,
