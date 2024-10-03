@@ -177,6 +177,7 @@ exports.create = (req, res) => {
                         token: newToken,
                       });
                     }
+                    
                     Branch.getClientNameByBranchId(
                       branch_id,
                       (err, clientName) => {

@@ -62,6 +62,17 @@ const Service = {
     });
   },
 
+  getServiceRequiredDocumentsByServiceId: (service_id, callback) => {
+    const sql = `SELECT * FROM \`service_required_documents\` WHERE \`service_id\` = ?`;
+    pool.query(sql, [service_id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results[0]);
+    });
+  },
+
   update: (id, title, description, callback) => {
     const sql = `
       UPDATE \`services\`
