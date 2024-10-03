@@ -11,10 +11,13 @@ const generateTable = (services) => {
   let rows = "";
 
   services.forEach((service, index) => {
+    // Split the service into title and description
+    const [title, description] = service.split(":");
+
     rows += `<tr>
-                <td>${index + 1}</td> <!-- Using index + 1 for serial number -->
-                <td>${service.title}</td>
-                <td>${service.description}</td>
+                <td>${index + 1}</td> <!-- Serial number -->
+                <td>${title}</td> <!-- Title -->
+                <td>${description.trim()}</td> <!-- Description -->
               </tr>`;
   });
 
