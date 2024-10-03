@@ -138,7 +138,7 @@ const clientApplication = {
           \`branch_id\`,
           \`services\`,
           \`package\`,
-          \`customer_id\`,
+          \`customer_id\`
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
