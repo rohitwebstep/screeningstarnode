@@ -504,43 +504,6 @@ exports.update = (req, res) => {
                 Object.keys(mainJson).forEach((key) =>
                   compareAndAddChanges(key, mainJson[key])
                 );
-                console.log(annexureJson);
-                return res.status(200).json({
-                  status: true,
-                  annexureJson,
-                  token: newToken,
-                });
-                Object.keys(annexureJson).forEach((db_table) => {
-                  const annexureData = annexureJson[db_table];
-
-                  // Ensure the nested object exists for the db_table in changes
-                  if (!changes[db_table]) {
-                    changes[db_table] = {};
-                  }
-
-                  // Process each key-value pair in annexureData
-                  Object.keys(annexureData).forEach((key) => {
-                    // Get the current value from the existing application data
-                    const currentValue = currentCMTApplication[db_table]?.[key];
-
-                    // Insert or Update Logic: Track new entries or modified values
-                    if (currentValue !== annexureData[key]) {
-                      changes[db_table][key] = {
-                        old: currentValue || null, // Set to null if currentValue is undefined or null
-                        new: annexureData[key], // The new value from annexureData
-                      };
-                    }
-                  });
-
-                  console.log(annexureData);
-                  console.log("=====================");
-                });
-
-                return res.status(200).json({
-                  status: true,
-                  changes,
-                  token: newToken,
-                });
               }
 
               ClientMasterTrackerModel.update(
@@ -609,6 +572,19 @@ exports.update = (req, res) => {
                       err,
                       () => {}
                     );
+                  }
+
+                  if (
+                    typeof annexureJson === "object" &&
+                    annexureJson !== null
+                  ) {
+                    for (let key in annexureJson) {
+                      const db_table = key ?? null;
+                      const subJson = annexureJson[db_table] ?? null;
+
+                      console.log("db_table:", db_table);
+                      console.log("subJson:", subJson);
+                    }
                   }
 
                   return res.status(200).json({
