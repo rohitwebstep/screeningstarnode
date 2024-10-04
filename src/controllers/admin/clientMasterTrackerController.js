@@ -619,7 +619,7 @@ exports.generateReport = (req, res) => {
           console.error("Database error during branch retrieval:", err);
           return res.status(500).json({
             status: false,
-            message: "Failed to retrieve BranchModel. Please try again.",
+            message: "Failed to retrieve Branch. Please try again.",
             token: newToken,
           });
         }
