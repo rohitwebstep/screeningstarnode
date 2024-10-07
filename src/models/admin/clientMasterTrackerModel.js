@@ -134,6 +134,7 @@ GROUP BY b.name;
       console.log(results);
       // If the table does not exist, return an error
       if (results[0].count === 0) {
+        console.log(`1 - ${db_table}`);
         const createTableSql = `
         CREATE TABLE \`${db_table}\` (
           \`id\` bigint(20) NOT NULL AUTO_INCREMENT,
@@ -251,6 +252,7 @@ GROUP BY b.name;
         }
         console.log(tableResults);
         if (tableResults[0].count === 0) {
+          console.log(`2 - ${db_table}`);
           const createTableSql = `
           CREATE TABLE \`${db_table}\` (
             \`id\` bigint(20) NOT NULL AUTO_INCREMENT,
@@ -500,6 +502,7 @@ GROUP BY b.name;
         }
         console.log(tableResults);
         if (tableResults[0].count === 0) {
+          console.log(`3 - ${db_table}`);
           const createTableSql = `
           CREATE TABLE \`${db_table}\` (
             \`id\` bigint(20) NOT NULL AUTO_INCREMENT,
