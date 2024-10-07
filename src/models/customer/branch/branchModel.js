@@ -24,7 +24,7 @@ const Branch = {
   index: (callback) => {
     // SQL query to get all entries grouped by status
     const statusCheckSql = `
-      SELECT client_application_id, application_name, status, application_date
+      SELECT id, application_id, employee_id, name, status
       FROM client_applications
       WHERE status IN ('Completed', 'WIP', 'Completed Green', 'Completed Red', 'Completed Yellow', 'Completed Pink', 'Completed Orange')
       ORDER BY 
@@ -72,7 +72,7 @@ const Branch = {
         \`customer_id\`, \`name\`, \`email\`, \`is_head\`, \`password\`, \`permissions\`, \`mobile_number\`
       ) VALUES (?, ?, ?, ?, MD5(?), ?, ?)
     `;
-    const permissions = `{"client_application": { "create": true, "update": true, "view": true, "delete": true },"candidate_application": { "create": true, "update": true, "view": true, "delete": true }}`;
+    const permissions = `{"index": {"view": true},"client_application": {"create": true,"update": true,"view": true,"delete": true},"candidate_application": {"create": true,"update": true,"view": true,"delete": true}}`;
     const valuesBranch = [
       BranchData.customer_id,
       BranchData.name,
