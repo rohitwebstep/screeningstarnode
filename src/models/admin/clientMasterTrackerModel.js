@@ -155,7 +155,7 @@ GROUP BY b.name;
 
         pool.query(createTableSql, (createErr) => {
           if (createErr) {
-            console.error(`Error creating table "${db_table}":`, createErr);
+            console.error(`Error creating table 1 "${db_table}":`, createErr);
             return callback(createErr);
           }
           fetchData();
@@ -271,7 +271,7 @@ GROUP BY b.name;
 
           pool.query(createTableSql, (createErr) => {
             if (createErr) {
-              console.error(`Error creating table "${db_table}":`, createErr);
+              console.error(`Error creating table 2 "${db_table}":`, createErr);
               return callback(createErr);
             }
             fetchData();
@@ -520,7 +520,7 @@ GROUP BY b.name;
 
           pool.query(createTableSql, (createErr) => {
             if (createErr) {
-              console.error("Error creating table:", createErr);
+              console.error("Error creating table 3 :", createErr);
               return callback(createErr, null);
             }
             proceedToCheckColumns();
