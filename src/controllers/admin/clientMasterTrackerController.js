@@ -535,6 +535,7 @@ exports.generateReport = (req, res) => {
     customer_id,
     application_id,
     updated_json,
+    annexureJson,
   } = req.body;
 
   // Define required fields
@@ -590,7 +591,7 @@ exports.generateReport = (req, res) => {
     }
 
     recursiveFlatten(jsonObj);
-    return { mainJson: result, annexureJson: annexureResult };
+    return { mainJson: result, annexureRawJson: annexureResult };
   }
 
   const action = JSON.stringify({ cmt_application: "generate_report" });
@@ -678,7 +679,7 @@ exports.generateReport = (req, res) => {
               }
 
               // Flatten the updated_json object and separate annexure
-              let { mainJson, annexureJson } =
+              let { mainJson, annexureRawJson } =
                 flattenJsonWithAnnexure(updated_json);
 
               // Declare changes outside the conditional block
