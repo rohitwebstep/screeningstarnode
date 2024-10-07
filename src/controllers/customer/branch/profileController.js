@@ -56,7 +56,7 @@ exports.index = (req, res) => {
 
         const newToken = tokenResult.newToken;
 
-        Branch.index((dbErr, clientApplications) => {
+        Branch.index(branch_id, (dbErr, clientApplications) => {
           if (dbErr) {
             console.error("Database error:", dbErr);
             return res.status(500).json({

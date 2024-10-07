@@ -21,7 +21,7 @@ const Branch = {
     });
   },
 
-  index: (callback) => {
+  index: (branch_id, callback) => {
     // SQL query to fetch client applications grouped by status
     const query = `
         SELECT 
@@ -42,6 +42,7 @@ const Branch = {
                 'Completed Pink', 
                 'Completed Orange'
             )
+            AND \`branch_id\` = ? -- Corrected this line
         ORDER BY 
             CASE 
                 WHEN \`status\` = 'Completed' THEN 1
@@ -56,7 +57,7 @@ const Branch = {
     `;
 
     // Execute the query to retrieve the data from the database
-    pool.query(query, (err, results) => {
+    pool.query(query, [branch_id], (err, results) => {
       if (err) {
         console.error(
           "Database query error while fetching applications by status:",
@@ -65,16 +66,23 @@ const Branch = {
         return callback(err, null);
       }
 
-      // Group the results by 'status' field
+      // Group the results by 'status' field with applicationCount and applications array
       const applicationsByStatus = results.reduce((grouped, row) => {
         if (!grouped[row.status]) {
-          grouped[row.status] = [];
+          grouped[row.status] = {
+            applicationCount: 0,
+            applications: [],
+          };
         }
-        grouped[row.status].push({
+
+        grouped[row.status].applications.push({
           client_application_id: row.application_id,
           application_name: row.name,
           application_date: row.date_created, // Assuming 'date_created' is a field in your table
         });
+
+        grouped[row.status].applicationCount += 1;
+
         return grouped;
       }, {});
 
