@@ -320,6 +320,8 @@ exports.annexureData = (req, res) => {
   if (!_token || _token === "" || _token === undefined)
     missingFields.push("Token");
 
+  const modifiedDbTable = db_table.replace(/-/g, "_");
+
   if (missingFields.length > 0) {
     return res.status(400).json({
       status: false,
@@ -351,7 +353,7 @@ exports.annexureData = (req, res) => {
 
       ClientMasterTrackerModel.annexureData(
         application_id,
-        db_table,
+        modifiedDbTable,
         (err, annexureData) => {
           if (err) {
             console.error("Database error:", err);
@@ -761,12 +763,13 @@ exports.generateReport = (req, res) => {
 
                     for (let key in annexureJson) {
                       const db_table = key ?? null;
-                      const subJson = annexureJson[db_table] ?? null;
+                      const modifiedDbTable = db_table.replace(/-/g, "_");
+                      const subJson = annexureJson[modifiedDbTable] ?? null;
 
                       const annexurePromise = new Promise((resolve, reject) => {
                         ClientMasterTrackerModel.getCMTAnnexureByApplicationId(
                           application_id,
-                          db_table,
+                          modifiedDbTable,
                           (err, currentCMTAnnexure) => {
                             if (err) {
                               console.error(
@@ -793,7 +796,7 @@ exports.generateReport = (req, res) => {
                               application_id,
                               branch_id,
                               customer_id,
-                              db_table,
+                              modifiedDbTable,
                               subJson,
                               (err, annexureResult) => {
                                 if (err) {
