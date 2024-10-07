@@ -131,7 +131,7 @@ GROUP BY b.name;
         console.error("Database error while checking table existence:", err);
         return callback(err, null);
       }
-
+      console.log(results);
       // If the table does not exist, return an error
       if (results[0].count === 0) {
         const createTableSql = `
@@ -249,6 +249,7 @@ GROUP BY b.name;
           console.error("Error checking table existence:", tableErr);
           return callback(tableErr);
         }
+        console.log(tableResults);
         if (tableResults[0].count === 0) {
           const createTableSql = `
           CREATE TABLE \`${db_table}\` (
@@ -497,7 +498,7 @@ GROUP BY b.name;
           console.error("Error checking table existence:", tableErr);
           return callback(tableErr, null);
         }
-
+        console.log(tableResults);
         if (tableResults[0].count === 0) {
           const createTableSql = `
           CREATE TABLE \`${db_table}\` (
