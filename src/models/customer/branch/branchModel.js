@@ -22,47 +22,64 @@ const Branch = {
   },
 
   index: (callback) => {
-    // SQL query to get all entries grouped by status
-    const statusCheckSql = `
-      SELECT id, application_id, employee_id, name, status
-      FROM client_applications
-      WHERE status IN ('Completed', 'WIP', 'Completed Green', 'Completed Red', 'Completed Yellow', 'Completed Pink', 'Completed Orange')
-      ORDER BY 
-        CASE 
-          WHEN status = 'Completed' THEN 1
-          WHEN status = 'WIP' THEN 2
-          WHEN status = 'Completed Green' THEN 3
-          WHEN status = 'Completed Red' THEN 4
-          WHEN status = 'Completed Yellow' THEN 5
-          WHEN status = 'Completed Pink' THEN 6
-          WHEN status = 'Completed Orange' THEN 7
-          ELSE 8
-        END,
-        application_date;
+    // SQL query to fetch client applications grouped by status
+    const query = `
+        SELECT 
+            \`id\`, 
+            \`application_id\`, 
+            \`employee_id\`, 
+            \`name\`, 
+            \`status\`
+        FROM 
+            \`client_applications\`
+        WHERE 
+            \`status\` IN (
+                'Completed', 
+                'WIP', 
+                'Completed Green', 
+                'Completed Red', 
+                'Completed Yellow', 
+                'Completed Pink', 
+                'Completed Orange'
+            )
+        ORDER BY 
+            CASE 
+                WHEN \`status\` = 'Completed' THEN 1
+                WHEN \`status\` = 'WIP' THEN 2
+                WHEN \`status\` = 'Completed Green' THEN 3
+                WHEN \`status\` = 'Completed Red' THEN 4
+                WHEN \`status\` = 'Completed Yellow' THEN 5
+                WHEN \`status\` = 'Completed Pink' THEN 6
+                WHEN \`status\` = 'Completed Orange' THEN 7
+                ELSE 8
+            END;
     `;
 
-    // Query to fetch data from the database
-    pool.query(statusCheckSql, (err, results) => {
+    // Execute the query to retrieve the data from the database
+    pool.query(query, (err, results) => {
       if (err) {
-        console.error("Error fetching entries by status:", err);
+        console.error(
+          "Database query error while fetching applications by status:",
+          err
+        );
         return callback(err, null);
       }
 
-      // Organize the results by status in a grouped format
-      const groupedByStatus = results.reduce((acc, row) => {
-        if (!acc[row.status]) {
-          acc[row.status] = [];
+      // Group the results by 'status' field
+      const applicationsByStatus = results.reduce((grouped, row) => {
+        if (!grouped[row.status]) {
+          grouped[row.status] = [];
         }
-        acc[row.status].push({
-          client_application_id: row.client_application_id,
-          application_name: row.application_name,
-          application_date: row.application_date,
+        grouped[row.status].push({
+          client_application_id: row.application_id,
+          application_name: row.name,
+          application_date: row.date_created, // Assuming 'date_created' is a field in your table
         });
-        return acc;
+        return grouped;
       }, {});
 
-      // Callback with the grouped results
-      return callback(null, groupedByStatus);
+      // Return the grouped results via callback
+      return callback(null, applicationsByStatus);
     });
   },
 
