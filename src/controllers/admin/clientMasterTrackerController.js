@@ -282,7 +282,7 @@ exports.applicationByID = (req, res) => {
                   }
 
                   if (!CMTApplicationData) {
-                    res.json({
+                    return res.json({
                       status: true,
                       message: "Application fetched successfully",
                       application,
@@ -290,7 +290,7 @@ exports.applicationByID = (req, res) => {
                     });
                   }
 
-                  res.json({
+                  return res.json({
                     status: true,
                     message: "Application fetched successfully",
                     application,
