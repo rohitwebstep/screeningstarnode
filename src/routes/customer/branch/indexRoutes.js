@@ -9,6 +9,7 @@ const candidateRoutes = require("./candidateRoutes");
 // Basic routes
 router.post("/login", authController.login);
 router.get("/logout", authController.logout);
+router.get("/", profileController.index);
 router.post("/verify-branch-login", authController.validateLogin);
 router.get("/list", profileController.list);
 router.get("/is-email-used", profileController.isEmailUsed);

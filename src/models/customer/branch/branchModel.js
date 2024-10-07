@@ -21,6 +21,51 @@ const Branch = {
     });
   },
 
+  index: (callback) => {
+    // SQL query to get all entries grouped by status
+    const statusCheckSql = `
+      SELECT client_application_id, application_name, status, application_date
+      FROM client_applications
+      WHERE status IN ('Completed', 'WIP', 'Completed Green', 'Completed Red', 'Completed Yellow', 'Completed Pink', 'Completed Orange')
+      ORDER BY 
+        CASE 
+          WHEN status = 'Completed' THEN 1
+          WHEN status = 'WIP' THEN 2
+          WHEN status = 'Completed Green' THEN 3
+          WHEN status = 'Completed Red' THEN 4
+          WHEN status = 'Completed Yellow' THEN 5
+          WHEN status = 'Completed Pink' THEN 6
+          WHEN status = 'Completed Orange' THEN 7
+          ELSE 8
+        END,
+        application_date;
+    `;
+
+    // Query to fetch data from the database
+    pool.query(statusCheckSql, (err, results) => {
+      if (err) {
+        console.error("Error fetching entries by status:", err);
+        return callback(err, null);
+      }
+
+      // Organize the results by status in a grouped format
+      const groupedByStatus = results.reduce((acc, row) => {
+        if (!acc[row.status]) {
+          acc[row.status] = [];
+        }
+        acc[row.status].push({
+          client_application_id: row.client_application_id,
+          application_name: row.application_name,
+          application_date: row.application_date,
+        });
+        return acc;
+      }, {});
+
+      // Callback with the grouped results
+      return callback(null, groupedByStatus);
+    });
+  },
+
   create: (BranchData, callback) => {
     const sqlBranch = `
       INSERT INTO \`branches\` (
