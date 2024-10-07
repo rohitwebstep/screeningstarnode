@@ -535,7 +535,7 @@ exports.generateReport = (req, res) => {
     customer_id,
     application_id,
     updated_json,
-    annexureJson,
+    annexure,
   } = req.body;
 
   // Define required fields
@@ -756,16 +756,13 @@ exports.generateReport = (req, res) => {
                     () => {}
                   );
 
-                  if (
-                    typeof annexureJson === "object" &&
-                    annexureJson !== null
-                  ) {
+                  if (typeof annexure === "object" && annexure !== null) {
                     const annexurePromises = [];
 
-                    for (let key in annexureJson) {
+                    for (let key in annexure) {
                       const db_table = key ?? null;
                       const modifiedDbTable = db_table.replace(/-/g, "_");
-                      const subJson = annexureJson[modifiedDbTable] ?? null;
+                      const subJson = annexure[modifiedDbTable] ?? null;
 
                       const annexurePromise = new Promise((resolve, reject) => {
                         ClientMasterTrackerModel.getCMTAnnexureByApplicationId(
