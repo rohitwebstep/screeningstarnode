@@ -56,24 +56,24 @@ exports.index = (req, res) => {
 
         const newToken = tokenResult.newToken;
 
-        // Step 4: Fetch client applications by branch ID
-        Branch.index(branch_id, (dbErr, clientApplications) => {
+        Branch.index((dbErr, clientApplications) => {
           if (dbErr) {
             console.error("Database error:", dbErr);
             return res.status(500).json({
               status: false,
               message: "An error occurred while fetching client applications.",
-              token: newToken, // Return the new token even if an error occurs
+              token: newToken,
             });
           }
 
-          // Step 5: Return successful response with fetched applications
-          res.json({
+          res.status(200).json({
             status: true,
             message: "Client applications fetched successfully.",
             clientApplications,
-            totalResults: clientApplications.length,
-            token: newToken, // Return the refreshed token for further usage
+            totalResults: clientApplications
+              ? Object.keys(clientApplications).length
+              : 0,
+            token: newToken,
           });
         });
       }
