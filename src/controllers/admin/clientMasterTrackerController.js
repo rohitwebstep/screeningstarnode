@@ -849,6 +849,7 @@ exports.generateReport = (req, res) => {
                     Promise.all(annexurePromises)
                       .then(() => {
                         let mailMessage = "N/A";
+                        console.log(mainJson.insuffDetails);
                         if (
                           mainJson.insuffDetails?.overall_status &&
                           mainJson.insuffDetails?.is_verify
