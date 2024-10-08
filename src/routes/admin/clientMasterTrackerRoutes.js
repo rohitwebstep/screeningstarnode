@@ -26,4 +26,9 @@ router.get(
   clientMasterTrackerController.customerBasicInfoWithAdminAuth
 );
 
+router.get(
+  "/application-service",
+  clientMasterTrackerController.annexureDataByServiceIdofApplication
+);
+
 module.exports = router;
