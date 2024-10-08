@@ -44,8 +44,7 @@ async function qcReportCheckMail(
     });
 
     // Replace placeholders in the email template
-    let template = email.template;
-    template = template
+    let template = email.template
       .replace(/{{gender_title}}/g, gender_title)
       .replace(/{{client_name}}/g, client_name)
       .replace(/{{application_id}}/g, application_id);
@@ -56,23 +55,17 @@ async function qcReportCheckMail(
         let emails = [];
 
         try {
-          // Case 1: If it's already an array, use it
           if (Array.isArray(entry.email)) {
             emails = entry.email;
           } else if (typeof entry.email === "string") {
-            // Case 2: If it's a JSON string (with brackets and quotes), clean and parse it
-            let cleanedEmail = entry.email.trim();
-
-            // Remove extra quotes and backslashes from the string
-            cleanedEmail = cleanedEmail
+            let cleanedEmail = entry.email
+              .trim()
               .replace(/\\"/g, '"')
               .replace(/^"|"$/g, "");
 
-            // Check if the cleaned email is a JSON array
             if (cleanedEmail.startsWith("[") && cleanedEmail.endsWith("]")) {
               emails = JSON.parse(cleanedEmail);
             } else {
-              // Case 3: If it's a plain string email, use it directly
               emails = [cleanedEmail];
             }
           }
@@ -81,7 +74,6 @@ async function qcReportCheckMail(
           return ""; // Skip this entry if parsing fails
         }
 
-        // Ensure that emails array contains valid items, and format them
         return emails
           .filter((email) => email) // Ensure it's a valid non-empty string
           .map((email) => `"${entry.name}" <${email}>`)
@@ -104,14 +96,51 @@ async function qcReportCheckMail(
     console.log("Recipient List:", toList);
     console.log("CC List:", ccList);
 
+    const attachmentsUrl =
+      "https://i0.wp.com/goldquestglobal.in/wp-content/uploads/2024/03/goldquestglobal.png,https://www.antennahouse.com/hubfs/xsl-fo-sample/pdf/basic-link-1.pdf";
+
+    // Function to check if a file exists
+    const checkFileExists = async (url) => {
+      try {
+        const response = await fetch(url, { method: "HEAD" });
+        return response.ok; // Returns true if the status is in the range 200-299
+      } catch {
+        return false; // Return false if there was an error (e.g., network issue)
+      }
+    };
+
+    // Main function to create attachments
+    const createAttachments = async () => {
+      const urls = attachmentsUrl.split(",");
+      const attachments = [];
+
+      for (const url of urls) {
+        if (await checkFileExists(url)) {
+          const filename = url.split("/").pop(); // Extract the filename from the URL
+          attachments.push({
+            filename: filename,
+            path: url,
+          });
+        }
+      }
+
+      return attachments;
+    };
+
+    // Create attachments
+    const attachments = await createAttachments();
+
     // Send email
-    const info = await transporter.sendMail({
+    const mailOptions = {
       from: smtp.username,
-      to: toList, // Main recipient list
-      cc: ccList, // CC recipient list
+      to: toList,
+      cc: ccList,
       subject: email.title,
       html: template,
-    });
+      ...(attachments.length > 0 && { attachments }), // Only include attachments if present
+    };
+
+    const info = await transporter.sendMail(mailOptions);
 
     console.log("Email sent:", info.response);
   } catch (error) {
