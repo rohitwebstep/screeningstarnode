@@ -848,6 +848,26 @@ exports.generateReport = (req, res) => {
                     // Wait for all annexure operations to complete
                     Promise.all(annexurePromises)
                       .then(() => {
+                        if (
+                          mainJson.insuffDetails?.overall_status &&
+                          mainJson.insuffDetails?.is_verify
+                        ) {
+                          const status =
+                            mainJson.insuffDetails.overall_status.toLowerCase();
+                          const verified =
+                            mainJson.insuffDetails.is_verify.toLowerCase();
+
+                          if (status === "completed" || status === "complete") {
+                            if (verified === "yes") {
+                              console.log("Send Mail for Final Report");
+                            } else if (verified === "no") {
+                              console.log(
+                                "Send Mail for Report For Quality Check"
+                              );
+                            }
+                          }
+                        }
+
                         res.status(200).json({
                           status: true,
                           message: `CMT Application ${
