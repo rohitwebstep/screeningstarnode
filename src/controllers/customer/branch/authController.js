@@ -203,15 +203,30 @@ exports.updatePassword = (req, res) => {
   // Validate required fields
   const missingFields = [];
 
-  if (!new_password || new_password === "" || new_password === undefined) {
+  if (
+    !new_password ||
+    new_password === "" ||
+    new_password === undefined ||
+    new_password === "undefined"
+  ) {
     missingFields.push("New Password");
   }
 
-  if (!branch_id || branch_id === "" || branch_id === undefined) {
+  if (
+    !branch_id ||
+    branch_id === "" ||
+    branch_id === undefined ||
+    branch_id === "undefined"
+  ) {
     missingFields.push("Branch ID");
   }
 
-  if (!_token || _token === "" || _token === undefined) {
+  if (
+    !_token ||
+    _token === "" ||
+    _token === undefined ||
+    _token === "undefined"
+  ) {
     missingFields.push("Token");
   }
 
