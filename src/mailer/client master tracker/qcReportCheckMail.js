@@ -8,6 +8,7 @@ async function qcReportCheckMail(
   gender_title,
   client_name,
   application_id,
+  attachments_url,
   toArr,
   ccArr
 ) {
@@ -96,9 +97,6 @@ async function qcReportCheckMail(
     console.log("Recipient List:", toList);
     console.log("CC List:", ccList);
 
-    const attachmentsUrl =
-      "https://i0.wp.com/goldquestglobal.in/wp-content/uploads/2024/03/goldquestglobal.png,https://www.antennahouse.com/hubfs/xsl-fo-sample/pdf/basic-link-1.pdf";
-
     // Function to check if a file exists
     const checkFileExists = async (url) => {
       try {
@@ -111,7 +109,7 @@ async function qcReportCheckMail(
 
     // Main function to create attachments
     const createAttachments = async () => {
-      const urls = attachmentsUrl.split(",");
+      const urls = attachments_url.split(",");
       const attachments = [];
 
       for (const url of urls) {
@@ -141,7 +139,6 @@ async function qcReportCheckMail(
     };
 
     const info = await transporter.sendMail(mailOptions);
-
     console.log("Email sent:", info.response);
   } catch (error) {
     console.error("Error sending email:", error);

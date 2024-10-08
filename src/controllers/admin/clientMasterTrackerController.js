@@ -1029,6 +1029,7 @@ exports.generateReport = (req, res) => {
                                         gender_title,
                                         application.name,
                                         application.application_id,
+                                        mainJson.attachments_url,
                                         toArr,
                                         ccArr
                                       )
@@ -1074,6 +1075,7 @@ exports.generateReport = (req, res) => {
                                         gender_title,
                                         application.name,
                                         application.application_id,
+                                        mainJson.attachments_url,
                                         toArr,
                                         ccArr
                                       )

@@ -9,6 +9,7 @@ async function finalReportMail(
   gender_title,
   client_name,
   application_id,
+  attachments_url,
   toArr,
   ccArr
 ) {
@@ -106,15 +107,48 @@ async function finalReportMail(
     console.log("Recipient List:", toList);
     console.log("CC List:", ccList);
 
+    // Function to check if a file exists
+    const checkFileExists = async (url) => {
+      try {
+        const response = await fetch(url, { method: "HEAD" });
+        return response.ok; // Returns true if the status is in the range 200-299
+      } catch {
+        return false; // Return false if there was an error (e.g., network issue)
+      }
+    };
+
+    // Main function to create attachments
+    const createAttachments = async () => {
+      const urls = attachments_url.split(",");
+      const attachments = [];
+
+      for (const url of urls) {
+        if (await checkFileExists(url)) {
+          const filename = url.split("/").pop(); // Extract the filename from the URL
+          attachments.push({
+            filename: filename,
+            path: url,
+          });
+        }
+      }
+
+      return attachments;
+    };
+
+    // Create attachments
+    const attachments = await createAttachments();
+
     // Send email
-    const info = await transporter.sendMail({
+    const mailOptions = {
       from: smtp.username,
-      to: toList, // Main recipient list
-      cc: ccList, // CC recipient list
+      to: toList,
+      cc: ccList,
       subject: email.title,
       html: template,
-    });
+      ...(attachments.length > 0 && { attachments }), // Only include attachments if present
+    };
 
+    const info = await transporter.sendMail(mailOptions);
     console.log("Email sent:", info.response);
   } catch (error) {
     console.error("Error sending email:", error);
