@@ -21,4 +21,9 @@ router.get(
   clientMasterTrackerController.reportFormJsonByServiceID
 );
 
+router.get(
+  "/customer-info",
+  clientMasterTrackerController.customerBasicInfoWithAdminAuth
+);
+
 module.exports = router;
