@@ -119,7 +119,7 @@ async function finalReportMail(
 
     // Main function to create attachments
     const createAttachments = async () => {
-      const urls = attachments_url.split(",");
+      const urls = (attachments_url && typeof attachments_url === 'string') ? attachments_url.split(",") : [''];
       const attachments = [];
 
       for (const url of urls) {
