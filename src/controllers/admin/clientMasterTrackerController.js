@@ -4,6 +4,12 @@ const Customer = require("../../models/customer/customerModel");
 const Branch = require("../../models/customer/branch/branchModel");
 const AdminCommon = require("../../models/admin/commonModel");
 const BranchCommon = require("../../models/customer/branch/commonModel");
+const {
+  finalReportMail,
+} = require("../../mailer/client master tracker/finalReportMail");
+const {
+  QCReportCheckMail,
+} = require("../../mailer/client master tracker/qcReportCheckMail");
 
 // Controller to list all customers
 exports.list = (req, res) => {
@@ -848,48 +854,158 @@ exports.generateReport = (req, res) => {
                     // Wait for all annexure operations to complete
                     Promise.all(annexurePromises)
                       .then(() => {
-                        let mailMessage = "N/A";
-                        if (mainJson.overall_status && mainJson.is_verify) {
-                          const status = mainJson.overall_status.toLowerCase();
-                          const verified = mainJson.is_verify.toLowerCase();
-
-                          if (status === "completed" || status === "complete") {
-                            if (verified === "yes") {
-                              mailMessage = "Send Mail for Final Report";
-                              console.log("Send Mail for Final Report");
-                            } else if (verified === "no") {
-                              mailMessage =
-                                "Send Mail for Report For Quality Check";
-                              console.log(
-                                "Send Mail for Report For Quality Check"
+                        BranchCommon.getBranchandCustomerEmailsForNotification(
+                          branch_id,
+                          (emailError, emailData) => {
+                            if (emailError) {
+                              console.error(
+                                "Error fetching emails:",
+                                emailError
                               );
+                              return res.status(500).json({
+                                status: false,
+                                message: "Failed to retrieve email addresses.",
+                                token: newToken,
+                              });
                             }
-                          }
-                        }
 
-                        return res.status(200).json({
-                          status: true,
-                          message: `CMT Application ${
-                            currentCMTApplication &&
-                            Object.keys(currentCMTApplication).length > 0
-                              ? "updated"
-                              : "created"
-                          } successfully.`,
-                          token: newToken,
-                          mailMessage,
-                          mainJsonoverall_status: mainJson.overall_status,
-                          mainJsonis_verify: mainJson.is_verify,
-                        });
+                            const { branch, customer } = emailData;
+                            const company_name = customer.name;
+
+                            // Prepare recipient and CC lists
+                            const toArr = [
+                              { name: branch.name, email: branch.email },
+                            ];
+                            const ccArr = customer.emails
+                              .split(",")
+                              .map((email) => ({
+                                name: customer.name,
+                                email: email.trim(),
+                              }));
+
+                            ClientMasterTrackerModel.applicationByID(
+                              application_id,
+                              branch_id,
+                              (err, application) => {
+                                if (err) {
+                                  console.error("Database error:", err);
+                                  return res.status(500).json({
+                                    status: false,
+                                    message: err.message,
+                                    token: newToken,
+                                  });
+                                }
+
+                                if (!application) {
+                                  return res.status(404).json({
+                                    status: false,
+                                    message: "Application not found",
+                                    token: newToken,
+                                  });
+                                }
+
+                                let mailMessage = "N/A";
+
+                                if (
+                                  mainJson.overall_status &&
+                                  mainJson.is_verify
+                                ) {
+                                  const status =
+                                    mainJson.overall_status.toLowerCase();
+                                  const verified =
+                                    mainJson.is_verify.toLowerCase();
+
+                                  const gender = mainJson.gender?.toLowerCase();
+                                  const marital_status =
+                                    mainJson.marital_status?.toLowerCase();
+
+                                  let gender_title = "Mx.";
+
+                                  if (gender === "male") {
+                                    gender_title = "Mr.";
+                                  } else if (gender === "female") {
+                                    gender_title =
+                                      marital_status === "married"
+                                        ? "Mrs."
+                                        : "Ms.";
+                                  }
+
+                                  if (
+                                    status === "completed" ||
+                                    status === "complete"
+                                  ) {
+                                    if (verified === "yes") {
+                                      // Send email notification
+                                      finalReportMail(
+                                        "cmt",
+                                        "final",
+                                        company_name,
+                                        gender_title,
+                                        application.name,
+                                        application.application_id,
+                                        toArr,
+                                        ccArr
+                                      )
+                                        .then(() => {
+                                          console.log(
+                                            "Send Mail for Final Report"
+                                          );
+
+                                          return res.status(200).json({
+                                            status: true,
+                                            message: `CMT Application ${
+                                              currentCMTApplication &&
+                                              Object.keys(currentCMTApplication)
+                                                .length > 0
+                                                ? "updated"
+                                                : "created"
+                                            } successfully.`,
+                                            token: newToken,
+                                          });
+                                        })
+                                        .catch((emailError) => {
+                                          console.error(
+                                            "Error sending email:",
+                                            emailError
+                                          );
+
+                                          return res.status(200).json({
+                                            status: true,
+                                            message: `CMT Application ${
+                                              currentCMTApplication &&
+                                              Object.keys(currentCMTApplication)
+                                                .length > 0
+                                                ? "updated"
+                                                : "created"
+                                            } successfully  but failed to send mail.`,
+                                            token: newToken,
+                                          });
+                                        });
+                                    } else if (verified === "no") {
+                                      mailMessage =
+                                        "Send Mail for Report For Quality Check";
+                                      console.log(
+                                        "Send Mail for Report For Quality Check"
+                                      );
+
+                                      return res.status(200).json({
+                                        status: true,
+                                        message: mailMessage,
+                                        token: newToken,
+                                      });
+                                    }
+                                  }
+                                }
+                              }
+                            );
+                          }
+                        );
                       })
                       .catch((error) => {
                         return res.status(500).json({
                           status: false,
                           message: error,
                           token: newToken,
-                          mailMessage,
-                          mailMessage,
-                          mainJsonoverall_status: mainJson.overall_status,
-                          mainJsonis_verify: mainJson.is_verify,
                         });
                       });
                   } else {
