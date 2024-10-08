@@ -261,7 +261,7 @@ exports.applicationByID = (req, res) => {
               }
 
               if (!CMTApplicationID) {
-                res.json({
+                return res.json({
                   status: true,
                   message: "Application fetched successfully",
                   application,
@@ -848,6 +848,7 @@ exports.generateReport = (req, res) => {
                     // Wait for all annexure operations to complete
                     Promise.all(annexurePromises)
                       .then(() => {
+                        let mailMessage = "N/A";
                         if (
                           mainJson.insuffDetails?.overall_status &&
                           mainJson.insuffDetails?.is_verify
@@ -859,8 +860,11 @@ exports.generateReport = (req, res) => {
 
                           if (status === "completed" || status === "complete") {
                             if (verified === "yes") {
+                              mailMessage = "Send Mail for Final Report";
                               console.log("Send Mail for Final Report");
                             } else if (verified === "no") {
+                              mailMessage =
+                                "Send Mail for Report For Quality Check";
                               console.log(
                                 "Send Mail for Report For Quality Check"
                               );
@@ -877,6 +881,7 @@ exports.generateReport = (req, res) => {
                               : "created"
                           } successfully.`,
                           token: newToken,
+                          mailMessage,
                         });
                       })
                       .catch((error) => {
@@ -884,6 +889,7 @@ exports.generateReport = (req, res) => {
                           status: false,
                           message: error,
                           token: newToken,
+                          mailMessage,
                         });
                       });
                   } else {
