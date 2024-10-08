@@ -849,15 +849,9 @@ exports.generateReport = (req, res) => {
                     Promise.all(annexurePromises)
                       .then(() => {
                         let mailMessage = "N/A";
-                        console.log(mainJson.insuffDetails);
-                        if (
-                          mainJson.insuffDetails?.overall_status &&
-                          mainJson.insuffDetails?.is_verify
-                        ) {
-                          const status =
-                            mainJson.insuffDetails.overall_status.toLowerCase();
-                          const verified =
-                            mainJson.insuffDetails.is_verify.toLowerCase();
+                        if (mainJson.overall_status && mainJson.is_verify) {
+                          const status = mainJson.overall_status.toLowerCase();
+                          const verified = mainJson.is_verify.toLowerCase();
 
                           if (status === "completed" || status === "complete") {
                             if (verified === "yes") {
@@ -883,7 +877,8 @@ exports.generateReport = (req, res) => {
                           } successfully.`,
                           token: newToken,
                           mailMessage,
-                          mainJson,
+                          mainJsonoverall_status: mainJson.overall_status,
+                          mainJsonis_verify: mainJson.is_verify,
                         });
                       })
                       .catch((error) => {
@@ -892,7 +887,9 @@ exports.generateReport = (req, res) => {
                           message: error,
                           token: newToken,
                           mailMessage,
-                          mainJson,
+                          mailMessage,
+                          mainJsonoverall_status: mainJson.overall_status,
+                          mainJsonis_verify: mainJson.is_verify,
                         });
                       });
                   } else {
