@@ -2,11 +2,9 @@ const nodemailer = require("nodemailer");
 const connection = require("../../config/db"); // Import the existing MySQL connection
 
 // Function to send email
-async function qcReportCheckMail(
+async function readyForReport(
   module,
   action,
-  gender_title,
-  client_name,
   application_id,
   toArr,
   ccArr
@@ -45,10 +43,7 @@ async function qcReportCheckMail(
 
     // Replace placeholders in the email template
     let template = email.template;
-    template = template
-      .replace(/{{gender_title}}/g, gender_title)
-      .replace(/{{client_name}}/g, client_name)
-      .replace(/{{application_id}}/g, application_id);
+    template = template.replace(/{{application_id}}/g, application_id);
 
     // Prepare CC list
     const ccList = ccArr
@@ -119,4 +114,4 @@ async function qcReportCheckMail(
   }
 }
 
-module.exports = { qcReportCheckMail };
+module.exports = { readyForReport };

@@ -10,6 +10,9 @@ const {
 const {
   qcReportCheckMail,
 } = require("../../mailer/client master tracker/qcReportCheckMail");
+const {
+  readyForReport,
+} = require("../../mailer/client master tracker/readyForReport");
 
 // Controller to list all customers
 exports.list = (req, res) => {
@@ -1024,6 +1027,119 @@ exports.generateReport = (req, res) => {
                                             token: newToken,
                                           });
                                         });
+                                    } else {
+                                      return res.status(200).json({
+                                        status: true,
+                                        message: `CMT Application ${
+                                          currentCMTApplication &&
+                                          Object.keys(currentCMTApplication)
+                                            .length > 0
+                                            ? "updated"
+                                            : "created"
+                                        } successfully.`,
+                                        token: newToken,
+                                      });
+                                    }
+                                  } else {
+                                    const completeStatusArr = [
+                                      "completed",
+                                      "completed_green",
+                                      "completed_red",
+                                      "completed_yellow",
+                                      "completed_pink",
+                                      "completed_orange",
+                                    ];
+
+                                    let allMatch = true;
+
+                                    // Loop through the annexure object
+                                    for (let key in annexure) {
+                                      const db_table = key ?? null;
+                                      const modifiedDbTable = db_table.replace(
+                                        /-/g,
+                                        "_"
+                                      );
+                                      const subJson =
+                                        annexure[modifiedDbTable] ?? null;
+
+                                      if (
+                                        subJson &&
+                                        "color_status" in subJson
+                                      ) {
+                                        const colorStatusValue =
+                                          subJson.color_status.toLowerCase();
+
+                                        // Check if color_status value is in completeStatusArr
+                                        if (
+                                          !completeStatusArr.includes(
+                                            colorStatusValue
+                                          )
+                                        ) {
+                                          allMatch = false;
+                                          break;
+                                        }
+                                      } else {
+                                        allMatch = false;
+                                        break;
+                                      }
+                                    }
+
+                                    // Log the overall result
+                                    if (allMatch) {
+                                      readyForReport(
+                                        "cmt",
+                                        "ready",
+                                        application.application_id,
+                                        toArr,
+                                        ccArr
+                                      )
+                                        .then(() => {
+                                          console.log(
+                                            "Send Mail for Report For Report"
+                                          );
+
+                                          return res.status(200).json({
+                                            status: true,
+                                            message: `CMT Application ${
+                                              currentCMTApplication &&
+                                              Object.keys(currentCMTApplication)
+                                                .length > 0
+                                                ? "updated"
+                                                : "created"
+                                            } successfully and mail sent.`,
+                                            token: newToken,
+                                          });
+                                        })
+                                        .catch((emailError) => {
+                                          console.error(
+                                            "Error sending email:",
+                                            emailError
+                                          );
+
+                                          return res.status(200).json({
+                                            status: true,
+                                            message: `CMT Application ${
+                                              currentCMTApplication &&
+                                              Object.keys(currentCMTApplication)
+                                                .length > 0
+                                                ? "updated"
+                                                : "created"
+                                            } successfully but failed to send mail.`,
+                                            token: newToken,
+                                          });
+                                        });
+                                    } else {
+                                      return res.status(200).json({
+                                        status: true,
+                                        message: `CMT Application ${
+                                          currentCMTApplication &&
+                                          Object.keys(currentCMTApplication)
+                                            .length > 0
+                                            ? "updated"
+                                            : "created"
+                                        } successfully.`,
+                                        token: newToken,
+                                      });
                                     }
                                   }
                                 }
