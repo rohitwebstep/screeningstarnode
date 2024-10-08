@@ -873,7 +873,7 @@ exports.generateReport = (req, res) => {
                           }
                         }
 
-                        res.status(200).json({
+                        return res.status(200).json({
                           status: true,
                           message: `CMT Application ${
                             currentCMTApplication &&
@@ -883,19 +883,21 @@ exports.generateReport = (req, res) => {
                           } successfully.`,
                           token: newToken,
                           mailMessage,
+                          mainJson,
                         });
                       })
                       .catch((error) => {
-                        res.status(500).json({
+                        return res.status(500).json({
                           status: false,
                           message: error,
                           token: newToken,
                           mailMessage,
+                          mainJson,
                         });
                       });
                   } else {
                     // If there are no annexures, send the response directly
-                    res.status(200).json({
+                    return res.status(200).json({
                       status: true,
                       message: `CMT Application ${
                         currentCMTApplication &&
