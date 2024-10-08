@@ -132,11 +132,26 @@ exports.applicationListByBranch = (req, res) => {
   const { branch_id, admin_id, _token, status } = req.query;
 
   let missingFields = [];
-  if (!branch_id || branch_id === "" || branch_id === undefined)
+  if (
+    !branch_id ||
+    branch_id === "" ||
+    branch_id === undefined ||
+    branch_id === "undefined"
+  )
     missingFields.push("Branch ID");
-  if (!admin_id || admin_id === "" || admin_id === undefined)
+  if (
+    !admin_id ||
+    admin_id === "" ||
+    admin_id === undefined ||
+    admin_id === "undefined"
+  )
     missingFields.push("Admin ID");
-  if (!_token || _token === "" || _token === undefined)
+  if (
+    !_token ||
+    _token === "" ||
+    _token === undefined ||
+    _token === "undefined"
+  )
     missingFields.push("Token");
 
   if (missingFields.length > 0) {
@@ -168,7 +183,12 @@ exports.applicationListByBranch = (req, res) => {
 
       const newToken = result.newToken;
 
-      if (!status || status === "" || status === undefined) {
+      if (
+        !status ||
+        status === "" ||
+        status === undefined ||
+        status === "undefined"
+      ) {
         let status = null;
       }
 
@@ -200,13 +220,33 @@ exports.applicationByID = (req, res) => {
   const { application_id, branch_id, admin_id, _token } = req.query;
 
   let missingFields = [];
-  if (!application_id || application_id === "" || application_id === undefined)
+  if (
+    !application_id ||
+    application_id === "" ||
+    application_id === undefined ||
+    application_id === "undefined"
+  )
     missingFields.push("Application ID");
-  if (!branch_id || branch_id === "" || branch_id === undefined)
+  if (
+    !branch_id ||
+    branch_id === "" ||
+    branch_id === undefined ||
+    branch_id === "undefined"
+  )
     missingFields.push("Branch ID");
-  if (!admin_id || admin_id === "" || admin_id === undefined)
+  if (
+    !admin_id ||
+    admin_id === "" ||
+    admin_id === undefined ||
+    admin_id === "undefined"
+  )
     missingFields.push("Admin ID");
-  if (!_token || _token === "" || _token === undefined)
+  if (
+    !_token ||
+    _token === "" ||
+    _token === undefined ||
+    _token === "undefined"
+  )
     missingFields.push("Token");
 
   if (missingFields.length > 0) {
@@ -320,13 +360,33 @@ exports.annexureData = (req, res) => {
   const { application_id, db_table, admin_id, _token } = req.query;
 
   let missingFields = [];
-  if (!application_id || application_id === "" || application_id === undefined)
+  if (
+    !application_id ||
+    application_id === "" ||
+    application_id === undefined ||
+    application_id === "undefined"
+  )
     missingFields.push("Application ID");
-  if (!db_table || db_table === "" || db_table === undefined)
+  if (
+    !db_table ||
+    db_table === "" ||
+    db_table === undefined ||
+    db_table === "undefined"
+  )
     missingFields.push("DB Table");
-  if (!admin_id || admin_id === "" || admin_id === undefined)
+  if (
+    !admin_id ||
+    admin_id === "" ||
+    admin_id === undefined ||
+    admin_id === "undefined"
+  )
     missingFields.push("Admin ID");
-  if (!_token || _token === "" || _token === undefined)
+  if (
+    !_token ||
+    _token === "" ||
+    _token === undefined ||
+    _token === "undefined"
+  )
     missingFields.push("Token");
 
   const modifiedDbTable = db_table.replace(/-/g, "_");
@@ -398,9 +458,19 @@ exports.filterOptions = (req, res) => {
   const { admin_id, _token } = req.query;
 
   let missingFields = [];
-  if (!admin_id || admin_id === "" || admin_id === undefined)
+  if (
+    !admin_id ||
+    admin_id === "" ||
+    admin_id === undefined ||
+    admin_id === "undefined"
+  )
     missingFields.push("Admin ID");
-  if (!_token || _token === "" || _token === undefined)
+  if (
+    !_token ||
+    _token === "" ||
+    _token === undefined ||
+    _token === "undefined"
+  )
     missingFields.push("Token");
 
   if (missingFields.length > 0) {
@@ -466,11 +536,26 @@ exports.reportFormJsonByServiceID = (req, res) => {
   const { service_id, admin_id, _token } = req.query;
 
   let missingFields = [];
-  if (!service_id || service_id === "" || service_id === undefined)
+  if (
+    !service_id ||
+    service_id === "" ||
+    service_id === undefined ||
+    service_id === "undefined"
+  )
     missingFields.push("Service ID");
-  if (!admin_id || admin_id === "" || admin_id === undefined)
+  if (
+    !admin_id ||
+    admin_id === "" ||
+    admin_id === undefined ||
+    admin_id === "undefined"
+  )
     missingFields.push("Admin ID");
-  if (!_token || _token === "" || _token === undefined)
+  if (
+    !_token ||
+    _token === "" ||
+    _token === undefined ||
+    _token === "undefined"
+  )
     missingFields.push("Token");
 
   if (missingFields.length > 0) {
@@ -1182,11 +1267,26 @@ exports.customerBasicInfoWithAdminAuth = (req, res) => {
   const { customer_id, admin_id, _token } = req.query;
 
   let missingFields = [];
-  if (!customer_id || customer_id === "" || customer_id === undefined)
+  if (
+    !customer_id ||
+    customer_id === "" ||
+    customer_id === undefined ||
+    customer_id === "undefined"
+  )
     missingFields.push("Customer ID");
-  if (!admin_id || admin_id === "" || admin_id === undefined)
+  if (
+    !admin_id ||
+    admin_id === "" ||
+    admin_id === undefined ||
+    admin_id === "undefined"
+  )
     missingFields.push("Admin ID");
-  if (!_token || _token === "" || _token === undefined)
+  if (
+    !_token ||
+    _token === "" ||
+    _token === undefined ||
+    _token === "undefined"
+  )
     missingFields.push("Token");
 
   if (missingFields.length > 0) {
