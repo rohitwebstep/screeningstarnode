@@ -8,7 +8,7 @@ const {
   finalReportMail,
 } = require("../../mailer/client master tracker/finalReportMail");
 const {
-  QCReportCheckMail,
+  qcReportCheckMail,
 } = require("../../mailer/client master tracker/qcReportCheckMail");
 
 // Controller to list all customers
@@ -904,8 +904,6 @@ exports.generateReport = (req, res) => {
                                   });
                                 }
 
-                                let mailMessage = "N/A";
-
                                 if (
                                   mainJson.overall_status &&
                                   mainJson.is_verify
@@ -959,7 +957,7 @@ exports.generateReport = (req, res) => {
                                                 .length > 0
                                                 ? "updated"
                                                 : "created"
-                                            } successfully.`,
+                                            } successfully and mail sent.`,
                                             token: newToken,
                                           });
                                         })
@@ -977,22 +975,55 @@ exports.generateReport = (req, res) => {
                                                 .length > 0
                                                 ? "updated"
                                                 : "created"
-                                            } successfully  but failed to send mail.`,
+                                            } successfully but failed to send mail.`,
                                             token: newToken,
                                           });
                                         });
                                     } else if (verified === "no") {
-                                      mailMessage =
-                                        "Send Mail for Report For Quality Check";
-                                      console.log(
-                                        "Send Mail for Report For Quality Check"
-                                      );
+                                      qcReportCheckMail(
+                                        "cmt",
+                                        "qc",
+                                        gender_title,
+                                        application.name,
+                                        application.application_id,
+                                        toArr,
+                                        ccArr
+                                      )
+                                        .then(() => {
+                                          console.log(
+                                            "Send Mail for Report For Quality Check"
+                                          );
 
-                                      return res.status(200).json({
-                                        status: true,
-                                        message: mailMessage,
-                                        token: newToken,
-                                      });
+                                          return res.status(200).json({
+                                            status: true,
+                                            message: `CMT Application ${
+                                              currentCMTApplication &&
+                                              Object.keys(currentCMTApplication)
+                                                .length > 0
+                                                ? "updated"
+                                                : "created"
+                                            } successfully and mail sent.`,
+                                            token: newToken,
+                                          });
+                                        })
+                                        .catch((emailError) => {
+                                          console.error(
+                                            "Error sending email:",
+                                            emailError
+                                          );
+
+                                          return res.status(200).json({
+                                            status: true,
+                                            message: `CMT Application ${
+                                              currentCMTApplication &&
+                                              Object.keys(currentCMTApplication)
+                                                .length > 0
+                                                ? "updated"
+                                                : "created"
+                                            } successfully but failed to send mail.`,
+                                            token: newToken,
+                                          });
+                                        });
                                     }
                                   }
                                 }
