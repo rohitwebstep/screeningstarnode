@@ -1,4 +1,5 @@
 const Candidate = require("../../../../models/customer/branch/candidateApplicationModel");
+const Customer = require("../../../../models/customer/customerModel");
 const Branch = require("../../../../models/customer/branch/branchModel");
 const BranchCommon = require("../../../../models/customer/branch/commonModel");
 const CEF = require("../../../../models/customer/branch/cefModel");
