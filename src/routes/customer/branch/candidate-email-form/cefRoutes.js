@@ -3,6 +3,6 @@ const router = express.Router();
 const cefController = require("../../../../controllers/customer/branch/candidate/cefController");
 
 // Basic routes
-router.post("/form-json", cefController.formJson);
+router.get("/form-json", cefController.formJson);
 
 module.exports = router;
