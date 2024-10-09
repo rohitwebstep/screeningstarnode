@@ -14,6 +14,6 @@ router.put("/update", candidateController.update);
 router.delete("/delete", candidateController.delete);
 router.delete("/", candidateController.delete);
 
-app.use("/email-form", cefRoutes);
+router.use("/email-form", cefRoutes);
 
 module.exports = router;
