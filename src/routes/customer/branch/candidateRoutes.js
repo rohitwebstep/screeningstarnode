@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 const router = express.Router();
 const candidateController = require("../../../controllers/customer/branch/candidate/applicationController");
 const cefRoutes = require("./candidate-email-form/cefRoutes.js");
@@ -13,6 +14,6 @@ router.put("/update", candidateController.update);
 router.delete("/delete", candidateController.delete);
 router.delete("/", candidateController.delete);
 
-app.use("/candidate-email-form", cefRoutes);
+app.use("/email-form", cefRoutes);
 
 module.exports = router;
