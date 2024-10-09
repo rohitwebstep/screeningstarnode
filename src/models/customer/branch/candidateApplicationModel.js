@@ -173,6 +173,22 @@ const candidateApplication = {
       callback(null, results);
     });
   },
+
+  isApplicationExist: (app_id, branch_id, customer_id, callback) => {
+    const sql =
+      "SELECT * FROM `candidate_applications` WHERE `id` = ? AND `branch_id` = ? AND `customer_id` = ?";
+
+    pool.query(sql, [app_id, branch_id, customer_id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+
+      // Check if results exist
+      const exists = results.length > 0; // true if exists, false otherwise
+      callback(null, exists);
+    });
+  },
 };
 
 module.exports = candidateApplication;
