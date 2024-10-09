@@ -38,7 +38,6 @@ exports.isApplicationExist = (req, res) => {
   const { app_id, branch_id, customer_id } = req.query;
 
   let missingFields = [];
-  if (!service_id) missingFields.push("Service ID");
   if (
     !app_id ||
     app_id === "" ||
