@@ -103,8 +103,6 @@ exports.isApplicationExist = (req, res) => {
 
 exports.submit = (req, res) => {
   const {
-    admin_id,
-    _token,
     branch_id,
     customer_id,
     application_id,
@@ -116,8 +114,6 @@ exports.submit = (req, res) => {
 
   // Define required fields
   const requiredFields = {
-    admin_id,
-    _token,
     branch_id,
     customer_id,
     application_id,
