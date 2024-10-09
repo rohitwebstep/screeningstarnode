@@ -155,7 +155,6 @@ exports.submit = (req, res) => {
             return res.status(500).json({
               status: false,
               message: "Failed to retrieve Branch. Please try again.",
-              token: newToken,
             });
           }
 
@@ -163,7 +162,6 @@ exports.submit = (req, res) => {
             return res.status(404).json({
               status: false,
               message: "Branch not found.",
-              token: newToken,
             });
           }
 
@@ -172,7 +170,6 @@ exports.submit = (req, res) => {
               status: false,
               message: "Branch not found with customer match.",
               branch: currentBranch,
-              token: newToken,
             });
           }
 
@@ -182,7 +179,6 @@ exports.submit = (req, res) => {
               return res.status(500).json({
                 status: false,
                 message: "Failed to retrieve Customer. Please try again.",
-                token: newToken,
               });
             }
 
@@ -190,7 +186,6 @@ exports.submit = (req, res) => {
               return res.status(404).json({
                 status: false,
                 message: "Customer not found.",
-                token: newToken,
               });
             }
 
@@ -206,7 +201,6 @@ exports.submit = (req, res) => {
                     status: false,
                     message:
                       "Failed to retrieve CME Application. Please try again.",
-                    token: newToken,
                   });
                 }
 
@@ -235,7 +229,6 @@ exports.submit = (req, res) => {
                       return res.status(500).json({
                         status: false,
                         message: err,
-                        token: newToken,
                       });
                     }
 
@@ -308,7 +301,6 @@ exports.submit = (req, res) => {
                                   status: false,
                                   message:
                                     "Failed to retrieve email addresses.",
-                                  token: newToken,
                                 });
                               }
 
@@ -335,7 +327,6 @@ exports.submit = (req, res) => {
                                     return res.status(500).json({
                                       status: false,
                                       message: err.message,
-                                      token: newToken,
                                     });
                                   }
 
@@ -343,7 +334,6 @@ exports.submit = (req, res) => {
                                     return res.status(404).json({
                                       status: false,
                                       message: "Application not found",
-                                      token: newToken,
                                     });
                                   }
 
@@ -356,7 +346,6 @@ exports.submit = (req, res) => {
                                         ? "updated"
                                         : "created"
                                     } successfully`,
-                                    token: newToken,
                                   });
                                 }
                               );
@@ -367,7 +356,6 @@ exports.submit = (req, res) => {
                           return res.status(500).json({
                             status: false,
                             message: error,
-                            token: newToken,
                           });
                         });
                     } else {
@@ -380,7 +368,6 @@ exports.submit = (req, res) => {
                             ? "updated"
                             : "created"
                         } successfully.`,
-                        token: newToken,
                       });
                     }
                   }

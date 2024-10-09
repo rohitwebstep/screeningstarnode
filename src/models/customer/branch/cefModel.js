@@ -53,13 +53,13 @@ const cef = {
         (field) => !existingColumns.includes(field)
       );
 
-      // 2. Add missing columns
+      // 2. If there are missing columns, alter the table to add them
       if (missingColumns.length > 0) {
         const alterQueries = missingColumns.map((column) => {
           return `ALTER TABLE candidate_email_form ADD COLUMN ${column} VARCHAR(255)`; // Adjust data type as necessary
         });
 
-        // Run all ALTER statements in sequence
+        // Run all ALTER statements
         const alterPromises = alterQueries.map(
           (query) =>
             new Promise((resolve, reject) => {
@@ -73,134 +73,105 @@ const cef = {
             })
         );
 
+        // After altering the table, proceed to insert or update the data
         Promise.all(alterPromises)
           .then(() => {
-            // 3. Check if entry exists by candidate_application_id
-            const checkEntrySql =
-              "SELECT * FROM candidate_email_form WHERE candidate_application_id = ?";
-            pool.query(
-              checkEntrySql,
-              [candidate_application_id],
-              (entryErr, entryResults) => {
-                if (entryErr) {
-                  console.error("Error checking entry existence:", entryErr);
-                  return callback(entryErr, null);
-                }
-
-                // 4. Insert or update the entry
-                if (entryResults.length > 0) {
-                  personal_information.branch_id = branch_id;
-                  personal_information.customer_id = customer_id;
-                  personal_information.resume_file = resume_file;
-                  personal_information.govt_id = govt_id;
-
-                  // Update existing entry
-                  const updateSql =
-                    "UPDATE candidate_email_form SET ? WHERE candidate_application_id = ?";
-                  pool.query(
-                    updateSql,
-                    [personal_information, candidate_application_id],
-                    (updateErr, updateResult) => {
-                      if (updateErr) {
-                        console.error("Error updating application:", updateErr);
-                        return callback(updateErr, null);
-                      }
-                      callback(null, updateResult);
-                    }
-                  );
-                } else {
-                  // Insert new entry
-                  const insertSql = "INSERT INTO candidate_email_form SET ?";
-                  pool.query(
-                    insertSql,
-                    {
-                      ...personal_information,
-                      candidate_application_id,
-                      branch_id,
-                      customer_id,
-                      resume_file,
-                      govt_id,
-                    },
-                    (insertErr, insertResult) => {
-                      if (insertErr) {
-                        console.error(
-                          "Error inserting application:",
-                          insertErr
-                        );
-                        return callback(insertErr, null);
-                      }
-                      callback(null, insertResult);
-                    }
-                  );
-                }
-              }
+            // Insert or update entry after table alteration
+            cef.insertOrUpdateEntry(
+              personal_information,
+              candidate_application_id,
+              branch_id,
+              customer_id,
+              resume_file,
+              govt_id,
+              callback
             );
           })
-          .catch((err) => {
-            console.error("Error executing ALTER statements:", err);
-            callback(err, null);
+          .catch((alterErr) => {
+            console.error("Error executing ALTER statements:", alterErr);
+            callback(alterErr, null);
           });
       } else {
-        // If no columns are missing, proceed to check the entry
-        const checkEntrySql =
-          "SELECT * FROM candidate_email_form WHERE candidate_application_id = ?";
-        pool.query(
-          checkEntrySql,
-          [candidate_application_id],
-          (entryErr, entryResults) => {
-            if (entryErr) {
-              console.error("Error checking entry existence:", entryErr);
-              return callback(entryErr, null);
-            }
-
-            // 4. Insert or update the entry
-            if (entryResults.length > 0) {
-              // Add branch_id and customer_id to personal_information
-              personal_information.branch_id = branch_id;
-              personal_information.customer_id = customer_id;
-              personal_information.resume_file = resume_file;
-              personal_information.govt_id = govt_id;
-
-              // Update existing entry
-              const updateSql =
-                "UPDATE candidate_email_form SET ? WHERE candidate_application_id = ?";
-              pool.query(
-                updateSql,
-                [personal_information, candidate_application_id],
-                (updateErr, updateResult) => {
-                  if (updateErr) {
-                    console.error("Error updating application:", updateErr);
-                    return callback(updateErr, null);
-                  }
-                  callback(null, updateResult);
-                }
-              );
-            } else {
-              // Insert new entry
-              const insertSql = "INSERT INTO candidate_email_form SET ?";
-              pool.query(
-                insertSql,
-                {
-                  ...personal_information,
-                  candidate_application_id,
-                  branch_id,
-                  customer_id,
-                  resume_file,
-                  govt_id,
-                },
-                (insertErr, insertResult) => {
-                  if (insertErr) {
-                    console.error("Error inserting application:", insertErr);
-                    return callback(insertErr, null);
-                  }
-                  callback(null, insertResult);
-                }
-              );
-            }
-          }
+        // If no columns are missing, proceed to check and insert or update the entry
+        cef.insertOrUpdateEntry(
+          personal_information,
+          candidate_application_id,
+          branch_id,
+          customer_id,
+          resume_file,
+          govt_id,
+          callback
         );
       }
     });
+  },
+
+  // Helper function for inserting or updating the entry
+  insertOrUpdateEntry: (
+    personal_information,
+    candidate_application_id,
+    branch_id,
+    customer_id,
+    resume_file,
+    govt_id,
+    callback
+  ) => {
+    // Check if entry exists by candidate_application_id
+    const checkEntrySql =
+      "SELECT * FROM candidate_email_form WHERE candidate_application_id = ?";
+    pool.query(
+      checkEntrySql,
+      [candidate_application_id],
+      (entryErr, entryResults) => {
+        if (entryErr) {
+          console.error("Error checking entry existence:", entryErr);
+          return callback(entryErr, null);
+        }
+
+        if (entryResults.length > 0) {
+          // Entry exists, so update it
+          personal_information.branch_id = branch_id;
+          personal_information.customer_id = customer_id;
+          personal_information.resume_file = resume_file;
+          personal_information.govt_id = govt_id;
+
+          const updateSql =
+            "UPDATE candidate_email_form SET ? WHERE candidate_application_id = ?";
+          pool.query(
+            updateSql,
+            [personal_information, candidate_application_id],
+            (updateErr, updateResult) => {
+              if (updateErr) {
+                console.error("Error updating application:", updateErr);
+                return callback(updateErr, null);
+              }
+              callback(null, updateResult);
+            }
+          );
+        } else {
+          // Entry does not exist, so insert it
+          const insertSql = "INSERT INTO candidate_email_form SET ?";
+          pool.query(
+            insertSql,
+            {
+              ...personal_information,
+              candidate_application_id,
+              branch_id,
+              customer_id,
+              resume_file,
+              govt_id,
+            },
+            (insertErr, insertResult) => {
+              if (insertErr) {
+                console.error("Error inserting application:", insertErr);
+                return callback(insertErr, null);
+              }
+              callback(null, insertResult);
+            }
+          );
+        }
+      }
+    );
   },
 };
 
