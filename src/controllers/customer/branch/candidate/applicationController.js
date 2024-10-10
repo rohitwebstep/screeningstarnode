@@ -204,6 +204,11 @@ exports.create = (req, res) => {
                             }
 
                             if (serviceEntry) {
+                              console.log(
+                                `ServiceID - ${serviceEntry.id}`,
+                                `serviceIds - `,
+                                serviceIds
+                              );
                               const digitalAddressID = serviceEntry.id;
                               if (serviceIds.includes(digitalAddressID)) {
                                 davMail(
