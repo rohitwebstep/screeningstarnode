@@ -13,6 +13,72 @@ const cef = {
     });
   },
 
+  getCMEFormDataByApplicationId: (
+    candidate_application_id,
+    db_table,
+    callback
+  ) => {
+    // 1. Check if the table exists
+    const checkTableSql = `
+      SELECT COUNT(*) AS count 
+      FROM information_schema.tables 
+      WHERE table_schema = ? AND table_name = ?`;
+
+    pool.query(
+      checkTableSql,
+      [process.env.DB_NAME, db_table],
+      (tableErr, tableResults) => {
+        if (tableErr) {
+          console.error("Error checking table existence:", tableErr);
+          return callback(tableErr);
+        }
+        if (tableResults[0].count === 0) {
+          console.log(`2 - ${db_table}`);
+          const createTableSql = `
+          CREATE TABLE \`${db_table}\` (
+            \`id\` bigint(20) NOT NULL AUTO_INCREMENT,
+            \`cef_id\` bigint(20) NOT NULL,
+            \`candidate_application_id\` bigint(20) NOT NULL,
+            \`branch_id\` int(11) NOT NULL,
+            \`customer_id\` int(11) NOT NULL,
+            \`status\` VARCHAR(100) NOT NULL,
+            \`created_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+            \`updated_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (\`id\`),
+            KEY \`candidate_application_id\` (\`candidate_application_id\`),
+            KEY \`cef_application_customer_id\` (\`customer_id\`),
+            KEY \`cef_application_cef_id\` (\`cef_id\`),
+            CONSTRAINT \`fk_${db_table}_candidate_application_id\` FOREIGN KEY (\`candidate_application_id\`) REFERENCES \`client_applications\` (\`id\`) ON DELETE CASCADE,
+            CONSTRAINT \`fk_${db_table}_customer_id\` FOREIGN KEY (\`customer_id\`) REFERENCES \`customers\` (\`id\`) ON DELETE CASCADE,
+            CONSTRAINT \`fk_${db_table}_cef_id\` FOREIGN KEY (\`cef_id\`) REFERENCES \`cef_applications\` (\`id\`) ON DELETE CASCADE
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`;
+
+          pool.query(createTableSql, (createErr) => {
+            if (createErr) {
+              console.error(`Error creating table 2 "${db_table}":`, createErr);
+              return callback(createErr);
+            }
+            fetchData();
+          });
+        } else {
+          fetchData();
+        }
+
+        function fetchData() {
+          const sql = `SELECT * FROM \`${db_table}\` WHERE \`candidate_application_id\` = ?`;
+          pool.query(sql, [candidate_application_id], (queryErr, results) => {
+            if (queryErr) {
+              console.error("Error executing query:", queryErr);
+              return callback(queryErr);
+            }
+            const response = results.length > 0 ? results[0] : null;
+            callback(null, response);
+          });
+        }
+      }
+    );
+  },
+
   getCEFApplicationById: (candidate_application_id, callback) => {
     const sql =
       "SELECT * FROM `candidate_email_form` WHERE `candidate_application_id` = ?";
@@ -163,7 +229,7 @@ const cef = {
   },
 
   createOrUpdateAnnexure: (
-    cmt_id,
+    cef_id,
     candidate_application_id,
     branch_id,
     customer_id,
@@ -192,7 +258,7 @@ const cef = {
           const createTableSql = `
           CREATE TABLE \`${db_table}\` (
             \`id\` bigint(20) NOT NULL AUTO_INCREMENT,
-            \`cmt_id\` bigint(20) NOT NULL,
+            \`cef_id\` bigint(20) NOT NULL,
             \`candidate_application_id\` bigint(20) NOT NULL,
             \`branch_id\` int(11) NOT NULL,
             \`customer_id\` int(11) NOT NULL,
@@ -201,11 +267,11 @@ const cef = {
             \`updated_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (\`id\`),
             KEY \`candidate_application_id\` (\`candidate_application_id\`),
-            KEY \`cmt_application_customer_id\` (\`customer_id\`),
-            KEY \`cmt_application_cmt_id\` (\`cmt_id\`),
+            KEY \`cef_application_customer_id\` (\`customer_id\`),
+            KEY \`cef_application_cef_id\` (\`cef_id\`),
             CONSTRAINT \`fk_${db_table}_candidate_application_id\` FOREIGN KEY (\`candidate_application_id\`) REFERENCES \`client_applications\` (\`id\`) ON DELETE CASCADE,
             CONSTRAINT \`fk_${db_table}_customer_id\` FOREIGN KEY (\`customer_id\`) REFERENCES \`customers\` (\`id\`) ON DELETE CASCADE,
-            CONSTRAINT \`fk_${db_table}_cmt_id\` FOREIGN KEY (\`cmt_id\`) REFERENCES \`cmt_applications\` (\`id\`) ON DELETE CASCADE
+            CONSTRAINT \`fk_${db_table}_cef_id\` FOREIGN KEY (\`cef_id\`) REFERENCES \`cef_applications\` (\`id\`) ON DELETE CASCADE
           ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`;
 
           pool.query(createTableSql, (createErr) => {
@@ -303,7 +369,7 @@ const cef = {
                     candidate_application_id,
                     branch_id,
                     customer_id,
-                    cmt_id, // Include cmt_id in the insert statement
+                    cef_id, // Include cef_id in the insert statement
                   },
                   (insertErr, insertResult) => {
                     if (insertErr) {
