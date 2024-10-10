@@ -23,6 +23,8 @@ router.put("/update-password", authController.updatePassword);
 router.get("/active", profileController.active);
 router.get("/inactive", profileController.inactive);
 
+router.get("/service-info", profileController.getServiceById);
+
 router.delete("/delete", profileController.delete);
 
 router.use("/client-application", clientRoutes);
