@@ -81,7 +81,7 @@ const cef = {
 
   getCEFApplicationById: (candidate_application_id, callback) => {
     const sql =
-      "SELECT * FROM `candidate_email_form` WHERE `candidate_application_id` = ?";
+      "SELECT * FROM `cef_applications` WHERE `candidate_application_id` = ?";
     pool.query(sql, [candidate_application_id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
@@ -100,11 +100,11 @@ const cef = {
   ) => {
     const fields = Object.keys(personal_information);
 
-    // 1. Check for existing columns in candidate_email_form
+    // 1. Check for existing columns in cef_applications
     const checkColumnsSql = `
       SELECT COLUMN_NAME 
       FROM INFORMATION_SCHEMA.COLUMNS 
-      WHERE TABLE_NAME = 'candidate_email_form' AND COLUMN_NAME IN (?)`;
+      WHERE TABLE_NAME = 'cef_applications' AND COLUMN_NAME IN (?)`;
 
     pool.query(checkColumnsSql, [fields], (err, results) => {
       if (err) {
@@ -120,7 +120,7 @@ const cef = {
       // 2. If there are missing columns, alter the table to add them
       if (missingColumns.length > 0) {
         const alterQueries = missingColumns.map((column) => {
-          return `ALTER TABLE candidate_email_form ADD COLUMN ${column} VARCHAR(255)`; // Adjust data type as necessary
+          return `ALTER TABLE cef_applications ADD COLUMN ${column} VARCHAR(255)`; // Adjust data type as necessary
         });
 
         // Run all ALTER statements
@@ -176,7 +176,7 @@ const cef = {
   ) => {
     // Check if entry exists by candidate_application_id
     const checkEntrySql =
-      "SELECT * FROM candidate_email_form WHERE candidate_application_id = ?";
+      "SELECT * FROM cef_applications WHERE candidate_application_id = ?";
     pool.query(
       checkEntrySql,
       [candidate_application_id],
@@ -192,7 +192,7 @@ const cef = {
           personal_information.customer_id = customer_id;
 
           const updateSql =
-            "UPDATE candidate_email_form SET ? WHERE candidate_application_id = ?";
+            "UPDATE cef_applications SET ? WHERE candidate_application_id = ?";
           pool.query(
             updateSql,
             [personal_information, candidate_application_id],
@@ -206,7 +206,7 @@ const cef = {
           );
         } else {
           // Entry does not exist, so insert it
-          const insertSql = "INSERT INTO candidate_email_form SET ?";
+          const insertSql = "INSERT INTO cef_applications SET ?";
           pool.query(
             insertSql,
             {
