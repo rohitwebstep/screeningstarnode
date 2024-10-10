@@ -322,19 +322,21 @@ exports.list = (req, res) => {
     }
 
     // Verify branch token
-    BranchCommon.isBranchTokenValid(_token, branch_id, (err, result) => {
+    BranchCommon.isBranchTokenValid(_token, branch_id, (err, tokenResult) => {
       if (err) {
         console.error("Error checking token validity:", err);
         return res.status(500).json({ status: false, message: err.message });
       }
 
-      if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message });
+      if (!tokenResult.status) {
+        return res
+          .status(401)
+          .json({ status: false, message: tokenResult.message });
       }
 
-      const newToken = result.newToken;
+      const newToken = tokenResult.newToken;
 
-      Client.list(branch_id, (err, result) => {
+      Client.list(branch_id, (err, clientResults) => {
         if (err) {
           console.error("Database error:", err);
           return res.status(500).json({
@@ -347,8 +349,8 @@ exports.list = (req, res) => {
         res.json({
           status: true,
           message: "Client applications fetched successfully.",
-          clientApplications: result,
-          totalResults: result.length,
+          clientApplications: clientResults,
+          totalResults: clientResults.length,
           token: newToken,
         });
       });
