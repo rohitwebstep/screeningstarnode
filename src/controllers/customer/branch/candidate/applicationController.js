@@ -168,9 +168,10 @@ exports.create = (req, res) => {
                   const serviceIds = services.split(",").map((id) => id.trim());
                   const serviceNames = [];
 
-                  // Function to fetch service names
+                  // Function to fetch service names recursively
                   const fetchServiceNames = (index = 0) => {
                     if (index >= serviceIds.length) {
+                      // Once all service names are fetched, get app info
                       AppModel.info((err, appInfo) => {
                         if (err) {
                           console.error("Database error:", err);
@@ -191,6 +192,7 @@ exports.create = (req, res) => {
                           const dav_href = `${appHost}/dav-form/${base64_link_with_ids}`;
                           const bgv_href = `${appHost}/background_form/${base64_link_with_ids}`;
 
+                          // Fetch and process digital address service
                           Service.digitlAddressService((err, serviceEntry) => {
                             if (err) {
                               console.error("Database error:", err);
@@ -210,20 +212,16 @@ exports.create = (req, res) => {
                                   name,
                                   customer.name,
                                   dav_href,
-                                  {
-                                    name: name,
-                                    email: email.trim(),
-                                  }
+                                  { name: name, email: email.trim() }
                                 )
                                   .then(() => {
-                                    console.error(
-                                      "Digital address verification mail sent.",
-                                      emailError
+                                    console.log(
+                                      "Digital address verification mail sent."
                                     );
                                   })
                                   .catch((emailError) => {
                                     console.error(
-                                      "Error sending email:",
+                                      "Error sending digital address email:",
                                       emailError
                                     );
                                   });
@@ -231,6 +229,7 @@ exports.create = (req, res) => {
                             }
                           });
 
+                          // Send application creation email
                           createMail(
                             "candidate application",
                             "create",
@@ -247,7 +246,7 @@ exports.create = (req, res) => {
                                 message:
                                   "Candidate application created successfully and email sent.",
                                 data: {
-                                  candiate: result,
+                                  candidate: result,
                                   package,
                                 },
                                 token: newToken,
@@ -256,21 +255,26 @@ exports.create = (req, res) => {
                               });
                             })
                             .catch((emailError) => {
-                              console.error("Error sending email:", emailError);
+                              console.error(
+                                "Error sending application creation email:",
+                                emailError
+                              );
                               return res.status(201).json({
                                 status: true,
                                 message:
-                                  "Candidate application created successfully, but failed to send email.",
+                                  "Candidate application created successfully, but email failed to send.",
                                 candidate: result,
                                 token: newToken,
                               });
                             });
                         }
                       });
+                      return;
                     }
 
                     const id = serviceIds[index];
 
+                    // Fetch service required documents for each service ID
                     Service.getServiceRequiredDocumentsByServiceId(
                       id,
                       (err, currentService) => {
@@ -278,17 +282,17 @@ exports.create = (req, res) => {
                           console.error("Error fetching service data:", err);
                           return res.status(500).json({
                             status: false,
-                            message: err,
+                            message: err.message,
                             token: newToken,
                           });
                         }
 
-                        // Skip invalid services and continue to the next index
                         if (!currentService || !currentService.title) {
+                          // Skip invalid services and continue to the next service
                           return fetchServiceNames(index + 1);
                         }
 
-                        // Add the current service name to the array
+                        // Add the service name and description to the array
                         serviceNames.push(
                           `${currentService.title}: ${currentService.description}`
                         );
