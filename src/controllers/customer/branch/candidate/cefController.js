@@ -236,13 +236,14 @@ exports.submit = (req, res) => {
                   if (typeof annexure === "object" && annexure !== null) {
                     const annexurePromises = Object.keys(annexure).map(
                       (key) => {
-                        const modifiedDbTable = `cef_${key.replace(/-/g, "_")}`;
+                        const modifiedDbTable = `${key.replace(/-/g, "_")}`;
+                        const modifiedDbTableForDbQuery = `cef_${key.replace(/-/g, "_")}`;
                         const subJson = annexure[modifiedDbTable];
 
                         return new Promise((resolve, reject) => {
                           CEF.getCMEFormDataByApplicationId(
                             application_id,
-                            modifiedDbTable,
+                            modifiedDbTableForDbQuery,
                             (err, currentCMEFormData) => {
                               if (err) {
                                 console.error(
