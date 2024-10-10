@@ -56,7 +56,7 @@ async function davMail(
 
     // Prepare recipient list
     const toList = toArr
-      .map((email) => `"${email.name}" <${email.email}>`)
+      .map((item) => `"${item.name}" <${item.email}>`)
       .join(", ");
 
     // Debugging: Log the email lists
