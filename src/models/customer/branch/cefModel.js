@@ -229,7 +229,7 @@ const cef = {
   },
 
   createOrUpdateAnnexure: (
-    cmt_id,
+    cef_id,
     candidate_application_id,
     branch_id,
     customer_id,
@@ -258,7 +258,7 @@ const cef = {
           const createTableSql = `
           CREATE TABLE \`${db_table}\` (
             \`id\` bigint(20) NOT NULL AUTO_INCREMENT,
-            \`cmt_id\` bigint(20) NOT NULL,
+            \`cef_id\` bigint(20) NOT NULL,
             \`candidate_application_id\` bigint(20) NOT NULL,
             \`branch_id\` int(11) NOT NULL,
             \`customer_id\` int(11) NOT NULL,
@@ -269,11 +269,11 @@ const cef = {
             KEY \`candidate_application_id\` (\`candidate_application_id\`),
             KEY \`branch_id\` (\`branch_id\`),
             KEY \`cmt_application_customer_id\` (\`customer_id\`),
-            KEY \`cmt_application_cmt_id\` (\`cmt_id\`),
+            KEY \`cmt_application_cef_id\` (\`cef_id\`),
             CONSTRAINT \`fk_${db_table}_candidate_application_id\` FOREIGN KEY (\`candidate_application_id\`) REFERENCES \`candidate_applications\` (\`id\`) ON DELETE CASCADE,
             CONSTRAINT \`fk_${db_table}_branch_id\` FOREIGN KEY (\`branch_id\`) REFERENCES \`branches\` (\`id\`) ON DELETE CASCADE,
             CONSTRAINT \`fk_${db_table}_customer_id\` FOREIGN KEY (\`customer_id\`) REFERENCES \`customers\` (\`id\`) ON DELETE CASCADE,
-            CONSTRAINT \`fk_${db_table}_cmt_id\` FOREIGN KEY (\`cmt_id\`) REFERENCES \`cmt_applications\` (\`id\`) ON DELETE CASCADE
+            CONSTRAINT \`fk_${db_table}_cef_id\` FOREIGN KEY (\`cef_id\`) REFERENCES \`cmt_applications\` (\`id\`) ON DELETE CASCADE
           ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`;
 
           pool.query(createTableSql, (createErr) => {
@@ -371,7 +371,7 @@ const cef = {
                     candidate_application_id,
                     branch_id,
                     customer_id,
-                    cmt_id, // Include cmt_id in the insert statement
+                    cef_id, // Include cef_id in the insert statement
                   },
                   (insertErr, insertResult) => {
                     if (insertErr) {
