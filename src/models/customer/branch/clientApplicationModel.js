@@ -170,7 +170,12 @@ const clientApplication = {
   },
 
   list: (branch_id, callback) => {
-    const sql = "SELECT * FROM `client_applications` WHERE `branch_id` = ?";
+    const sql = `
+        SELECT ca.*, cma.*
+        FROM client_applications AS ca
+        LEFT JOIN cmt_application AS cma ON cma.client_application_id = ca.id
+        WHERE ca.branch_id = ?`;
+
     pool.query(sql, [branch_id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
