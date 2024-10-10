@@ -53,11 +53,11 @@ const Service = {
 
   digitlAddressService: (callback) => {
     const sql = `
-    SELECT * FROM \`services\`
-    WHERE \`title\` LIKE '%Digital%'
-    AND \`title\` LIKE '%Verification%'
-    LIMIT 1
-  `;
+      SELECT * FROM \`services\`
+      WHERE LOWER(\`title\`) LIKE '%digital%'
+      AND (LOWER(\`title\`) LIKE '%verification%' OR LOWER(\`title\`) LIKE '%address%')
+      LIMIT 1
+    `;
 
     pool.query(sql, (err, results) => {
       if (err) {
