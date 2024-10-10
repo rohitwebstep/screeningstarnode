@@ -1,6 +1,8 @@
 const Candidate = require("../../../../models/customer/branch/candidateApplicationModel");
 const BranchCommon = require("../../../../models/customer/branch/commonModel");
 const Service = require("../../../../models/admin/serviceModel");
+const AppModel = require("../../../../models/appModel");
+
 const {
   createMail,
 } = require("../../../../mailer/customer/branch/candidate/createMail");
@@ -18,8 +20,6 @@ exports.create = (req, res) => {
     employee_id,
     mobile_number,
     email,
-    bgv_href,
-    dav_href,
     services,
     package,
   } = req.body;
@@ -33,7 +33,6 @@ exports.create = (req, res) => {
     employee_id,
     mobile_number,
     email,
-    bgv_href,
   };
 
   // Check for missing fields
@@ -172,7 +171,7 @@ exports.create = (req, res) => {
                   // Function to fetch service names
                   const fetchServiceNames = (index = 0) => {
                     if (index >= serviceIds.length) {
-                      Service.digitlAddressService((err, serviceEntry) => {
+                      AppModel.info((err, appInfo) => {
                         if (err) {
                           console.error("Database error:", err);
                           return res.status(500).json({
@@ -182,70 +181,91 @@ exports.create = (req, res) => {
                           });
                         }
 
-                        if (serviceEntry) {
-                          digitalAddressID = serviceEntry.is;
-                          if (serviceIds.includes(digitalAddressID)) {
-                            davMail(
-                              "candidate application",
-                              "dav",
-                              name,
-                              customer.name,
-                              dav_href,
-                              {
-                                name: name,
-                                email: email.trim(),
-                              }
-                            )
-                              .then(() => {
-                                console.error(
-                                  "Digital address verification mail sent.",
-                                  emailError
-                                );
-                              })
-                              .catch((emailError) => {
-                                console.error(
-                                  "Error sending email:",
-                                  emailError
-                                );
+                        if (appInfo) {
+                          const appHost = appInfo.host;
+                          const base64_branch_id = btoa(branch_id);
+                          const base64_customer_id = btoa(customer_id);
+                          const base64_link_with_ids = `YXBwX2lk=${base64_result}&YnJhbmNoX2lk=${base64_branch_id}&Y3VzdG9tZXJfaWQ==${base64_customer_id};`;
+
+                          const dav_href = `${appHost}/dav-form/${base64_link_with_ids}`;
+                          const bgv_href = `${appHost}/background_form/${base64_link_with_ids}`;
+
+                          Service.digitlAddressService((err, serviceEntry) => {
+                            if (err) {
+                              console.error("Database error:", err);
+                              return res.status(500).json({
+                                status: false,
+                                message: err.message,
+                                token: newToken,
                               });
-                          }
+                            }
+
+                            if (serviceEntry) {
+                              const digitalAddressID = serviceEntry.id;
+                              if (serviceIds.includes(digitalAddressID)) {
+                                davMail(
+                                  "candidate application",
+                                  "dav",
+                                  name,
+                                  customer.name,
+                                  dav_href,
+                                  {
+                                    name: name,
+                                    email: email.trim(),
+                                  }
+                                )
+                                  .then(() => {
+                                    console.error(
+                                      "Digital address verification mail sent.",
+                                      emailError
+                                    );
+                                  })
+                                  .catch((emailError) => {
+                                    console.error(
+                                      "Error sending email:",
+                                      emailError
+                                    );
+                                  });
+                              }
+                            }
+                          });
+
+                          createMail(
+                            "candidate application",
+                            "create",
+                            name,
+                            result.insertId,
+                            bgv_href,
+                            serviceNames,
+                            toArr,
+                            ccArr
+                          )
+                            .then(() => {
+                              return res.status(201).json({
+                                status: true,
+                                message:
+                                  "Candidate application created successfully and email sent.",
+                                data: {
+                                  candiate: result,
+                                  package,
+                                },
+                                token: newToken,
+                                toArr,
+                                ccArr,
+                              });
+                            })
+                            .catch((emailError) => {
+                              console.error("Error sending email:", emailError);
+                              return res.status(201).json({
+                                status: true,
+                                message:
+                                  "Candidate application created successfully, but failed to send email.",
+                                candidate: result,
+                                token: newToken,
+                              });
+                            });
                         }
                       });
-
-                      createMail(
-                        "candidate application",
-                        "create",
-                        name,
-                        result.insertId,
-                        bgv_href,
-                        serviceNames,
-                        toArr,
-                        ccArr
-                      )
-                        .then(() => {
-                          return res.status(201).json({
-                            status: true,
-                            message:
-                              "Candidate application created successfully and email sent.",
-                            data: {
-                              candiate: result,
-                              package,
-                            },
-                            token: newToken,
-                            toArr,
-                            ccArr,
-                          });
-                        })
-                        .catch((emailError) => {
-                          console.error("Error sending email:", emailError);
-                          return res.status(201).json({
-                            status: true,
-                            message:
-                              "Candidate application created successfully, but failed to send email.",
-                            candidate: result,
-                            token: newToken,
-                          });
-                        });
                     }
 
                     const id = serviceIds[index];
