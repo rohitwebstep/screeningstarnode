@@ -203,10 +203,10 @@ const clientApplication = {
               );
             });
 
-            // Combine client application with cmt data
+            // Combine client application with cmt data, ensuring cmtApplications is an array
             finalResults.push({
               ...clientApp, // Include all client application fields
-              cmtApplications: cmtData, // Add cmt applications array
+              cmtApplications: cmtData.length > 0 ? cmtData : [], // Use empty array if no cmt records
             });
             resolve();
           });

@@ -42,7 +42,7 @@ const Branch = {
                 'Completed Pink', 
                 'Completed Orange'
             )
-            AND \`branch_id\` = ? -- Corrected this line
+            AND \`branch_id\` = ?
         ORDER BY 
             CASE 
                 WHEN \`status\` = 'Completed' THEN 1
@@ -66,28 +66,64 @@ const Branch = {
         return callback(err, null);
       }
 
-      // Group the results by 'status' field with applicationCount and applications array
-      const applicationsByStatus = results.reduce((grouped, row) => {
-        if (!grouped[row.status]) {
-          grouped[row.status] = {
-            applicationCount: 0,
-            applications: [],
-          };
-        }
+      // Array to hold promises for fetching cmt_application data
+      const cmtPromises = results.map((app) => {
+        return new Promise((resolve, reject) => {
+          const sqlCmt =
+            "SELECT * FROM cmt_application WHERE client_application_id = ?";
+          pool.query(sqlCmt, [app.application_id], (err, cmtResults) => {
+            if (err) {
+              console.error("Database query error for cmt_application:", err);
+              return reject(err);
+            }
 
-        grouped[row.status].applications.push({
-          client_application_id: row.application_id,
-          application_name: row.name,
-          application_date: row.date_created, // Assuming 'date_created' is a field in your table
+            // Add cmt_ prefix to each field in cmtResults
+            const cmtData = cmtResults.map((cmtApp) => {
+              return Object.fromEntries(
+                Object.entries(cmtApp).map(([key, value]) => [
+                  `cmt_${key}`,
+                  value,
+                ])
+              );
+            });
+
+            // Add the cmtApplications to the application object
+            app.cmtApplications = cmtData.length > 0 ? cmtData : []; // Use empty array if no cmt records
+
+            resolve(app); // Resolve with the updated application object
+          });
         });
+      });
 
-        grouped[row.status].applicationCount += 1;
+      // Wait for all cmt application queries to complete
+      Promise.all(cmtPromises)
+        .then((updatedResults) => {
+          // Group the results by 'status' field with applicationCount and applications array
+          const applicationsByStatus = updatedResults.reduce((grouped, row) => {
+            if (!grouped[row.status]) {
+              grouped[row.status] = {
+                applicationCount: 0,
+                applications: [],
+              };
+            }
 
-        return grouped;
-      }, {});
+            grouped[row.status].applications.push({
+              client_application_id: row.application_id,
+              application_name: row.name,
+              cmtApplications: row.cmtApplications, // Add cmt applications array
+            });
 
-      // Return the grouped results via callback
-      return callback(null, applicationsByStatus);
+            grouped[row.status].applicationCount += 1;
+
+            return grouped;
+          }, {});
+
+          // Return the grouped results via callback
+          return callback(null, applicationsByStatus);
+        })
+        .catch((err) => {
+          callback(err, null);
+        });
     });
   },
 

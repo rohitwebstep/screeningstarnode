@@ -343,6 +343,7 @@ exports.list = (req, res) => {
             status: false,
             message: "An error occurred while fetching client applications.",
             token: newToken,
+            err
           });
         }
 
