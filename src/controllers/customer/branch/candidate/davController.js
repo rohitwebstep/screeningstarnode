@@ -100,7 +100,6 @@ exports.submit = (req, res) => {
     customer_id,
     application_id,
     personal_information,
-    annexure,
   } = req.body;
 
   // Define required fields and check for missing values
@@ -224,85 +223,10 @@ exports.submit = (req, res) => {
                     });
                   }
 
-                  // Handle annexures if provided
-                  if (typeof annexure === "object" && annexure !== null) {
-                    const annexurePromises = Object.keys(annexure).map(
-                      (key) => {
-                        const modifiedDbTable = `${key.replace(/-/g, "_")}`;
-                        const modifiedDbTableForDbQuery = `cef_${key.replace(
-                          /-/g,
-                          "_"
-                        )}`;
-                        const subJson = annexure[modifiedDbTable];
-
-                        return new Promise((resolve, reject) => {
-                          DAV.getCMEFormDataByApplicationId(
-                            application_id,
-                            modifiedDbTableForDbQuery,
-                            (err, currentCMEFormData) => {
-                              if (err) {
-                                console.error(
-                                  "Database error during annexure retrieval:",
-                                  err
-                                );
-                                return reject(
-                                  "Error retrieving annexure data."
-                                );
-                              }
-
-                              if (
-                                currentCMEFormData &&
-                                Object.keys(currentCMEFormData).length > 0
-                              ) {
-                                return reject(
-                                  "Annexure has already been filed."
-                                );
-                              }
-
-                              DAV.createOrUpdateAnnexure(
-                                cmeResult.insertId,
-                                application_id,
-                                branch_id,
-                                customer_id,
-                                modifiedDbTableForDbQuery,
-                                subJson,
-                                (err) => {
-                                  if (err) {
-                                    console.error(
-                                      "Database error during annexure update:",
-                                      err
-                                    );
-                                    return reject(
-                                      "Error updating annexure data."
-                                    );
-                                  }
-                                  resolve();
-                                }
-                              );
-                            }
-                          );
-                        });
-                      }
-                    );
-
-                    // Process all annexure promises
-                    Promise.all(annexurePromises)
-                      .then(() => {
-                        sendNotificationEmails(branch_id, customer_id, res);
-                      })
-                      .catch((error) => {
-                        return res.status(400).json({
-                          status: false,
-                          message: error,
-                        });
-                      });
-                  } else {
-                    // No annexures to handle, finalize submission
-                    return res.status(200).json({
-                      status: true,
-                      message: "DAV Application submitted successfully.",
-                    });
-                  }
+                  return res.status(200).json({
+                    status: true,
+                    message: "DAV Application submitted successfully.",
+                  });
                 }
               );
             }
