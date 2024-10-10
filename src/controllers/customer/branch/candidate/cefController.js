@@ -232,6 +232,10 @@ exports.submit = (req, res) => {
                     });
                   }
 
+                  return res.status(400).json({
+                    annexure
+                  });
+
                   // Handle annexures if provided
                   if (typeof annexure === "object" && annexure !== null) {
                     const annexurePromises = Object.keys(annexure).map(
