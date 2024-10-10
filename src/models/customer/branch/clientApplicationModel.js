@@ -182,14 +182,14 @@ const clientApplication = {
       // Array to hold the final results
       const finalResults = [];
 
-      // Loop through clientResults to fetch data from cmt_application
+      // Loop through clientResults to fetch data from cmt_applications
       const cmtPromises = clientResults.map((clientApp) => {
         return new Promise((resolve, reject) => {
           const sqlCmt =
-            "SELECT * FROM cmt_application WHERE client_application_id = ?";
+            "SELECT * FROM cmt_applications WHERE client_application_id = ?";
           pool.query(sqlCmt, [clientApp.id], (err, cmtResults) => {
             if (err) {
-              console.error("Database query error for cmt_application:", err);
+              console.error("Database query error for cmt_applications:", err);
               return reject(err);
             }
 
