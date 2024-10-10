@@ -272,7 +272,7 @@ exports.submit = (req, res) => {
                                 application_id,
                                 branch_id,
                                 customer_id,
-                                modifiedDbTable,
+                                modifiedDbTableForDbQuery,
                                 subJson,
                                 (err) => {
                                   if (err) {
