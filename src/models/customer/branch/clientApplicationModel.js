@@ -283,6 +283,24 @@ const clientApplication = {
     });
   },
 
+  updateStatus: (status, client_application_id, callback) => {
+    const sql = `
+      UPDATE \`client_applications\`
+      SET
+        \`status\` = ?
+      WHERE
+        \`id\` = ?
+    `;
+
+    pool.query(sql, [status, client_application_id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results);
+    });
+  },
+
   delete: (id, callback) => {
     const sql = "DELETE FROM `client_applications` WHERE `id` = ?";
     pool.query(sql, [id], (err, results) => {
