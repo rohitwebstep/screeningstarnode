@@ -66,14 +66,14 @@ const Branch = {
         return callback(err, null);
       }
 
-      // Array to hold promises for fetching cmt_application data
+      // Array to hold promises for fetching cmt_applications data
       const cmtPromises = results.map((app) => {
         return new Promise((resolve, reject) => {
           const sqlCmt =
-            "SELECT * FROM cmt_application WHERE client_application_id = ?";
+            "SELECT * FROM cmt_applications WHERE client_application_id = ?";
           pool.query(sqlCmt, [app.application_id], (err, cmtResults) => {
             if (err) {
-              console.error("Database query error for cmt_application:", err);
+              console.error("Database query error for cmt_applications:", err);
               return reject(err);
             }
 
