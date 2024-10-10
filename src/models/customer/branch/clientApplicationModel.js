@@ -170,18 +170,57 @@ const clientApplication = {
   },
 
   list: (branch_id, callback) => {
-    const sql = `
-        SELECT ca.*, cma.*
-        FROM client_applications AS ca
-        LEFT JOIN cmt_applications AS cma ON cma.client_application_id = ca.id
-        WHERE ca.branch_id = ?`;
+    // First query to fetch data from client_applications
+    const sqlClient = "SELECT * FROM client_applications WHERE branch_id = ?";
 
-    pool.query(sql, [branch_id], (err, results) => {
+    pool.query(sqlClient, [branch_id], (err, clientResults) => {
       if (err) {
         console.error("Database query error:", err);
         return callback(err, null);
       }
-      callback(null, results);
+
+      // Array to hold the final results
+      const finalResults = [];
+
+      // Loop through clientResults to fetch data from cmt_application
+      const cmtPromises = clientResults.map((clientApp) => {
+        return new Promise((resolve, reject) => {
+          const sqlCmt =
+            "SELECT * FROM cmt_application WHERE client_application_id = ?";
+          pool.query(sqlCmt, [clientApp.id], (err, cmtResults) => {
+            if (err) {
+              console.error("Database query error for cmt_application:", err);
+              return reject(err);
+            }
+
+            // Add cmt_ prefix to each field in cmtResults
+            const cmtData = cmtResults.map((cmtApp) => {
+              return Object.fromEntries(
+                Object.entries(cmtApp).map(([key, value]) => [
+                  `cmt_${key}`,
+                  value,
+                ])
+              );
+            });
+
+            // Combine client application with cmt data
+            finalResults.push({
+              ...clientApp, // Include all client application fields
+              cmtApplications: cmtData, // Add cmt applications array
+            });
+            resolve();
+          });
+        });
+      });
+
+      // Wait for all cmt application queries to complete
+      Promise.all(cmtPromises)
+        .then(() => {
+          callback(null, finalResults);
+        })
+        .catch((err) => {
+          callback(err, null);
+        });
     });
   },
 
