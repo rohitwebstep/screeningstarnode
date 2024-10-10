@@ -143,7 +143,23 @@ exports.create = (req, res) => {
                 null,
                 () => {}
               );
+              Service.digitlAddressService((err, serviceEntry) => {
+                if (err) {
+                  console.error("Database error:", err);
+                  return res.status(500).json({
+                    status: false,
+                    message: err.message,
+                    token: newToken,
+                  });
+                }
 
+                if (serviceEntry) {
+                  const digitalAddressID = serviceEntry.id;
+                  return res.status(500).json({
+                    digitalAddressID,
+                  });
+                }
+              });
               BranchCommon.getBranchandCustomerEmailsForNotification(
                 branch_id,
                 (emailError, emailData) => {
