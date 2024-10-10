@@ -51,6 +51,26 @@ const Service = {
     });
   },
 
+  digitlAddressService: (callback) => {
+    const sql = `
+    SELECT * FROM \`services\`
+    WHERE \`title\` LIKE '%Digital%'
+    AND \`title\` LIKE '%Verification%'
+    LIMIT 1
+  `;
+
+    pool.query(sql, (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+
+      // Check if results are found and return the first entry or null if not found
+      const singleEntry = results.length > 0 ? results[0] : null;
+      callback(null, singleEntry); // Return single entry or null if not found
+    });
+  },
+
   getServiceById: (id, callback) => {
     const sql = `SELECT * FROM \`services\` WHERE \`id\` = ?`;
     pool.query(sql, [id], (err, results) => {
