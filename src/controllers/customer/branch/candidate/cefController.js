@@ -107,7 +107,6 @@ exports.submit = (req, res) => {
     branch_id,
     customer_id,
     application_id,
-    resume_file,
     govt_id,
     personal_information,
     annexure,
@@ -118,7 +117,6 @@ exports.submit = (req, res) => {
     branch_id,
     customer_id,
     application_id,
-    resume_file,
     govt_id,
     personal_information,
   };
@@ -213,8 +211,6 @@ exports.submit = (req, res) => {
                 }
 
                 CEF.create(
-                  resume_file,
-                  govt_id,
                   personal_information,
                   application_id,
                   branch_id,

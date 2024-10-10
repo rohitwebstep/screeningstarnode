@@ -26,8 +26,6 @@ const cef = {
   },
 
   create: (
-    resume_file,
-    govt_id,
     personal_information,
     candidate_application_id,
     branch_id,
@@ -82,8 +80,6 @@ const cef = {
               candidate_application_id,
               branch_id,
               customer_id,
-              resume_file,
-              govt_id,
               callback
             );
           })
@@ -98,8 +94,6 @@ const cef = {
           candidate_application_id,
           branch_id,
           customer_id,
-          resume_file,
-          govt_id,
           callback
         );
       }
@@ -112,8 +106,6 @@ const cef = {
     candidate_application_id,
     branch_id,
     customer_id,
-    resume_file,
-    govt_id,
     callback
   ) => {
     // Check if entry exists by candidate_application_id
@@ -132,8 +124,6 @@ const cef = {
           // Entry exists, so update it
           personal_information.branch_id = branch_id;
           personal_information.customer_id = customer_id;
-          personal_information.resume_file = resume_file;
-          personal_information.govt_id = govt_id;
 
           const updateSql =
             "UPDATE candidate_email_form SET ? WHERE candidate_application_id = ?";
@@ -158,8 +148,6 @@ const cef = {
               candidate_application_id,
               branch_id,
               customer_id,
-              resume_file,
-              govt_id,
             },
             (insertErr, insertResult) => {
               if (insertErr) {
