@@ -107,7 +107,6 @@ exports.submit = (req, res) => {
     branch_id,
     customer_id,
     application_id,
-    govt_id,
     personal_information,
     annexure,
   } = req.body;
@@ -117,7 +116,6 @@ exports.submit = (req, res) => {
     branch_id,
     customer_id,
     application_id,
-    govt_id,
     personal_information,
   };
 
