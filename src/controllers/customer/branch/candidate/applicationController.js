@@ -217,7 +217,7 @@ exports.create = (req, res) => {
                                   name,
                                   customer.name,
                                   dav_href,
-                                  { name: name, email: email.trim() }
+                                  [{ name: name, email: email.trim() }]
                                 )
                                   .then(() => {
                                     console.log(
