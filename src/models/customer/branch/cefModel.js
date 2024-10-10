@@ -229,7 +229,7 @@ const cef = {
   },
 
   createOrUpdateAnnexure: (
-    cef_id,
+    cmt_id,
     candidate_application_id,
     branch_id,
     customer_id,
@@ -239,7 +239,7 @@ const cef = {
   ) => {
     const fields = Object.keys(mainJson);
 
-    // Step 1: Check if the table exists
+    // 1. Check if the table exists
     const checkTableSql = `
       SELECT COUNT(*) AS count 
       FROM information_schema.tables 
@@ -253,33 +253,32 @@ const cef = {
           console.error("Error checking table existence:", tableErr);
           return callback(tableErr, null);
         }
-
         if (tableResults[0].count === 0) {
-          console.log(`Table ${db_table} does not exist. Creating it...`);
+          console.log(`3 - ${db_table}`);
           const createTableSql = `
-            CREATE TABLE \`${db_table}\` (
-              \`id\` bigint(20) NOT NULL AUTO_INCREMENT,
-              \`cef_id\` bigint(20) NOT NULL,
-              \`candidate_application_id\` bigint(20) NOT NULL,
-              \`branch_id\` int(11) NOT NULL,
-              \`customer_id\` int(11) NOT NULL,
-              \`status\` VARCHAR(100) NOT NULL,
-              \`created_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-              \`updated_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-              PRIMARY KEY (\`id\`),
-              KEY \`candidate_application_id\` (\`candidate_application_id\`),
-              KEY \`branch_id\` (\`branch_id\`),
-              KEY \`cef_application_customer_id\` (\`customer_id\`),
-              KEY \`cef_application_cef_id\` (\`cef_id\`),
-              CONSTRAINT \`fk_${db_table}_candidate_application_id\` FOREIGN KEY (\`candidate_application_id\`) REFERENCES \`client_applications\` (\`id\`) ON DELETE CASCADE,
-              CONSTRAINT \`fk_${db_table}_branch_id\` FOREIGN KEY (\`branch_id\`) REFERENCES \`branches\` (\`id\`) ON DELETE CASCADE,
-              CONSTRAINT \`fk_${db_table}_customer_id\` FOREIGN KEY (\`customer_id\`) REFERENCES \`customers\` (\`id\`) ON DELETE CASCADE,
-              CONSTRAINT \`fk_${db_table}_cef_id\` FOREIGN KEY (\`cef_id\`) REFERENCES \`cef_applications\` (\`id\`) ON DELETE CASCADE
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`;
+          CREATE TABLE \`${db_table}\` (
+            \`id\` bigint(20) NOT NULL AUTO_INCREMENT,
+            \`cmt_id\` bigint(20) NOT NULL,
+            \`candidate_application_id\` bigint(20) NOT NULL,
+            \`branch_id\` int(11) NOT NULL,
+            \`customer_id\` int(11) NOT NULL,
+            \`status\` VARCHAR(100) NOT NULL,
+            \`created_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+            \`updated_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (\`id\`),
+            KEY \`candidate_application_id\` (\`candidate_application_id\`),
+            KEY \`branch_id\` (\`branch_id\`),
+            KEY \`cmt_application_customer_id\` (\`customer_id\`),
+            KEY \`cmt_application_cmt_id\` (\`cmt_id\`),
+            CONSTRAINT \`fk_${db_table}_candidate_application_id\` FOREIGN KEY (\`candidate_application_id\`) REFERENCES \`candidate_applications\` (\`id\`) ON DELETE CASCADE,
+            CONSTRAINT \`fk_${db_table}_branch_id\` FOREIGN KEY (\`branch_id\`) REFERENCES \`branches\` (\`id\`) ON DELETE CASCADE,
+            CONSTRAINT \`fk_${db_table}_customer_id\` FOREIGN KEY (\`customer_id\`) REFERENCES \`customers\` (\`id\`) ON DELETE CASCADE,
+            CONSTRAINT \`fk_${db_table}_cmt_id\` FOREIGN KEY (\`cmt_id\`) REFERENCES \`cmt_applications\` (\`id\`) ON DELETE CASCADE
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`;
 
           pool.query(createTableSql, (createErr) => {
             if (createErr) {
-              console.error("Error creating table:", createErr);
+              console.error("Error creating table 3 :", createErr);
               return callback(createErr, null);
             }
             proceedToCheckColumns();
@@ -288,7 +287,6 @@ const cef = {
           proceedToCheckColumns();
         }
 
-        // Step 2: Check for missing columns and add them if necessary
         function proceedToCheckColumns() {
           const checkColumnsSql = `
             SELECT COLUMN_NAME 
@@ -306,11 +304,13 @@ const cef = {
               (field) => !existingColumns.includes(field)
             );
 
+            // 4. Add missing columns
             if (missingColumns.length > 0) {
               const alterQueries = missingColumns.map((column) => {
                 return `ALTER TABLE \`${db_table}\` ADD COLUMN \`${column}\` VARCHAR(255)`; // Adjust data type as necessary
               });
 
+              // Run all ALTER statements in sequence
               const alterPromises = alterQueries.map(
                 (query) =>
                   new Promise((resolve, reject) => {
@@ -336,8 +336,8 @@ const cef = {
           });
         }
 
-        // Step 3: Check if entry exists by candidate_application_id and update or insert
         function checkAndUpdateEntry() {
+          // 5. Check if entry exists by candidate_application_id
           const checkEntrySql = `SELECT * FROM \`${db_table}\` WHERE candidate_application_id = ?`;
           pool.query(
             checkEntrySql,
@@ -348,22 +348,21 @@ const cef = {
                 return callback(entryErr, null);
               }
 
+              // 6. Insert or update the entry
               if (entryResults.length > 0) {
-                // Update existing entry
                 const updateSql = `UPDATE \`${db_table}\` SET ? WHERE candidate_application_id = ?`;
                 pool.query(
                   updateSql,
                   [mainJson, candidate_application_id],
                   (updateErr, updateResult) => {
                     if (updateErr) {
-                      console.error("Error updating entry:", updateErr);
+                      console.error("Error updating application:", updateErr);
                       return callback(updateErr, null);
                     }
                     callback(null, updateResult);
                   }
                 );
               } else {
-                // Insert new entry
                 const insertSql = `INSERT INTO \`${db_table}\` SET ?`;
                 pool.query(
                   insertSql,
@@ -372,11 +371,11 @@ const cef = {
                     candidate_application_id,
                     branch_id,
                     customer_id,
-                    cef_id, // Include cef_id in the insert statement
+                    cmt_id, // Include cmt_id in the insert statement
                   },
                   (insertErr, insertResult) => {
                     if (insertErr) {
-                      console.error("Error inserting entry:", insertErr);
+                      console.error("Error inserting application:", insertErr);
                       return callback(insertErr, null);
                     }
                     callback(null, insertResult);
