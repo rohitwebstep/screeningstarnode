@@ -12,6 +12,7 @@ exports.create = (req, res) => {
     employee_id,
     mobile_number,
     email,
+    bgv_href,
     services,
     package,
   } = req.body;
@@ -25,6 +26,7 @@ exports.create = (req, res) => {
     employee_id,
     mobile_number,
     email,
+    bgv_href,
   };
 
   // Check for missing fields
@@ -169,7 +171,7 @@ exports.create = (req, res) => {
                         "create",
                         name,
                         result.insertId,
-                        "#",
+                        bgv_href,
                         serviceNames,
                         toArr,
                         ccArr
