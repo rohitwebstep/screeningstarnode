@@ -232,18 +232,17 @@ exports.submit = (req, res) => {
                     });
                   }
 
-
-
                   // Handle annexures if provided
                   if (typeof annexure === "object" && annexure !== null) {
                     const annexurePromises = Object.keys(annexure).map(
                       (key) => {
                         const modifiedDbTable = `${key.replace(/-/g, "_")}`;
-                        const modifiedDbTableForDbQuery = `cef_${key.replace(/-/g, "_")}`;
+                        const modifiedDbTableForDbQuery = `cef_${key.replace(
+                          /-/g,
+                          "_"
+                        )}`;
                         const subJson = annexure[modifiedDbTable];
-                        return res.status(400).json({
-                          subJson
-                        });
+
                         return new Promise((resolve, reject) => {
                           CEF.getCMEFormDataByApplicationId(
                             application_id,
