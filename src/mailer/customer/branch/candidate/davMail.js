@@ -50,13 +50,19 @@ async function davMail(
       .replace(/{{url}}/g, href);
 
     // Validate recipient email(s)
-    if (!toArr || toArr.length === 0) {
+    if (!Array.isArray(toArr) || toArr.length === 0) {
       throw new Error("No recipient email provided");
     }
 
     // Prepare recipient list
     const toList = toArr
-      .map((item) => `"${item.name}" <${item.email}>`)
+      .map((item) => {
+        // Ensure email is a valid non-empty string
+        if (!item.email) {
+          throw new Error(`No valid email provided for ${item.name}`);
+        }
+        return `"${item.name}" <${item.email}>`;
+      })
       .join(", ");
 
     // Debugging: Log the email lists
