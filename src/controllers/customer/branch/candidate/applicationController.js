@@ -143,23 +143,7 @@ exports.create = (req, res) => {
                 null,
                 () => {}
               );
-              Service.digitlAddressService((err, serviceEntry) => {
-                if (err) {
-                  console.error("Database error:", err);
-                  return res.status(500).json({
-                    status: false,
-                    message: err.message,
-                    token: newToken,
-                  });
-                }
 
-                if (serviceEntry) {
-                  const digitalAddressID = serviceEntry.id;
-                  return res.status(500).json({
-                    digitalAddressID,
-                  });
-                }
-              });
               BranchCommon.getBranchandCustomerEmailsForNotification(
                 branch_id,
                 (emailError, emailData) => {
@@ -181,7 +165,9 @@ exports.create = (req, res) => {
                     email: email.trim(),
                   }));
 
-                  const serviceIds = services.split(",").map((id) => id.trim());
+                  const serviceIds = services
+                    .split(",")
+                    .map((id) => parseInt(id.trim(), 10));
                   const serviceNames = [];
 
                   // Function to fetch service names recursively
@@ -220,12 +206,10 @@ exports.create = (req, res) => {
                             }
 
                             if (serviceEntry) {
-                              console.log(
-                                `ServiceID - ${serviceEntry.id}`,
-                                `serviceIds - `,
-                                serviceIds
+                              const digitalAddressID = parseInt(
+                                serviceEntry.id,
+                                10
                               );
-                              const digitalAddressID = serviceEntry.id;
                               if (serviceIds.includes(digitalAddressID)) {
                                 davMail(
                                   "candidate application",
