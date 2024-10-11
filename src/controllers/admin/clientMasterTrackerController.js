@@ -1174,9 +1174,12 @@ exports.generateReport = (req, res) => {
                                             "color_status" in subJson
                                           ) {
                                             const colorStatusValue =
-                                              subJson.color_status.toLowerCase();
+                                              subJson.color_status &&
+                                              typeof subJson.color_status ===
+                                                "string"
+                                                ? subJson.color_status.toLowerCase()
+                                                : null; // Or set a default value if needed
 
-                                            // Check if color_status value is in completeStatusArr
                                             if (
                                               !completeStatusArr.includes(
                                                 colorStatusValue
