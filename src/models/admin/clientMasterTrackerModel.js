@@ -90,11 +90,11 @@ GROUP BY b.name;
     const params = [branch_id];
 
     // Check if status is not null and add the corresponding condition
-    // if (status !== null) {
-    //   sql += ` AND \`status\` = ?`;
-    //   params.push(status);
-    // }
-
+    if (typeof status === "string" && status.trim() !== "") {
+      sql += ` AND \`status\` = ?`;
+      params.push(status);
+    }
+    
     pool.query(sql, params, (err, results) => {
       if (err) {
         console.error("Database query error:", err);
