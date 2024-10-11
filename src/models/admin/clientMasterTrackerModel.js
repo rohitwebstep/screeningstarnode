@@ -94,7 +94,7 @@ GROUP BY b.name;
       sql += ` AND \`status\` = ?`;
       params.push(status);
     }
-    
+
     pool.query(sql, params, (err, results) => {
       if (err) {
         console.error("Database query error:", err);
@@ -335,94 +335,37 @@ GROUP BY b.name;
         (field) => !existingColumns.includes(field)
       );
 
-      // 2. Add missing columns
-      if (missingColumns.length > 0) {
-        const alterQueries = missingColumns.map((column) => {
-          return `ALTER TABLE cmt_applications ADD COLUMN ${column} VARCHAR(255)`; // Adjust data type as necessary
-        });
-
-        // Run all ALTER statements in sequence
-        const alterPromises = alterQueries.map(
-          (query) =>
-            new Promise((resolve, reject) => {
-              pool.query(query, (alterErr) => {
-                if (alterErr) {
-                  console.error("Error adding column:", alterErr);
-                  return reject(alterErr);
-                }
-                resolve();
-              });
-            })
-        );
-
-        Promise.all(alterPromises)
-          .then(() => {
-            // 3. Check if entry exists by client_application_id
-            const checkEntrySql =
-              "SELECT * FROM cmt_applications WHERE client_application_id = ?";
-            pool.query(
-              checkEntrySql,
-              [client_application_id],
-              (entryErr, entryResults) => {
-                if (entryErr) {
-                  console.error("Error checking entry existence:", entryErr);
-                  return callback(entryErr, null);
-                }
-
-                // 4. Insert or update the entry
-                if (entryResults.length > 0) {
-                  // Add branch_id and customer_id to mainJson
-                  mainJson.branch_id = branch_id;
-                  mainJson.customer_id = customer_id;
-
-                  // Update existing entry
-                  const updateSql =
-                    "UPDATE cmt_applications SET ? WHERE client_application_id = ?";
-                  pool.query(
-                    updateSql,
-                    [mainJson, client_application_id],
-                    (updateErr, updateResult) => {
-                      if (updateErr) {
-                        console.error("Error updating application:", updateErr);
-                        return callback(updateErr, null);
-                      }
-                      callback(null, updateResult);
-                    }
-                  );
-                } else {
-                  // Insert new entry
-                  const insertSql = "INSERT INTO cmt_applications SET ?";
-                  pool.query(
-                    insertSql,
-                    {
-                      ...mainJson,
-                      client_application_id,
-                      branch_id,
-                      customer_id,
-                    },
-                    (insertErr, insertResult) => {
-                      if (insertErr) {
-                        console.error(
-                          "Error inserting application:",
-                          insertErr
-                        );
-                        return callback(insertErr, null);
-                      }
-                      callback(null, insertResult);
-                    }
-                  );
-                }
-              }
-            );
-          })
-          .catch((err) => {
-            console.error("Error executing ALTER statements:", err);
-            callback(err, null);
+      // 2. Add missing columns if any
+      const addMissingColumns = () => {
+        if (missingColumns.length > 0) {
+          const alterQueries = missingColumns.map((column) => {
+            return `ALTER TABLE cmt_applications ADD COLUMN ${column} VARCHAR(255)`; // Adjust data type as needed
           });
-      } else {
-        // If no columns are missing, proceed to check the entry
+
+          // Run all ALTER statements sequentially
+          const alterPromises = alterQueries.map(
+            (query) =>
+              new Promise((resolve, reject) => {
+                pool.query(query, (alterErr) => {
+                  if (alterErr) {
+                    console.error("Error adding column:", alterErr);
+                    return reject(alterErr);
+                  }
+                  resolve();
+                });
+              })
+          );
+
+          return Promise.all(alterPromises);
+        }
+        return Promise.resolve(); // No missing columns, resolve immediately
+      };
+
+      // 3. Check if entry exists by client_application_id and insert/update accordingly
+      const checkAndUpsertEntry = () => {
         const checkEntrySql =
           "SELECT * FROM cmt_applications WHERE client_application_id = ?";
+
         pool.query(
           checkEntrySql,
           [client_application_id],
@@ -432,12 +375,11 @@ GROUP BY b.name;
               return callback(entryErr, null);
             }
 
-            // 4. Insert or update the entry
-            if (entryResults.length > 0) {
-              // Add branch_id and customer_id to mainJson
-              mainJson.branch_id = branch_id;
-              mainJson.customer_id = customer_id;
+            // Add branch_id and customer_id to mainJson
+            mainJson.branch_id = branch_id;
+            mainJson.customer_id = customer_id;
 
+            if (entryResults.length > 0) {
               // Update existing entry
               const updateSql =
                 "UPDATE cmt_applications SET ? WHERE client_application_id = ?";
@@ -469,7 +411,15 @@ GROUP BY b.name;
             }
           }
         );
-      }
+      };
+
+      // Execute the operations in sequence
+      addMissingColumns()
+        .then(() => checkAndUpsertEntry())
+        .catch((err) => {
+          console.error("Error during ALTER or entry check:", err);
+          callback(err, null);
+        });
     });
   },
 
