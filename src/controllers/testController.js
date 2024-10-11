@@ -4,7 +4,7 @@ const { upload, saveImage, saveImages } = require("../utils/imageSave");
 
 exports.uploadImage = (req, res) => {
   // Define the target directory to move files to
-  const targetDir = "uploads/123"; // Specify your target directory here
+  const targetDir = "uploads/rohit"; // Specify your target directory here
   fs.mkdir(targetDir, { recursive: true }, (err) => {
     if (err) {
       console.error("Error creating directory:", err);
