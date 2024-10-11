@@ -24,6 +24,7 @@ router.get("/active", profileController.active);
 router.get("/inactive", profileController.inactive);
 
 router.get("/service-info", profileController.getServiceById);
+router.get("/annexure-by-service",profileController.annexureDataByServiceId);
 
 router.delete("/delete", profileController.delete);
 
