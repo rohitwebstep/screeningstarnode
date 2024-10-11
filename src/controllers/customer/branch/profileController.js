@@ -62,7 +62,8 @@ exports.index = (req, res) => {
             console.error("Database error:", dbErr);
             return res.status(500).json({
               status: false,
-              message: "An error occurred while fetching client applications 1.",
+              message:
+                "An error occurred while fetching client applications 1.",
               token: newToken,
             });
           }
@@ -768,7 +769,7 @@ exports.getServiceById = (req, res) => {
   const { id, branch_id, _token } = req.query;
   let missingFields = [];
   if (!id || id === "") missingFields.push("Service ID");
-  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
+  if (!branch_id || branch_id === "") missingFields.push("Branch ID");
   if (!_token || _token === "") missingFields.push("Token");
 
   if (missingFields.length > 0) {
