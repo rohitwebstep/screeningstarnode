@@ -778,7 +778,7 @@ exports.getServiceById = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-  const action = JSON.stringify({ report_case_status: "view" });
+  const action = JSON.stringify({ service: "view" });
 
   // Step 2: Check if the branch is authorized for the action
   BranchCommon.isBranchAuthorizedForAction(branch_id, action, (authResult) => {
