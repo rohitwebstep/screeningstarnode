@@ -1454,6 +1454,7 @@ exports.annexureDataByServiceIdofApplication = (req, res) => {
 
           const parsedData = JSON.parse(reportFormJson.json);
           const db_table = parsedData.db_table;
+          const heading = parsedData.heading;
           const modifiedDbTable = db_table.replace(/-/g, "_");
 
           ClientMasterTrackerModel.annexureData(
@@ -1482,6 +1483,7 @@ exports.annexureDataByServiceIdofApplication = (req, res) => {
                 status: true,
                 message: "Application fetched successfully.",
                 annexureData,
+                heading,
                 token: newToken,
               });
             }
