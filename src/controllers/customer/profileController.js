@@ -351,13 +351,14 @@ exports.create = (req, res) => {
 };
 
 exports.uploadCustomLogo = (req, res) => {
-  const { admin_id, _token, customer_code } = req.query;
+  const adminId = req.body.admin_id || req.query.admin_id;
+  const token = req.body._token || req.query._token;
+  const customerCode = req.body.customer_code || req.query.customer_code;
 
   let missingFields = [];
-  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
-  if (!_token || _token === "") missingFields.push("Token");
-  if (!customer_code || customer_code === "")
-    missingFields.push("Customer Code");
+  if (!adminId || adminId === "") missingFields.push("Admin ID");
+  if (!token || token === "") missingFields.push("Token");
+  if (!customerCode || customerCode === "") missingFields.push("Customer Code");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
