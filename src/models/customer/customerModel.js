@@ -149,7 +149,7 @@ const Customer = {
         \`contact_person_name\`, \`escalation_point_contact\`,
         \`single_point_of_contact\`, \`gst_number\`, \`tat_days\`, 
         \`agreement_date\`, \`agreement_duration\`, \`custom_template\`,
-        \`custom_logo\`, \`custom_address\`, \`state\`, \`state_code\`, 
+        \`custom_address\`, \`state\`, \`state_code\`, 
         \`payment_contact_person\`, \`client_standard\`
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
@@ -165,7 +165,6 @@ const Customer = {
       metaData.agreement_date,
       metaData.agreement_duration,
       metaData.custom_template || "no",
-      metaData.custom_logo || null,
       metaData.custom_address || null,
       metaData.state,
       metaData.state_code,
@@ -201,8 +200,7 @@ const Customer = {
         \`tat_days\` = ?, 
         \`agreement_date\` = ?, 
         \`agreement_duration\` = ?, 
-        \`custom_template\` = ?, 
-        \`custom_logo\` = ?, 
+        \`custom_template\` = ?,
         \`custom_address\` = ?, 
         \`state\` = ?, 
         \`state_code\` = ?, 
@@ -221,7 +219,6 @@ const Customer = {
       metaData.agreement_date,
       metaData.agreement_duration,
       metaData.custom_template || "no",
-      metaData.custom_logo || null,
       metaData.custom_address || null,
       metaData.state,
       metaData.state_code,
