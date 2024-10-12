@@ -64,21 +64,24 @@ exports.create = (req, res) => {
         }
 
         try {
-          const savedCustoLogoPaths = custom_logo
-            ? await saveImages(custom_logo, targetDir)
-            : [];
+          let savedCustoLogoPaths = [];
 
-          if (savedCustoLogoPaths.length > 0) {
-            console.log(`savedCustoLogoPaths - `, savedCustoLogoPaths);
+          // Check if multiple files are uploaded under the "images" field
+          if (req.files.custom_logo) {
+            savedCustoLogoPaths = await saveImages(
+              req.files.custom_logo,
+              targetDir
+            ); // Pass targetDir to saveImages
           }
-          return res.status(201).json({
-            status: true,
-            message:
-              savedCustoLogoPaths.length > 0
-                ? "Custom Logo Image(s) saved successfully"
-                : "No images uploaded",
-            data: savedCustoLogoPaths,
-          });
+
+          // Check if a single file is uploaded under the "image" field
+          if (req.files.custom_logo && req.files.custom_logo.length > 0) {
+            const savedImagePath = await saveImage(
+              req.files.image[0],
+              targetDir
+            ); // Pass targetDir to saveImage
+            savedCustoLogoPaths.push(savedImagePath);
+          }
         } catch (error) {
           return res.status(500).json({
             status: false,
@@ -110,13 +113,26 @@ exports.create = (req, res) => {
         }
 
         try {
-          const savedAgrUploadPaths = agr_upload
-            ? await saveImages(agr_upload, targetDir)
-            : [];
+          let savedAgrUploadPaths = [];
 
-          if (savedAgrUploadPaths.length > 0) {
-            console.log(`savedAgrUploadPaths - `, savedAgrUploadPaths);
+          // Check if multiple files are uploaded under the "images" field
+          if (req.files.agr_upload) {
+            savedAgrUploadPaths = await saveImages(
+              req.files.agr_upload,
+              targetDir
+            ); // Pass targetDir to saveImages
           }
+
+          // Check if a single file is uploaded under the "image" field
+          if (req.files.agr_upload && req.files.agr_upload.length > 0) {
+            const savedImagePath = await saveImage(
+              req.files.image[0],
+              targetDir
+            ); // Pass targetDir to saveImage
+            savedAgrUploadPaths.push(savedImagePath);
+          }
+
+          // Return success response
           return res.status(201).json({
             status: true,
             message:
