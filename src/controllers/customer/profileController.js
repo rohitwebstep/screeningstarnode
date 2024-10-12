@@ -127,6 +127,11 @@ exports.create = (req, res) => {
     });
   }
 
+  return res.status(400).json({
+    status: false,
+    message: `send custom_log or agr_upload`,
+  });
+
   // Define required fields
   const requiredFields = {
     admin_id,
