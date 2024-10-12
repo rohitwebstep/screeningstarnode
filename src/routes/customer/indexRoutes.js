@@ -1,13 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const profileController = require("../../controllers/customer/profileController");
-const multer = require('multer');
-const upload = multer({ dest: 'uploads/' });
 
 // Profile routes
 router.post("/create", profileController.create);
-router.post("/upload/custom-logo", upload.array('images'), profileController.uploadCustomLogo);
-// router.post("/upload/custom-logo", profileController.uploadCustomLogo);
+router.post("/upload/custom-logo", profileController.uploadCustomLogo);
 router.get("/list", profileController.list);
 router.get("/inactive-list", profileController.inactiveList);
 router.put("/update", profileController.update);
