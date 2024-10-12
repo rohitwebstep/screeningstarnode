@@ -351,8 +351,11 @@ exports.create = (req, res) => {
 };
 
 exports.uploadCustomLogo = (req, res) => {
-  console.log(req.body); // Log request body for debugging
-
+  console.log(req); // Log request body for debugging
+  return res.status(400).json({
+    status: false,
+    req
+  });
   const adminId = req.body.admin_id;
   const token = req.body._token;
   const customerCode = req.body.customer_code;
