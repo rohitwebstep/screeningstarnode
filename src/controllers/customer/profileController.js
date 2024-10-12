@@ -43,32 +43,6 @@ exports.create = (req, res) => {
     custom_address,
   } = req.body;
 
-  // Define required fields
-  const requiredFields = {
-    admin_id,
-    _token,
-    tat,
-    state,
-    gstin,
-    emails,
-    address,
-    branches,
-    state_code,
-    clientData,
-    agr_upload,
-    client_spoc,
-    client_code,
-    company_name,
-    mobile_number,
-    contact_person,
-    date_agreement,
-    client_standard,
-    additional_login,
-    agreement_period,
-    name_of_escalation,
-    custom_template,
-  };
-
   // Handle custom logo upload
   if (custom_logo) {
     const targetDir = `uploads/customer/${client_code}/custom-logo`;
@@ -152,6 +126,32 @@ exports.create = (req, res) => {
       });
     });
   }
+
+  // Define required fields
+  const requiredFields = {
+    admin_id,
+    _token,
+    tat,
+    state,
+    gstin,
+    emails,
+    address,
+    branches,
+    state_code,
+    clientData,
+    agr_upload,
+    client_spoc,
+    client_code,
+    company_name,
+    mobile_number,
+    contact_person,
+    date_agreement,
+    client_standard,
+    additional_login,
+    agreement_period,
+    name_of_escalation,
+    custom_template,
+  };
 
   let additional_login_int = 0;
   if (additional_login && additional_login.toLowerCase() === "yes") {
