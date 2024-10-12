@@ -6,6 +6,7 @@ const BranchCommon = require("../../models/customer/branch/commonModel");
 const { createMail } = require("../../mailer/customer/createMail");
 const fs = require("fs");
 const path = require("path");
+const multer = require("multer");
 const { upload, saveImage, saveImages } = require("../../utils/imageSave");
 
 // Helper function to generate a password
