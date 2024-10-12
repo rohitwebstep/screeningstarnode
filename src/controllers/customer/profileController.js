@@ -67,6 +67,10 @@ exports.create = (req, res) => {
           const savedCustoLogoPaths = custom_logo
             ? await saveImages(custom_logo, targetDir)
             : [];
+
+          if (savedCustoLogoPaths.length > 0) {
+            console.log(`savedCustoLogoPaths - `, savedCustoLogoPaths);
+          }
           return res.status(201).json({
             status: true,
             message:
@@ -109,6 +113,10 @@ exports.create = (req, res) => {
           const savedAgrUploadPaths = agr_upload
             ? await saveImages(agr_upload, targetDir)
             : [];
+
+          if (savedAgrUploadPaths.length > 0) {
+            console.log(`savedAgrUploadPaths - `, savedAgrUploadPaths);
+          }
           return res.status(201).json({
             status: true,
             message:
