@@ -199,7 +199,7 @@ exports.create = (req, res) => {
 
             const customerId = result.insertId;
             // const fileArr = [{'file' => custom_logo, 'folder_name' => 'logo'}, {'file' => agr_upload, 'folder_name' => 'agreement'}];
-            if (req.files.custom_logo) {
+            if (custom_logo) {
               const targetDir = `uploads/customer/${customerId}/custom-logo`;
               fs.mkdir(targetDir, { recursive: true }, (err) => {
                 if (err) {
@@ -220,18 +220,15 @@ exports.create = (req, res) => {
 
                   try {
                     let savedCustoLogoPaths = [];
-                    if (req.files.custom_logo) {
+                    if (custom_logo) {
                       savedCustoLogoPaths = await saveImages(
-                        req.files.custom_logo,
+                        custom_logo,
                         targetDir
                       );
                     }
-                    if (
-                      req.files.custom_logo &&
-                      req.files.custom_logo.length > 0
-                    ) {
+                    if (custom_logo && custom_logo.length > 0) {
                       const savedCustoLogoPath = await saveImage(
-                        req.files.custom_logo[0],
+                        custom_logo[0],
                         targetDir
                       );
                       savedCustoLogoPaths.push(savedCustoLogoPath);
@@ -254,7 +251,7 @@ exports.create = (req, res) => {
                 });
               });
             }
-            if (req.files.agr_upload) {
+            if (agr_upload) {
               const targetDir = `uploads/customer/${customerId}/agreement`;
               fs.mkdir(targetDir, { recursive: true }, (err) => {
                 if (err) {
@@ -275,18 +272,15 @@ exports.create = (req, res) => {
 
                   try {
                     let savedAgrUploadPaths = [];
-                    if (req.files.agr_upload) {
+                    if (agr_upload) {
                       savedAgrUploadPaths = await saveImages(
-                        req.files.agr_upload,
+                        agr_upload,
                         targetDir
                       );
                     }
-                    if (
-                      req.files.agr_upload &&
-                      req.files.agr_upload.length > 0
-                    ) {
+                    if (agr_upload && agr_upload.length > 0) {
                       const savedAgrUploadPath = await saveImage(
-                        req.files.agr_upload[0],
+                        agr_upload[0],
                         targetDir
                       );
                       savedAgrUploadPaths.push(savedAgrUploadPath);
