@@ -4,10 +4,10 @@ const Branch = require("../../models/customer/branch/branchModel");
 const AdminCommon = require("../../models/admin/commonModel");
 const BranchCommon = require("../../models/customer/branch/commonModel");
 const { createMail } = require("../../mailer/customer/createMail");
+
 const fs = require("fs");
 const path = require("path");
-const multer = require("multer");
-const { upload, saveImage, saveImages } = require("../../utils/imageSave");
+const { upload, saveImage, saveImages } = require("../utils/imageSave");
 
 // Helper function to generate a password
 const generatePassword = (companyName) => {
@@ -43,119 +43,6 @@ exports.create = (req, res) => {
     custom_logo,
     custom_address,
   } = req.body;
-
-  // Handle custom logo upload
-  if (req.files.custom_logo) {
-    const targetDir = `uploads/customer/${client_code}/custom-logo`;
-    fs.mkdir(targetDir, { recursive: true }, (err) => {
-      if (err) {
-        console.error("Error creating directory:", err);
-        return res.status(500).json({
-          status: false,
-          message: "Error creating directory.",
-        });
-      }
-      // Use multer to handle the upload
-      upload(req, res, async (err) => {
-        if (err) {
-          return res.status(400).json({
-            status: false,
-            message: "Error uploading file.",
-          });
-        }
-
-        try {
-          let savedCustoLogoPaths = [];
-
-          // Check if multiple files are uploaded under the "images" field
-          if (req.files.custom_logo) {
-            savedCustoLogoPaths = await saveImages(
-              req.files.custom_logo,
-              targetDir
-            ); // Pass targetDir to saveImages
-          }
-
-          // Check if a single file is uploaded under the "image" field
-          if (req.files.custom_logo && req.files.custom_logo.length > 0) {
-            const savedImagePath = await saveImage(
-              req.files.image[0],
-              targetDir
-            ); // Pass targetDir to saveImage
-            savedCustoLogoPaths.push(savedImagePath);
-          }
-        } catch (error) {
-          return res.status(500).json({
-            status: false,
-            message: "An error occurred while saving the custom logo image",
-          });
-        }
-      });
-    });
-  }
-
-  // Handle agreement upload
-  if (req.files.agr_upload) {
-    const targetDir = `uploads/customer/${client_code}/agreement`;
-    fs.mkdir(targetDir, { recursive: true }, (err) => {
-      if (err) {
-        console.error("Error creating directory:", err);
-        return res.status(500).json({
-          status: false,
-          message: "Error creating directory.",
-        });
-      }
-      // Use multer to handle the upload
-      upload(req, res, async (err) => {
-        if (err) {
-          return res.status(400).json({
-            status: false,
-            message: "Error uploading file.",
-          });
-        }
-
-        try {
-          let savedAgrUploadPaths = [];
-
-          // Check if multiple files are uploaded under the "images" field
-          if (req.files.agr_upload) {
-            savedAgrUploadPaths = await saveImages(
-              req.files.agr_upload,
-              targetDir
-            ); // Pass targetDir to saveImages
-          }
-
-          // Check if a single file is uploaded under the "image" field
-          if (req.files.agr_upload && req.files.agr_upload.length > 0) {
-            const savedImagePath = await saveImage(
-              req.files.image[0],
-              targetDir
-            ); // Pass targetDir to saveImage
-            savedAgrUploadPaths.push(savedImagePath);
-          }
-
-          // Return success response
-          return res.status(201).json({
-            status: true,
-            message:
-              savedAgrUploadPaths.length > 0
-                ? "Agreement Image(s) saved successfully"
-                : "No images uploaded",
-            data: savedAgrUploadPaths,
-          });
-        } catch (error) {
-          return res.status(500).json({
-            status: false,
-            message: "An error occurred while saving the agreement image",
-          });
-        }
-      });
-    });
-  }
-
-  return res.status(400).json({
-    status: false,
-    message: `send custom_log or agr_upload`,
-  });
 
   // Define required fields
   const requiredFields = {
@@ -470,6 +357,59 @@ exports.create = (req, res) => {
             );
           }
         );
+      }
+    });
+  });
+};
+
+exports.uploadCustomLogo = (req, res) => {
+  const targetDir = "uploads/customer/logo";
+  fs.mkdir(targetDir, { recursive: true }, (err) => {
+    if (err) {
+      console.error("Error creating directory:", err);
+      return res.status(500).json({
+        status: false,
+        message: "Error creating directory.",
+      });
+    }
+    // Use multer to handle the upload
+    upload(req, res, async (err) => {
+      if (err) {
+        return res.status(400).json({
+          status: false,
+          message: "Error uploading file.",
+        });
+      }
+
+      try {
+        let savedImagePaths = [];
+
+        // Check if multiple files are uploaded under the "images" field
+        if (req.files.images) {
+          savedImagePaths = await saveImages(req.files.images, targetDir); // Pass targetDir to saveImages
+        }
+
+        // Check if a single file is uploaded under the "image" field
+        if (req.files.image && req.files.image.length > 0) {
+          const savedImagePath = await saveImage(req.files.image[0], targetDir); // Pass targetDir to saveImage
+          savedImagePaths.push(savedImagePath);
+        }
+
+        // Return success response
+        return res.status(201).json({
+          status: true,
+          message:
+            savedImagePaths.length > 0
+              ? "Image(s) saved successfully"
+              : "No images uploaded",
+          data: savedImagePaths,
+        });
+      } catch (error) {
+        console.error("Error saving image:", error);
+        return res.status(500).json({
+          status: false,
+          message: "An error occurred while saving the image",
+        });
       }
     });
   });
