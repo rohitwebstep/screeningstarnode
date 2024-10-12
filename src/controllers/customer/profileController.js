@@ -92,61 +92,6 @@ exports.create = (req, res) => {
     });
   }
 
-  if (req.files.images) {
-    const targetDir = "uploads/customer/";
-    fs.mkdir(targetDir, { recursive: true }, (err) => {
-      if (err) {
-        console.error("Error creating directory:", err);
-        return res.status(500).json({
-          status: false,
-          message: "Error creating directory.",
-        });
-      }
-      // Use multer to handle the upload
-      upload(req, res, async (err) => {
-        if (err) {
-          return res.status(400).json({
-            status: false,
-            message: "Error uploading file.",
-          });
-        }
-
-        try {
-          let savedImagePaths = [];
-
-          // Check if multiple files are uploaded under the "images" field
-          if (req.files.images) {
-            savedImagePaths = await saveImages(req.files.images, targetDir); // Pass targetDir to saveImages
-          }
-
-          // Check if a single file is uploaded under the "image" field
-          if (req.files.image && req.files.image.length > 0) {
-            const savedImagePath = await saveImage(
-              req.files.image[0],
-              targetDir
-            ); // Pass targetDir to saveImage
-            savedImagePaths.push(savedImagePath);
-          }
-
-          // Return success response
-          return res.status(201).json({
-            status: true,
-            message:
-              savedImagePaths.length > 0
-                ? "Image(s) saved successfully"
-                : "No images uploaded",
-            data: savedImagePaths,
-          });
-        } catch (error) {
-          console.error("Error saving image:", error);
-          return res.status(500).json({
-            status: false,
-            message: "An error occurred while saving the image",
-          });
-        }
-      });
-    });
-  }
   const action = JSON.stringify({ customer: "create" });
   AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
@@ -253,6 +198,117 @@ exports.create = (req, res) => {
             }
 
             const customerId = result.insertId;
+
+            if (req.files.custom_logo) {
+              const targetDir = `uploads/customer/${customerId}/custom-logo`;
+              fs.mkdir(targetDir, { recursive: true }, (err) => {
+                if (err) {
+                  console.error("Error creating directory:", err);
+                  return res.status(500).json({
+                    status: false,
+                    message: "Error creating directory.",
+                  });
+                }
+                // Use multer to handle the upload
+                upload(req, res, async (err) => {
+                  if (err) {
+                    return res.status(400).json({
+                      status: false,
+                      message: "Error uploading file.",
+                    });
+                  }
+
+                  try {
+                    let savedCustoLogoPaths = [];
+                    if (req.files.custom_logo) {
+                      savedCustoLogoPaths = await saveImages(
+                        req.files.custom_logo,
+                        targetDir
+                      );
+                    }
+                    if (
+                      req.files.custom_logo &&
+                      req.files.custom_logo.length > 0
+                    ) {
+                      const savedCustoLogoPath = await saveImage(
+                        req.files.custom_logo[0],
+                        targetDir
+                      );
+                      savedCustoLogoPaths.push(savedCustoLogoPath);
+                    }
+                    return res.status(201).json({
+                      status: true,
+                      message:
+                        savedCustoLogoPaths.length > 0
+                          ? "Custom Logo Image(s) saved successfully"
+                          : "No images uploaded",
+                      data: savedCustoLogoPaths,
+                    });
+                  } catch (error) {
+                    return res.status(500).json({
+                      status: false,
+                      message:
+                        "An error occurred while saving the custom logo image",
+                    });
+                  }
+                });
+              });
+            }
+            if (req.files.agr_upload) {
+              const targetDir = `uploads/customer/${customerId}/agreement`;
+              fs.mkdir(targetDir, { recursive: true }, (err) => {
+                if (err) {
+                  console.error("Error creating directory:", err);
+                  return res.status(500).json({
+                    status: false,
+                    message: "Error creating directory.",
+                  });
+                }
+                // Use multer to handle the upload
+                upload(req, res, async (err) => {
+                  if (err) {
+                    return res.status(400).json({
+                      status: false,
+                      message: "Error uploading file.",
+                    });
+                  }
+
+                  try {
+                    let savedAgrUploadPaths = [];
+                    if (req.files.agr_upload) {
+                      savedAgrUploadPaths = await saveImages(
+                        req.files.agr_upload,
+                        targetDir
+                      );
+                    }
+                    if (
+                      req.files.agr_upload &&
+                      req.files.agr_upload.length > 0
+                    ) {
+                      const savedAgrUploadPath = await saveImage(
+                        req.files.agr_upload[0],
+                        targetDir
+                      );
+                      savedAgrUploadPaths.push(savedAgrUploadPath);
+                    }
+                    return res.status(201).json({
+                      status: true,
+                      message:
+                        savedAgrUploadPaths.length > 0
+                          ? "Agr Upload Image(s) saved successfully"
+                          : "No images uploaded",
+                      data: savedAgrUploadPaths,
+                    });
+                  } catch (error) {
+                    return res.status(500).json({
+                      status: false,
+                      message:
+                        "An error occurred while saving the agremeent image",
+                    });
+                  }
+                });
+              });
+            }
 
             Customer.createCustomerMeta(
               {
