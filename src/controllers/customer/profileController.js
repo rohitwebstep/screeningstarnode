@@ -7,7 +7,7 @@ const { createMail } = require("../../mailer/customer/createMail");
 
 const fs = require("fs");
 const path = require("path");
-const { upload, saveImage, saveImages } = require("../utils/imageSave");
+const { upload, saveImage, saveImages } = require("../../utils/imageSave");
 
 // Helper function to generate a password
 const generatePassword = (companyName) => {
@@ -363,7 +363,22 @@ exports.create = (req, res) => {
 };
 
 exports.uploadCustomLogo = (req, res) => {
-  const targetDir = "uploads/customer/logo";
+  const { admin_id, _token, customer_code } = req.query;
+
+  let missingFields = [];
+  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
+  if (!_token || _token === "") missingFields.push("Token");
+  if (!customer_code || customer_code === "")
+    missingFields.push("Customer Code");
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  const targetDir = `uploads/customer/${customer_code}/logo`;
   fs.mkdir(targetDir, { recursive: true }, (err) => {
     if (err) {
       console.error("Error creating directory:", err);
