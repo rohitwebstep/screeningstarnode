@@ -69,9 +69,10 @@ exports.create = (req, res) => {
     custom_template,
   };
 
-  let additional_login_int = 0;
-  if (additional_login && additional_login.toLowerCase() === "yes") {
-    additional_login_int = 1;
+  let additional_login_int =
+    additional_login && additional_login.toLowerCase() === "yes" ? 1 : 0;
+
+  if (additional_login_int) {
     requiredFields.username = username;
   }
 
@@ -97,7 +98,7 @@ exports.create = (req, res) => {
     if (!result.status) {
       return res.status(403).json({
         status: false,
-        message: result.message, // Return the message from the authorization function
+        message: result.message,
       });
     }
 
@@ -135,7 +136,7 @@ exports.create = (req, res) => {
         }
 
         // Check if username is required and exists
-        if (additional_login && additional_login.toLowerCase() === "yes") {
+        if (additional_login_int) {
           Customer.checkUsername(username, (err, exists) => {
             if (err) {
               console.error("Error checking username:", err);
@@ -175,10 +176,7 @@ exports.create = (req, res) => {
             mobile_number,
             services: JSON.stringify(clientData),
             additional_login: additional_login_int,
-            username:
-              additional_login && additional_login.toLowerCase() === "yes"
-                ? username
-                : null,
+            username: additional_login_int ? username : null,
           },
           (err, result) => {
             if (err) {
@@ -198,273 +196,234 @@ exports.create = (req, res) => {
             }
 
             const customerId = result.insertId;
-            // const fileArr = [{'file' => custom_logo, 'folder_name' => 'logo'}, {'file' => agr_upload, 'folder_name' => 'agreement'}];
-            if (custom_logo) {
-              const targetDir = `uploads/customer/${customerId}/custom-logo`;
-              fs.mkdir(targetDir, { recursive: true }, (err) => {
-                if (err) {
-                  console.error("Error creating directory:", err);
-                  return res.status(500).json({
-                    status: false,
-                    message: "Error creating directory.",
-                  });
-                }
-                // Use multer to handle the upload
-                upload(req, res, async (err) => {
+
+            // Handle file uploads for custom_logo and agr_upload
+            handleFileUploads(req, res, customerId, (uploadError) => {
+              if (uploadError) {
+                return res.status(500).json(uploadError);
+              }
+
+              Customer.createCustomerMeta(
+                {
+                  customer_id: customerId,
+                  address,
+                  contact_person_name: contact_person,
+                  escalation_point_contact: name_of_escalation,
+                  single_point_of_contact: client_spoc,
+                  gst_number: gstin,
+                  tat_days: tat,
+                  agreement_date: date_agreement,
+                  agreement_duration: agreement_period,
+                  custom_template,
+                  custom_logo:
+                    custom_template && custom_template.toLowerCase() === "yes"
+                      ? custom_logo
+                      : null,
+                  custom_address:
+                    custom_template && custom_template.toLowerCase() === "yes"
+                      ? custom_address
+                      : null,
+                  state,
+                  state_code,
+                  payment_contact_person: null,
+                  client_standard,
+                },
+                (err, metaResult) => {
                   if (err) {
-                    return res.status(400).json({
-                      status: false,
-                      message: "Error uploading file.",
-                    });
-                  }
-
-                  try {
-                    let savedCustoLogoPaths = [];
-                    if (custom_logo) {
-                      savedCustoLogoPaths = await saveImages(
-                        custom_logo,
-                        targetDir
-                      );
-                    }
-                    if (custom_logo && custom_logo.length > 0) {
-                      const savedCustoLogoPath = await saveImage(
-                        custom_logo[0],
-                        targetDir
-                      );
-                      savedCustoLogoPaths.push(savedCustoLogoPath);
-                    }
-                    return res.status(201).json({
-                      status: true,
-                      message:
-                        savedCustoLogoPaths.length > 0
-                          ? "Custom Logo Image(s) saved successfully"
-                          : "No images uploaded",
-                      data: savedCustoLogoPaths,
-                    });
-                  } catch (error) {
-                    return res.status(500).json({
-                      status: false,
-                      message:
-                        "An error occurred while saving the custom logo image",
-                    });
-                  }
-                });
-              });
-            }
-            if (agr_upload) {
-              const targetDir = `uploads/customer/${customerId}/agreement`;
-              fs.mkdir(targetDir, { recursive: true }, (err) => {
-                if (err) {
-                  console.error("Error creating directory:", err);
-                  return res.status(500).json({
-                    status: false,
-                    message: "Error creating directory.",
-                  });
-                }
-                // Use multer to handle the upload
-                upload(req, res, async (err) => {
-                  if (err) {
-                    return res.status(400).json({
-                      status: false,
-                      message: "Error uploading file.",
-                    });
-                  }
-
-                  try {
-                    let savedAgrUploadPaths = [];
-                    if (agr_upload) {
-                      savedAgrUploadPaths = await saveImages(
-                        agr_upload,
-                        targetDir
-                      );
-                    }
-                    if (agr_upload && agr_upload.length > 0) {
-                      const savedAgrUploadPath = await saveImage(
-                        agr_upload[0],
-                        targetDir
-                      );
-                      savedAgrUploadPaths.push(savedAgrUploadPath);
-                    }
-                    return res.status(201).json({
-                      status: true,
-                      message:
-                        savedAgrUploadPaths.length > 0
-                          ? "Agr Upload Image(s) saved successfully"
-                          : "No images uploaded",
-                      data: savedAgrUploadPaths,
-                    });
-                  } catch (error) {
-                    return res.status(500).json({
-                      status: false,
-                      message:
-                        "An error occurred while saving the agremeent image",
-                    });
-                  }
-                });
-              });
-            }
-
-            Customer.createCustomerMeta(
-              {
-                customer_id: customerId,
-                address,
-                contact_person_name: contact_person,
-                escalation_point_contact: name_of_escalation,
-                single_point_of_contact: client_spoc,
-                gst_number: gstin,
-                tat_days: tat,
-                agreement_date: date_agreement,
-                agreement_duration: agreement_period,
-                custom_template,
-                custom_logo:
-                  custom_template && custom_template.toLowerCase() === "yes"
-                    ? custom_logo
-                    : null,
-                custom_address:
-                  custom_template && custom_template.toLowerCase() === "yes"
-                    ? custom_address
-                    : null,
-                state,
-                state_code,
-                payment_contact_person: null,
-                client_standard,
-              },
-              (err, metaResult) => {
-                if (err) {
-                  console.error(
-                    "Database error while creating customer meta:",
-                    err
-                  );
-                  AdminCommon.adminActivityLog(
-                    admin_id,
-                    "Customer Meta",
-                    "Create",
-                    "0",
-                    `{id: ${customerId}}`,
-                    err.message,
-                    () => {}
-                  );
-                  return res.status(500).json({
-                    status: false,
-                    message: err.error,
-                    token: newToken,
-                  });
-                }
-                const headBranchEmail = emails[0];
-                // Create the first branch (head branch)
-                Branch.create(
-                  {
-                    customer_id: customerId,
-                    name: company_name,
-                    email: headBranchEmail,
-                    head: 1,
-                    password,
-                    mobile_number,
-                  },
-                  (err, headBranchResult) => {
-                    if (err) {
-                      console.error("Error creating head branch:", err);
-                      return res.status(500).json({
-                        status: false,
-                        message: err,
-                        token: newToken,
-                      });
-                    }
-
-                    const headBranchId = headBranchResult.insertId;
-
-                    // Create remaining branches with head_branch_id as foreign key
-                    const branchCreationPromises = branches.map(
-                      (branch) =>
-                        new Promise((resolve, reject) => {
-                          Branch.create(
-                            {
-                              customer_id: customerId,
-                              name: branch.branch_name,
-                              email: branch.branch_email,
-                              head: 0,
-                              head_id: headBranchId,
-                              password,
-                            },
-                            (err, branchResult) => {
-                              if (err) {
-                                console.error(
-                                  "Error creating branch:",
-                                  branch.branch_name,
-                                  err
-                                );
-                                return reject(err);
-                              }
-                              resolve(branchResult);
-                            }
-                          );
-                        })
+                    console.error(
+                      "Database error while creating customer meta:",
+                      err
                     );
-                    Promise.all(branchCreationPromises)
-                      .then((branchResults) => {
-                        AdminCommon.adminActivityLog(
-                          admin_id,
-                          "Customer",
-                          "Create",
-                          "1",
-                          `{id: ${customerId}}`,
-                          null,
-                          () => {}
-                        );
-                        // Send email notification
-                        createMail(
-                          "customer",
-                          "create",
-                          company_name,
-                          branches,
-                          password
-                        )
-                          .then(() => {
-                            res.json({
-                              status: true,
-                              message:
-                                "Customer and branches created successfully, and credentials sent through mail.",
-                              data: {
-                                customer: result,
-                                meta: metaResult,
-                                branches: [headBranchResult, ...branchResults],
-                              },
-                              token: newToken,
-                            });
-                          })
-                          .catch((emailError) => {
-                            console.error("Error sending email:", emailError);
-                            res.json({
-                              status: true,
-                              message:
-                                "Customer and branches created successfully, but failed to send email.",
-                              data: {
-                                customer: result,
-                                meta: metaResult,
-                                branches: [headBranchResult, ...branchResults],
-                              },
-                              token: newToken,
-                            });
-                          });
-                      })
-                      .catch((error) => {
-                        console.error("Error creating branches:", error);
-                        res.status(500).json({
+                    AdminCommon.adminActivityLog(
+                      admin_id,
+                      "Customer Meta",
+                      "Create",
+                      "0",
+                      `{id: ${customerId}}`,
+                      err.message,
+                      () => {}
+                    );
+                    return res.status(500).json({
+                      status: false,
+                      message: err.error,
+                      token: newToken,
+                    });
+                  }
+
+                  const headBranchEmail = emails[0];
+                  // Create the first branch (head branch)
+                  Branch.create(
+                    {
+                      customer_id: customerId,
+                      name: company_name,
+                      email: headBranchEmail,
+                      head: 1,
+                      password,
+                      mobile_number,
+                    },
+                    (err, headBranchResult) => {
+                      if (err) {
+                        console.error("Error creating head branch:", err);
+                        return res.status(500).json({
                           status: false,
-                          message: "Error creating some branches.",
+                          message: err,
                           token: newToken,
                         });
-                      });
-                  }
-                );
-              }
-            );
+                      }
+
+                      const headBranchId = headBranchResult.insertId;
+
+                      // Create remaining branches with head_branch_id as foreign key
+                      const branchCreationPromises = branches.map(
+                        (branch) =>
+                          new Promise((resolve, reject) => {
+                            Branch.create(
+                              {
+                                customer_id: customerId,
+                                name: branch.branch_name,
+                                email: branch.branch_email,
+                                head: 0,
+                                head_id: headBranchId,
+                                password,
+                              },
+                              (err, branchResult) => {
+                                if (err) {
+                                  console.error(
+                                    "Error creating branch:",
+                                    branch.branch_name,
+                                    err
+                                  );
+                                  return reject(err);
+                                }
+                                resolve(branchResult);
+                              }
+                            );
+                          })
+                      );
+
+                      Promise.all(branchCreationPromises)
+                        .then((branchResults) => {
+                          AdminCommon.adminActivityLog(
+                            admin_id,
+                            "Customer",
+                            "Create",
+                            "1",
+                            `{id: ${customerId}}`,
+                            null,
+                            () => {}
+                          );
+                          // Send email notification
+                          createMail(
+                            "customer",
+                            "create",
+                            company_name,
+                            branches,
+                            password
+                          )
+                            .then(() => {
+                              res.json({
+                                status: true,
+                                message:
+                                  "Customer and branches created successfully, and credentials sent through mail.",
+                                data: {
+                                  customer: result,
+                                  meta: metaResult,
+                                  branches: [
+                                    headBranchResult,
+                                    ...branchResults,
+                                  ],
+                                },
+                                token: newToken,
+                              });
+                            })
+                            .catch((emailError) => {
+                              console.error("Error sending email:", emailError);
+                              res.json({
+                                status: true,
+                                message:
+                                  "Customer and branches created successfully, but failed to send email.",
+                                data: {
+                                  customer: result,
+                                  meta: metaResult,
+                                  branches: [
+                                    headBranchResult,
+                                    ...branchResults,
+                                  ],
+                                },
+                                token: newToken,
+                              });
+                            });
+                        })
+                        .catch((error) => {
+                          console.error("Error creating branches:", error);
+                          res.status(500).json({
+                            status: false,
+                            message: "Error creating some branches.",
+                            token: newToken,
+                          });
+                        });
+                    }
+                  );
+                }
+              );
+            });
           }
         );
       }
     });
   });
 };
+
+// Utility function to handle file uploads for custom_logo and agr_upload
+function handleFileUploads(req, res, customerId, callback) {
+  const logoPath = `uploads/customer/${customerId}/custom-logo/${req.body.custom_logo.name}`;
+  const agreementPath = `uploads/customer/${customerId}/agreement/${req.body.agr_upload.name}`;
+
+  // Create directories if they do not exist
+  const mkdir = (path) =>
+    new Promise((resolve, reject) => {
+      fs.mkdir(path, { recursive: true }, (err) => {
+        if (err) {
+          console.error("Error creating directory:", err);
+          return reject(err);
+        }
+        resolve();
+      });
+    });
+
+  // Move files and handle errors
+  const moveFile = (file, path) =>
+    new Promise((resolve, reject) => {
+      file.mv(path, (err) => {
+        if (err) {
+          console.error("Error moving file:", err);
+          return reject(err);
+        }
+        resolve();
+      });
+    });
+
+  // Handle custom_logo upload
+  if (req.body.custom_logo) {
+    mkdir(`uploads/customer/${customerId}/custom-logo`)
+      .then(() => moveFile(req.body.custom_logo, logoPath))
+      .catch((err) =>
+        callback({ status: false, message: "Failed to upload custom logo" })
+      );
+  }
+
+  // Handle agr_upload upload
+  if (req.body.agr_upload) {
+    mkdir(`uploads/customer/${customerId}/agreement`)
+      .then(() => moveFile(req.body.agr_upload, agreementPath))
+      .catch((err) =>
+        callback({ status: false, message: "Failed to upload agreement" })
+      );
+  }
+
+  // Call the callback when done
+  callback(null);
+}
 
 // Controller to list all customers
 exports.inactiveList = (req, res) => {
