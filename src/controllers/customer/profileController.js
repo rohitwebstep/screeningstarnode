@@ -352,10 +352,7 @@ exports.create = (req, res) => {
 
 exports.uploadCustomLogo = (req, res) => {
   console.log(req.body); // Log request body for debugging
-  return res.status(400).json({
-    status: false,
-    'data' : req.body
-  });
+
   const adminId = req.body.admin_id;
   const token = req.body._token;
   const customerCode = req.body.customer_code;
@@ -371,7 +368,7 @@ exports.uploadCustomLogo = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-
+  
   const targetDir = `uploads/customer/${customer_code}/logo`;
   fs.mkdir(targetDir, { recursive: true }, (err) => {
     if (err) {
