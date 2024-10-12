@@ -151,7 +151,7 @@ const Customer = {
         \`agreement_date\`, \`agreement_duration\`, \`custom_template\`,
         \`custom_address\`, \`state\`, \`state_code\`, 
         \`payment_contact_person\`, \`client_standard\`
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const valuesCustomerMetas = [
@@ -200,7 +200,7 @@ const Customer = {
         \`tat_days\` = ?, 
         \`agreement_date\` = ?, 
         \`agreement_duration\` = ?, 
-        \`custom_template\` = ?,
+        \`custom_template\` = ?, 
         \`custom_address\` = ?, 
         \`state\` = ?, 
         \`state_code\` = ?, 
