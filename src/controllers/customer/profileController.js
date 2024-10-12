@@ -363,6 +363,21 @@ exports.create = (req, res) => {
 };
 
 exports.uploadCustomLogo = (req, res) => {
+  // Define the required parameters
+  const requiredParams = ["admin_id", "_token", "customer_code"];
+
+  // Dynamic extraction and validation of parameters
+  const params = {};
+  for (const param of requiredParams) {
+    const value = req.body[param];
+    if (!value) {
+      return res.status(400).json({
+        status: false,
+        message: `${param} is required.`,
+      });
+    }
+    params[param] = value; // Store valid parameters in an object
+  }
   const targetDir = "uploads/customer/logo";
   fs.mkdir(targetDir, { recursive: true }, (err) => {
     if (err) {
