@@ -374,6 +374,7 @@ exports.uploadCustomLogo = (req, res) => {
       return res.status(400).json({
         status: false,
         message: `${param} is required.`,
+        data: req.body
       });
     }
     params[param] = value; // Store valid parameters in an object
