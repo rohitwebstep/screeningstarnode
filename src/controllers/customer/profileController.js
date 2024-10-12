@@ -362,72 +362,74 @@ exports.create = (req, res) => {
   });
 };
 
-exports.uploadCustomLogo = (req, res) => {
-  // Define the required parameters
-  const requiredParams = ["admin_id", "_token", "customer_code"];
-
-  // Dynamic extraction and validation of parameters
-  const params = {};
-  for (const param of requiredParams) {
-    const value = req.body[param];
-    if (!value) {
+exports.uploadCustomLogo = async (req, res) => {
+  // Use multer to handle the upload
+  upload(req, res, async (err) => {
+    if (err) {
       return res.status(400).json({
         status: false,
-        message: `${param} is required.`,
-        data: req.body
+        message: "Error uploading file.",
       });
     }
-    params[param] = value; // Store valid parameters in an object
-  }
-  const targetDir = "uploads/customer/logo";
-  fs.mkdir(targetDir, { recursive: true }, (err) => {
-    if (err) {
-      console.error("Error creating directory:", err);
-      return res.status(500).json({
-        status: false,
-        message: "Error creating directory.",
-      });
-    }
-    // Use multer to handle the upload
-    upload(req, res, async (err) => {
-      if (err) {
+
+    try {
+      const { admin_id, _token, customer_code } = req.body;
+
+      // Create an array to hold names of empty fields
+      const missingFields = [];
+
+      // Validate the required fields and populate the missingFields array
+      if (!admin_id) missingFields.push("admin_id");
+      if (!_token) missingFields.push("_token");
+      if (!customer_code) missingFields.push("customer_code");
+
+      // If there are missing fields, return an error response
+      if (missingFields.length > 0) {
         return res.status(400).json({
           status: false,
-          message: "Error uploading file.",
-        });
-      }
-
-      try {
-        let savedImagePaths = [];
-
-        // Check if multiple files are uploaded under the "images" field
-        if (req.files.images) {
-          savedImagePaths = await saveImages(req.files.images, targetDir); // Pass targetDir to saveImages
-        }
-
-        // Check if a single file is uploaded under the "image" field
-        if (req.files.image && req.files.image.length > 0) {
-          const savedImagePath = await saveImage(req.files.image[0], targetDir); // Pass targetDir to saveImage
-          savedImagePaths.push(savedImagePath);
-        }
-
-        // Return success response
-        return res.status(201).json({
-          status: true,
           message:
-            savedImagePaths.length > 0
-              ? "Image(s) saved successfully"
-              : "No images uploaded",
-          data: savedImagePaths,
-        });
-      } catch (error) {
-        console.error("Error saving image:", error);
-        return res.status(500).json({
-          status: false,
-          message: "An error occurred while saving the image",
+            "The following fields are required: " + missingFields.join(", "),
         });
       }
-    });
+
+      // Define the target directory for uploads
+      const targetDir = `uploads/customer/${customer_code}/logo`;
+
+      // Create the target directory for uploads, ensuring it's done before proceeding
+      await fs.promises.mkdir(targetDir, { recursive: true });
+
+      let savedImagePaths = [];
+
+      // Check if multiple files are uploaded under the "images" field
+      if (req.files.images) {
+        savedImagePaths = await saveImages(req.files.images, targetDir); // Pass targetDir to saveImages
+      }
+
+      // Check if a single file is uploaded under the "image" field
+      if (req.files.image && req.files.image.length > 0) {
+        const savedImagePath = await saveImage(req.files.image[0], targetDir); // Pass targetDir to saveImage
+        savedImagePaths.push(savedImagePath);
+      }
+
+      // Return success response
+      return res.status(201).json({
+        status: true,
+        admin_id,
+        _token,
+        customer_code,
+        message:
+          savedImagePaths.length > 0
+            ? "Image(s) saved successfully"
+            : "No images uploaded",
+        data: savedImagePaths,
+      });
+    } catch (error) {
+      console.error("Error saving image:", error);
+      return res.status(500).json({
+        status: false,
+        message: "An error occurred while saving the image",
+      });
+    }
   });
 };
 
