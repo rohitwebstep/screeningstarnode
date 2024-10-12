@@ -56,8 +56,8 @@ const saveImages = async (files, targetDir) => {
 // Exporting the upload middleware and saving functions
 module.exports = {
   upload: upload.fields([
-    { name: "images", maxCount: 10 },
-    { name: "image", maxCount: 1 },
+    { name: "custom_logo", maxCount: 10 },
+    { name: "agr_upload", maxCount: 10 },
   ]),
   saveImage,
   saveImages,
