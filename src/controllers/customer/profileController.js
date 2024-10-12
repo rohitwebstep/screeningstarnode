@@ -28,7 +28,6 @@ exports.create = (req, res) => {
     branches,
     state_code,
     clientData,
-    agr_upload,
     client_spoc,
     client_code,
     company_name,
@@ -40,7 +39,6 @@ exports.create = (req, res) => {
     agreement_period,
     name_of_escalation,
     custom_template,
-    custom_logo,
     custom_address,
   } = req.body;
 
@@ -56,7 +54,6 @@ exports.create = (req, res) => {
     branches,
     state_code,
     clientData,
-    agr_upload,
     client_spoc,
     client_code,
     company_name,
@@ -74,11 +71,6 @@ exports.create = (req, res) => {
   if (additional_login && additional_login.toLowerCase() === "yes") {
     additional_login_int = 1;
     requiredFields.username = username;
-  }
-
-  if (custom_template && custom_template.toLowerCase() === "yes") {
-    requiredFields.custom_logo = custom_logo;
-    requiredFields.custom_address = custom_address;
   }
 
   // Check for missing fields
@@ -212,10 +204,6 @@ exports.create = (req, res) => {
                 agreement_date: date_agreement,
                 agreement_duration: agreement_period,
                 custom_template,
-                custom_logo:
-                  custom_template && custom_template.toLowerCase() === "yes"
-                    ? custom_logo
-                    : null,
                 custom_address:
                   custom_template && custom_template.toLowerCase() === "yes"
                     ? custom_address
@@ -556,7 +544,6 @@ exports.update = (req, res) => {
     username,
     state_code,
     clientData,
-    agr_upload,
     client_spoc,
     client_code,
     company_name,
@@ -568,7 +555,6 @@ exports.update = (req, res) => {
     agreement_period,
     name_of_escalation,
     custom_template,
-    custom_logo,
     custom_address,
   } = req.body;
 
@@ -600,11 +586,6 @@ exports.update = (req, res) => {
   if (additional_login && additional_login.toLowerCase() === "yes") {
     additional_login_int = 1;
     requiredFields.username = username;
-  }
-
-  if (custom_template && custom_template.toLowerCase() === "yes") {
-    requiredFields.custom_logo = custom_logo;
-    requiredFields.custom_address = custom_address;
   }
 
   // Check for missing fields
@@ -708,10 +689,6 @@ exports.update = (req, res) => {
               compareAndAddChanges("client_standard", client_standard);
               compareAndAddChanges("agreement_duration", agreement_period);
               compareAndAddChanges("custom_template", custom_template);
-              if (custom_template && custom_template.toLowerCase() === "yes") {
-                compareAndAddChanges("custom_logo", custom_logo);
-                compareAndAddChanges("custom_address", custom_address);
-              }
               compareAndAddChanges("state", state);
               compareAndAddChanges("state_code", state_code);
               if (currentCustomerMeta.payment_contact_person !== null) {
@@ -840,11 +817,6 @@ exports.update = (req, res) => {
                           custom_template.toLowerCase() === "yes"
                             ? 1
                             : 0,
-                        custom_logo:
-                          custom_template &&
-                          custom_template.toLowerCase() === "yes"
-                            ? custom_logo
-                            : null,
                         custom_address:
                           custom_template &&
                           custom_template.toLowerCase() === "yes"
