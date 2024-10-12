@@ -44,7 +44,7 @@ exports.create = (req, res) => {
   } = req.body;
 
   // Handle custom logo upload
-  if (custom_logo) {
+  if (req.files.custom_logo) {
     const targetDir = `uploads/customer/${client_code}/custom-logo`;
     fs.mkdir(targetDir, { recursive: true }, (err) => {
       if (err) {
@@ -86,7 +86,7 @@ exports.create = (req, res) => {
   }
 
   // Handle agreement upload
-  if (agr_upload) {
+  if (req.files.agr_upload) {
     const targetDir = `uploads/customer/${client_code}/agreement`;
     fs.mkdir(targetDir, { recursive: true }, (err) => {
       if (err) {
