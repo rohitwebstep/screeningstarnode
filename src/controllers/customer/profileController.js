@@ -351,9 +351,11 @@ exports.create = (req, res) => {
 };
 
 exports.uploadCustomLogo = (req, res) => {
-  const adminId = req.body.admin_id || req.query.admin_id;
-  const token = req.body._token || req.query._token;
-  const customerCode = req.body.customer_code || req.query.customer_code;
+  console.log(req.body); // Log request body for debugging
+
+  const adminId = req.body.admin_id;
+  const token = req.body._token;
+  const customerCode = req.body.customer_code;
 
   let missingFields = [];
   if (!adminId || adminId === "") missingFields.push("Admin ID");
@@ -416,6 +418,11 @@ exports.uploadCustomLogo = (req, res) => {
         });
       }
     });
+  });
+
+  return res.status(400).json({
+    status: false,
+    message: `Incorrect Call`,
   });
 };
 
