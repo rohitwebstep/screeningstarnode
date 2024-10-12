@@ -198,7 +198,7 @@ exports.create = (req, res) => {
             }
 
             const customerId = result.insertId;
-
+            // const fileArr = [{'file' => custom_logo, 'folder_name' => 'logo'}, {'file' => agr_upload, 'folder_name' => 'agreement'}];
             if (req.files.custom_logo) {
               const targetDir = `uploads/customer/${customerId}/custom-logo`;
               fs.mkdir(targetDir, { recursive: true }, (err) => {
