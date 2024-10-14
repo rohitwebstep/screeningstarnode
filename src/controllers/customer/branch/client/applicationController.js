@@ -713,7 +713,7 @@ exports.upload = async (req, res) => {
         }
 
         // Save uploaded document paths to the database
-        await new Promise((resolve, reject) => {
+        const uploadSuccess = await new Promise((resolve, reject) => {
           Client.upload(
             client_application_id,
             db_column,
@@ -728,16 +728,25 @@ exports.upload = async (req, res) => {
           );
         });
 
-        // Return success response
-        return res.status(201).json({
-          status: true,
-          message:
-            savedImagePaths.length > 0
-              ? "Image(s) saved successfully."
-              : "No images uploaded.",
-          data: savedImagePaths,
-          token: newToken,
-        });
+        if (uploadSuccess) {
+          // Return success response
+          return res.status(201).json({
+            status: true,
+            message:
+              savedImagePaths.length > 0
+                ? "Image(s) saved successfully."
+                : "No images uploaded.",
+            data: savedImagePaths,
+            token: newToken,
+          });
+        } else {
+          // Return failure response
+          return res.status(500).json({
+            status: false,
+            message: "Failed to update the database.",
+            token: newToken,
+          });
+        }
       } catch (error) {
         console.error("Error saving image:", error);
         return res.status(500).json({
