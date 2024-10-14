@@ -6,6 +6,14 @@ const {
   createMail,
 } = require("../../../../mailer/customer/branch/client/createMail");
 
+const fs = require("fs");
+const path = require("path");
+const {
+  upload,
+  saveImage,
+  saveImages,
+} = require("../../../../utils/imageSave");
+
 exports.create = (req, res) => {
   const {
     branch_id,
