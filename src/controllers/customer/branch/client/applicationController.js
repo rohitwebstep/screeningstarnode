@@ -616,7 +616,7 @@ exports.upload = async (req, res) => {
       customer_code: customerCode,
       client_application_id: clientAppId,
       upload_category: uploadCat,
-      send_mail: sendMail,
+      sendMail: send_mail,
     } = req.body;
 
     // Validate required fields and collect missing ones
@@ -642,206 +642,113 @@ exports.upload = async (req, res) => {
     }
 
     const action = JSON.stringify({ client_application: "update" });
-
-    // Check branch authorization
-    const branchAuthResult = await new Promise((resolve) => {
-      BranchCommon.isBranchAuthorizedForAction(branchId, action, resolve);
-    });
-
-    if (!branchAuthResult.status) {
-      return res.status(403).json({
-        status: false,
-        message: branchAuthResult.message,
-      });
-    }
-
-    // Check branch token validity
-    const tokenValidityResult = await new Promise((resolve) => {
-      BranchCommon.isBranchTokenValid(token, branchId, resolve);
-    });
-
-    if (!tokenValidityResult.status) {
-      return res
-        .status(401)
-        .json({ status: false, message: tokenValidityResult.message });
-    }
-
-    const newToken = tokenValidityResult.newToken;
-
-    // Define the target directory for uploads
-    let targetDirectory;
-    let dbColumn;
-
-    switch (uploadCat) {
-      case "photo":
-        targetDirectory = `uploads/customer/${customerCode}`;
-        dbColumn = `photo`;
-        break;
-      case "attach_documents":
-        targetDirectory = `uploads/customer/${customerCode}/document`;
-        dbColumn = `attach_documents`;
-        break;
-      default:
-        return res.status(400).json({
+    BranchCommon.isBranchAuthorizedForAction(branchId, action, (result) => {
+      if (!result.status) {
+        return res.status(403).json({
           status: false,
-          message: "Invalid upload category.",
-          token: newToken,
+          message: result.message,
         });
-    }
+      }
 
-    // Create the target directory for uploads
-    await fs.promises.mkdir(targetDirectory, { recursive: true });
-
-    let savedImagePaths = [];
-
-    // Check for multiple files under the "images" field
-    if (req.files.images) {
-      savedImagePaths = await saveImages(req.files.images, targetDirectory);
-    }
-
-    // Check for a single file under the "image" field
-    if (req.files.image && req.files.image.length > 0) {
-      const savedImagePath = await saveImage(
-        req.files.image[0],
-        targetDirectory
-      );
-      savedImagePaths.push(savedImagePath);
-    }
-
-    Client.upload(
-      clientAppId,
-      dbColumn,
-      savedImagePaths,
-      async (success, result) => {
-        if (!success) {
-          return res.status(500).json({
-            status: false,
-            message:
-              result.error || "An error occurred while saving the image.",
-            token: newToken,
-            success: false,
-            details: result.details,
-            query: result.query,
-            params: result.params,
-          });
+      BranchCommon.isBranchTokenValid(token, branchId, async (err, result) => {
+        if (err) {
+          console.error("Error checking token validity:", err);
+          return res.status(500).json({ status: false, message: err.message });
         }
 
-        // Handle the case where the upload was successful
-        if (result && result.affectedRows > 0) {
-          if (sendMail == 1) {
-            try {
-              const emailData =
-                await BranchCommon.getBranchandCustomerEmailsForNotification(
-                  branchId
-                );
+        if (!result.status) {
+          return res
+            .status(401)
+            .json({ status: false, message: result.message });
+        }
 
-              const { branch, customer } = emailData;
-              const toArr = [{ name: branch.name, email: branch.email }];
-              const ccArr = customer.emails.split(",").map((email) => ({
-                name: customer.name,
-                email: email.trim(),
-              }));
+        const newToken = result.newToken;
 
-              const clientCode = await Branch.getClientUniqueIDByBranchId(
-                branchId
-              );
-              if (!clientCode) {
-                return res.status(400).json({
-                  status: false,
-                  message: `Customer Unique ID not Found`,
-                  token: newToken,
-                });
-              }
-
-              const clientName = await Branch.getClientNameByBranchId(branchId);
-              if (!clientName) {
-                return res.status(400).json({
-                  status: false,
-                  message: "Customer Unique ID not found",
-                  token: newToken,
-                });
-              }
-
-              const serviceIds =
-                typeof services === "string" && services.trim() !== ""
-                  ? services.split(",").map((id) => id.trim())
-                  : [];
-              const serviceNames = [];
-
-              // Function to fetch service names
-              const fetchServiceNames = async (index = 0) => {
-                if (index >= serviceIds.length) {
-                  // Once all services have been processed, send email notification
-                  await createMail(
-                    "client application",
-                    "create",
-                    client_application_name,
-                    clientAppId,
-                    clientName,
-                    clientCode,
-                    serviceNames,
-                    [], // attached_documents
-                    toArr,
-                    ccArr
-                  );
-                  return res.status(201).json({
-                    status: true,
-                    message:
-                      "Client application created successfully and email sent.",
-                    data: {
-                      client: result,
-                      package,
-                    },
-                    token: newToken,
-                    toArr,
-                    ccArr,
-                  });
-                }
-
-                const id = serviceIds[index];
-                const currentService = await Service.getServiceById(id);
-
-                // Skip invalid services and continue to the next index
-                if (currentService && currentService.title) {
-                  serviceNames.push(currentService.title);
-                }
-                fetchServiceNames(index + 1);
-              };
-
-              // Start fetching service names
-              await fetchServiceNames();
-            } catch (emailError) {
-              console.error("Error in email processing:", emailError);
-              return res.status(500).json({
-                status: false,
-                message: "Failed to process email notifications.",
-                token: newToken,
-              });
-            }
-          } else {
-            return res.status(201).json({
-              status: true,
-              message:
-                savedImagePaths.length > 0
-                  ? "Image(s) saved successfully."
-                  : "No images uploaded.",
-              data: savedImagePaths,
+        // Define the target directory for uploads
+        let targetDirectory;
+        let dbColumn;
+        switch (uploadCat) {
+          case "photo":
+            targetDirectory = `uploads/customer/${customerCode}`;
+            dbColumn = `photo`;
+            break;
+          case "attach_documents":
+            targetDirectory = `uploads/customer/${customerCode}/document`;
+            dbColumn = `attach_documents`;
+            break;
+          default:
+            return res.status(400).json({
+              status: false,
+              message: "Invalid upload category.",
               token: newToken,
             });
-          }
-        } else {
-          // If no rows were affected, indicate that no changes were made
-          return res.status(400).json({
-            status: false,
-            message:
-              "No changes were made. Please check the client application ID.",
-            token: newToken,
-            query: result.query,
-            params: result.params,
-          });
         }
-      }
-    );
+
+        // Create the target directory for uploads
+        await fs.promises.mkdir(targetDirectory, { recursive: true });
+
+        let savedImagePaths = [];
+
+        // Check for multiple files under the "images" field
+        if (req.files.images) {
+          savedImagePaths = await saveImages(req.files.images, targetDirectory);
+        }
+
+        // Check for a single file under the "image" field
+        if (req.files.image && req.files.image.length > 0) {
+          const savedImagePath = await saveImage(
+            req.files.image[0],
+            targetDirectory
+          );
+          savedImagePaths.push(savedImagePath);
+        }
+
+        Client.upload(
+          clientAppId,
+          dbColumn,
+          savedImagePaths,
+          (success, result) => {
+            if (!success) {
+              // If an error occurred, return the error details in the response
+              return res.status(500).json({
+                status: false,
+                message:
+                  result.error || "An error occurred while saving the image.", // Use detailed error message if available
+                token: newToken,
+                success: false, // Indicate failure
+                details: result.details, // Optionally include more error details
+                query: result.query, // Include the final SQL query
+                params: result.params, // Include the parameters used in the query
+              });
+            }
+
+            // Handle the case where the upload was successful
+            if (result && result.affectedRows > 0) {
+              // Return success response if there are affected rows
+              return res.status(201).json({
+                status: true,
+                message:
+                  savedImagePaths.length > 0
+                    ? "Image(s) saved successfully."
+                    : "No images uploaded.",
+                data: savedImagePaths,
+                token: newToken,
+              });
+            } else {
+              // If no rows were affected, indicate that no changes were made
+              return res.status(400).json({
+                status: false,
+                message:
+                  "No changes were made. Please check the client application ID.",
+                token: newToken,
+                query: result.query, // Include the final SQL query
+                params: result.params, // Include the parameters used in the query
+              });
+            }
+          }
+        );
+      });
+    });
   });
 };
 
