@@ -642,20 +642,24 @@ exports.upload = async (req, res) => {
       }
 
       // Check if the admin is authorized
-      const action = JSON.stringify({ client_application: "create" });
-      const authorizationResult = await new Promise((resolve) => {
-        BranchCommon.isBranchAuthorizedForAction(branch_id, action, resolve);
+      const actionPayload = JSON.stringify({ client_application: "create" });
+      const authorizationCheck = await new Promise((resolve) => {
+        BranchCommon.isBranchAuthorizedForAction(
+          branch_id,
+          actionPayload,
+          resolve
+        );
       });
 
-      if (!authorizationResult.status) {
+      if (!authorizationCheck.status) {
         return res.status(403).json({
           status: false,
-          message: authorizationResult.message,
+          message: authorizationCheck.message,
         });
       }
 
       // Validate branch token
-      const tokenValidationResult = await new Promise((resolve) => {
+      const tokenValidationCheck = await new Promise((resolve) => {
         BranchCommon.isBranchTokenValid(_token, branch_id, (err, result) => {
           if (err) {
             console.error("Error checking token validity:", err);
@@ -667,57 +671,60 @@ exports.upload = async (req, res) => {
         });
       });
 
-      if (!tokenValidationResult.status) {
+      if (!tokenValidationCheck.status) {
         return res
           .status(401)
-          .json({ status: false, message: tokenValidationResult.message });
+          .json({ status: false, message: tokenValidationCheck.message });
       }
 
-      const newToken = tokenValidationResult.newToken;
+      const newBranchToken = tokenValidationCheck.newToken;
 
       // Define the target directory for uploads
-      let targetDir;
-      let db_column;
+      let uploadDir;
+      let dbColumn;
       switch (upload_category) {
         case "photo":
-          targetDir = `uploads/customer/${customer_code}`;
-          db_column = `photo`;
+          uploadDir = `uploads/customer/${customer_code}`;
+          dbColumn = `photo`;
           break;
         case "attach_documents":
-          targetDir = `uploads/customer/${customer_code}/document`;
-          db_column = `attach_documents`;
+          uploadDir = `uploads/customer/${customer_code}/document`;
+          dbColumn = `attach_documents`;
           break;
         default:
           return res.status(400).json({
             status: false,
             message: "Invalid upload category.",
-            token: newToken,
+            token: newBranchToken,
           });
       }
 
       try {
         // Create the target directory for uploads
-        await fs.promises.mkdir(targetDir, { recursive: true });
+        await fs.promises.mkdir(uploadDir, { recursive: true });
 
-        let savedImagePaths = [];
+        let uploadedImagePaths = [];
 
         // Check for multiple files under the "images" field
         if (req.files.images) {
-          savedImagePaths = await saveImages(req.files.images, targetDir);
+          uploadedImagePaths = await saveImages(req.files.images, uploadDir);
         }
 
         // Check for a single file under the "image" field
         if (req.files.image && req.files.image.length > 0) {
-          const savedImagePath = await saveImage(req.files.image[0], targetDir);
-          savedImagePaths.push(savedImagePath);
+          const uploadedImagePath = await saveImage(
+            req.files.image[0],
+            uploadDir
+          );
+          uploadedImagePaths.push(uploadedImagePath);
         }
 
         // Save uploaded document paths to the database
         await new Promise((resolve, reject) => {
           Client.upload(
             client_application_id,
-            db_column,
-            savedImagePaths,
+            dbColumn,
+            uploadedImagePaths,
             (err, result) => {
               if (err) {
                 console.error("Database error while creating customer:", err);
@@ -732,18 +739,18 @@ exports.upload = async (req, res) => {
         return res.status(201).json({
           status: true,
           message:
-            savedImagePaths.length > 0
+            uploadedImagePaths.length > 0
               ? "Image(s) saved successfully."
               : "No images uploaded.",
-          data: savedImagePaths,
-          token: newToken,
+          data: uploadedImagePaths,
+          token: newBranchToken,
         });
       } catch (error) {
         console.error("Error saving image:", error);
         return res.status(500).json({
           status: false,
           message: "An error occurred while saving the image.",
-          token: newToken,
+          token: newBranchToken,
         });
       }
     } catch (error) {
