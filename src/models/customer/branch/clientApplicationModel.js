@@ -117,20 +117,14 @@ const clientApplication = {
     } = data;
 
     const serviceIds =
-      typeof services === "string" && services.trim() !== ""
-        ? services
-            .split(",")
-            .map((id) => id.trim())
-            .join(",")
-        : ""; // Pass empty string if services are not present
+      Array.isArray(services) && services.length > 0
+        ? services.map((id) => id.trim()).join(",")
+        : "";
 
     const packageIds =
-      typeof package === "string" && package.trim() !== ""
-        ? package
-            .split(",")
-            .map((id) => id.trim())
-            .join(",")
-        : ""; // Pass empty string if package is not present
+      Array.isArray(package) && package.length > 0
+        ? package.map((id) => id.trim()).join(",")
+        : "";
     console.log("Processed Services:", serviceIds);
     console.log("Processed Package:", packageIds);
 
