@@ -354,7 +354,7 @@ exports.create = (req, res) => {
   });
 };
 
-exports.uploadCustomLogo = async (req, res) => {
+exports.upload = async (req, res) => {
   // Use multer to handle the upload
   upload(req, res, async (err) => {
     if (err) {
