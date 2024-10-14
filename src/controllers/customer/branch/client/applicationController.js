@@ -741,10 +741,11 @@ exports.upload = async (req, res) => {
             token: newToken,
           });
         } else {
-          // Return failure response
+          // Return failure response with error detail
+          console.error("Database update failed, no changes made.");
           return res.status(500).json({
             status: false,
-            message: "Failed to update the database.",
+            message: "Failed to update the database. No changes were made.",
             token: newToken,
           });
         }
@@ -761,7 +762,7 @@ exports.upload = async (req, res) => {
       return res.status(500).json({
         status: false,
         message: "An error occurred during the upload process.",
-        error
+        error: error.message || error,
       });
     }
   });
