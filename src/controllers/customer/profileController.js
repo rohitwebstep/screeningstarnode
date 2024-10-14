@@ -367,70 +367,116 @@ exports.upload = async (req, res) => {
     try {
       const { admin_id, _token, customer_code, upload_category } = req.body;
 
-      // Create an array to hold names of empty fields
-      const missingFields = [];
-
-      // Validate the required fields and populate the missingFields array
-      if (!admin_id) missingFields.push("admin_id");
-      if (!_token) missingFields.push("_token");
-      if (!customer_code) missingFields.push("customer_code");
-      if (!upload_category) missingFields.push("upload_category");
+      // Validate required fields and collect missing ones
+      const requiredFields = {
+        admin_id,
+        _token,
+        customer_code,
+        upload_category,
+      };
+      const missingFields = Object.keys(requiredFields).filter(
+        (key) => !requiredFields[key]
+      );
 
       // If there are missing fields, return an error response
       if (missingFields.length > 0) {
         return res.status(400).json({
           status: false,
-          message:
-            "The following fields are required: " + missingFields.join(", "),
+          message: `The following fields are required: ${missingFields.join(
+            ", "
+          )}`,
         });
       }
 
-      // Define the target directory for uploads
-      let targetDir;
-      if (upload_category == "custom_logo") {
-        targetDir = `uploads/customer/${customer_code}/logo`;
-      } else if (upload_category == "agr_upload") {
-        targetDir = `uploads/customer/${customer_code}/agreement`;
-      } else {
-        return res.status(500).json({
-          status: false,
-          message: "wrong file is called",
+      // Check if the admin is authorized
+      const action = JSON.stringify({ customer: "create" });
+      AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
+        if (!result.status) {
+          return res.status(403).json({
+            status: false,
+            message: result.message,
+          });
+        }
+
+        // Verify admin token
+        AdminCommon.isAdminTokenValid(_token, admin_id, async (err, result) => {
+          if (err) {
+            console.error("Error checking token validity:", err);
+            return res
+              .status(500)
+              .json({ status: false, message: err.message });
+          }
+
+          if (!result.status) {
+            return res
+              .status(401)
+              .json({ status: false, message: result.message });
+          }
+
+          const newToken = result.newToken;
+
+          // Define the target directory for uploads
+          let targetDir;
+          switch (upload_category) {
+            case "custom_logo":
+              targetDir = `uploads/customer/${customer_code}/logo`;
+              break;
+            case "agr_upload":
+              targetDir = `uploads/customer/${customer_code}/agreement`;
+              break;
+            default:
+              return res.status(400).json({
+                status: false,
+                message: "Invalid upload category.",
+                token: newToken,
+              });
+          }
+
+          try {
+            // Create the target directory for uploads
+            await fs.promises.mkdir(targetDir, { recursive: true });
+
+            let savedImagePaths = [];
+
+            // Check for multiple files under the "images" field
+            if (req.files.images) {
+              savedImagePaths = await saveImages(req.files.images, targetDir);
+            }
+
+            // Check for a single file under the "image" field
+            if (req.files.image && req.files.image.length > 0) {
+              const savedImagePath = await saveImage(
+                req.files.image[0],
+                targetDir
+              );
+              savedImagePaths.push(savedImagePath);
+            }
+
+            // Return success response
+            return res.status(201).json({
+              status: true,
+              message:
+                savedImagePaths.length > 0
+                  ? "Image(s) saved successfully."
+                  : "No images uploaded.",
+              data: savedImagePaths,
+              token: newToken,
+            });
+          } catch (error) {
+            console.error("Error saving image:", error);
+            return res.status(500).json({
+              status: false,
+              message: "An error occurred while saving the image.",
+              token: newToken,
+            });
+          }
         });
-      }
-
-      // Create the target directory for uploads, ensuring it's done before proceeding
-      await fs.promises.mkdir(targetDir, { recursive: true });
-
-      let savedImagePaths = [];
-
-      // Check if multiple files are uploaded under the "images" field
-      if (req.files.images) {
-        savedImagePaths = await saveImages(req.files.images, targetDir); // Pass targetDir to saveImages
-      }
-
-      // Check if a single file is uploaded under the "image" field
-      if (req.files.image && req.files.image.length > 0) {
-        const savedImagePath = await saveImage(req.files.image[0], targetDir); // Pass targetDir to saveImage
-        savedImagePaths.push(savedImagePath);
-      }
-
-      // Return success response
-      return res.status(201).json({
-        status: true,
-        admin_id,
-        _token,
-        customer_code,
-        message:
-          savedImagePaths.length > 0
-            ? "Image(s) saved successfully"
-            : "No images uploaded",
-        data: savedImagePaths,
       });
     } catch (error) {
-      console.error("Error saving image:", error);
+      console.error("Error processing upload:", error);
       return res.status(500).json({
         status: false,
-        message: "An error occurred while saving the image",
+        message: "An error occurred during the upload process.",
       });
     }
   });
