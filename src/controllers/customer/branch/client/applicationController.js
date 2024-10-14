@@ -589,6 +589,92 @@ exports.update = (req, res) => {
   });
 };
 
+exports.upload = async (req, res) => {
+  // Use multer to handle the upload
+  upload(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({
+        status: false,
+        message: "Error uploading file.",
+      });
+    }
+
+    try {
+      const {
+        branch_id,
+        _token,
+        customer_code,
+        client_employee_id,
+        upload_category,
+      } = req.body;
+
+      // Create an array to hold names of empty fields
+      const missingFields = [];
+
+      // Validate the required fields and populate the missingFields array
+      if (!branch_id) missingFields.push("Branch ID");
+      if (!_token) missingFields.push("_token");
+      if (!customer_code) missingFields.push("Customer Code");
+      if (!upload_category) missingFields.push("Upload Category");
+      if (!client_employee_id) missingFields.push("Client Employee ID");
+
+      // If there are missing fields, return an error response
+      if (missingFields.length > 0) {
+        return res.status(400).json({
+          status: false,
+          message:
+            "The following fields are required: " + missingFields.join(", "),
+        });
+      }
+
+      // Define the target directory for uploads
+      let targetDir;
+      if (upload_category == "photo") {
+        targetDir = `uploads/customer/${customer_code}/${client_employee_id}`;
+      } else if (upload_category == "attached_document") {
+        targetDir = `uploads/customer/${customer_code}/${client_employee_id}/document`;
+      } else {
+        return res.status(500).json({
+          status: false,
+          message: "wrong file is called",
+        });
+      }
+
+      // Create the target directory for uploads, ensuring it's done before proceeding
+      await fs.promises.mkdir(targetDir, { recursive: true });
+
+      let savedImagePaths = [];
+
+      // Check if multiple files are uploaded under the "images" field
+      if (req.files.images) {
+        savedImagePaths = await saveImages(req.files.images, targetDir); // Pass targetDir to saveImages
+      }
+
+      // Check if a single file is uploaded under the "image" field
+      if (req.files.image && req.files.image.length > 0) {
+        const savedImagePath = await saveImage(req.files.image[0], targetDir); // Pass targetDir to saveImage
+        savedImagePaths.push(savedImagePath);
+      }
+
+      // Return success response
+      return res.status(201).json({
+        status: true,
+        message:
+          savedImagePaths.length > 0
+            ? "Image(s) saved successfully"
+            : "No images uploaded",
+        data: savedImagePaths,
+      });
+    } catch (error) {
+      console.error("Error saving image:", error);
+      return res.status(500).json({
+        status: false,
+        message: "An error occurred while saving the image",
+      });
+    }
+  });
+};
+
 exports.delete = (req, res) => {
   const { id, branch_id, _token } = req.query;
 
