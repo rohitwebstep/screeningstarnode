@@ -116,6 +116,26 @@ const clientApplication = {
       customer_id,
     } = data;
 
+    // Process services and package to ensure they are strings
+    const serviceIds =
+      services && services.trim() !== ""
+        ? services
+            .split(",")
+            .map((id) => id.trim())
+            .join(",")
+        : "";
+
+    const packageIds =
+      package && package.trim() !== ""
+        ? package
+            .split(",")
+            .map((id) => id.trim())
+            .join(",")
+        : "";
+
+    console.log("Processed Services:", serviceIds);
+    console.log("Processed Package:", packageIds);
+
     // Generate a new application ID
     console.log("Generating new application ID for branch:", branch_id);
     clientApplication.generateApplicationID(
@@ -153,8 +173,8 @@ const clientApplication = {
           batch_number,
           sub_client,
           branch_id,
-          services || "",
-          package || "",
+          serviceIds,
+          packageIds,
           customer_id,
         ];
 
