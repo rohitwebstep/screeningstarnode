@@ -302,14 +302,14 @@ const clientApplication = {
       [savedImagePaths, client_application_id],
       (err, results) => {
         if (err) {
-          return callback(false); // Return false if there's an error
+          return callback(false, null); // Return false if there's an error, with no result
         }
 
         // Check if any rows were affected by the update
         if (results.affectedRows > 0) {
-          return callback(true); // Return true if the update was successful
+          return callback(true, results); // Return true if the update was successful, with results
         } else {
-          return callback(false); // Return false if no rows were updated
+          return callback(false, results); // Return false if no rows were updated, with results
         }
       }
     );
