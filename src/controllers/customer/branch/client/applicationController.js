@@ -603,10 +603,14 @@ exports.update = (req, res) => {
 exports.upload = async (req, res) => {
   // Use multer to handle the upload
   upload(req, res, async (err) => {
+    let step = 1; // Initialize step variable
+
     if (err) {
+      console.log(`Step ${step++}: Error uploading file.`);
       return res.status(400).json({
         status: false,
         message: "Error uploading file.",
+        step,
       });
     }
 
@@ -618,6 +622,8 @@ exports.upload = async (req, res) => {
         client_application_id,
         upload_category,
       } = req.body;
+
+      console.log(`Step ${step++}: Validating required fields.`);
 
       // Validate required fields and collect missing ones
       const requiredFields = {
@@ -633,14 +639,21 @@ exports.upload = async (req, res) => {
 
       // If there are missing fields, return an error response
       if (missingFields.length > 0) {
+        console.log(
+          `Step ${step++}: Missing fields detected - ${missingFields.join(
+            ", "
+          )}`
+        );
         return res.status(400).json({
           status: false,
           message: `The following fields are required: ${missingFields.join(
             ", "
           )}`,
+          step,
         });
       }
 
+      console.log(`Step ${step++}: Checking admin authorization.`);
       // Check if the admin is authorized
       const actionPayload = JSON.stringify({ client_application: "create" });
       const authorizationCheck = await new Promise((resolve) => {
@@ -652,12 +665,15 @@ exports.upload = async (req, res) => {
       });
 
       if (!authorizationCheck.status) {
+        console.log(`Step ${step++}: Authorization failed.`);
         return res.status(403).json({
           status: false,
           message: authorizationCheck.message,
+          step,
         });
       }
 
+      console.log(`Step ${step++}: Validating branch token.`);
       // Validate branch token
       const tokenValidationCheck = await new Promise((resolve) => {
         BranchCommon.isBranchTokenValid(_token, branch_id, (err, result) => {
@@ -665,16 +681,19 @@ exports.upload = async (req, res) => {
             console.error("Error checking token validity:", err);
             return res
               .status(500)
-              .json({ status: false, message: err.message });
+              .json({ status: false, message: err.message, step });
           }
           resolve(result);
         });
       });
 
       if (!tokenValidationCheck.status) {
-        return res
-          .status(401)
-          .json({ status: false, message: tokenValidationCheck.message });
+        console.log(`Step ${step++}: Token validation failed.`);
+        return res.status(401).json({
+          status: false,
+          message: tokenValidationCheck.message,
+          step,
+        });
       }
 
       const newBranchToken = tokenValidationCheck.newToken;
@@ -692,13 +711,16 @@ exports.upload = async (req, res) => {
           dbColumn = `attach_documents`;
           break;
         default:
+          console.log(`Step ${step++}: Invalid upload category.`);
           return res.status(400).json({
             status: false,
             message: "Invalid upload category.",
             token: newBranchToken,
+            step,
           });
       }
 
+      console.log(`Step ${step++}: Creating target directory for uploads.`);
       try {
         // Create the target directory for uploads
         await fs.promises.mkdir(uploadDir, { recursive: true });
@@ -707,11 +729,13 @@ exports.upload = async (req, res) => {
 
         // Check for multiple files under the "images" field
         if (req.files.images) {
+          console.log(`Step ${step++}: Saving multiple images.`);
           uploadedImagePaths = await saveImages(req.files.images, uploadDir);
         }
 
         // Check for a single file under the "image" field
         if (req.files.image && req.files.image.length > 0) {
+          console.log(`Step ${step++}: Saving single image.`);
           const uploadedImagePath = await saveImage(
             req.files.image[0],
             uploadDir
@@ -719,6 +743,7 @@ exports.upload = async (req, res) => {
           uploadedImagePaths.push(uploadedImagePath);
         }
 
+        console.log(`Step ${step++}: Saving document paths to the database.`);
         // Save uploaded document paths to the database
         await new Promise((resolve, reject) => {
           Client.upload(
@@ -735,6 +760,7 @@ exports.upload = async (req, res) => {
           );
         });
 
+        console.log(`Step ${step++}: Upload successful.`);
         // Return success response
         return res.status(201).json({
           status: true,
@@ -744,6 +770,7 @@ exports.upload = async (req, res) => {
               : "No images uploaded.",
           data: uploadedImagePaths,
           token: newBranchToken,
+          step,
         });
       } catch (error) {
         console.error("Error saving image:", error);
@@ -751,6 +778,7 @@ exports.upload = async (req, res) => {
           status: false,
           message: "An error occurred while saving the image.",
           token: newBranchToken,
+          step,
         });
       }
     } catch (error) {
@@ -758,6 +786,7 @@ exports.upload = async (req, res) => {
       return res.status(500).json({
         status: false,
         message: "An error occurred during the upload process.",
+        step,
       });
     }
   });
