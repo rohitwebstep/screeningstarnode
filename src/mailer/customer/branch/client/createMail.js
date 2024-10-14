@@ -87,7 +87,10 @@ async function createMail(
 
     // Generate the HTML table from service details
     const table = generateTable(services);
-    const docsHTML = generateDocs(docs);
+    let docsHTML = "";
+    if (docs && docs.length > 0) {
+      docsHTML = generateDocs(docs);
+    }
 
     // Replace placeholders in the email template
     let template = email.template;
@@ -96,8 +99,15 @@ async function createMail(
       .replace(/{{client_name}}/g, name)
       .replace(/{{application_id}}/g, application_id)
       .replace(/{{client_code}}/g, client_code)
-      .replace(/{{docs}}/g, docsHTML)
       .replace(/{{services}}/g, table);
+
+    // If docsHTML has content, replace its placeholder
+    if (docsHTML) {
+      template = template.replace(/{{docs}}/g, docsHTML);
+    } else {
+      // If there are no documents, remove the placeholder from the template
+      template = template.replace(/{{docs}}/g, "");
+    }
 
     // Prepare CC list
     const ccList = ccArr
