@@ -168,7 +168,7 @@ exports.create = (req, res) => {
             name: company_name,
             address,
             profile_picture: null,
-            emails_json: JSON.parse(emails),
+            emails_json: JSON.stringify(emails),
             mobile_number,
             services: JSON.stringify(clientData),
             additional_login: additional_login_int,
