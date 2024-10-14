@@ -641,40 +641,6 @@ exports.upload = async (req, res) => {
         });
       }
 
-      // Check if the admin is authorized
-      const action = JSON.stringify({ client_application: "create" });
-      const authorizationResult = await new Promise((resolve) => {
-        BranchCommon.isBranchAuthorizedForAction(branch_id, action, resolve);
-      });
-
-      if (!authorizationResult.status) {
-        return res.status(403).json({
-          status: false,
-          message: authorizationResult.message,
-        });
-      }
-
-      // Validate branch token
-      const tokenValidationResult = await new Promise((resolve) => {
-        BranchCommon.isBranchTokenValid(_token, branch_id, (err, result) => {
-          if (err) {
-            console.error("Error checking token validity:", err);
-            return res
-              .status(500)
-              .json({ status: false, message: err.message });
-          }
-          resolve(result);
-        });
-      });
-
-      if (!tokenValidationResult.status) {
-        return res
-          .status(401)
-          .json({ status: false, message: tokenValidationResult.message });
-      }
-
-      const newToken = tokenValidationResult.newToken;
-
       // Define the target directory for uploads
       let targetDir;
       let db_column;
@@ -691,7 +657,6 @@ exports.upload = async (req, res) => {
           return res.status(400).json({
             status: false,
             message: "Invalid upload category.",
-            token: newToken,
           });
       }
 
@@ -736,14 +701,12 @@ exports.upload = async (req, res) => {
               ? "Image(s) saved successfully."
               : "No images uploaded.",
           data: savedImagePaths,
-          token: newToken,
         });
       } catch (error) {
         console.error("Error saving image:", error);
         return res.status(500).json({
           status: false,
           message: "An error occurred while saving the image.",
-          token: newToken,
         });
       }
     } catch (error) {
