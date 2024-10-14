@@ -716,6 +716,7 @@ exports.upload = async (req, res) => {
             status: false,
             message: "An error occurred while saving to the database.",
             token: newToken,
+            err,
           });
         }
 
@@ -735,6 +736,7 @@ exports.upload = async (req, res) => {
       return res.status(500).json({
         status: false,
         message: "An error occurred during the upload process.",
+        error,
       });
     }
   });
