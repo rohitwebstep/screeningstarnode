@@ -101,6 +101,8 @@ const clientApplication = {
 
   // Method to create a new client application
   create: (data, callback) => {
+    console.log("Create function initiated with data:", data);
+
     const {
       name,
       employee_id,
@@ -115,12 +117,16 @@ const clientApplication = {
     } = data;
 
     // Generate a new application ID
+    console.log("Generating new application ID for branch:", branch_id);
     clientApplication.generateApplicationID(
       branch_id,
       (err, new_application_id) => {
         if (err) {
+          console.error("Error generating new application ID:", err);
           return callback(err, null);
         }
+
+        console.log("Generated new application ID:", new_application_id);
 
         const sql = `
         INSERT INTO \`client_applications\` (
@@ -152,11 +158,16 @@ const clientApplication = {
           customer_id,
         ];
 
+        console.log("SQL Query:", sql);
+        console.log("Query Values:", values);
+
         pool.query(sql, values, (err, results) => {
           if (err) {
             console.error("Database query error:", err);
             return callback(err, null);
           }
+
+          console.log("Database query successful. Results:", results);
           callback(null, { results, new_application_id });
         });
       }
