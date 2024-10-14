@@ -716,6 +716,8 @@ exports.upload = async (req, res) => {
                 token: newToken,
                 success: false, // Indicate failure
                 details: result.details, // Optionally include more error details
+                query: result.query, // Include the final SQL query
+                params: result.params, // Include the parameters used in the query
               });
             }
 
@@ -738,6 +740,8 @@ exports.upload = async (req, res) => {
                 message:
                   "No changes were made. Please check the client application ID.",
                 token: newToken,
+                query: result.query, // Include the final SQL query
+                params: result.params, // Include the parameters used in the query
               });
             }
           }

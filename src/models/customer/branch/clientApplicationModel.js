@@ -297,30 +297,33 @@ const clientApplication = {
       WHERE id = ?
     `;
 
-    pool.query(
-      sqlUpdateCustomer,
-      [savedImagePaths, client_application_id],
-      (err, results) => {
-        if (err) {
-          // Return error details if there's a database error
-          return callback(false, {
-            error: "Database error occurred.",
-            details: err, // Include error details for debugging
-          });
-        }
+    // Prepare the parameters for the query
+    const queryParams = [savedImagePaths, client_application_id];
 
-        // Check if any rows were affected by the update
-        if (results.affectedRows > 0) {
-          return callback(true, results); // Success with results
-        } else {
-          // No rows updated, return a specific message
-          return callback(false, {
-            error: "No rows updated. Please check the client application ID.",
-            details: results,
-          });
-        }
+    pool.query(sqlUpdateCustomer, queryParams, (err, results) => {
+      if (err) {
+        // Return error details and the final query with parameters
+        return callback(false, {
+          error: "Database error occurred.",
+          details: err, // Include error details for debugging
+          query: sqlUpdateCustomer,
+          params: queryParams, // Return the parameters used in the query
+        });
       }
-    );
+
+      // Check if any rows were affected by the update
+      if (results.affectedRows > 0) {
+        return callback(true, results); // Success with results
+      } else {
+        // No rows updated, return a specific message along with the query details
+        return callback(false, {
+          error: "No rows updated. Please check the client application ID.",
+          details: results,
+          query: sqlUpdateCustomer,
+          params: queryParams, // Return the parameters used in the query
+        });
+      }
+    });
   },
 
   update: (data, client_application_id, callback) => {
