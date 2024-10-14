@@ -12,13 +12,11 @@ exports.create = (req, res) => {
     _token,
     customer_id,
     name,
-    attach_documents,
     employee_id,
     spoc,
     location,
     batch_number,
     sub_client,
-    photo,
     services,
     package,
   } = req.body;
@@ -29,13 +27,11 @@ exports.create = (req, res) => {
     _token,
     customer_id,
     name,
-    attach_documents,
     employee_id,
     spoc,
     location,
     batch_number,
     sub_client,
-    photo,
   };
 
   // Check for missing fields
@@ -95,13 +91,11 @@ exports.create = (req, res) => {
         Client.create(
           {
             name,
-            attach_documents,
             employee_id,
             spoc,
             location,
             batch_number,
             sub_client,
-            photo,
             branch_id,
             services,
             package,
@@ -220,7 +214,7 @@ exports.create = (req, res) => {
                               clientName,
                               clientCode,
                               serviceNames,
-                              attach_documents,
+                              [],
                               toArr,
                               ccArr
                             )
@@ -343,7 +337,7 @@ exports.list = (req, res) => {
             status: false,
             message: "An error occurred while fetching client applications 2.",
             token: newToken,
-            err
+            err,
           });
         }
 

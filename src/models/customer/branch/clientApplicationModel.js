@@ -103,13 +103,11 @@ const clientApplication = {
   create: (data, callback) => {
     const {
       name,
-      attach_documents,
       employee_id,
       spoc,
       location,
       batch_number,
       sub_client,
-      photo,
       branch_id,
       services,
       package,
@@ -128,30 +126,26 @@ const clientApplication = {
         INSERT INTO \`client_applications\` (
           \`application_id\`,
           \`name\`,
-          \`attach_documents\`,
           \`employee_id\`,
           \`spoc\`,
           \`location\`,
           \`batch_number\`,
           \`sub_client\`,
-          \`photo\`,
           \`branch_id\`,
           \`services\`,
           \`package\`,
           \`customer_id\`
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
         const values = [
           new_application_id,
           name,
-          attach_documents,
           employee_id,
           spoc,
           location,
           batch_number,
           sub_client,
-          photo,
           branch_id,
           services || "",
           package || "",
