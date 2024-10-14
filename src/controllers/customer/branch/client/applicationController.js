@@ -761,6 +761,7 @@ exports.upload = async (req, res) => {
       return res.status(500).json({
         status: false,
         message: "An error occurred during the upload process.",
+        error
       });
     }
   });
