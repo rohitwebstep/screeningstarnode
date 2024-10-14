@@ -479,6 +479,17 @@ exports.upload = async (req, res) => {
                     token: newToken,
                   });
                 }
+
+                // Return success response
+                return res.status(201).json({
+                  status: true,
+                  message:
+                    savedImagePaths.length > 0
+                      ? "Image(s) saved successfully."
+                      : "No images uploaded.",
+                  data: savedImagePaths,
+                  token: newToken,
+                });
               }
             );
           } catch (error) {
