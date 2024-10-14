@@ -199,7 +199,7 @@ exports.create = (req, res) => {
                         }
 
                         const serviceIds =
-                          services && services.trim() !== ""
+                          typeof services === "string" && services.trim() !== ""
                             ? services.split(",").map((id) => id.trim())
                             : [];
 
