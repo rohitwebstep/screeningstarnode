@@ -708,10 +708,14 @@ exports.upload = async (req, res) => {
           savedImagePaths,
           (success, result) => {
             if (!success) {
+              // If an error occurred, return the error details in the response
               return res.status(500).json({
                 status: false,
-                message: "An error occurred while saving the image.",
+                message:
+                  result.error || "An error occurred while saving the image.", // Use detailed error message if available
                 token: newToken,
+                success: false, // Indicate failure
+                details: result.details, // Optionally include more error details
               });
             }
 

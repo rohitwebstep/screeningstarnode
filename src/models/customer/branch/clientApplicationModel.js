@@ -302,14 +302,22 @@ const clientApplication = {
       [savedImagePaths, client_application_id],
       (err, results) => {
         if (err) {
-          return callback(false, null); // Return false if there's an error, with no result
+          // Return error details if there's a database error
+          return callback(false, {
+            error: "Database error occurred.",
+            details: err, // Include error details for debugging
+          });
         }
 
         // Check if any rows were affected by the update
         if (results.affectedRows > 0) {
-          return callback(true, results); // Return true if the update was successful, with results
+          return callback(true, results); // Success with results
         } else {
-          return callback(false, results); // Return false if no rows were updated, with results
+          // No rows updated, return a specific message
+          return callback(false, {
+            error: "No rows updated. Please check the client application ID.",
+            details: results,
+          });
         }
       }
     );
