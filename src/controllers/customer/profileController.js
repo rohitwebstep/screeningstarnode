@@ -457,17 +457,6 @@ exports.upload = async (req, res) => {
               savedImagePaths.push(savedImagePath);
             }
 
-            // Return success response
-            return res.status(201).json({
-              status: true,
-              message:
-                savedImagePaths.length > 0
-                  ? "Image(s) saved successfully."
-                  : "No images uploaded.",
-              data: savedImagePaths,
-              token: newToken,
-            });
-
             Customer.documentUpload(
               customer_id,
               db_column,
