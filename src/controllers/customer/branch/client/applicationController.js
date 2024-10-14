@@ -600,7 +600,7 @@ exports.update = (req, res) => {
   });
 };
 
-exports.uploadFile = async (req, res) => {
+exports.upload = async (req, res) => {
   // Use multer to handle the upload
   upload(req, res, async (uploadError) => {
     if (uploadError) {
