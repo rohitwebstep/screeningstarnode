@@ -116,23 +116,21 @@ const clientApplication = {
       customer_id,
     } = data;
 
-    // Process services and package to ensure they are strings
     const serviceIds =
-      services && services.trim() !== ""
+      typeof services === "string" && services.trim() !== ""
         ? services
             .split(",")
             .map((id) => id.trim())
             .join(",")
-        : "''"; // Pass empty string if services are not present
+        : ""; // Pass empty string if services are not present
 
     const packageIds =
-      package && package.trim() !== ""
+      typeof package === "string" && package.trim() !== ""
         ? package
             .split(",")
             .map((id) => id.trim())
             .join(",")
-        : "''"; // Pass empty string if package is not present
-
+        : ""; // Pass empty string if package is not present
     console.log("Processed Services:", serviceIds);
     console.log("Processed Package:", packageIds);
 
