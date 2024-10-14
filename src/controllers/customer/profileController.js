@@ -355,12 +355,9 @@ exports.create = (req, res) => {
 };
 
 exports.upload = async (req, res) => {
-  console.log("Upload function initiated");
-
   // Use multer to handle the upload
   upload(req, res, async (err) => {
     if (err) {
-      console.error("Error during file upload:", err);
       return res.status(400).json({
         status: false,
         message: "Error uploading file.",
@@ -368,7 +365,6 @@ exports.upload = async (req, res) => {
     }
 
     try {
-      console.log("Request body:", req.body);
       const { admin_id, _token, customer_code, customer_id, upload_category } =
         req.body;
 
@@ -386,7 +382,6 @@ exports.upload = async (req, res) => {
 
       // If there are missing fields, return an error response
       if (missingFields.length > 0) {
-        console.warn("Missing required fields:", missingFields);
         return res.status(400).json({
           status: false,
           message: `The following fields are required: ${missingFields.join(
@@ -395,21 +390,16 @@ exports.upload = async (req, res) => {
         });
       }
 
-      console.log("All required fields are present. Proceeding...");
-
       // Check if the admin is authorized
       const action = JSON.stringify({ customer: "create" });
-      console.log("Checking if admin is authorized for action:", action);
       AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
         if (!result.status) {
-          console.warn("Admin authorization failed:", result.message);
           return res.status(403).json({
             status: false,
             message: result.message,
           });
         }
 
-        console.log("Admin authorized. Verifying admin token...");
         // Verify admin token
         AdminCommon.isAdminTokenValid(_token, admin_id, async (err, result) => {
           if (err) {
@@ -420,16 +410,14 @@ exports.upload = async (req, res) => {
           }
 
           if (!result.status) {
-            console.warn("Admin token verification failed:", result.message);
             return res
               .status(401)
               .json({ status: false, message: result.message });
           }
 
           const newToken = result.newToken;
-          console.log("Admin token verified. Proceeding with upload...");
 
-          // Define the target directory and database column for uploads
+          // Define the target directory for uploads
           let targetDir;
           let db_column;
           switch (upload_category) {
@@ -442,7 +430,6 @@ exports.upload = async (req, res) => {
               db_column = `agreement`;
               break;
             default:
-              console.warn("Invalid upload category:", upload_category);
               return res.status(400).json({
                 status: false,
                 message: "Invalid upload category.",
@@ -450,24 +437,19 @@ exports.upload = async (req, res) => {
               });
           }
 
-          console.log("Target directory:", targetDir, "DB column:", db_column);
-
           try {
             // Create the target directory for uploads
             await fs.promises.mkdir(targetDir, { recursive: true });
-            console.log("Target directory created:", targetDir);
 
             let savedImagePaths = [];
 
             // Check for multiple files under the "images" field
-            if (req.files && req.files.images) {
-              console.log("Multiple images detected. Saving...");
+            if (req.files.images) {
               savedImagePaths = await saveImages(req.files.images, targetDir);
             }
 
             // Check for a single file under the "image" field
-            if (req.files && req.files.image && req.files.image.length > 0) {
-              console.log("Single image detected. Saving...");
+            if (req.files.image && req.files.image.length > 0) {
               const savedImagePath = await saveImage(
                 req.files.image[0],
                 targetDir
@@ -475,16 +457,24 @@ exports.upload = async (req, res) => {
               savedImagePaths.push(savedImagePath);
             }
 
-            console.log("Saved image paths:", savedImagePaths);
+            // Return success response
+            return res.status(201).json({
+              status: true,
+              message:
+                savedImagePaths.length > 0
+                  ? "Image(s) saved successfully."
+                  : "No images uploaded.",
+              data: savedImagePaths,
+              token: newToken,
+            });
 
-            // Update customer document in the database
             Customer.documentUpload(
               customer_id,
               db_column,
               savedImagePaths,
               (err, result) => {
                 if (err) {
-                  console.error("Database error while updating customer:", err);
+                  console.error("Database error while creating customer:", err);
                   AdminCommon.adminActivityLog(
                     admin_id,
                     "Customer",
@@ -496,23 +486,10 @@ exports.upload = async (req, res) => {
                   );
                   return res.status(500).json({
                     status: false,
-                    message: "Database update failed.",
+                    message: err.message,
                     token: newToken,
                   });
                 }
-
-                console.log("Customer document updated successfully:", result);
-
-                // Return success response
-                return res.status(201).json({
-                  status: true,
-                  message:
-                    savedImagePaths.length > 0
-                      ? "Image(s) saved successfully."
-                      : "No images uploaded.",
-                  data: savedImagePaths,
-                  token: newToken,
-                });
               }
             );
           } catch (error) {
