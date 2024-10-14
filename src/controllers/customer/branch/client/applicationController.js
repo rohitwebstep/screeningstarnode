@@ -17,6 +17,7 @@ exports.create = (req, res) => {
     location,
     batch_number,
     sub_client,
+    photo,
     services,
     package,
   } = req.body;
@@ -32,6 +33,7 @@ exports.create = (req, res) => {
     location,
     batch_number,
     sub_client,
+    photo,
   };
 
   // Check for missing fields
@@ -214,6 +216,7 @@ exports.create = (req, res) => {
                               clientName,
                               clientCode,
                               serviceNames,
+                              [],
                               toArr,
                               ccArr
                             )
@@ -336,7 +339,7 @@ exports.list = (req, res) => {
             status: false,
             message: "An error occurred while fetching client applications 2.",
             token: newToken,
-            err
+            err,
           });
         }
 
@@ -358,11 +361,13 @@ exports.update = (req, res) => {
     _token,
     client_application_id,
     name,
+    attach_documents,
     employee_id,
     spoc,
     location,
     batch_number,
     sub_client,
+    photo,
     services,
     package,
   } = req.body;
@@ -373,11 +378,13 @@ exports.update = (req, res) => {
     _token,
     client_application_id,
     name,
+    attach_documents,
     employee_id,
     spoc,
     location,
     batch_number,
     sub_client,
+    photo,
   };
 
   // Check for missing fields
@@ -441,6 +448,12 @@ exports.update = (req, res) => {
           if (currentClientApplication.name !== name) {
             changes.name = { old: currentClientApplication.name, new: name };
           }
+          if (currentClientApplication.attach_documents !== attach_documents) {
+            changes.attach_documents = {
+              old: currentClientApplication.attach_documents,
+              new: attach_documents,
+            };
+          }
           if (currentClientApplication.employee_id !== employee_id) {
             changes.employee_id = {
               old: currentClientApplication.employee_id,
@@ -469,6 +482,12 @@ exports.update = (req, res) => {
             changes.sub_client = {
               old: currentClientApplication.sub_client,
               new: sub_client,
+            };
+          }
+          if (currentClientApplication.photo !== photo) {
+            changes.photo = {
+              old: currentClientApplication.photo,
+              new: photo,
             };
           }
           if (
@@ -513,11 +532,13 @@ exports.update = (req, res) => {
               Client.update(
                 {
                   name,
+                  attach_documents,
                   employee_id,
                   spoc,
                   location,
                   batch_number,
                   sub_client,
+                  photo,
                   services,
                   package,
                 },
@@ -685,87 +706,5 @@ exports.delete = (req, res) => {
         });
       }
     );
-  });
-};
-
-exports.upload = async (req, res) => {
-  // Use multer to handle the upload
-  upload(req, res, async (err) => {
-    if (err) {
-      return res.status(400).json({
-        status: false,
-        message: "Error uploading file.",
-      });
-    }
-
-    try {
-      const { admin_id, _token, customer_code, upload_category } = req.body;
-
-      // Create an array to hold names of empty fields
-      const missingFields = [];
-
-      // Validate the required fields and populate the missingFields array
-      if (!admin_id) missingFields.push("admin_id");
-      if (!_token) missingFields.push("_token");
-      if (!customer_code) missingFields.push("customer_code");
-      if (!upload_category) missingFields.push("upload_category");
-
-      // If there are missing fields, return an error response
-      if (missingFields.length > 0) {
-        return res.status(400).json({
-          status: false,
-          message:
-            "The following fields are required: " + missingFields.join(", "),
-        });
-      }
-
-      // Define the target directory for uploads
-      let targetDir;
-      if (upload_category == "custom_logo") {
-        targetDir = `uploads/customer/${customer_code}/logo`;
-      } else if (upload_category == "agr_upload") {
-        targetDir = `uploads/customer/${customer_code}/agreement`;
-      } else {
-        return res.status(500).json({
-          status: false,
-          message: "wrong file is called",
-        });
-      }
-
-      // Create the target directory for uploads, ensuring it's done before proceeding
-      await fs.promises.mkdir(targetDir, { recursive: true });
-
-      let savedImagePaths = [];
-
-      // Check if multiple files are uploaded under the "images" field
-      if (req.files.images) {
-        savedImagePaths = await saveImages(req.files.images, targetDir); // Pass targetDir to saveImages
-      }
-
-      // Check if a single file is uploaded under the "image" field
-      if (req.files.image && req.files.image.length > 0) {
-        const savedImagePath = await saveImage(req.files.image[0], targetDir); // Pass targetDir to saveImage
-        savedImagePaths.push(savedImagePath);
-      }
-
-      // Return success response
-      return res.status(201).json({
-        status: true,
-        admin_id,
-        _token,
-        customer_code,
-        message:
-          savedImagePaths.length > 0
-            ? "Image(s) saved successfully"
-            : "No images uploaded",
-        data: savedImagePaths,
-      });
-    } catch (error) {
-      console.error("Error saving image:", error);
-      return res.status(500).json({
-        status: false,
-        message: "An error occurred while saving the image",
-      });
-    }
   });
 };
