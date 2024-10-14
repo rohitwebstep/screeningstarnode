@@ -673,13 +673,13 @@ exports.upload = async (req, res) => {
             let targetDirectory;
             let dbColumn;
             switch (uploadCat) {
-              case "custom_logo":
-                targetDirectory = `uploads/customer/${customerCode}/logo`;
-                dbColumn = `custom_logo`;
+              case "photo":
+                targetDirectory = `uploads/customer/${customerCode}`;
+                dbColumn = `photo`;
                 break;
-              case "agr_upload":
-                targetDirectory = `uploads/customer/${customerCode}/agreement`;
-                dbColumn = `agreement`;
+              case "attach_documents":
+                targetDirectory = `uploads/customer/${customerCode}/document`;
+                dbColumn = `attach_documents`;
                 break;
               default:
                 return res.status(400).json({
