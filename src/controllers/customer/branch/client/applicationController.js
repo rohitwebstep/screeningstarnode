@@ -617,6 +617,7 @@ exports.upload = async (req, res) => {
         customer_code,
         client_application_id,
         upload_category,
+        mail_send,
       } = req.body;
 
       // Validate required fields and collect missing ones
