@@ -198,9 +198,11 @@ exports.create = (req, res) => {
                           });
                         }
 
-                        const serviceIds = services
-                          .split(",")
-                          .map((id) => id.trim());
+                        const serviceIds =
+                          services && services.trim() !== ""
+                            ? services.split(",").map((id) => id.trim())
+                            : [];
+
                         const serviceNames = [];
 
                         // Function to fetch service names
