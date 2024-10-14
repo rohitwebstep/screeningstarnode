@@ -602,8 +602,8 @@ exports.update = (req, res) => {
 
 exports.upload = async (req, res) => {
   // Use multer to handle the upload
-  upload(req, res, async (uploadError) => {
-    if (uploadError) {
+  upload(req, res, async (err) => {
+    if (err) {
       return res.status(400).json({
         status: false,
         message: "Error uploading file.",
@@ -612,171 +612,145 @@ exports.upload = async (req, res) => {
 
     try {
       const {
-        branch_id: branchId,
-        _token: token,
-        customer_code: customerCode,
-        client_application_id: clientAppId,
-        upload_category: uploadCategory,
-        mail_send: mailSend,
+        branch_id,
+        _token,
+        customer_code,
+        client_application_id,
+        upload_category,
       } = req.body;
 
       // Validate required fields and collect missing ones
-      const requiredParams = {
-        branchId,
-        token,
-        customerCode,
-        clientAppId,
-        uploadCategory,
+      const requiredFields = {
+        branch_id,
+        _token,
+        customer_code,
+        client_application_id,
+        upload_category,
       };
-      const missingParams = Object.keys(requiredParams).filter(
-        (key) => !requiredParams[key]
+      const missingFields = Object.keys(requiredFields).filter(
+        (key) => !requiredFields[key]
       );
 
       // If there are missing fields, return an error response
-      if (missingParams.length > 0) {
+      if (missingFields.length > 0) {
         return res.status(400).json({
           status: false,
-          message: `The following fields are required: ${missingParams.join(
+          message: `The following fields are required: ${missingFields.join(
             ", "
           )}`,
         });
       }
 
-      const actionPayload = JSON.stringify({ client_application: "create" });
-      BranchCommon.isBranchAuthorizedForAction(
-        branchId,
-        actionPayload,
-        (authCheckResult) => {
-          if (!authCheckResult.status) {
-            return res.status(403).json({
-              status: false,
-              message: authCheckResult.message,
-            });
+      // Check if the admin is authorized
+      const action = JSON.stringify({ client_application: "create" });
+      const authorizationResult = await new Promise((resolve) => {
+        BranchCommon.isBranchAuthorizedForAction(branch_id, action, resolve);
+      });
+
+      if (!authorizationResult.status) {
+        return res.status(403).json({
+          status: false,
+          message: authorizationResult.message,
+        });
+      }
+
+      // Validate branch token
+      const tokenValidationResult = await new Promise((resolve) => {
+        BranchCommon.isBranchTokenValid(_token, branch_id, (err, result) => {
+          if (err) {
+            console.error("Error checking token validity:", err);
+            return res
+              .status(500)
+              .json({ status: false, message: err.message });
           }
+          resolve(result);
+        });
+      });
 
-          BranchCommon.isBranchTokenValid(
-            token,
-            branchId,
-            (tokenValidationError, tokenValidationResult) => {
-              if (tokenValidationError) {
-                console.error(
-                  "Error checking token validity:",
-                  tokenValidationError
-                );
-                return res.status(500).json({
-                  status: false,
-                  message: tokenValidationError.message,
-                });
+      if (!tokenValidationResult.status) {
+        return res
+          .status(401)
+          .json({ status: false, message: tokenValidationResult.message });
+      }
+
+      const newToken = tokenValidationResult.newToken;
+
+      // Define the target directory for uploads
+      let targetDir;
+      let db_column;
+      switch (upload_category) {
+        case "photo":
+          targetDir = `uploads/customer/${customer_code}`;
+          db_column = `photo`;
+          break;
+        case "attach_documents":
+          targetDir = `uploads/customer/${customer_code}/document`;
+          db_column = `attach_documents`;
+          break;
+        default:
+          return res.status(400).json({
+            status: false,
+            message: "Invalid upload category.",
+            token: newToken,
+          });
+      }
+
+      try {
+        // Create the target directory for uploads
+        await fs.promises.mkdir(targetDir, { recursive: true });
+
+        let savedImagePaths = [];
+
+        // Check for multiple files under the "images" field
+        if (req.files.images) {
+          savedImagePaths = await saveImages(req.files.images, targetDir);
+        }
+
+        // Check for a single file under the "image" field
+        if (req.files.image && req.files.image.length > 0) {
+          const savedImagePath = await saveImage(req.files.image[0], targetDir);
+          savedImagePaths.push(savedImagePath);
+        }
+
+        // Save uploaded document paths to the database
+        await new Promise((resolve, reject) => {
+          Client.upload(
+            client_application_id,
+            db_column,
+            savedImagePaths,
+            (err, result) => {
+              if (err) {
+                console.error("Database error while creating customer:", err);
+                return reject(err);
               }
-
-              if (!tokenValidationResult.status) {
-                return res.status(401).json({
-                  status: false,
-                  message: tokenValidationResult.message,
-                });
-              }
-
-              const refreshedAuthToken = tokenValidationResult.newToken;
-              startSaving(refreshedAuthToken);
+              resolve(result);
             }
           );
-        }
-      );
+        });
 
-      async function startSaving(refreshedAuthToken) {
-        // Define the target directory for uploads
-        let uploadDir;
-        let databaseColumn;
-
-        switch (uploadCategory) {
-          case "photo":
-            uploadDir = `uploads/customer/${customerCode}`;
-            databaseColumn = `photo`;
-            break;
-          case "attach_documents":
-            uploadDir = `uploads/customer/${customerCode}/document`;
-            databaseColumn = `attach_documents`;
-            break;
-          default:
-            return res.status(400).json({
-              status: false,
-              message: "Invalid upload category.",
-              token: refreshedAuthToken,
-            });
-        }
-
-        try {
-          // Create the target directory for uploads
-          await fs.promises.mkdir(uploadDir, { recursive: true });
-
-          let uploadedPaths = [];
-
-          // Check for multiple files under the "images" field
-          if (req.files.images) {
-            uploadedPaths = await saveImages(req.files.images, uploadDir);
-          }
-
-          // Check for a single file under the "image" field
-          if (req.files.image && req.files.image.length > 0) {
-            const singleImagePath = await saveImage(
-              req.files.image[0],
-              uploadDir
-            );
-            uploadedPaths.push(singleImagePath);
-          }
-
-          // Save uploaded document paths to the database
-          const dbUploadSuccess = await new Promise((resolve, reject) => {
-            Client.upload(
-              clientAppId,
-              databaseColumn,
-              uploadedPaths,
-              (err, result) => {
-                if (err) {
-                  console.error("Database error while creating customer:", err);
-                  return reject(err);
-                }
-                resolve(result);
-              }
-            );
-          });
-
-          if (dbUploadSuccess) {
-            // Return success response
-            return res.status(201).json({
-              status: true,
-              message:
-                uploadedPaths.length > 0
-                  ? "Image(s) saved successfully."
-                  : "No images uploaded.",
-              data: uploadedPaths,
-              token: refreshedAuthToken,
-            });
-          } else {
-            // Return failure response with error detail
-            console.error("Database update failed, no changes made.");
-            return res.status(500).json({
-              status: false,
-              message: "Failed to update the database. No changes were made.",
-              token: refreshedAuthToken,
-            });
-          }
-        } catch (saveError) {
-          console.error("Error saving image:", saveError);
-          return res.status(500).json({
-            status: false,
-            message: "An error occurred while saving the image.",
-            token: refreshedAuthToken,
-            error: saveError.message || saveError,
-          });
-        }
+        // Return success response
+        return res.status(201).json({
+          status: true,
+          message:
+            savedImagePaths.length > 0
+              ? "Image(s) saved successfully."
+              : "No images uploaded.",
+          data: savedImagePaths,
+          token: newToken,
+        });
+      } catch (error) {
+        console.error("Error saving image:", error);
+        return res.status(500).json({
+          status: false,
+          message: "An error occurred while saving the image.",
+          token: newToken,
+        });
       }
-    } catch (processingError) {
-      console.error("Error processing upload:", processingError);
+    } catch (error) {
+      console.error("Error processing upload:", error);
       return res.status(500).json({
         status: false,
         message: "An error occurred during the upload process.",
-        error: processingError.message || processingError,
       });
     }
   });
