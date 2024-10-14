@@ -365,13 +365,15 @@ exports.upload = async (req, res) => {
     }
 
     try {
-      const { admin_id, _token, customer_code, upload_category } = req.body;
+      const { admin_id, _token, customer_code, customer_id, upload_category } =
+        req.body;
 
       // Validate required fields and collect missing ones
       const requiredFields = {
         admin_id,
         _token,
         customer_code,
+        customer_id,
         upload_category,
       };
       const missingFields = Object.keys(requiredFields).filter(
@@ -415,14 +417,17 @@ exports.upload = async (req, res) => {
 
           const newToken = result.newToken;
 
-          // Define the target directory for uploads
+          // Define the target directory and database column for uploads
           let targetDir;
+          let db_column;
           switch (upload_category) {
             case "custom_logo":
               targetDir = `uploads/customer/${customer_code}/logo`;
+              db_column = `custom_logo`;
               break;
             case "agr_upload":
               targetDir = `uploads/customer/${customer_code}/agreement`;
+              db_column = `agreement`;
               break;
             default:
               return res.status(400).json({
@@ -439,12 +444,12 @@ exports.upload = async (req, res) => {
             let savedImagePaths = [];
 
             // Check for multiple files under the "images" field
-            if (req.files.images) {
+            if (req.files && req.files.images) {
               savedImagePaths = await saveImages(req.files.images, targetDir);
             }
 
             // Check for a single file under the "image" field
-            if (req.files.image && req.files.image.length > 0) {
+            if (req.files && req.files.image && req.files.image.length > 0) {
               const savedImagePath = await saveImage(
                 req.files.image[0],
                 targetDir
@@ -452,16 +457,42 @@ exports.upload = async (req, res) => {
               savedImagePaths.push(savedImagePath);
             }
 
-            // Return success response
-            return res.status(201).json({
-              status: true,
-              message:
-                savedImagePaths.length > 0
-                  ? "Image(s) saved successfully."
-                  : "No images uploaded.",
-              data: savedImagePaths,
-              token: newToken,
-            });
+            // Update customer document in the database
+            Customer.documentUpload(
+              customer_id,
+              db_column,
+              savedImagePaths,
+              (err, result) => {
+                if (err) {
+                  console.error("Database error while updating customer:", err);
+                  AdminCommon.adminActivityLog(
+                    admin_id,
+                    "Customer",
+                    "Create",
+                    "0",
+                    null,
+                    err.message,
+                    () => {}
+                  );
+                  return res.status(500).json({
+                    status: false,
+                    message: "Database update failed.",
+                    token: newToken,
+                  });
+                }
+
+                // Return success response
+                return res.status(201).json({
+                  status: true,
+                  message:
+                    savedImagePaths.length > 0
+                      ? "Image(s) saved successfully."
+                      : "No images uploaded.",
+                  data: savedImagePaths,
+                  token: newToken,
+                });
+              }
+            );
           } catch (error) {
             console.error("Error saving image:", error);
             return res.status(500).json({

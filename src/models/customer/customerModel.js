@@ -103,6 +103,30 @@ const Customer = {
     });
   },
 
+  documentUpload: (customer_id, db_column, savedImagePaths, callback) => {
+    const sqlUpdateCustomer = `
+      UPDATE customer_metas 
+      SET ${db_column} = ?
+      WHERE id = ?
+    `;
+
+    pool.query(
+      sqlUpdateCustomer,
+      [savedImagePaths, customer_id],
+      (err, results) => {
+        if (err) {
+          console.error("Error updating customer meta:", err);
+          return callback(
+            { message: "Database update failed.", error: err },
+            null
+          );
+        }
+
+        return callback(null, results);
+      }
+    );
+  },
+
   update: (customerId, customerData, callback) => {
     const sqlUpdateCustomer = `
       UPDATE \`customers\` 
