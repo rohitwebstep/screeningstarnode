@@ -296,6 +296,30 @@ const clientApplication = {
     });
   },
 
+  upload: (client_application_id, db_column, savedImagePaths, callback) => {
+    const sqlUpdateCustomer = `
+      UPDATE client_applications 
+      SET ${db_column} = ?
+      WHERE id = ?
+    `;
+
+    pool.query(
+      sqlUpdateCustomer,
+      [savedImagePaths, client_application_id],
+      (err, results) => {
+        if (err) {
+          console.error("Error updating customer meta:", err);
+          return callback(
+            { message: "Database update failed.", error: err },
+            null
+          );
+        }
+
+        return callback(null, results);
+      }
+    );
+  },
+
   update: (data, client_application_id, callback) => {
     const {
       name,

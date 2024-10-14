@@ -607,72 +607,142 @@ exports.upload = async (req, res) => {
         branch_id,
         _token,
         customer_code,
-        client_employee_id,
+        client_application_id,
         upload_category,
       } = req.body;
 
-      // Create an array to hold names of empty fields
-      const missingFields = [];
-
-      // Validate the required fields and populate the missingFields array
-      if (!branch_id) missingFields.push("Branch ID");
-      if (!_token) missingFields.push("_token");
-      if (!customer_code) missingFields.push("Customer Code");
-      if (!upload_category) missingFields.push("Upload Category");
-      if (!client_employee_id) missingFields.push("Client Employee ID");
+      // Validate required fields and collect missing ones
+      const requiredFields = {
+        branch_id,
+        _token,
+        customer_code,
+        client_application_id,
+        upload_category,
+      };
+      const missingFields = Object.keys(requiredFields).filter(
+        (key) => !requiredFields[key]
+      );
 
       // If there are missing fields, return an error response
       if (missingFields.length > 0) {
         return res.status(400).json({
           status: false,
-          message:
-            "The following fields are required: " + missingFields.join(", "),
+          message: `The following fields are required: ${missingFields.join(
+            ", "
+          )}`,
         });
       }
+
+      // Check if the admin is authorized
+      const action = JSON.stringify({ client_application: "create" });
+      const authorizationResult = await new Promise((resolve) => {
+        BranchCommon.isBranchAuthorizedForAction(branch_id, action, resolve);
+      });
+
+      if (!authorizationResult.status) {
+        return res.status(403).json({
+          status: false,
+          message: authorizationResult.message,
+        });
+      }
+
+      // Validate branch token
+      const tokenValidationResult = await new Promise((resolve) => {
+        BranchCommon.isBranchTokenValid(_token, branch_id, (err, result) => {
+          if (err) {
+            console.error("Error checking token validity:", err);
+            return res
+              .status(500)
+              .json({ status: false, message: err.message });
+          }
+          resolve(result);
+        });
+      });
+
+      if (!tokenValidationResult.status) {
+        return res
+          .status(401)
+          .json({ status: false, message: tokenValidationResult.message });
+      }
+
+      const newToken = tokenValidationResult.newToken;
 
       // Define the target directory for uploads
       let targetDir;
-      if (upload_category == "photo") {
-        targetDir = `uploads/customer/${customer_code}/${client_employee_id}`;
-      } else if (upload_category == "attached_document") {
-        targetDir = `uploads/customer/${customer_code}/${client_employee_id}/document`;
-      } else {
+      let db_column;
+      switch (upload_category) {
+        case "photo":
+          targetDir = `uploads/customer/${customer_code}`;
+          db_column = `photo`;
+          break;
+        case "attach_documents":
+          targetDir = `uploads/customer/${customer_code}/document`;
+          db_column = `attach_documents`;
+          break;
+        default:
+          return res.status(400).json({
+            status: false,
+            message: "Invalid upload category.",
+            token: newToken,
+          });
+      }
+
+      try {
+        // Create the target directory for uploads
+        await fs.promises.mkdir(targetDir, { recursive: true });
+
+        let savedImagePaths = [];
+
+        // Check for multiple files under the "images" field
+        if (req.files.images) {
+          savedImagePaths = await saveImages(req.files.images, targetDir);
+        }
+
+        // Check for a single file under the "image" field
+        if (req.files.image && req.files.image.length > 0) {
+          const savedImagePath = await saveImage(req.files.image[0], targetDir);
+          savedImagePaths.push(savedImagePath);
+        }
+
+        // Save uploaded document paths to the database
+        await new Promise((resolve, reject) => {
+          Client.upload(
+            client_application_id,
+            db_column,
+            savedImagePaths,
+            (err, result) => {
+              if (err) {
+                console.error("Database error while creating customer:", err);
+                return reject(err);
+              }
+              resolve(result);
+            }
+          );
+        });
+
+        // Return success response
+        return res.status(201).json({
+          status: true,
+          message:
+            savedImagePaths.length > 0
+              ? "Image(s) saved successfully."
+              : "No images uploaded.",
+          data: savedImagePaths,
+          token: newToken,
+        });
+      } catch (error) {
+        console.error("Error saving image:", error);
         return res.status(500).json({
           status: false,
-          message: "wrong file is called",
+          message: "An error occurred while saving the image.",
+          token: newToken,
         });
       }
-
-      // Create the target directory for uploads, ensuring it's done before proceeding
-      await fs.promises.mkdir(targetDir, { recursive: true });
-
-      let savedImagePaths = [];
-
-      // Check if multiple files are uploaded under the "images" field
-      if (req.files.images) {
-        savedImagePaths = await saveImages(req.files.images, targetDir); // Pass targetDir to saveImages
-      }
-
-      // Check if a single file is uploaded under the "image" field
-      if (req.files.image && req.files.image.length > 0) {
-        const savedImagePath = await saveImage(req.files.image[0], targetDir); // Pass targetDir to saveImage
-        savedImagePaths.push(savedImagePath);
-      }
-
-      // Return success response
-      return res.status(201).json({
-        status: true,
-        message:
-          savedImagePaths.length > 0
-            ? "Image(s) saved successfully"
-            : "No images uploaded",
-        data: savedImagePaths,
-      });
     } catch (error) {
-      console.error("Error saving image:", error);
+      console.error("Error processing upload:", error);
       return res.status(500).json({
         status: false,
-        message: "An error occurred while saving the image",
+        message: "An error occurred during the upload process.",
       });
     }
   });
