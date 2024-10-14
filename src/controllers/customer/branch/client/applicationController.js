@@ -755,6 +755,7 @@ exports.upload = async (req, res) => {
           status: false,
           message: "An error occurred while saving the image.",
           token: newToken,
+          error: error.message || error,
         });
       }
     } catch (error) {
