@@ -291,37 +291,24 @@ const clientApplication = {
   },
 
   upload: (client_application_id, db_column, savedImagePaths, callback) => {
-    console.log("Upload function initiated");
-    console.log("Client Application ID:", client_application_id);
-    console.log("Database Column:", db_column);
-    console.log("Saved Image Paths:", savedImagePaths);
-
     const sqlUpdateCustomer = `
       UPDATE client_applications 
       SET ${db_column} = ?
       WHERE id = ?
     `;
 
-    console.log("SQL Update Query:", sqlUpdateCustomer);
-    console.log("Query Parameters:", [savedImagePaths, client_application_id]);
-
     pool.query(
       sqlUpdateCustomer,
       [savedImagePaths, client_application_id],
       (err, results) => {
         if (err) {
-          console.error("Error updating customer meta:", err);
           return callback(false); // Return false if there's an error
         }
 
         // Check if any rows were affected by the update
         if (results.affectedRows > 0) {
-          console.log("Database update successful. Results:", results);
           return callback(true); // Return true if the update was successful
         } else {
-          console.log(
-            "No rows were updated. Client Application ID may not exist."
-          );
           return callback(false); // Return false if no rows were updated
         }
       }

@@ -704,11 +704,11 @@ exports.upload = async (req, res) => {
 
         Client.upload(clientAppId, dbColumn, savedImagePaths, (err, result) => {
           if (err) {
-            console.error("Database error while creating customer:", err);
             return res.status(500).json({
               status: false,
               message: "An error occurred while saving the image.",
               token: newToken,
+              err
             });
           }
 
