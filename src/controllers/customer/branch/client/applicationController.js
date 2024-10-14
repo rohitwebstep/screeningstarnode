@@ -702,27 +702,42 @@ exports.upload = async (req, res) => {
           savedImagePaths.push(savedImagePath);
         }
 
-        Client.upload(clientAppId, dbColumn, savedImagePaths, (err, result) => {
-          if (err) {
-            return res.status(500).json({
-              status: false,
-              message: "An error occurred while saving the image.",
-              token: newToken,
-              err
-            });
-          }
+        Client.upload(
+          clientAppId,
+          dbColumn,
+          savedImagePaths,
+          (success, result) => {
+            if (!success) {
+              return res.status(500).json({
+                status: false,
+                message: "An error occurred while saving the image.",
+                token: newToken,
+              });
+            }
 
-          // Return success response
-          return res.status(201).json({
-            status: true,
-            message:
-              savedImagePaths.length > 0
-                ? "Image(s) saved successfully."
-                : "No images uploaded.",
-            data: savedImagePaths,
-            token: newToken,
-          });
-        });
+            // Handle the case where the upload was successful
+            if (result && result.affectedRows > 0) {
+              // Return success response if there are affected rows
+              return res.status(201).json({
+                status: true,
+                message:
+                  savedImagePaths.length > 0
+                    ? "Image(s) saved successfully."
+                    : "No images uploaded.",
+                data: savedImagePaths,
+                token: newToken,
+              });
+            } else {
+              // If no rows were affected, indicate that no changes were made
+              return res.status(400).json({
+                status: false,
+                message:
+                  "No changes were made. Please check the client application ID.",
+                token: newToken,
+              });
+            }
+          }
+        );
       });
     });
   });
