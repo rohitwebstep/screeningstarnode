@@ -365,7 +365,7 @@ exports.uploadCustomLogo = async (req, res) => {
     }
 
     try {
-      const { admin_id, _token, customer_code } = req.body;
+      const { admin_id, _token, customer_code, upload_category } = req.body;
 
       // Create an array to hold names of empty fields
       const missingFields = [];
@@ -374,6 +374,7 @@ exports.uploadCustomLogo = async (req, res) => {
       if (!admin_id) missingFields.push("admin_id");
       if (!_token) missingFields.push("_token");
       if (!customer_code) missingFields.push("customer_code");
+      if (!upload_category) missingFields.push("upload_category");
 
       // If there are missing fields, return an error response
       if (missingFields.length > 0) {
@@ -385,7 +386,17 @@ exports.uploadCustomLogo = async (req, res) => {
       }
 
       // Define the target directory for uploads
-      const targetDir = `uploads/customer/${customer_code}/logo`;
+      let targetDir;
+      if (upload_category == "custom_logo") {
+        targetDir = `uploads/customer/${customer_code}/logo`;
+      } else if (upload_category == "agr_upload") {
+        targetDir = `uploads/customer/${customer_code}/agreement`;
+      } else {
+        return res.status(500).json({
+          status: false,
+          message: "wrong file is called",
+        });
+      }
 
       // Create the target directory for uploads, ensuring it's done before proceeding
       await fs.promises.mkdir(targetDir, { recursive: true });
@@ -786,7 +797,7 @@ exports.update = (req, res) => {
                   name: company_name,
                   address,
                   profile_picture: currentCustomer.profile_picture, // Assuming no change
-                  emails_json: JSON.stringify(emails),
+                  emails_json: emails,
                   mobile: mobile_number,
                   services: JSON.stringify(clientData),
                   additional_login: additional_login_int,
