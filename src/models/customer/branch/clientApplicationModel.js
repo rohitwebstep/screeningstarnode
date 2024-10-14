@@ -139,17 +139,17 @@ const clientApplication = {
       `;
 
         const values = [
-          new_application_id,
-          name,
-          employee_id,
-          spoc,
-          location,
-          batch_number,
-          sub_client,
-          branch_id,
+          new_application_id || "",
+          name || "",
+          employee_id || "",
+          spoc || "",
+          location || "",
+          batch_number || "",
+          sub_client || "",
+          branch_id || "",
           services || "",
           package || "",
-          customer_id,
+          customer_id || 0,
         ];
 
         pool.query(sql, values, (err, results) => {
