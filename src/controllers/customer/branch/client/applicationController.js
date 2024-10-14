@@ -121,6 +121,7 @@ exports.create = (req, res) => {
                 message:
                   "Failed to create client application. Please try again.",
                 token: newToken,
+                err,
               });
             }
 
