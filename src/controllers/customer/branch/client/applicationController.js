@@ -17,7 +17,6 @@ exports.create = (req, res) => {
     location,
     batch_number,
     sub_client,
-    photo,
     services,
     package,
   } = req.body;
@@ -33,7 +32,6 @@ exports.create = (req, res) => {
     location,
     batch_number,
     sub_client,
-    photo,
   };
 
   // Check for missing fields
