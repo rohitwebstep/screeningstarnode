@@ -123,7 +123,7 @@ const clientApplication = {
             .split(",")
             .map((id) => id.trim())
             .join(",")
-        : "";
+        : "''"; // Pass empty string if services are not present
 
     const packageIds =
       package && package.trim() !== ""
@@ -131,7 +131,7 @@ const clientApplication = {
             .split(",")
             .map((id) => id.trim())
             .join(",")
-        : "";
+        : "''"; // Pass empty string if package is not present
 
     console.log("Processed Services:", serviceIds);
     console.log("Processed Package:", packageIds);
