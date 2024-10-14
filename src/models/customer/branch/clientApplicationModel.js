@@ -103,13 +103,11 @@ const clientApplication = {
   create: (data, callback) => {
     const {
       name,
-      attach_documents,
       employee_id,
       spoc,
       location,
       batch_number,
       sub_client,
-      photo,
       branch_id,
       services,
       package,
@@ -128,30 +126,26 @@ const clientApplication = {
         INSERT INTO \`client_applications\` (
           \`application_id\`,
           \`name\`,
-          \`attach_documents\`,
           \`employee_id\`,
           \`spoc\`,
           \`location\`,
           \`batch_number\`,
           \`sub_client\`,
-          \`photo\`,
           \`branch_id\`,
           \`services\`,
           \`package\`,
           \`customer_id\`
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
         const values = [
           new_application_id,
           name,
-          attach_documents,
           employee_id,
           spoc,
           location,
           batch_number,
           sub_client,
-          photo,
           branch_id,
           services || "",
           package || "",
@@ -276,13 +270,11 @@ const clientApplication = {
   update: (data, client_application_id, callback) => {
     const {
       name,
-      attach_documents,
       employee_id,
       spoc,
       location,
       batch_number,
       sub_client,
-      photo,
       services,
       package,
     } = data;
@@ -291,13 +283,11 @@ const clientApplication = {
       UPDATE \`client_applications\`
       SET
         \`name\` = ?,
-        \`attach_documents\` = ?,
         \`employee_id\` = ?,
         \`spoc\` = ?,
         \`location\` = ?,
         \`batch_number\` = ?,
         \`sub_client\` = ?,
-        \`photo\` = ?,
         \`services\` = ?,
         \`package\` = ?
       WHERE
@@ -306,13 +296,11 @@ const clientApplication = {
 
     const values = [
       name,
-      attach_documents,
       employee_id,
       spoc,
       location,
       batch_number,
       sub_client,
-      photo,
       services,
       package,
       client_application_id,
