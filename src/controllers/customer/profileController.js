@@ -428,6 +428,8 @@ exports.create = (req, res) => {
                                     message:
                                       "Customer and branches created successfully.",
                                     branches: formattedBranches,
+                                    data: { customerId },
+                                    password,
                                     token: newToken,
                                   });
                                 })
@@ -451,6 +453,8 @@ exports.create = (req, res) => {
                             message:
                               "Customer and branches created successfully.",
                             token: newToken,
+                            data: { customerId },
+                            password,
                           });
                         }
                       })
