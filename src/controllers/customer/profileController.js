@@ -40,6 +40,7 @@ exports.create = (req, res) => {
     name_of_escalation,
     custom_template,
     custom_address,
+    send_mail,
   } = req.body;
 
   // Define required fields
@@ -262,32 +263,32 @@ exports.create = (req, res) => {
                     const headBranchId = headBranchResult.insertId;
 
                     // Create remaining branches with head_branch_id as foreign key
-                    const branchCreationPromises = branches.map(
-                      (branch) =>
-                        new Promise((resolve, reject) => {
-                          Branch.create(
-                            {
-                              customer_id: customerId,
-                              name: branch.branch_name,
-                              email: branch.branch_email,
-                              head: 0,
-                              head_id: headBranchId,
-                              password,
-                            },
-                            (err, branchResult) => {
-                              if (err) {
-                                console.error(
-                                  "Error creating branch:",
-                                  branch.branch_name,
-                                  err
-                                );
-                                return reject(err);
-                              }
-                              resolve(branchResult);
+                    const branchCreationPromises = branches.map((branch) => {
+                      return new Promise((resolve, reject) => {
+                        Branch.create(
+                          {
+                            customer_id: customerId,
+                            name: branch.branch_name,
+                            email: branch.branch_email,
+                            head: 0,
+                            head_id: headBranchId,
+                            password,
+                          },
+                          (err, branchResult) => {
+                            if (err) {
+                              console.error(
+                                "Error creating branch:",
+                                branch.branch_name,
+                                err
+                              );
+                              return reject(err);
                             }
-                          );
-                        })
-                    );
+                            resolve(branchResult);
+                          }
+                        );
+                      });
+                    });
+
                     Promise.all(branchCreationPromises)
                       .then((branchResults) => {
                         AdminCommon.adminActivityLog(
@@ -301,39 +302,149 @@ exports.create = (req, res) => {
                         );
 
                         if (send_mail == 1) {
-                          createMail(
-                            "customer",
-                            "create",
-                            company_name,
-                            branches,
-                            password
-                          )
-                            .then(() => {
-                              return res.status(201).json({
-                                status: true,
-                                message:
-                                  "Customer and branches created successfully, and credentials sent through mail.",
-                                data: {
-                                  customer: result,
-                                  meta: metaResult,
-                                  branches: [
-                                    headBranchResult,
-                                    ...branchResults,
-                                  ],
-                                },
-                                password,
-                                token: newToken,
+                          getAllBranchesByCustomerId(
+                            customerId,
+                            (err, branches) => {
+                              if (err) {
+                                console.error(
+                                  "Database error while fetching branches:",
+                                  err
+                                );
+
+                                // Log the error using your admin activity log function
+                                AdminCommon.adminActivityLog(
+                                  admin_id,
+                                  "Branch",
+                                  "Fetch",
+                                  "0",
+                                  null,
+                                  err.message,
+                                  () => {}
+                                );
+
+                                return res.status(500).json({
+                                  status: false,
+                                  message: err.message,
+                                  token: newToken,
+                                });
+                              }
+
+                              const formattedBranches = branches.map(
+                                (branch) => ({
+                                  email: branch.email,
+                                  name: branch.name,
+                                })
+                              );
+
+                              const emailPromises = branches.map((branch) => {
+                                console.log(`Branch:`, branch);
+
+                                if (branch.is_head == 1) {
+                                  // For head branches, fetch customer details
+                                  return new Promise((resolve, reject) => {
+                                    Customer.getCustomerById(
+                                      customerId,
+                                      (err, currentCustomer) => {
+                                        if (err) {
+                                          console.error(
+                                            "Database error during customer retrieval:",
+                                            err
+                                          );
+                                          return reject(
+                                            new Error(
+                                              "Failed to retrieve Customer. Please try again."
+                                            )
+                                          );
+                                        }
+
+                                        if (!currentCustomer) {
+                                          return reject(
+                                            new Error("Customer not found.")
+                                          );
+                                        }
+
+                                        const customerName =
+                                          currentCustomer.name;
+                                        const customerJsonArr = JSON.parse(
+                                          currentCustomer.emails
+                                        );
+
+                                        // Create a recipient list
+                                        const customerRecipientList =
+                                          customerJsonArr
+                                            .map(
+                                              (email) =>
+                                                `"${customerName}" <${email}>`
+                                            )
+                                            .join(", ");
+
+                                        // Create email for head branch
+                                        createMail(
+                                          "customer",
+                                          "create",
+                                          company_name,
+                                          formattedBranches,
+                                          password,
+                                          branch.is_head,
+                                          customerRecipientList
+                                        )
+                                          .then(resolve)
+                                          .catch(reject);
+                                      }
+                                    );
+                                  });
+                                } else {
+                                  // For non-head branches
+                                  return createMail(
+                                    "customer",
+                                    "create",
+                                    company_name,
+                                    [
+                                      {
+                                        email: branch.email,
+                                        name: branch.name,
+                                      },
+                                    ],
+                                    password,
+                                    branch.is_head,
+                                    []
+                                  ).catch((emailError) => {
+                                    console.error(
+                                      "Error sending email:",
+                                      emailError
+                                    );
+                                    return Promise.resolve(
+                                      "Email sending failed for this branch."
+                                    );
+                                  });
+                                }
                               });
-                            })
-                            .catch((emailError) => {
-                              console.error("Error sending email:", emailError);
-                              return res.json({
-                                status: true,
-                                message:
-                                  "Customer and branches created and file saved successfully, but failed to send email.",
-                                token: newToken,
-                              });
-                            });
+
+                              // Wait for all email promises to resolve
+                              Promise.all(emailPromises)
+                                .then(() => {
+                                  return res.json({
+                                    status: true,
+                                    message:
+                                      "Customer and branches created successfully.",
+                                    branches: formattedBranches,
+                                    token: newToken,
+                                  });
+                                })
+                                .catch((error) => {
+                                  console.error(
+                                    "An error occurred during processing:",
+                                    error
+                                  );
+                                  return res.status(500).json({
+                                    status: false,
+                                    message:
+                                      "An error occurred while processing requests.",
+                                    token: newToken,
+                                  });
+                                });
+                            }
+                          );
                         } else {
                           return res.json({
                             status: true,
@@ -342,7 +453,6 @@ exports.create = (req, res) => {
                             token: newToken,
                           });
                         }
-                        // Send email notification
                       })
                       .catch((error) => {
                         console.error("Error creating branches:", error);
