@@ -174,7 +174,7 @@ exports.create = (req, res) => {
                   const fetchServiceNames = (index = 0) => {
                     if (index >= serviceIds.length) {
                       // Once all service names are fetched, get app info
-                      AppModel.info((err, appInfo) => {
+                      AppModel.info('frontend', (err, appInfo) => {
                         if (err) {
                           console.error("Database error:", err);
                           return res.status(500).json({
