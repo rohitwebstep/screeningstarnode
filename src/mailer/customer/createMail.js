@@ -1,7 +1,7 @@
 const nodemailer = require("nodemailer");
 const connection = require("../../config/db"); // Import the existing MySQL connection
 
-// Function to generate HTML table from branch details
+// Function to generate an HTML table from branch details
 const generateTable = (branches, password) => {
   let table =
     '<table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse;">';
@@ -11,8 +11,8 @@ const generateTable = (branches, password) => {
   branches.forEach((branch, index) => {
     table += `<tr>
                 <td>${index + 1}</td>
-                <td>${branch.branch_email}</td>
-                <td>${branch.branch_name}</td>
+                <td>${branch.email}</td>
+                <td>${branch.name}</td>
                 <td>${password}</td>
               </tr>`;
   });
@@ -22,9 +22,16 @@ const generateTable = (branches, password) => {
 };
 
 // Function to send email
-async function createMail(module, action, name, branches_json_string, password) {
+async function createMail(
+  module,
+  action,
+  name,
+  branches,
+  password,
+  is_head,
+  customerData
+) {
   try {
-    const branches = JSON.parse(branches_json_string);
     // Fetch email template
     const [emailRows] = await connection
       .promise()
@@ -34,6 +41,7 @@ async function createMail(module, action, name, branches_json_string, password) 
       );
     if (emailRows.length === 0) throw new Error("Email template not found");
     const email = emailRows[0];
+
     // Fetch SMTP credentials
     const [smtpRows] = await connection
       .promise()
@@ -59,24 +67,35 @@ async function createMail(module, action, name, branches_json_string, password) 
     const table = generateTable(branches, password);
 
     // Replace placeholders in the email template
-    let template = email.template;
-    template = template
+    let template = email.template
       .replace(/{{dynamic_name}}/g, name)
       .replace(/{{table}}/g, table);
 
-    // Send email to all branch emails
-    const recipientList = branches
-      .map((branch) => `"${branch.branch_name}" <${branch.branch_email}>`)
-      .join(", ");
+    // Prepare recipient list based on whether the branch is a head branch
+    let recipientList;
+    if (is_head === 1) {
+      // Include all customers in the recipient list for head branches
+      recipientList = customerData.map(
+        (customer) => `"${customer.name}" <${customer.email}>`
+      );
+    } else {
+      // If not a head branch, only include the specific branches
+      recipientList = branches.map(
+        (branch) => `"${branch.name}" <${branch.email}>`
+      );
+    }
 
+    // Send email to the prepared recipient list
     const info = await transporter.sendMail({
       from: smtp.username,
-      to: recipientList,
+      to: recipientList.join(", "), // Join the recipient list into a string
       subject: email.title,
       html: template,
     });
+
+    console.log("Email sent successfully:", info.response);
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error("Error sending email:", error.message);
   }
 }
 
