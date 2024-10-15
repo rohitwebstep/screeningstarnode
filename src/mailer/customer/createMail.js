@@ -22,8 +22,9 @@ const generateTable = (branches, password) => {
 };
 
 // Function to send email
-async function createMail(module, action, name, branches, password) {
+async function createMail(module, action, name, branches_json_string, password) {
   try {
+    const branches = JSON.parse(branches_json_string);
     // Fetch email template
     const [emailRows] = await connection
       .promise()
