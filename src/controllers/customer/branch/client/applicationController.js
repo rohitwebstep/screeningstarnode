@@ -815,8 +815,6 @@ exports.upload = async (req, res) => {
                   status: true,
                   message: "Client application created successfully.",
                   token: newToken,
-                  toArr,
-                  ccArr,
                 });
               }
             } else {
@@ -826,8 +824,6 @@ exports.upload = async (req, res) => {
                 message:
                   "No changes were made. Please check the client application ID.",
                 token: newToken,
-                query: result.query, // Include the final SQL query
-                params: result.params, // Include the parameters used in the query
               });
             }
           }
