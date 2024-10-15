@@ -874,7 +874,7 @@ exports.update = (req, res) => {
                   name: company_name,
                   address,
                   profile_picture: currentCustomer.profile_picture,
-                  emails_json: JSON.parse(emails),
+                  emails_json: emails,
                   mobile: mobile_number,
                   services: JSON.stringify(clientData),
                   additional_login: additional_login_int,
