@@ -30,5 +30,6 @@ router.get(
   "/application-service",
   clientMasterTrackerController.annexureDataByServiceIdofApplication
 );
+router.post("/upload", clientMasterTrackerController.upload);
 
 module.exports = router;
