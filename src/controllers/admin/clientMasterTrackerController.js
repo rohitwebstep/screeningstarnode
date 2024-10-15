@@ -1633,7 +1633,7 @@ exports.upload = async (req, res) => {
                 } else {
                   return res.status(201).json({
                     status: true,
-                    message: "Failed to upload annexure.",
+                    message: "Annexure uploaded successfully.",
                     token: newToken,
                   });
                 }
