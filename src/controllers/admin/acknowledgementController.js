@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const Acknowledgement = require("../../models/admin/acknowledgementMedel");
+const Acknowledgement = require("../../models/admin/acknowledgementModel");
 const AdminCommon = require("../../models/admin/commonModel");
 
 // Controller to list all customers

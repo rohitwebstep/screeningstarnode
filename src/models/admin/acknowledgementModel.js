@@ -1,6 +1,6 @@
 const crypto = require("crypto");
-const Acknowledgement = require("../../models/admin/acknowledgementModel");
-const AdminCommon = require("../../models/admin/commonModel");
+const Acknowledgement = require("./acknowledgementModel");
+const AdminCommon = require("./commonModel");
 
 // Controller to list all customers
 exports.list = (req, res) => {
