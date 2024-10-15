@@ -396,6 +396,17 @@ const Customer = {
     });
   },
 
+  getAllBranchesByCustomerId: (customerId, callback) => {
+    const sql = "SELECT * FROM `branches` WHERE `customer_id` = ?";
+    pool.query(sql, [customerId], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results); // Returns all matching entries
+    });
+  },
+
   getClientUniqueIDByCustomerId: (id, callback) => {
     const sql = "SELECT `client_unique_id` FROM `customers` WHERE `id` = ?";
     pool.query(sql, [id], (err, results) => {
