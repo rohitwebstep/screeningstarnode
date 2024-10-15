@@ -488,11 +488,6 @@ exports.upload = async (req, res) => {
                         status: true,
                         message:
                           "Customer and branches created and file saved successfully, and credentials sent through mail.",
-                        data: {
-                          customer: result,
-                          meta: metaResult,
-                          branches: [headBranchResult, ...branchResults],
-                        },
                         data: savedImagePaths,
                         token: newToken,
                       });
@@ -503,11 +498,6 @@ exports.upload = async (req, res) => {
                         status: true,
                         message:
                           "Customer and branches created and file saved successfully, but failed to send email.",
-                        data: {
-                          customer: result,
-                          meta: metaResult,
-                          branches: [headBranchResult, ...branchResults],
-                        },
                         data: savedImagePaths,
                         token: newToken,
                       });
@@ -517,11 +507,6 @@ exports.upload = async (req, res) => {
                     status: true,
                     message:
                       "Customer and branches created and file saved successfully.",
-                    data: {
-                      customer: result,
-                      meta: metaResult,
-                      branches: [headBranchResult, ...branchResults],
-                    },
                     data: savedImagePaths,
                     token: newToken,
                   });
