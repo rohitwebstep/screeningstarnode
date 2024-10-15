@@ -7,7 +7,7 @@ const hashPassword = (password) =>
 
 const Acknowledgement = {
   list: (callback) => {
-    const sql = `SELECT DISTINCT client_uid FROM applications WHERE ack_sent = '0'`;
+    const sql = `SELECT DISTINCT \`client_uid\` FROM \`client_applications\` WHERE ack_sent = 0`;
 
     pool.query(sql, (err, results) => {
       if (err) {
