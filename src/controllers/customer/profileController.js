@@ -496,7 +496,6 @@ exports.upload = async (req, res) => {
         upload_category,
         send_mail,
         company_name,
-        branches,
         password,
       } = req.body;
 
@@ -512,7 +511,6 @@ exports.upload = async (req, res) => {
       // If send_mail is 1, add additional required fields
       if (send_mail == 1) {
         requiredFields.company_name = company_name;
-        requiredFields.branches = branches;
         requiredFields.password = password;
       }
 
@@ -623,7 +621,7 @@ exports.upload = async (req, res) => {
                 if (send_mail == 1) {
                   Customer.getAllBranchesByCustomerId(
                     customer_id,
-                    (err, branches) => {
+                    (err, dbBranches) => {
                       if (err) {
                         console.error(
                           "Database error while fetching branches:",
@@ -653,17 +651,17 @@ exports.upload = async (req, res) => {
                       const emailPromises = [];
 
                       // Format the branches into the desired structure
-                      const formattedBranches = branches.map((branch) => ({
-                        email: branch.email,
-                        name: branch.name,
+                      const formattedBranches = dbBranches.map((dbBranch) => ({
+                        email: dbBranch.email,
+                        name: dbBranch.name,
                       }));
 
                       // Iterate through each branch
-                      branches.forEach((branch) => {
-                        console.log(`Branch:`, branch);
+                      dbBranches.forEach((dbBranch) => {
+                        console.log(`Branch:`, dbBranch);
 
                         // Check if the branch is a head branch
-                        if (branch.is_head == 1) {
+                        if (dbBranch.is_head == 1) {
                           Customer.getCustomerById(
                             customer_id,
                             (err, currentCustomer) => {
@@ -705,7 +703,7 @@ exports.upload = async (req, res) => {
                                 company_name,
                                 formattedBranches,
                                 password,
-                                branch.is_head,
+                                dbBranch.is_head,
                                 customerRecipientList
                               ).catch((emailError) => {
                                 console.error(
@@ -726,9 +724,9 @@ exports.upload = async (req, res) => {
                             "customer",
                             "create",
                             company_name,
-                            [{ email: branch.email, name: branch.name }], // Send only the current branch
+                            [{ email: dbBranch.email, name: dbBranch.name }], // Send only the current branch
                             password,
-                            branch.is_head,
+                            dbBranch.is_head,
                             []
                           ).catch((emailError) => {
                             console.error("Error sending email:", emailError);
