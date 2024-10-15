@@ -15,6 +15,14 @@ const {
   readyForReport,
 } = require("../../mailer/client master tracker/readyForReport");
 
+const fs = require("fs");
+const path = require("path");
+const {
+  upload,
+  saveImage,
+  saveImages,
+} = require("../../utils/imageSave");
+
 // Controller to list all customers
 exports.list = (req, res) => {
   const { admin_id, _token } = req.query;
@@ -1493,6 +1501,383 @@ exports.annexureDataByServiceIdofApplication = (req, res) => {
           );
         }
       );
+    });
+  });
+};
+
+exports.upload = async (req, res) => {
+  // Use multer to handle the upload
+  upload(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({
+        status: false,
+        message: "Error uploading file.",
+      });
+    }
+
+    const {
+      branch_id: branchId,
+      _token: token,
+      customer_code: customerCode,
+      client_application_id: clientAppId,
+      upload_category: uploadCat,
+      send_mail,
+      services,
+      client_application_name,
+      client_application_generated_id,
+    } = req.body;
+
+    // Validate required fields and collect missing ones
+    const requiredFields = {
+      branchId,
+      token,
+      customerCode,
+      clientAppId,
+      uploadCat,
+    };
+
+    if (send_mail == 1) {
+      requiredFields.services = services;
+      requiredFields.client_application_name = client_application_name;
+      requiredFields.client_application_generated_id =
+        client_application_generated_id;
+    }
+
+    const missingFields = Object.keys(requiredFields).filter(
+      (key) => !requiredFields[key]
+    );
+
+    // If there are missing fields, return an error response
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        status: false,
+        message: `The following fields are required: ${missingFields.join(
+          ", "
+        )}`,
+      });
+    }
+
+    const action = JSON.stringify({ client_application: "update" });
+    BranchCommon.isBranchAuthorizedForAction(branchId, action, (result) => {
+      if (!result.status) {
+        return res.status(403).json({
+          status: false,
+          message: result.message,
+        });
+      }
+
+      BranchCommon.isBranchTokenValid(token, branchId, async (err, result) => {
+        if (err) {
+          console.error("Error checking token validity:", err);
+          return res.status(500).json({ status: false, message: err.message });
+        }
+
+        if (!result.status) {
+          return res
+            .status(401)
+            .json({ status: false, message: result.message });
+        }
+
+        const newToken = result.newToken;
+
+        // Define the target directory for uploads
+        let targetDirectory;
+        let dbColumn;
+        switch (uploadCat) {
+          case "photo":
+            targetDirectory = `uploads/customer/${customerCode}`;
+            dbColumn = `photo`;
+            break;
+          case "attach_documents":
+            targetDirectory = `uploads/customer/${customerCode}/document`;
+            dbColumn = `attach_documents`;
+            break;
+          default:
+            return res.status(400).json({
+              status: false,
+              message: "Invalid upload category.",
+              token: newToken,
+            });
+        }
+
+        // Create the target directory for uploads
+        await fs.promises.mkdir(targetDirectory, { recursive: true });
+
+        let savedImagePaths = [];
+
+        // Check for multiple files under the "images" field
+        if (req.files.images) {
+          savedImagePaths = await saveImages(req.files.images, targetDirectory);
+        }
+
+        // Check for a single file under the "image" field
+        if (req.files.image && req.files.image.length > 0) {
+          const savedImagePath = await saveImage(
+            req.files.image[0],
+            targetDirectory
+          );
+          savedImagePaths.push(savedImagePath);
+        }
+
+        Client.upload(
+          clientAppId,
+          dbColumn,
+          savedImagePaths,
+          (success, result) => {
+            if (!success) {
+              // If an error occurred, return the error details in the response
+              return res.status(500).json({
+                status: false,
+                message:
+                  result.error || "An error occurred while saving the image.", // Use detailed error message if available
+                token: newToken,
+                // details: result.details,
+                // query: result.query,
+                // params: result.params,
+              });
+            }
+
+            // Handle the case where the upload was successful
+            if (result && result.affectedRows > 0) {
+              // Return success response if there are affected rows
+              if (send_mail == 1) {
+                Client.getClientApplicationById(
+                  clientAppId,
+                  (err, currentClientApplication) => {
+                    if (err) {
+                      console.error(
+                        "Database error during clientApplication retrieval:",
+                        err
+                      );
+                      return res.status(500).json({
+                        status: false,
+                        message: "Failed to retrieve Client. Please try again.",
+                        token: newToken,
+                      });
+                    }
+
+                    if (!currentClientApplication) {
+                      return res.status(404).json({
+                        status: false,
+                        message: "Client Aplication not found.",
+                        token: newToken,
+                      });
+                    }
+
+                    let newAttachedDocsString = "";
+                    if (
+                      currentClientApplication.attach_documents &&
+                      currentClientApplication.attach_documents.trim() !== ""
+                    ) {
+                      AppModel.info("backend", (err, appInfo) => {
+                        if (err) {
+                          console.error("Database error:", err);
+                          return res.status(500).json({
+                            status: false,
+                            message: err.message,
+                            token: newToken,
+                          });
+                        }
+
+                        if (appInfo) {
+                          const appHost =
+                            appInfo.host || "www.goldquestglobal.com";
+                          const documentsArray =
+                            currentClientApplication.attach_documents
+                              .split(",")
+                              .map((doc) => doc.trim());
+
+                          // Loop through each document
+                          documentsArray.forEach((doc, index) => {
+                            console.log(`Document ${index + 1}: ${doc}`);
+                            newAttachedDocsString += `${appHost}/${doc}`;
+                          });
+                        }
+                      });
+                    }
+
+                    BranchCommon.getBranchandCustomerEmailsForNotification(
+                      branchId,
+                      (emailError, emailData) => {
+                        if (emailError) {
+                          console.error("Error fetching emails:", emailError);
+                          return res.status(500).json({
+                            status: false,
+                            message: "Failed to retrieve email addresses.",
+                            token: newToken,
+                          });
+                        }
+
+                        const { branch, customer } = emailData;
+
+                        // Prepare recipient and CC lists
+                        const toArr = [
+                          { name: branch.name, email: branch.email },
+                        ];
+                        const ccArr = customer.emails
+                          .split(",")
+                          .map((email) => ({
+                            name: customer.name,
+                            email: email.trim(),
+                          }));
+
+                        Branch.getClientUniqueIDByBranchId(
+                          branchId,
+                          (err, clientCode) => {
+                            if (err) {
+                              console.error("Error checking unique ID:", err);
+                              return res.status(500).json({
+                                status: false,
+                                message: err.message,
+                                token: newToken,
+                              });
+                            }
+
+                            // Check if the unique ID exists
+                            if (!clientCode) {
+                              return res.status(400).json({
+                                status: false,
+                                message: `Customer Unique ID not Found`,
+                                token: newToken,
+                              });
+                            }
+                            Branch.getClientNameByBranchId(
+                              branchId,
+                              (err, clientName) => {
+                                if (err) {
+                                  console.error(
+                                    "Error checking client name:",
+                                    err
+                                  );
+                                  return res.status(500).json({
+                                    status: false,
+                                    message: err.message,
+                                    token: newToken,
+                                  });
+                                }
+
+                                // Check if the client name exists
+                                if (!clientName) {
+                                  return res.status(400).json({
+                                    status: false,
+                                    message: "Customer Unique ID not found",
+                                    token: newToken,
+                                  });
+                                }
+
+                                const serviceIds =
+                                  typeof services === "string" &&
+                                  services.trim() !== ""
+                                    ? services.split(",").map((id) => id.trim())
+                                    : [];
+
+                                const serviceNames = [];
+
+                                // Function to fetch service names
+                                const fetchServiceNames = (index = 0) => {
+                                  if (index >= serviceIds.length) {
+                                    // Once all services have been processed, send email notification
+                                    createMail(
+                                      "client application",
+                                      "create",
+                                      client_application_name,
+                                      client_application_generated_id,
+                                      clientName,
+                                      clientCode,
+                                      serviceNames,
+                                      newAttachedDocsString,
+                                      toArr,
+                                      ccArr
+                                    )
+                                      .then(() => {
+                                        return res.status(201).json({
+                                          status: true,
+                                          message:
+                                            "Client application created successfully and email sent.",
+                                          token: newToken,
+                                          toArr,
+                                          ccArr,
+                                        });
+                                      })
+                                      .catch((emailError) => {
+                                        console.error(
+                                          "Error sending email:",
+                                          emailError
+                                        );
+                                        return res.status(201).json({
+                                          status: true,
+                                          message:
+                                            "Client application created successfully, but failed to send email.",
+                                          client: result,
+                                          token: newToken,
+                                        });
+                                      });
+                                    return;
+                                  }
+
+                                  const id = serviceIds[index];
+
+                                  Service.getServiceById(
+                                    id,
+                                    (err, currentService) => {
+                                      if (err) {
+                                        console.error(
+                                          "Error fetching service data:",
+                                          err
+                                        );
+                                        return res.status(500).json({
+                                          status: false,
+                                          message: err,
+                                          token: newToken,
+                                        });
+                                      }
+
+                                      // Skip invalid services and continue to the next index
+                                      if (
+                                        !currentService ||
+                                        !currentService.title
+                                      ) {
+                                        return fetchServiceNames(index + 1);
+                                      }
+
+                                      // Add the current service name to the array
+                                      serviceNames.push(currentService.title);
+
+                                      // Recursively fetch the next service
+                                      fetchServiceNames(index + 1);
+                                    }
+                                  );
+                                };
+
+                                // Start fetching service names
+                                fetchServiceNames();
+                              }
+                            );
+                          }
+                        );
+                      }
+                    );
+                  }
+                );
+              } else {
+                return res.status(201).json({
+                  status: true,
+                  message: "Client application created successfully.",
+                  token: newToken,
+                });
+              }
+            } else {
+              // If no rows were affected, indicate that no changes were made
+              return res.status(400).json({
+                status: false,
+                message:
+                  "No changes were made. Please check the client application ID.",
+                token: newToken,
+              });
+            }
+          }
+        );
+      });
     });
   });
 };
