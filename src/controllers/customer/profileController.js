@@ -371,13 +371,10 @@ exports.create = (req, res) => {
                                           );
 
                                           // Create a recipient list
-                                          const customerRecipientList =
-                                            customerJsonArr
-                                              .map(
-                                                (email) =>
-                                                  `"${customerName}" <${email}>`
-                                              )
-                                              .join(", ");
+                                          const customerRecipientList = customerJsonArr.map(email => ({
+                                            name: customerName,
+                                            email: email
+                                        }));
 
                                           // Create email for head branch
                                           createMail(
