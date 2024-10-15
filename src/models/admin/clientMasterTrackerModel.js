@@ -645,53 +645,89 @@ GROUP BY b.name;
 
       // Function to check for missing columns and perform the update
       function proceedToCheckColumns() {
-        // Step 3: Define an array of missingColumns (you need to define how you get this list)
-        const missingColumns = []; // Populate this with the actual logic to check for missing columns
+        // Step 1: Get the current columns in the table
+        const currentColumnsSql = `
+          SELECT COLUMN_NAME 
+          FROM information_schema.columns 
+          WHERE table_schema = DATABASE() 
+          AND table_name = ?`;
 
-        // Call addMissingColumns to ensure columns exist
-        addMissingColumns()
-          .then(() => {
-            const sqlUpdateCustomer = `
-              UPDATE ${db_table} 
-              SET ${db_column} = ?
-              WHERE client_application_id = ?`;
-
-            // Prepare the parameters for the query
-            const queryParams = [savedImagePaths, client_application_id];
-
-            pool.query(sqlUpdateCustomer, queryParams, (err, results) => {
-              if (err) {
-                // Return error details and the final query with parameters
-                return callback(false, {
-                  error: "Database error occurred.",
-                  details: err, // Include error details for debugging
-                  query: sqlUpdateCustomer,
-                  params: queryParams, // Return the parameters used in the query
-                });
-              }
-
-              // Check if any rows were affected by the update
-              if (results.affectedRows > 0) {
-                return callback(true, results); // Success with results
-              } else {
-                // No rows updated, return a specific message along with the query details
-                return callback(false, {
-                  error:
-                    "No rows updated. Please check the client application ID.",
-                  details: results,
-                  query: sqlUpdateCustomer,
-                  params: queryParams, // Return the parameters used in the query
-                });
-              }
-            });
-          })
-          .catch((error) => {
-            // Handle errors from addMissingColumns
+        pool.query(currentColumnsSql, [db_table], (err, results) => {
+          if (err) {
             return callback(false, {
-              error: "Error adding missing columns.",
-              details: error,
+              error: "Error fetching current columns.",
+              details: err,
+            });
+          }
+
+          // Extract the column names from the results
+          const existingColumns = results.map((row) => row.COLUMN_NAME);
+
+          // Step 2: Define the columns you expect
+          const expectedColumns = [db_column]; // Add more expected columns as needed
+
+          const missingColumns = expectedColumns.filter(
+            (column) => !existingColumns.includes(column)
+          );
+
+          // Step 3: Add missing columns
+          const addColumnPromises = missingColumns.map((column) => {
+            const addColumnSql = `ALTER TABLE \`${db_table}\` ADD \`${column}\` VARCHAR(255) NOT NULL`;
+            return new Promise((resolveAdd, rejectAdd) => {
+              pool.query(addColumnSql, (addErr) => {
+                if (addErr) {
+                  return rejectAdd(addErr);
+                }
+                resolveAdd();
+              });
             });
           });
+
+          // Step 4: Wait for all column additions to complete
+          Promise.all(addColumnPromises)
+            .then(() => {
+              const sqlUpdateCustomer = `
+                UPDATE ${db_table} 
+                SET ${db_column} = ?
+                WHERE client_application_id = ?`;
+
+              // Prepare the parameters for the query
+              const queryParams = [savedImagePaths, client_application_id];
+
+              pool.query(sqlUpdateCustomer, queryParams, (err, results) => {
+                if (err) {
+                  // Return error details and the final query with parameters
+                  return callback(false, {
+                    error: "Database error occurred.",
+                    details: err, // Include error details for debugging
+                    query: sqlUpdateCustomer,
+                    params: queryParams, // Return the parameters used in the query
+                  });
+                }
+
+                // Check if any rows were affected by the update
+                if (results.affectedRows > 0) {
+                  return callback(true, results); // Success with results
+                } else {
+                  // No rows updated, return a specific message along with the query details
+                  return callback(false, {
+                    error:
+                      "No rows updated. Please check the client application ID.",
+                    details: results,
+                    query: sqlUpdateCustomer,
+                    params: queryParams, // Return the parameters used in the query
+                  });
+                }
+              });
+            })
+            .catch((error) => {
+              // Handle errors from adding missing columns
+              return callback(false, {
+                error: "Error adding missing columns.",
+                details: error,
+              });
+            });
+        });
       }
     });
   },
