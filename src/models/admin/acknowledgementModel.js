@@ -1,63 +1,22 @@
 const crypto = require("crypto");
-const Acknowledgement = require("./acknowledgementModel");
-const AdminCommon = require("./commonModel");
+const pool = require("../../config/db");
 
-// Controller to list all customers
-exports.list = (req, res) => {
-  const { admin_id, _token } = req.query;
+// Function to hash the password using MD5
+const hashPassword = (password) =>
+  crypto.createHash("md5").update(password).digest("hex");
 
-  let missingFields = [];
-  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
-  if (!_token || _token === "") missingFields.push("Token");
+const Acknowledgement = {
+  list: (callback) => {
+    const sql = `SELECT DISTINCT client_uid FROM applications WHERE ack_sent = '0'`;
 
-  if (missingFields.length > 0) {
-    return res.status(400).json({
-      status: false,
-      message: `Missing required fields: ${missingFields.join(", ")}`,
-    });
-  }
-
-  const action = JSON.stringify({ acknowledgement: "view" });
-  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (authResult) => {
-    if (!authResult.status) {
-      return res.status(403).json({
-        status: false,
-        message: authResult.message, // Return the message from the authorization function
-      });
-    }
-
-    // Verify admin token
-    AdminCommon.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
+    pool.query(sql, (err, results) => {
       if (err) {
-        console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
+        console.error("Database query error:", err);
+        return callback(err, null);
       }
-
-      if (!tokenResult.status) {
-        return res
-          .status(401)
-          .json({ status: false, message: tokenResult.message });
-      }
-
-      const newToken = tokenResult.newToken;
-
-      // Fetch customers from Acknowledgement model
-      Acknowledgement.list((err, customers) => {
-        if (err) {
-          console.error("Database error:", err);
-          return res
-            .status(500)
-            .json({ status: false, message: err.message, token: newToken });
-        }
-
-        res.json({
-          status: true,
-          message: "Customers fetched successfully",
-          customers: customers,
-          totalResults: customers.length,
-          token: newToken,
-        });
-      });
+      callback(null, results);
     });
-  });
+  },
 };
+
+module.exports = Acknowledgement;
