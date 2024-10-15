@@ -28,6 +28,7 @@ exports.create = (req, res) => {
     sub_client,
     services,
     package,
+    send_mail,
   } = req.body;
 
   // Define required fields
