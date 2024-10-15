@@ -1,7 +1,6 @@
 const crypto = require("crypto");
 const Acknowledgement = require("../../models/admin/acknowledgementModel");
 const AdminCommon = require("../../models/admin/commonModel");
-
 // Controller to list all customers
 exports.list = (req, res) => {
   const { admin_id, _token } = req.query;
@@ -17,29 +16,32 @@ exports.list = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ cmt_application: "view" });
-  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
-    if (!result.status) {
+  const action = JSON.stringify({ acknowledgement: "view" });
+  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (authResult) => {
+    if (!authResult.status) {
       return res.status(403).json({
         status: false,
-        message: result.message, // Return the message from the authorization function
+        message: authResult.message, // Return the message from the authorization function
       });
     }
 
     // Verify admin token
-    AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
+    AdminCommon.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
       if (err) {
         console.error("Error checking token validity:", err);
         return res.status(500).json({ status: false, message: err.message });
       }
 
-      if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message });
+      if (!tokenResult.status) {
+        return res
+          .status(401)
+          .json({ status: false, message: tokenResult.message });
       }
 
-      const newToken = result.newToken;
+      const newToken = tokenResult.newToken;
 
-      Acknowledgement.list((err, result) => {
+      // Fetch customers from Acknowledgement model
+      Acknowledgement.list((err, customers) => {
         if (err) {
           console.error("Database error:", err);
           return res
@@ -50,8 +52,8 @@ exports.list = (req, res) => {
         res.json({
           status: true,
           message: "Customers fetched successfully",
-          customers: result,
-          totalResults: result.length,
+          customers: customers,
+          totalResults: customers.length,
           token: newToken,
         });
       });
