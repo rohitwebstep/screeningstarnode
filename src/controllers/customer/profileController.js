@@ -300,44 +300,22 @@ exports.create = (req, res) => {
                           () => {}
                         );
                         // Send email notification
-                        createMail(
-                          "customer",
-                          "create",
-                          company_name,
-                          branches,
-                          password
-                        )
-                          .then(() => {
-                            res.json({
-                              status: true,
-                              message:
-                                "Customer and branches created successfully, and credentials sent through mail.",
-                              data: {
-                                customer: result,
-                                meta: metaResult,
-                                branches: [headBranchResult, ...branchResults],
-                              },
-                              token: newToken,
-                            });
-                          })
-                          .catch((emailError) => {
-                            console.error("Error sending email:", emailError);
-                            res.json({
-                              status: true,
-                              message:
-                                "Customer and branches created successfully, but failed to send email.",
-                              data: {
-                                customer: result,
-                                meta: metaResult,
-                                branches: [headBranchResult, ...branchResults],
-                              },
-                              token: newToken,
-                            });
-                          });
+                        return res.status(201).json({
+                          status: true,
+                          message:
+                            "Customer and branches created successfully, and credentials sent through mail.",
+                          data: {
+                            customer: result,
+                            meta: metaResult,
+                            branches: [headBranchResult, ...branchResults],
+                          },
+                          password,
+                          token: newToken,
+                        });
                       })
                       .catch((error) => {
                         console.error("Error creating branches:", error);
-                        res.status(500).json({
+                        return res.status(500).json({
                           status: false,
                           message: "Error creating some branches.",
                           token: newToken,
@@ -365,8 +343,17 @@ exports.upload = async (req, res) => {
     }
 
     try {
-      const { admin_id, _token, customer_code, customer_id, upload_category } =
-        req.body;
+      const {
+        admin_id,
+        _token,
+        customer_code,
+        customer_id,
+        upload_category,
+        send_mail,
+        company_name,
+        branches,
+        password,
+      } = req.body;
 
       // Validate required fields and collect missing ones
       const requiredFields = {
@@ -376,6 +363,14 @@ exports.upload = async (req, res) => {
         customer_id,
         upload_category,
       };
+
+      // If send_mail is 1, add additional required fields
+      if (send_mail == 1) {
+        requiredFields.company_name = company_name;
+        requiredFields.branches = branches;
+        requiredFields.password = password;
+      }
+
       const missingFields = Object.keys(requiredFields).filter(
         (key) => !requiredFields[key]
       );
@@ -480,16 +475,57 @@ exports.upload = async (req, res) => {
                   });
                 }
 
-                // Return success response
-                return res.status(201).json({
-                  status: true,
-                  message:
-                    savedImagePaths.length > 0
-                      ? "Image(s) saved successfully."
-                      : "No images uploaded.",
-                  data: savedImagePaths,
-                  token: newToken,
-                });
+                if (send_mail == 1) {
+                  createMail(
+                    "customer",
+                    "create",
+                    company_name,
+                    branches,
+                    password
+                  )
+                    .then(() => {
+                      return res.json({
+                        status: true,
+                        message:
+                          "Customer and branches created and file saved successfully, and credentials sent through mail.",
+                        data: {
+                          customer: result,
+                          meta: metaResult,
+                          branches: [headBranchResult, ...branchResults],
+                        },
+                        data: savedImagePaths,
+                        token: newToken,
+                      });
+                    })
+                    .catch((emailError) => {
+                      console.error("Error sending email:", emailError);
+                      return res.json({
+                        status: true,
+                        message:
+                          "Customer and branches created and file saved successfully, but failed to send email.",
+                        data: {
+                          customer: result,
+                          meta: metaResult,
+                          branches: [headBranchResult, ...branchResults],
+                        },
+                        data: savedImagePaths,
+                        token: newToken,
+                      });
+                    });
+                } else {
+                  return res.json({
+                    status: true,
+                    message:
+                      "Customer and branches created and file saved successfully.",
+                    data: {
+                      customer: result,
+                      meta: metaResult,
+                      branches: [headBranchResult, ...branchResults],
+                    },
+                    data: savedImagePaths,
+                    token: newToken,
+                  });
+                }
               }
             );
           } catch (error) {
