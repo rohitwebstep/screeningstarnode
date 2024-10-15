@@ -1615,6 +1615,9 @@ exports.upload = async (req, res) => {
                   message:
                     result.error || "An error occurred while saving the image.",
                   token: newToken,
+                  details,
+                  query,
+                  params,
                 });
               }
 
