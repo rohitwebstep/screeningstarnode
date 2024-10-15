@@ -5,7 +5,8 @@ require("dotenv").config(); // Ensure you load environment variables
 
 // Import routes
 const adminRoutes = require("./routes/admin/indexRoutes");
-const clientMasterTracker = require("./routes/admin/clientMasterTrackerRoutes");
+const clientMasterTrackerRoutes = require("./routes/admin/clientMasterTrackerRoutes");
+const acknowledgementRoutes = require("./routes/admin/acknowledgementRoutes");
 const externalLoginCredentials = require("./routes/admin/externalLoginCredentialsRoutes");
 const customerRoutes = require("./routes/customer/indexRoutes");
 const branchRoutes = require("./routes/customer/branch/indexRoutes");
@@ -23,7 +24,8 @@ app.use('/uploads', express.static('uploads'));
 
 // Define routes
 app.use("/admin", adminRoutes);
-app.use("/client-master-tracker", clientMasterTracker);
+app.use("/client-master-tracker", clientMasterTrackerRoutes);
+app.use("/acknowledgement", acknowledgementRoutes);
 app.use("/external-login-credentials", externalLoginCredentials);
 app.use("/customer", customerRoutes);
 app.use("/branch", branchRoutes);
