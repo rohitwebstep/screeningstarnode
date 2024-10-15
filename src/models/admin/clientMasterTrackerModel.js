@@ -589,42 +589,109 @@ GROUP BY b.name;
     savedImagePaths,
     callback
   ) => {
-    const sqlUpdateCustomer = `
-      UPDATE ${db_table} 
-      SET ${db_column} = ?
-      WHERE id = ?
-    `;
+    // Step 1: Check if the table exists
+    const checkTableSql = `
+      SELECT COUNT(*) AS count 
+      FROM information_schema.tables 
+      WHERE table_schema = DATABASE() 
+      AND table_name = ?`;
 
-    // Prepare the parameters for the query
-    const queryParams = [
-      db_table,
-      db_column,
-      savedImagePaths,
-      client_application_id,
-    ];
-
-    pool.query(sqlUpdateCustomer, queryParams, (err, results) => {
-      if (err) {
-        // Return error details and the final query with parameters
+    pool.query(checkTableSql, [db_table], (tableErr, tableResults) => {
+      if (tableErr) {
+        console.error("Error checking table existence:", tableErr);
         return callback(false, {
-          error: "Database error occurred.",
-          details: err, // Include error details for debugging
-          query: sqlUpdateCustomer,
-          params: queryParams, // Return the parameters used in the query
+          error: "Error checking table existence.",
+          details: tableErr,
         });
       }
 
-      // Check if any rows were affected by the update
-      if (results.affectedRows > 0) {
-        return callback(true, results); // Success with results
-      } else {
-        // No rows updated, return a specific message along with the query details
-        return callback(false, {
-          error: "No rows updated. Please check the client application ID.",
-          details: results,
-          query: sqlUpdateCustomer,
-          params: queryParams, // Return the parameters used in the query
+      // Step 2: If table does not exist, create it
+      if (tableResults[0].count === 0) {
+        console.log(`Table does not exist, creating table: ${db_table}`);
+        const createTableSql = `
+          CREATE TABLE \`${db_table}\` (
+            \`id\` bigint(20) NOT NULL AUTO_INCREMENT,
+            \`cmt_id\` bigint(20) NOT NULL,
+            \`client_application_id\` bigint(20) NOT NULL,
+            \`branch_id\` int(11) NOT NULL,
+            \`customer_id\` int(11) NOT NULL,
+            \`status\` VARCHAR(100) NOT NULL,
+            \`created_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+            \`updated_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (\`id\`),
+            KEY \`client_application_id\` (\`client_application_id\`),
+            KEY \`cmt_application_customer_id\` (\`customer_id\`),
+            KEY \`cmt_application_cmt_id\` (\`cmt_id\`),
+            CONSTRAINT \`fk_${db_table}_client_application_id\` FOREIGN KEY (\`client_application_id\`) REFERENCES \`client_applications\` (\`id\`) ON DELETE CASCADE,
+            CONSTRAINT \`fk_${db_table}_customer_id\` FOREIGN KEY (\`customer_id\`) REFERENCES \`customers\` (\`id\`) ON DELETE CASCADE,
+            CONSTRAINT \`fk_${db_table}_cmt_id\` FOREIGN KEY (\`cmt_id\`) REFERENCES \`cmt_applications\` (\`id\`) ON DELETE CASCADE
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`;
+
+        pool.query(createTableSql, (createErr) => {
+          if (createErr) {
+            console.error("Error creating table:", createErr);
+            return callback(false, {
+              error: "Error creating table.",
+              details: createErr,
+            });
+          }
+          // After creating the table, check for missing columns
+          proceedToCheckColumns();
         });
+      } else {
+        // If table exists, check for missing columns
+        proceedToCheckColumns();
+      }
+
+      // Function to check for missing columns and perform the update
+      function proceedToCheckColumns() {
+        // Step 3: Define an array of missingColumns (you need to define how you get this list)
+        const missingColumns = []; // Populate this with the actual logic to check for missing columns
+
+        // Call addMissingColumns to ensure columns exist
+        addMissingColumns()
+          .then(() => {
+            const sqlUpdateCustomer = `
+              UPDATE ${db_table} 
+              SET ${db_column} = ?
+              WHERE client_application_id = ?`;
+
+            // Prepare the parameters for the query
+            const queryParams = [savedImagePaths, client_application_id];
+
+            pool.query(sqlUpdateCustomer, queryParams, (err, results) => {
+              if (err) {
+                // Return error details and the final query with parameters
+                return callback(false, {
+                  error: "Database error occurred.",
+                  details: err, // Include error details for debugging
+                  query: sqlUpdateCustomer,
+                  params: queryParams, // Return the parameters used in the query
+                });
+              }
+
+              // Check if any rows were affected by the update
+              if (results.affectedRows > 0) {
+                return callback(true, results); // Success with results
+              } else {
+                // No rows updated, return a specific message along with the query details
+                return callback(false, {
+                  error:
+                    "No rows updated. Please check the client application ID.",
+                  details: results,
+                  query: sqlUpdateCustomer,
+                  params: queryParams, // Return the parameters used in the query
+                });
+              }
+            });
+          })
+          .catch((error) => {
+            // Handle errors from addMissingColumns
+            return callback(false, {
+              error: "Error adding missing columns.",
+              details: error,
+            });
+          });
       }
     });
   },
