@@ -150,8 +150,9 @@ exports.create = (req, res) => {
                 status: true,
                 message: "Client application created successfully.",
                 token: newToken,
-                toArr,
-                ccArr,
+                insertId: result.insertId,
+                result,
+                new_application_id: result.new_application_id,
               });
             }
             let newAttachedDocsString = "";
