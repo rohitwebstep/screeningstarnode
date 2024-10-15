@@ -299,19 +299,50 @@ exports.create = (req, res) => {
                           null,
                           () => {}
                         );
+
+                        if (send_mail == 1) {
+                          createMail(
+                            "customer",
+                            "create",
+                            company_name,
+                            branches,
+                            password
+                          )
+                            .then(() => {
+                              return res.status(201).json({
+                                status: true,
+                                message:
+                                  "Customer and branches created successfully, and credentials sent through mail.",
+                                data: {
+                                  customer: result,
+                                  meta: metaResult,
+                                  branches: [
+                                    headBranchResult,
+                                    ...branchResults,
+                                  ],
+                                },
+                                password,
+                                token: newToken,
+                              });
+                            })
+                            .catch((emailError) => {
+                              console.error("Error sending email:", emailError);
+                              return res.json({
+                                status: true,
+                                message:
+                                  "Customer and branches created and file saved successfully, but failed to send email.",
+                                token: newToken,
+                              });
+                            });
+                        } else {
+                          return res.json({
+                            status: true,
+                            message:
+                              "Customer and branches created successfully.",
+                            token: newToken,
+                          });
+                        }
                         // Send email notification
-                        return res.status(201).json({
-                          status: true,
-                          message:
-                            "Customer and branches created successfully, and credentials sent through mail.",
-                          data: {
-                            customer: result,
-                            meta: metaResult,
-                            branches: [headBranchResult, ...branchResults],
-                          },
-                          password,
-                          token: newToken,
-                        });
                       })
                       .catch((error) => {
                         console.error("Error creating branches:", error);
