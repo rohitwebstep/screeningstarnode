@@ -973,7 +973,7 @@ exports.update = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-  const clientData = JSON.parse(services);
+  const clientData = services;
 
   const action = JSON.stringify({ customer: "update" });
 
