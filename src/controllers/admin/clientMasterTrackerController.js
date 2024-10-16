@@ -667,7 +667,6 @@ exports.generateReport = (req, res) => {
     customer_id,
     application_id,
     updated_json,
-    send_mail,
   };
 
   // Check for missing fields
