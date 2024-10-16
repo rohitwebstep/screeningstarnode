@@ -1787,11 +1787,6 @@ exports.upload = async (req, res) => {
                                     });
                                   }
 
-                                  const status =
-                                    application.overall_status?.toLowerCase();
-                                  const verified =
-                                    application.is_verify?.toLowerCase();
-
                                   const gender =
                                     application.gender?.toLowerCase();
                                   const marital_status =
@@ -1809,123 +1804,109 @@ exports.upload = async (req, res) => {
                                   }
 
                                   // Prepare and send email based on application status
-                                  if (
-                                    status === "completed" ||
-                                    status === "complete"
-                                  ) {
-                                    // Final report email
-                                    if (emailStatus == 1) {
-                                      finalReportMail(
-                                        "cmt",
-                                        "final",
-                                        company_name,
-                                        gender_title,
-                                        application.name,
-                                        application.application_id,
-                                        attachments,
-                                        toArr,
-                                        ccArr
-                                      )
-                                        .then(() => {
-                                          console.log(
-                                            "Sent Mail for Final Report"
-                                          );
-                                          return res.status(200).json({
-                                            status: true,
-                                            message: `CMT mail sent.`,
-                                            token: newToken,
-                                          });
-                                        })
-                                        .catch((emailError) => {
-                                          console.error(
-                                            "Error sending email:",
-                                            emailError
-                                          );
-                                          return res.status(200).json({
-                                            status: true,
-                                            message: `Failed to send CMT mail.`,
-                                            token: newToken,
-                                          });
+                                  // Final report email
+                                  if (emailStatus == 1) {
+                                    finalReportMail(
+                                      "cmt",
+                                      "final",
+                                      company_name,
+                                      gender_title,
+                                      application.name,
+                                      application.application_id,
+                                      attachments,
+                                      toArr,
+                                      ccArr
+                                    )
+                                      .then(() => {
+                                        console.log(
+                                          "Sent Mail for Final Report"
+                                        );
+                                        return res.status(200).json({
+                                          status: true,
+                                          message: `CMT mail sent.`,
+                                          token: newToken,
                                         });
-                                    }
-                                    // QC report email
-                                    else if (emailStatus == 2) {
-                                      qcReportCheckMail(
-                                        "cmt",
-                                        "qc",
-                                        gender_title,
-                                        application.name,
-                                        application.application_id,
-                                        attachments,
-                                        toArr,
-                                        ccArr
-                                      )
-                                        .then(() => {
-                                          console.log(
-                                            "Sent Mail for Report For Quality Check"
-                                          );
-                                          return res.status(200).json({
-                                            status: true,
-                                            message: `CMT mail sent.`,
-                                            token: newToken,
-                                          });
-                                        })
-                                        .catch((emailError) => {
-                                          console.error(
-                                            "Error sending email:",
-                                            emailError
-                                          );
-                                          return res.status(200).json({
-                                            status: true,
-                                            message: `Failed to send CMT mail.`,
-                                            token: newToken,
-                                          });
+                                      })
+                                      .catch((emailError) => {
+                                        console.error(
+                                          "Error sending email:",
+                                          emailError
+                                        );
+                                        return res.status(200).json({
+                                          status: true,
+                                          message: `Failed to send CMT mail.`,
+                                          token: newToken,
                                         });
-                                    }
-                                    // No specific email status
-                                    else {
-                                      return res.status(200).json({
-                                        status: true,
-                                        message: `CMT Application successfully.`,
-                                        token: newToken,
                                       });
-                                    }
+                                  }
+                                  // QC report email
+                                  else if (emailStatus == 2) {
+                                    qcReportCheckMail(
+                                      "cmt",
+                                      "qc",
+                                      gender_title,
+                                      application.name,
+                                      application.application_id,
+                                      attachments,
+                                      toArr,
+                                      ccArr
+                                    )
+                                      .then(() => {
+                                        console.log(
+                                          "Sent Mail for Report For Quality Check"
+                                        );
+                                        return res.status(200).json({
+                                          status: true,
+                                          message: `CMT mail sent.`,
+                                          token: newToken,
+                                        });
+                                      })
+                                      .catch((emailError) => {
+                                        console.error(
+                                          "Error sending email:",
+                                          emailError
+                                        );
+                                        return res.status(200).json({
+                                          status: true,
+                                          message: `Failed to send CMT mail.`,
+                                          token: newToken,
+                                        });
+                                      });
+                                  }
+                                  // Handling for other statuses
+                                  else if (emailStatus == 3) {
+                                    readyForReport(
+                                      "cmt",
+                                      "ready",
+                                      application.application_id,
+                                      toArr,
+                                      ccArr
+                                    )
+                                      .then(() => {
+                                        console.log("Sent Mail for Report");
+                                        return res.status(200).json({
+                                          status: true,
+                                          message: `CMT mail sent.`,
+                                          token: newToken,
+                                        });
+                                      })
+                                      .catch((emailError) => {
+                                        console.error(
+                                          "Error sending email:",
+                                          emailError
+                                        );
+                                        return res.status(200).json({
+                                          status: true,
+                                          message: `Failed to send CMT mail.`,
+                                          token: newToken,
+                                        });
+                                      });
                                   } else {
-                                    // Handling for other statuses
-                                    if (emailStatus == 3) {
-                                      readyForReport(
-                                        "cmt",
-                                        "ready",
-                                        application.application_id,
-                                        toArr,
-                                        ccArr
-                                      )
-                                        .then(() => {
-                                          console.log("Sent Mail for Report");
-                                          return res.status(200).json({
-                                            status: true,
-                                            message: `CMT mail sent.`,
-                                            token: newToken,
-                                          });
-                                        })
-                                        .catch((emailError) => {
-                                          console.error(
-                                            "Error sending email:",
-                                            emailError
-                                          );
-                                          return res.status(200).json({
-                                            status: true,
-                                            message: `Failed to send CMT mail.`,
-                                            token: newToken,
-                                          });
-                                        });
-                                    } else {
-                                      return res.status(200).json({
-                                        status: true,
-                                        message: `CMT Application processed successfully.`,
-                                        token: newToken,
-                                      });
-                                    }
+                                    return res.status(200).json({
+                                      status: true,
+                                      message: `CMT Application processed successfully.`,
+                                      token: newToken,
+                                    });
                                   }
                                 }
                               );
