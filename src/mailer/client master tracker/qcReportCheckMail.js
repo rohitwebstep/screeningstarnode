@@ -75,9 +75,10 @@ async function qcReportCheckMail(
           return ""; // Skip this entry if parsing fails
         }
 
+        // Ensure it's a valid non-empty string
         return emails
-          .filter((email) => email) // Ensure it's a valid non-empty string
-          .map((email) => `"${entry.name}" <${email}>`)
+          .filter((email) => email) // Filter out invalid emails
+          .map((email) => `"${entry.name}" <${email.trim()}>`) // Trim to remove whitespace
           .join(", ");
       })
       .filter((cc) => cc !== "") // Remove any empty CCs from failed parses
@@ -90,7 +91,7 @@ async function qcReportCheckMail(
 
     // Prepare recipient list
     const toList = toArr
-      .map((email) => `"${email.name}" <${email.email}>`)
+      .map((email) => `"${email.name}" <${email.email.trim()}>`) // Trim to remove whitespace
       .join(", ");
 
     // Debugging: Log the email lists
@@ -109,7 +110,10 @@ async function qcReportCheckMail(
 
     // Main function to create attachments
     const createAttachments = async () => {
-      const urls = (attachments_url && typeof attachments_url === 'string') ? attachments_url.split(",") : [''];
+      const urls =
+        attachments_url && typeof attachments_url === "string"
+          ? attachments_url.split(",")
+          : [""];
       const attachments = [];
 
       for (const url of urls) {
@@ -132,7 +136,7 @@ async function qcReportCheckMail(
     const mailOptions = {
       from: smtp.username,
       to: toList,
-      cc: ccList,
+      cc: ccList, // Ensure the CC list is properly formatted
       subject: email.title,
       html: template,
       ...(attachments.length > 0 && { attachments }), // Only include attachments if present

@@ -22,7 +22,8 @@ const createAttachments = async (attachments_url) => {
 
   for (const url of urls) {
     const trimmedUrl = url.trim(); // Remove any extra whitespace
-    if (trimmedUrl) { // Check for non-empty URL
+    if (trimmedUrl) {
+      // Check for non-empty URL
       const exists = await checkFileExists(trimmedUrl);
       if (exists) {
         const filename = trimmedUrl.split("/").pop(); // Extract the filename from the URL
@@ -105,23 +106,17 @@ async function finalReportMail(
         let emails = [];
 
         try {
-          // Case 1: If it's already an array, use it
           if (Array.isArray(entry.email)) {
             emails = entry.email;
           } else if (typeof entry.email === "string") {
-            // Case 2: If it's a JSON string (with brackets and quotes), clean and parse it
-            let cleanedEmail = entry.email.trim();
-
-            // Remove extra quotes and backslashes from the string
-            cleanedEmail = cleanedEmail
+            let cleanedEmail = entry.email
+              .trim()
               .replace(/\\"/g, '"')
               .replace(/^"|"$/g, "");
 
-            // Check if the cleaned email is a JSON array
             if (cleanedEmail.startsWith("[") && cleanedEmail.endsWith("]")) {
               emails = JSON.parse(cleanedEmail);
             } else {
-              // Case 3: If it's a plain string email, use it directly
               emails = [cleanedEmail];
             }
           }
@@ -130,15 +125,14 @@ async function finalReportMail(
           return ""; // Skip this entry if parsing fails
         }
 
-        // Ensure that emails array contains valid items, and format them
+        // Ensure it's a valid non-empty string
         return emails
-          .filter((email) => email) // Ensure it's a valid non-empty string
-          .map((email) => `"${entry.name}" <${email}>`)
+          .filter((email) => email) // Filter out invalid emails
+          .map((email) => `"${entry.name}" <${email.trim()}>`) // Trim to remove whitespace
           .join(", ");
       })
       .filter((cc) => cc !== "") // Remove any empty CCs from failed parses
       .join(", ");
-
     // Validate recipient email(s)
     if (!toArr || toArr.length === 0) {
       throw new Error("No recipient email provided");
