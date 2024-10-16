@@ -1060,7 +1060,7 @@ exports.generateReport = (req, res) => {
                                           const marital_status =
                                             mainJson.marital_status?.toLowerCase();
 
-                                          let gender_title = "Mx.";
+                                          let gender_title = "Mr.";
 
                                           if (gender === "male") {
                                             gender_title = "Mr.";
@@ -1813,7 +1813,7 @@ exports.upload = async (req, res) => {
                             const maritalStatus =
                               application.marital_status?.toLowerCase();
 
-                            let genderTitle = "Mx.";
+                            let genderTitle = "Mr.";
                             if (gender === "male") {
                               genderTitle = "Mr.";
                             } else if (gender === "female") {
