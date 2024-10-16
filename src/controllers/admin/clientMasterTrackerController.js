@@ -1938,13 +1938,9 @@ exports.upload = async (req, res) => {
                             }
                             // Handle unknown email status
                             else {
-                              console.warn(
-                                "Unknown email status:",
-                                emailStatus
-                              );
-                              return res.status(400).json({
-                                status: false,
-                                message: "Unknown email status provided.",
+                              return res.status(200).json({
+                                status: true,
+                                message: "files saved.",
                                 token: newToken,
                               });
                             }
