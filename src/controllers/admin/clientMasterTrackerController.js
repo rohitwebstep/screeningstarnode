@@ -1265,7 +1265,7 @@ exports.generateReport = (req, res) => {
 
                                             // Log the overall result
                                             if (allMatch) {
-                                              if (send_mail == 3) {
+                                              if (send_mail == 0) {
                                                 return res.status(200).json({
                                                   status: true,
                                                   message: `CMT Application ${
