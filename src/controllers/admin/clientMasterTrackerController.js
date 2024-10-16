@@ -1801,7 +1801,7 @@ exports.upload = async (req, res) => {
                                     console.log("Sent Mail for Final Report");
                                     return res.status(200).json({
                                       status: true,
-                                      message: "CMT mail sent.",
+                                      message: "CMT Final Report mail sent.",
                                       token: newToken,
                                     });
                                   })
@@ -1835,7 +1835,8 @@ exports.upload = async (req, res) => {
                                     );
                                     return res.status(200).json({
                                       status: true,
-                                      message: "CMT mail sent.",
+                                      message:
+                                        "CMT Quality Check Report mail sent.",
                                       token: newToken,
                                     });
                                   })
@@ -1864,7 +1865,8 @@ exports.upload = async (req, res) => {
                                     console.log("Sent Mail for Report");
                                     return res.status(200).json({
                                       status: true,
-                                      message: "CMT mail sent.",
+                                      message:
+                                        "CMT Ready for Report mail sent.",
                                       token: newToken,
                                     });
                                   })
