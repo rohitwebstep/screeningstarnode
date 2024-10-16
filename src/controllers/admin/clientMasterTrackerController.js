@@ -1727,6 +1727,7 @@ exports.upload = async (req, res) => {
                 message:
                   result.error || "An error occurred while saving the image.",
                 token: newToken,
+                savedImagePaths,
               });
             }
 
@@ -1749,6 +1750,7 @@ exports.upload = async (req, res) => {
                         status: false,
                         message: "Failed to retrieve email addresses.",
                         token: newToken,
+                        savedImagePaths
                       });
                     }
 
@@ -1778,6 +1780,7 @@ exports.upload = async (req, res) => {
                             status: false,
                             message: err.message,
                             token: newToken,
+                            savedImagePaths
                           });
                         }
 
@@ -1789,6 +1792,7 @@ exports.upload = async (req, res) => {
                             status: false,
                             message: "Application not found",
                             token: newToken,
+                            savedImagePaths
                           });
                         }
 
@@ -1804,6 +1808,7 @@ exports.upload = async (req, res) => {
                                 status: false,
                                 message: "Database error occurred",
                                 token: newToken,
+                                savedImagePaths
                               });
                             }
 
@@ -1850,6 +1855,7 @@ exports.upload = async (req, res) => {
                                     status: true,
                                     message: "CMT Final Report mail sent.",
                                     token: newToken,
+                                    savedImagePaths
                                   });
                                 })
                                 .catch((emailError) => {
@@ -1861,6 +1867,7 @@ exports.upload = async (req, res) => {
                                     status: true,
                                     message: "Failed to send CMT mail.",
                                     token: newToken,
+                                    savedImagePaths
                                   });
                                 });
                             }
@@ -1889,6 +1896,7 @@ exports.upload = async (req, res) => {
                                     message:
                                       "CMT Quality Check Report mail sent.",
                                     token: newToken,
+                                    savedImagePaths
                                   });
                                 })
                                 .catch((emailError) => {
@@ -1900,6 +1908,7 @@ exports.upload = async (req, res) => {
                                     status: true,
                                     message: "Failed to send CMT mail.",
                                     token: newToken,
+                                    savedImagePaths
                                   });
                                 });
                             }
@@ -1922,6 +1931,7 @@ exports.upload = async (req, res) => {
                                     status: true,
                                     message: "Ready for Report mail sent.",
                                     token: newToken,
+                                    savedImagePaths
                                   });
                                 })
                                 .catch((emailError) => {
@@ -1933,6 +1943,7 @@ exports.upload = async (req, res) => {
                                     status: true,
                                     message: "Failed to send CMT mail.",
                                     token: newToken,
+                                    savedImagePaths
                                   });
                                 });
                             }
@@ -1942,6 +1953,7 @@ exports.upload = async (req, res) => {
                                 status: true,
                                 message: "Images uploaded successfully.",
                                 token: newToken,
+                                savedImagePaths
                               });
                             }
                           }
@@ -1956,6 +1968,7 @@ exports.upload = async (req, res) => {
                   status: true,
                   message: "Images uploaded successfully.",
                   token: newToken,
+                  savedImagePaths
                 });
               }
             } else {
@@ -1964,6 +1977,7 @@ exports.upload = async (req, res) => {
                 status: false,
                 message: "No records were updated or created.",
                 token: newToken,
+                savedImagePaths
               });
             }
           }
