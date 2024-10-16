@@ -1,6 +1,5 @@
 const nodemailer = require("nodemailer");
 const connection = require("../../config/db"); // Import the existing MySQL connection
-const fetch = require("node-fetch"); // Ensure to import node-fetch
 
 // Function to check if a file exists
 const checkFileExists = async (url) => {
@@ -17,24 +16,23 @@ const checkFileExists = async (url) => {
 const createAttachments = async (attachments_url) => {
   const urls =
     attachments_url && typeof attachments_url === "string"
-      ? attachments_url.split(",")
+      ? attachments_url.split(",").map((url) => url.trim()) // Split and trim URLs
       : []; // Default to an empty array if attachments_url is not a valid string
 
   const attachments = [];
 
   for (const url of urls) {
-    const trimmedUrl = url.trim(); // Remove any extra whitespace
-    if (trimmedUrl) {
+    if (url) {
       // Check for non-empty URL
-      const exists = await checkFileExists(trimmedUrl);
+      const exists = await checkFileExists(url);
       if (exists) {
-        const filename = trimmedUrl.split("/").pop(); // Extract the filename from the URL
+        const filename = url.split("/").pop(); // Extract the filename from the URL
         attachments.push({
           filename: filename,
-          path: trimmedUrl,
+          path: url,
         });
       } else {
-        console.warn(`File does not exist: ${trimmedUrl}`); // Log warning for missing file
+        console.warn(`File does not exist: ${url}`); // Log warning for missing file
       }
     } else {
       console.warn(`Empty or invalid URL: ${url}`); // Log warning for invalid URL
@@ -63,6 +61,7 @@ async function qcReportCheckMail(
         "SELECT * FROM emails WHERE module = ? AND action = ? AND status = 1",
         [module, action]
       );
+
     if (emailRows.length === 0) throw new Error("Email template not found");
     const email = emailRows[0];
 
@@ -73,6 +72,7 @@ async function qcReportCheckMail(
         "SELECT * FROM smtp_credentials WHERE module = ? AND action = ? AND status = '1'",
         [module, action]
       );
+
     if (smtpRows.length === 0) throw new Error("SMTP credentials not found");
     const smtp = smtpRows[0];
 
@@ -101,15 +101,14 @@ async function qcReportCheckMail(
           if (Array.isArray(entry.email)) {
             emails = entry.email;
           } else if (typeof entry.email === "string") {
-            let cleanedEmail = entry.email
+            const cleanedEmail = entry.email
               .trim()
               .replace(/\\"/g, '"')
               .replace(/^"|"$/g, "");
-            if (cleanedEmail.startsWith("[") && cleanedEmail.endsWith("]")) {
-              emails = JSON.parse(cleanedEmail);
-            } else {
-              emails = [cleanedEmail];
-            }
+            emails =
+              cleanedEmail.startsWith("[") && cleanedEmail.endsWith("]")
+                ? JSON.parse(cleanedEmail)
+                : [cleanedEmail];
           }
         } catch (e) {
           console.error("Error parsing email JSON:", entry.email, e);
