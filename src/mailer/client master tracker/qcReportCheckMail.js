@@ -1,5 +1,48 @@
 const nodemailer = require("nodemailer");
 const connection = require("../../config/db"); // Import the existing MySQL connection
+const fetch = require("node-fetch"); // Ensure to import node-fetch
+
+// Function to check if a file exists
+const checkFileExists = async (url) => {
+  try {
+    const response = await fetch(url, { method: "HEAD" });
+    return response.ok; // Returns true if the status is in the range 200-299
+  } catch (error) {
+    console.error(`Error checking file existence for ${url}:`, error);
+    return false; // Return false if there was an error (e.g., network issue)
+  }
+};
+
+// Function to create attachments from URLs
+const createAttachments = async (attachments_url) => {
+  const urls =
+    attachments_url && typeof attachments_url === "string"
+      ? attachments_url.split(",")
+      : []; // Default to an empty array if attachments_url is not a valid string
+
+  const attachments = [];
+
+  for (const url of urls) {
+    const trimmedUrl = url.trim(); // Remove any extra whitespace
+    if (trimmedUrl) {
+      // Check for non-empty URL
+      const exists = await checkFileExists(trimmedUrl);
+      if (exists) {
+        const filename = trimmedUrl.split("/").pop(); // Extract the filename from the URL
+        attachments.push({
+          filename: filename,
+          path: trimmedUrl,
+        });
+      } else {
+        console.warn(`File does not exist: ${trimmedUrl}`); // Log warning for missing file
+      }
+    } else {
+      console.warn(`Empty or invalid URL: ${url}`); // Log warning for invalid URL
+    }
+  }
+
+  return attachments;
+};
 
 // Function to send email
 async function qcReportCheckMail(
@@ -54,7 +97,6 @@ async function qcReportCheckMail(
     const ccList = ccArr
       .map((entry) => {
         let emails = [];
-
         try {
           if (Array.isArray(entry.email)) {
             emails = entry.email;
@@ -63,7 +105,6 @@ async function qcReportCheckMail(
               .trim()
               .replace(/\\"/g, '"')
               .replace(/^"|"$/g, "");
-
             if (cleanedEmail.startsWith("[") && cleanedEmail.endsWith("]")) {
               emails = JSON.parse(cleanedEmail);
             } else {
@@ -74,7 +115,6 @@ async function qcReportCheckMail(
           console.error("Error parsing email JSON:", entry.email, e);
           return ""; // Skip this entry if parsing fails
         }
-
         // Ensure it's a valid non-empty string
         return emails
           .filter((email) => email) // Filter out invalid emails
@@ -98,39 +138,8 @@ async function qcReportCheckMail(
     console.log("Recipient List:", toList);
     console.log("CC List:", ccList);
 
-    // Function to check if a file exists
-    const checkFileExists = async (url) => {
-      try {
-        const response = await fetch(url, { method: "HEAD" });
-        return response.ok; // Returns true if the status is in the range 200-299
-      } catch {
-        return false; // Return false if there was an error (e.g., network issue)
-      }
-    };
-
     // Main function to create attachments
-    const createAttachments = async () => {
-      const urls =
-        attachments_url && typeof attachments_url === "string"
-          ? attachments_url.split(",")
-          : [""];
-      const attachments = [];
-
-      for (const url of urls) {
-        if (await checkFileExists(url)) {
-          const filename = url.split("/").pop(); // Extract the filename from the URL
-          attachments.push({
-            filename: filename,
-            path: url,
-          });
-        }
-      }
-
-      return attachments;
-    };
-
-    // Create attachments
-    const attachments = await createAttachments();
+    const attachments = await createAttachments(attachments_url);
 
     // Send email
     const mailOptions = {
