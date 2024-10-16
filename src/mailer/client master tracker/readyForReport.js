@@ -40,7 +40,6 @@ async function readyForReport(module, action, application_id, toArr, ccArr) {
     template = template.replace(/{{application_id}}/g, application_id);
 
     // Prepare CC list
-    // Prepare CC list
     const ccList = ccArr
       .map((entry) => {
         let emails = [];
@@ -73,6 +72,7 @@ async function readyForReport(module, action, application_id, toArr, ccArr) {
       })
       .filter((cc) => cc !== "") // Remove any empty CCs from failed parses
       .join(", ");
+
     // Validate recipient email(s)
     if (!toArr || toArr.length === 0) {
       throw new Error("No recipient email provided");
