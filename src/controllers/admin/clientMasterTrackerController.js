@@ -1940,7 +1940,7 @@ exports.upload = async (req, res) => {
                             else {
                               return res.status(200).json({
                                 status: true,
-                                message: "files saved.",
+                                message: "Images uploaded successfully.",
                                 token: newToken,
                               });
                             }
