@@ -76,6 +76,27 @@ exports.list = (req, res) => {
   });
 };
 
+exports.test = (req, res) => {
+  // Replace 1 with the appropriate client application ID you need to pass
+  ClientMasterTrackerModel.getAttachmentsByClientAppID(1, (err, result) => {
+    if (err) {
+      console.error("Database error:", err);
+      return res.status(500).json({
+        status: false,
+        message: "Database error occurred",
+      });
+    }
+
+    // If successful, return the result
+    res.json({
+      status: true,
+      message: "Attachments fetched successfully",
+      attachments: result,
+      totalResults: result.length,
+    });
+  });
+};
+
 exports.listByCustomerId = (req, res) => {
   const { customer_id, admin_id, _token } = req.query;
 
