@@ -78,7 +78,7 @@ exports.list = (req, res) => {
 
 exports.test = (req, res) => {
   // Replace 1 with the appropriate client application ID you need to pass
-  ClientMasterTrackerModel.getAttachmentsByClientAppID(1, (err, result) => {
+  ClientMasterTrackerModel.getAttachmentsByClientAppID(2, (err, result) => {
     if (err) {
       console.error("Database error:", err);
       return res.status(500).json({
