@@ -16,16 +16,25 @@ const createAttachments = async (attachments_url) => {
   const urls =
     attachments_url && typeof attachments_url === "string"
       ? attachments_url.split(",")
-      : [""];
+      : [""]; // Default to an empty array if attachments_url is not a valid string
+
   const attachments = [];
 
   for (const url of urls) {
-    if (await checkFileExists(url)) {
-      const filename = url.split("/").pop(); // Extract the filename from the URL
-      attachments.push({
-        filename: filename,
-        path: url,
-      });
+    const trimmedUrl = url.trim(); // Remove any extra whitespace
+    if (trimmedUrl) { // Check for non-empty URL
+      const exists = await checkFileExists(trimmedUrl);
+      if (exists) {
+        const filename = trimmedUrl.split("/").pop(); // Extract the filename from the URL
+        attachments.push({
+          filename: filename,
+          path: trimmedUrl,
+        });
+      } else {
+        console.warn(`File does not exist: ${trimmedUrl}`); // Log warning for missing file
+      }
+    } else {
+      console.warn(`Empty or invalid URL: ${url}`); // Log warning for invalid URL
     }
   }
 
@@ -78,6 +87,9 @@ async function finalReportMail(
 
     // Create attachments
     const attachments = await createAttachments(attachments_url);
+    if (attachments.length === 0) {
+      console.warn("No valid attachments to send.");
+    }
 
     // Replace placeholders in the email template
     let template = email.template;
@@ -141,6 +153,7 @@ async function finalReportMail(
     console.log("Recipient List:", toList);
     console.log("CC List:", ccList);
 
+    console.log(`Going For Email - `, attachments);
     // Send email
     const mailOptions = {
       from: smtp.username,
