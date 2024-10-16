@@ -739,18 +739,18 @@ GROUP BY b.name;
         console.error("Database query error:", err);
         return callback(err, null);
       }
-  
+
       if (results.length > 0) {
-        const services = results[0].services.split(","); // Split the services by comma
+        const services = results[0].services.split(","); // Split services by comma
         const dbTableFileInputs = {}; // Object to store db_table and its file inputs
-        let completedQueries = 0; // To track when all queries are completed
-  
+        let completedQueries = 0; // To track completed queries
+
         // Step 1: Loop through each service and perform actions
-        services.forEach(service => {
+        services.forEach((service) => {
           const query = "SELECT `json` FROM `report_forms` WHERE `id` = ?";
           pool.query(query, [service], (err, result) => {
             completedQueries++;
-  
+
             if (err) {
               console.error("Error fetching JSON for service:", service, err);
             } else if (result.length > 0) {
@@ -758,60 +758,87 @@ GROUP BY b.name;
                 // Parse the JSON data
                 const jsonData = JSON.parse(result[0].json);
                 const dbTable = jsonData.db_table;
-  
+
                 // Initialize an array for the dbTable if not already present
                 if (!dbTableFileInputs[dbTable]) {
                   dbTableFileInputs[dbTable] = [];
                 }
-  
+
                 // Extract inputs with type 'file' and add to the db_table array
-                jsonData.rows.forEach(row => {
-                  row.inputs.forEach(input => {
+                jsonData.rows.forEach((row) => {
+                  row.inputs.forEach((input) => {
                     if (input.type === "file") {
                       dbTableFileInputs[dbTable].push(input.name);
                     }
                   });
                 });
               } catch (parseErr) {
-                console.error("Error parsing JSON for service:", service, parseErr);
+                console.error(
+                  "Error parsing JSON for service:",
+                  service,
+                  parseErr
+                );
               }
             }
-  
-            // Step 2: When all queries are completed, proceed to the next part
+
+            // When all services have been processed
             if (completedQueries === services.length) {
-              let finalAttachments = [];
-              let tableQueries = 0;
-              const totalTables = Object.keys(dbTableFileInputs).length;
-  
-              // Loop through each db_table and perform a query
-              for (const [dbTable, fileInputNames] of Object.entries(dbTableFileInputs)) {
-                const selectQuery = `SELECT ${fileInputNames.join(", ")} FROM ${dbTable}`;
-  
-                pool.query(selectQuery, (err, rows) => {
-                  tableQueries++;
-  
-                  if (err) {
-                    console.error(`Error querying table ${dbTable}:`, err);
-                  } else {
-                    // Combine values from each row into a single string
-                    rows.forEach(row => {
-                      const attachments = Object.values(row)
-                        .filter(value => value) // Remove any falsy values
-                        .join(","); // Join values by comma
-  
-                      // Split and concatenate the URL with each attachment
-                      attachments.split(",").forEach(attachment => {
-                        finalAttachments.push(`www.example.com/${attachment}`);
-                      });
-                    });
-                  }
-  
-                  // Step 3: When all db_table queries are completed, return finalAttachments
-                  if (tableQueries === totalTables) {
-                    callback(null, finalAttachments.join(", "));
-                  }
-                });
-              }
+              // Fetch the host from the database
+              const hostSql = `SELECT \`host\` FROM \`app_info\` WHERE \`status\` = 1 AND \`interface_type\` = ? ORDER BY \`updated_at\` DESC LIMIT 1`;
+              pool.query(hostSql, ["backend"], (err, hostResults) => {
+                if (err) {
+                  console.error("Database query error:", err);
+                  return callback(err, null);
+                }
+
+                // Check if an entry was found for the host
+                const host =
+                  hostResults.length > 0
+                    ? hostResults[0].host
+                    : "www.example.com"; // Fallback host
+
+                let finalAttachments = [];
+                let tableQueries = 0;
+                const totalTables = Object.keys(dbTableFileInputs).length;
+
+                // Loop through each db_table and perform a query
+                for (const [dbTable, fileInputNames] of Object.entries(
+                  dbTableFileInputs
+                )) {
+                  const selectQuery = `SELECT ${fileInputNames.join(
+                    ", "
+                  )} FROM ${dbTable} WHERE client_application_id = ?`;
+
+                  pool.query(
+                    selectQuery,
+                    [client_application_id],
+                    (err, rows) => {
+                      tableQueries++;
+
+                      if (err) {
+                        console.error(`Error querying table ${dbTable}:`, err);
+                      } else {
+                        // Combine values from each row into a single string
+                        rows.forEach((row) => {
+                          const attachments = Object.values(row)
+                            .filter((value) => value) // Remove any falsy values
+                            .join(","); // Join values by comma
+
+                          // Split and concatenate the URL with each attachment
+                          attachments.split(",").forEach((attachment) => {
+                            finalAttachments.push(`${host}/${attachment}`);
+                          });
+                        });
+                      }
+
+                      // Step 3: When all db_table queries are completed, return finalAttachments
+                      if (tableQueries === totalTables) {
+                        callback(null, finalAttachments.join(", "));
+                      }
+                    }
+                  );
+                }
+              });
             }
           });
         });
@@ -819,7 +846,7 @@ GROUP BY b.name;
         callback(null, []); // Return an empty array if no results found
       }
     });
-  }
+  },
 };
 
 module.exports = Customer;
