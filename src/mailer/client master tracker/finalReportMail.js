@@ -1,5 +1,36 @@
 const nodemailer = require("nodemailer");
-const connection = require("../../config/db"); // Import the existing MySQL connection
+const connection = require("../../../../config/db"); // Import the existing MySQL connection
+
+// Function to check if a file exists
+const checkFileExists = async (url) => {
+  try {
+    const response = await fetch(url, { method: "HEAD" });
+    return response.ok; // Returns true if the status is in the range 200-299
+  } catch {
+    return false; // Return false if there was an error (e.g., network issue)
+  }
+};
+
+// Function to create attachments from URLs
+const createAttachments = async (attachments_url) => {
+  const urls =
+    attachments_url && typeof attachments_url === "string"
+      ? attachments_url.split(",")
+      : [""];
+  const attachments = [];
+
+  for (const url of urls) {
+    if (await checkFileExists(url)) {
+      const filename = url.split("/").pop(); // Extract the filename from the URL
+      attachments.push({
+        filename: filename,
+        path: url,
+      });
+    }
+  }
+
+  return attachments;
+};
 
 // Function to send email
 async function finalReportMail(
@@ -44,6 +75,9 @@ async function finalReportMail(
         pass: smtp.password,
       },
     });
+
+    // Create attachments
+    const attachments = await createAttachments(attachments_url);
 
     // Replace placeholders in the email template
     let template = email.template;
@@ -106,37 +140,6 @@ async function finalReportMail(
     // Debugging: Log the email lists
     console.log("Recipient List:", toList);
     console.log("CC List:", ccList);
-
-    // Function to check if a file exists
-    const checkFileExists = async (url) => {
-      try {
-        const response = await fetch(url, { method: "HEAD" });
-        return response.ok; // Returns true if the status is in the range 200-299
-      } catch {
-        return false; // Return false if there was an error (e.g., network issue)
-      }
-    };
-
-    // Main function to create attachments
-    const createAttachments = async () => {
-      const urls = (attachments_url && typeof attachments_url === 'string') ? attachments_url.split(",") : [''];
-      const attachments = [];
-
-      for (const url of urls) {
-        if (await checkFileExists(url)) {
-          const filename = url.split("/").pop(); // Extract the filename from the URL
-          attachments.push({
-            filename: filename,
-            path: url,
-          });
-        }
-      }
-
-      return attachments;
-    };
-
-    // Create attachments
-    const attachments = await createAttachments();
 
     // Send email
     const mailOptions = {
