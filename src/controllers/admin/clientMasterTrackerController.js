@@ -1758,7 +1758,7 @@ exports.upload = async (req, res) => {
 
                     // Prepare recipient and CC lists
                     const toArr = [{ name: branch.name, email: branch.email }];
-                    const ccArr = customer.emails.split(",").map((email) => ({
+                    const ccArr = JSON.parse(customer.emails).map((email) => ({
                       name: customer.name,
                       email: email.trim(),
                     }));

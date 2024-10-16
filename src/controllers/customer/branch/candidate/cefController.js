@@ -359,7 +359,7 @@ const sendNotificationEmails = (branch_id, customer_id, res) => {
 
       const { branch, customer } = emailData;
       const toArr = [{ name: branch.name, email: branch.email }];
-      const ccArr = customer.emails.split(",").map((email) => ({
+      const ccArr = JSON.parse(customer.emails).map((email) => ({
         name: customer.name,
         email: email.trim(),
       }));
