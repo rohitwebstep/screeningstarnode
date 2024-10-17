@@ -26,24 +26,30 @@ const Acknowledgement = {
 
       const processResults = (result) => {
         const { branch_id, customer_id, application_count } = result;
-        const customerSql = `SELECT \`id\`, \`admin_id\`, \`client_unique_id\`, \`name\` FROM \`customers\` WHERE \`id\` = ? AND \`status\` = ? `;
-        const branchSql = `SELECT \`id\` ,\`customer_id\` ,\`name\` ,\`is_head\` ,\`head_id\` FROM \`branches\` WHERE \`id\` = ? AND \`status\` = ? `;
+        const customerSql = `SELECT \`id\`, \`admin_id\`, \`client_unique_id\`, \`name\` FROM \`customers\` WHERE \`id\` = ? AND \`status\` = 1`;
+        const branchSql = `SELECT \`id\`, \`customer_id\`, \`name\`, \`is_head\`, \`head_id\` FROM \`branches\` WHERE \`id\` = ? AND \`status\` = 1`;
 
         // Fetch customer details
         pool.query(
           customerSql,
-          [customer_id, 0],
+          [customer_id],
           (customerErr, customerResult) => {
-            if (customerErr) {
+            if (customerErr || customerResult.length === 0) {
               console.error("Error fetching customer:", customerErr);
-              return callback(customerErr, null);
+              return callback(
+                customerErr || new Error("Customer not found"),
+                null
+              );
             }
 
             // Fetch branch details
-            pool.query(branchSql, [branch_id, 1], (branchErr, branchResult) => {
-              if (branchErr) {
+            pool.query(branchSql, [branch_id], (branchErr, branchResult) => {
+              if (branchErr || branchResult.length === 0) {
                 console.error("Error fetching branch:", branchErr);
-                return callback(branchErr, null);
+                return callback(
+                  branchErr || new Error("Branch not found"),
+                  null
+                );
               }
 
               const branchData = {
@@ -57,9 +63,11 @@ const Acknowledgement = {
 
               // Group data under the customer ID
               if (!customerMap.has(customer_id)) {
-                const customerData = customerResult[0];
-                customerData.applicationCount = 0; // Initialize total application count
-                customerData.branches = []; // Initialize branches array
+                const customerData = {
+                  ...customerResult[0],
+                  applicationCount: 0, // Initialize total application count
+                  branches: [], // Initialize branches array
+                };
                 customerMap.set(customer_id, customerData);
               }
 
