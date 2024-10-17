@@ -140,13 +140,20 @@ exports.sendNotification = (req, res) => {
             });
           }
 
-          res.json({
-            status: true,
-            message: "Customers fetched successfully",
-            customers: customers,
-            totalResults: customers ? customers.length : 0,
-            token: newToken,
-          });
+          if (customers && customers.length > 0) {
+            res.json({
+              status: true,
+              message: "Customers fetched successfully",
+              customers: customers,
+              totalResults: customers.length,
+              token: newToken,
+            });
+          } else {
+            res.json({
+              status: false,
+              message: "No applications for acknowledgement",
+            });
+          }
         });
       });
     });
