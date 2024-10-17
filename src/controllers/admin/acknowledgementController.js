@@ -66,7 +66,7 @@ exports.list = (req, res) => {
   });
 };
 
-exports.sendNotification = async (req, res) => {
+exports.sendNotification = (req, res) => {
   const { admin_id, _token, customer_id } = req.body;
 
   // Check for missing fields
@@ -84,12 +84,8 @@ exports.sendNotification = async (req, res) => {
 
   const action = JSON.stringify({ acknowledgement: "send-notification" });
 
-  try {
-    // Check admin authorization
-    const authResult = await AdminCommon.isAdminAuthorizedForAction(
-      admin_id,
-      action
-    );
+  // Check admin authorization
+  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (authResult) => {
     if (!authResult.status) {
       return res.status(403).json({
         status: false,
@@ -98,126 +94,223 @@ exports.sendNotification = async (req, res) => {
     }
 
     // Verify admin token
-    const tokenResult = await AdminCommon.isAdminTokenValid(_token, admin_id);
-    if (!tokenResult.status) {
-      return res.status(401).json({
-        status: false,
-        message: tokenResult.message,
-      });
-    }
+    AdminCommon.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
+      if (err) {
+        console.error("Error checking token validity:", err);
+        return res.status(500).json({ status: false, message: err.message });
+      }
 
-    const newToken = tokenResult.newToken;
+      if (!tokenResult.status) {
+        return res.status(401).json({
+          status: false,
+          message: tokenResult.message,
+        });
+      }
 
-    // Fetch the specific customer
-    const currentCustomer = await Customer.getActiveCustomerById(customer_id);
-    if (!currentCustomer) {
-      return res.status(404).json({
-        status: false,
-        message: "Customer not found.",
-        token: newToken,
-      });
-    }
+      const newToken = tokenResult.newToken;
 
-    // Fetch all customers from the Acknowledgement model
-    const customers = await Acknowledgement.list();
-    if (!customers || !customers.data || customers.data.length === 0) {
-      return res.json({
-        status: true,
-        message: "No customers found.",
-        totalResults: 0,
-        token: newToken,
-      });
-    }
-
-    // Process each customer
-    for (const customer of customers.data) {
-      const {
-        id: customerId,
-        admin_id: adminId,
-        client_unique_id: clientUniqueId,
-        name,
-        applicationCount: totalApplications,
-      } = customer;
-
-      console.log(`Customer ID: ${customerId}`);
-      console.log(`Admin ID: ${adminId}`);
-      console.log(`Client Unique ID: ${clientUniqueId}`);
-      console.log(`Customer Name: ${name.trim()}`);
-      console.log(`Total Applications: ${totalApplications}`);
-
-      // Process each branch of the customer
-      for (const branch of customer.branches) {
-        const {
-          id: branchId,
-          customer_id: branchCustomerId,
-          name: branchName,
-          is_head: isHead,
-          head_id: headId,
-          applicationCount: branchApplications,
-        } = branch;
-
-        console.log(`  Branch ID: ${branchId}`);
-        console.log(`  Branch Customer ID: ${branchCustomerId}`);
-        console.log(`  Branch Name: ${branchName.trim()}`);
-        console.log(`  Is Head: ${isHead}`);
-        console.log(`  Head ID: ${headId}`);
-        console.log(`  Branch Application Count: ${branchApplications}`);
-
-        // Fetch client applications by branch ID
-        const applications =
-          await Acknowledgement.getClientApplicationByBranchIDForAckEmail(
-            branchId
-          );
-        if (
-          !applications ||
-          !applications.data ||
-          applications.data.length === 0
-        ) {
-          console.log(
-            `No client applications found for Branch ID: ${branchId}`
-          );
-          continue; // Skip to the next branch
+      // Fetch the specific customer
+      Customer.getActiveCustomerById(customer_id, (err, currentCustomer) => {
+        if (err) {
+          console.error("Database error during customer retrieval:", err);
+          return res.status(500).json({
+            status: false,
+            message: "Failed to retrieve customer. Please try again.",
+            token: newToken,
+          });
         }
 
-        // Process each application
-        for (const app of applications.data) {
-          const { application_id: applicationId, name, services } = app;
-          console.log(`Application ID: ${applicationId}`);
-          console.log(`Name: ${name}`);
+        if (!currentCustomer) {
+          return res.status(404).json({
+            status: false,
+            message: "Customer not found.",
+            token: newToken,
+          });
+        }
 
-          // Split services and process each one
-          const serviceIds = services
-            .split(",")
-            .map((service) => service.trim());
-          const serviceTitleArr = [];
-
-          for (const serviceId of serviceIds) {
-            const currentService = await Service.getServiceById(serviceId);
-            if (currentService) {
-              serviceTitleArr.push(currentService.title);
-            } else {
-              console.log(`Service not found for ID: ${serviceId}`);
-            }
+        // Fetch all customers from the Acknowledgement model
+        Acknowledgement.list((err, customers) => {
+          if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({
+              status: false,
+              message: err.message,
+              token: newToken,
+            });
           }
 
-          console.log(`Service Titles: ${serviceTitleArr.join(", ")}`);
-        }
-      }
-    }
+          if (customers && customers.data && customers.data.length > 0) {
+            let processedCount = 0; // Counter for processed customers
 
-    // Success response after processing all applications
-    return res.status(200).json({
-      status: true,
-      message: "Client applications fetched successfully.",
-      data: customers.data,
-      totalResults: customers.data.length,
-      token: newToken,
+            customers.data.forEach((customer) => {
+              const {
+                id: customerId,
+                admin_id: adminId,
+                client_unique_id: clientUniqueId,
+                name,
+                applicationCount: totalApplications,
+                branches,
+              } = customer;
+
+              console.log(`Customer ID: ${customerId}`);
+              console.log(`Admin ID: ${adminId}`);
+              console.log(`Client Unique ID: ${clientUniqueId}`);
+              console.log(`Customer Name: ${name.trim()}`);
+              console.log(`Total Applications: ${totalApplications}`);
+
+              // Check if branches exist
+              if (branches && branches.length > 0) {
+                branches.forEach((branch) => {
+                  const {
+                    id: branchId,
+                    customer_id: branchCustomerId,
+                    name: branchName,
+                    is_head: isHead,
+                    head_id: headId,
+                    applicationCount: branchApplications,
+                  } = branch;
+
+                  console.log(`  Branch ID: ${branchId}`);
+                  console.log(`  Branch Customer ID: ${branchCustomerId}`);
+                  console.log(`  Branch Name: ${branchName.trim()}`);
+                  console.log(`  Is Head: ${isHead}`);
+                  console.log(`  Head ID: ${headId}`);
+                  console.log(
+                    `  Branch Application Count: ${branchApplications}`
+                  );
+
+                  // Fetch client applications by branch ID
+                  Acknowledgement.getClientApplicationByBranchIDForAckEmail(
+                    branchId,
+                    (err, applications) => {
+                      if (err) {
+                        console.error("Database error:", err);
+                        return res.status(500).json({
+                          status: false,
+                          message:
+                            "An error occurred while fetching client applications.",
+                          token: newToken,
+                        });
+                      }
+
+                      if (!applications.data.length) {
+                        console.log(
+                          `No client applications found for branch ID: ${branchId}`
+                        );
+                        processedCount++;
+                        if (processedCount === customers.data.length) {
+                          // Send success response after processing all customers
+                          return res.status(200).json({
+                            status: true,
+                            message:
+                              "Client applications processed successfully.",
+                            token: newToken,
+                          });
+                        }
+                        return; // Exit this branch's loop
+                      }
+
+                      // Loop through applications
+                      const applicationPromises = applications.data.map(
+                        (app) => {
+                          const {
+                            application_id: applicationId,
+                            name,
+                            services,
+                          } = app;
+
+                          console.log(`Application ID: ${applicationId}`);
+                          console.log(`Name: ${name}`);
+
+                          // Split services and process each one
+                          const serviceIds = services
+                            .split(",")
+                            .map((service) => service.trim());
+                          const serviceFetchPromises = serviceIds.map(
+                            (serviceId) => {
+                              return new Promise((resolve, reject) => {
+                                // Fetch the service title by ID
+                                Service.getServiceById(
+                                  serviceId,
+                                  (err, currentService) => {
+                                    if (err) {
+                                      console.error(
+                                        "Error fetching service data:",
+                                        err
+                                      );
+                                      return reject(err);
+                                    }
+
+                                    if (!currentService) {
+                                      return reject(
+                                        new Error("Service not found")
+                                      );
+                                    }
+
+                                    resolve(currentService.title);
+                                  }
+                                );
+                              });
+                            }
+                          );
+
+                          // Return a promise that resolves with the service titles
+                          return Promise.all(serviceFetchPromises).then(
+                            (serviceTitles) => {
+                              console.log(
+                                `Service Titles for Application ID ${applicationId}: ${serviceTitles.join(
+                                  ", "
+                                )}`
+                              );
+                            }
+                          );
+                        }
+                      );
+
+                      // Wait for all application promises to resolve
+                      Promise.all(applicationPromises)
+                        .then(() => {
+                          processedCount++;
+                          if (processedCount === customers.data.length) {
+                            // Send success response after processing all customers
+                            return res.status(200).json({
+                              status: true,
+                              message:
+                                "Client applications processed successfully.",
+                              token: newToken,
+                            });
+                          }
+                        })
+                        .catch((error) => {
+                          console.error(
+                            "Error processing applications:",
+                            error
+                          );
+                          return res.status(500).json({
+                            status: false,
+                            message:
+                              "An error occurred while processing applications.",
+                            token: newToken,
+                          });
+                        });
+                    }
+                  );
+                });
+              } else {
+                processedCount++;
+              }
+            });
+          } else {
+            return res.json({
+              status: true,
+              message: "Customers fetched successfully",
+              customers: customers,
+              totalResults: customers ? customers.data.length : 0,
+              token: newToken,
+            });
+          }
+        });
+      });
     });
-  } catch (error) {
-    console.error("An error occurred:", error);
-    return res.status(500).json({
-      status: false,
-      message: "An internal server error occurred. Please try again.",
-    });
-  }
+  });
 };
