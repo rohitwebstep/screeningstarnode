@@ -199,7 +199,6 @@ exports.sendNotification = (req, res) => {
                         );
                         processedCount++;
                         if (processedCount === customers.data.length) {
-                          // Send success response after processing all customers
                           return res.status(200).json({
                             status: true,
                             message:
@@ -228,7 +227,7 @@ exports.sendNotification = (req, res) => {
                             .map((service) => service.trim());
                           const serviceFetchPromises = serviceIds.map(
                             (serviceId) => {
-                              return new Promise((resolve, reject) => {
+                              return new Promise((resolve) => {
                                 // Fetch the service title by ID
                                 Service.getServiceById(
                                   serviceId,
@@ -238,13 +237,14 @@ exports.sendNotification = (req, res) => {
                                         "Error fetching service data:",
                                         err
                                       );
-                                      return reject(err);
+                                      return resolve(null); // Skip this service
                                     }
 
                                     if (!currentService) {
-                                      return reject(
-                                        new Error("Service not found")
+                                      console.log(
+                                        `Service not found for ID: ${serviceId}`
                                       );
+                                      return resolve(null); // Skip this service
                                     }
 
                                     resolve(currentService.title);
@@ -257,8 +257,12 @@ exports.sendNotification = (req, res) => {
                           // Return a promise that resolves with the service titles
                           return Promise.all(serviceFetchPromises).then(
                             (serviceTitles) => {
+                              // Filter out any null values from serviceTitles
+                              const validServiceTitles = serviceTitles.filter(
+                                (title) => title !== null
+                              );
                               console.log(
-                                `Service Titles for Application ID ${applicationId}: ${serviceTitles.join(
+                                `Service Titles for Application ID ${applicationId}: ${validServiceTitles.join(
                                   ", "
                                 )}`
                               );
@@ -272,7 +276,6 @@ exports.sendNotification = (req, res) => {
                         .then(() => {
                           processedCount++;
                           if (processedCount === customers.data.length) {
-                            // Send success response after processing all customers
                             return res.status(200).json({
                               status: true,
                               message:
