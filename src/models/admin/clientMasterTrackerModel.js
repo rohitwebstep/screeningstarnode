@@ -196,7 +196,7 @@ GROUP BY b.name;
   getCMTApplicationById: (client_application_id, callback) => {
     const sql =
       "SELECT * FROM `cmt_applications` WHERE `client_application_id` = ?";
-    pool.query(sql, [client_application_id], (err, results) => {
+    pool.query(sql, [`${client_application_id}`], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback(err, null);
