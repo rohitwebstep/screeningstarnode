@@ -166,7 +166,7 @@ exports.sendNotification = (req, res) => {
               console.log(`  Is Head: ${branch.is_head ? "Yes" : "No"}`);
               console.log(`  Applications: `);
 
-              // Print applications directly
+              // Process applications
               branch.applications.forEach((application) => {
                 const serviceIds =
                   typeof application.services === "string" &&
@@ -174,17 +174,17 @@ exports.sendNotification = (req, res) => {
                     ? application.services.split(",").map((id) => id.trim())
                     : [];
 
-                const serviceNames = [];
+                // Initialize an array to hold service names for this application
+                application.serviceNames = []; // Create a new property for service names
 
                 // Function to fetch service names
                 const fetchServiceNames = (index = 0) => {
                   if (index >= serviceIds.length) {
+                    // Log the service names for the application
                     console.log(
-                      `    Application ID: ${application.application_id}`
-                    );
-                    console.log(`    Application Name: ${application.name}`);
-                    console.log(
-                      `    Service Names: ${serviceNames.join(", ")}`
+                      `    Service Names: ${application.serviceNames.join(
+                        ", "
+                      )}`
                     );
                     return;
                   }
@@ -206,8 +206,8 @@ exports.sendNotification = (req, res) => {
                       return fetchServiceNames(index + 1);
                     }
 
-                    // Add the current service name to the array
-                    serviceNames.push(currentService.title);
+                    // Add the current service name to the application's array
+                    application.serviceNames.push(currentService.title);
 
                     // Recursively fetch the next service
                     fetchServiceNames(index + 1);
