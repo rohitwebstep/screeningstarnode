@@ -115,10 +115,9 @@ const Acknowledgement = {
 
   listByCustomerID: (customer_id, callback) => {
     const sql = `
-      SELECT id, application_id, name, services, ack_sent, branch_id, customer_id, COUNT(*) AS application_count
+      SELECT id, application_id, name, services, ack_sent, branch_id, customer_id
       FROM client_applications
       WHERE ack_sent = 0 AND customer_id = ?
-      GROUP BY branch_id, customer_id
     `;
 
     pool.query(sql, [customer_id], (err, results) => {
@@ -138,14 +137,8 @@ const Acknowledgement = {
       let remainingQueries = results.length; // Track number of remaining results to process
 
       const processResults = (result) => {
-        const {
-          branch_id,
-          customer_id,
-          application_count,
-          application_id,
-          name,
-          services,
-        } = result; // Include application details
+        const { branch_id, application_id, name, services } = result; // Include application details
+
         const customerSql = `SELECT id, admin_id, client_unique_id, name FROM customers WHERE id = ? AND status = ?`;
         const branchSql = `SELECT id, customer_id, name, is_head, head_id FROM branches WHERE id = ? AND status = ?`;
 
@@ -186,7 +179,7 @@ const Acknowledgement = {
                   is_head: branchResult[0].is_head,
                   head_id: branchResult[0].head_id,
                   applications: [], // Initialize applications array
-                  applicationCount: application_count,
+                  applicationCount: 0, // Initialize application count for the branch
                 };
 
                 // Add application details to the branch
@@ -196,6 +189,7 @@ const Acknowledgement = {
                   services: services,
                 };
                 branchData.applications.push(applicationDetails);
+                branchData.applicationCount += 1; // Increment count for this application
 
                 // Group data under the customer ID
                 if (!customerMap.has(customer_id)) {
@@ -213,13 +207,13 @@ const Acknowledgement = {
                 if (existingBranch) {
                   // If branch exists, push the application to the existing branch
                   existingBranch.applications.push(applicationDetails);
-                  existingBranch.applicationCount += application_count; // Update count for this branch
+                  existingBranch.applicationCount += 1; // Update count for this branch
                 } else {
                   // If branch doesn't exist, push the new branch data
                   customerData.branches.push(branchData);
                 }
-                customerData.applicationCount += application_count; // Update total for customer
-                totalResults += application_count; // Update overall total
+                customerData.applicationCount += 1; // Update total for customer
+                totalResults += 1; // Update overall total
 
                 // Resolve when all queries are done
                 remainingQueries--;
