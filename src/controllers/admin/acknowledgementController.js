@@ -128,8 +128,9 @@ exports.sendNotification = (req, res) => {
           });
         }
 
-        // Fetch all customers from the Acknowledgement model
+        // Fetch acknowledgements for the customer
         Acknowledgement.listByCustomerID(customer_id, (err, customers) => {
+          // Pass customer_id to the function
           if (err) {
             console.error("Database error:", err);
             return res.status(500).json({
@@ -139,108 +140,13 @@ exports.sendNotification = (req, res) => {
             });
           }
 
-          if (customers && customers.data && customers.data.length > 0) {
-            let processedCount = 0; // Counter for processed customers
-
-            // Using Promise.all for better control over asynchronous calls
-            const customerPromises = customers.data.map((customer) => {
-              const { id: customerId, branches } = customer;
-
-              if (branches && branches.length > 0) {
-                return Promise.all(
-                  branches.map((branch) => {
-                    const { id: branchId } = branch;
-
-                    return Acknowledgement.getClientApplicationByBranchIDForAckEmail(
-                      branchId
-                    ).then((applications) => {
-                      if (!applications.data.length) {
-                        console.log(
-                          `No client applications found for branch ID: ${branchId}`
-                        );
-                        return;
-                      }
-
-                      const applicationPromises = applications.data.map(
-                        (app) => {
-                          const { application_id: applicationId, services } =
-                            app;
-
-                          // Split services and fetch titles
-                          const serviceIds = services
-                            .split(",")
-                            .map((service) => service.trim());
-                          const serviceFetchPromises = serviceIds.map(
-                            (serviceId) =>
-                              new Promise((resolve) => {
-                                Service.getServiceById(
-                                  serviceId,
-                                  (err, currentService) => {
-                                    if (err || !currentService) {
-                                      console.error(
-                                        "Error fetching service data:",
-                                        err
-                                      );
-                                      return resolve(null); // Skip this service
-                                    }
-                                    resolve(currentService.title);
-                                  }
-                                );
-                              })
-                          );
-
-                          // Return promise that resolves with service titles
-                          return Promise.all(serviceFetchPromises).then(
-                            (serviceTitles) => {
-                              const validServiceTitles = serviceTitles.filter(
-                                (title) => title !== null
-                              );
-                              console.log(
-                                `Service Titles for Application ID ${applicationId}: ${validServiceTitles.join(
-                                  ", "
-                                )}`
-                              );
-                            }
-                          );
-                        }
-                      );
-
-                      return Promise.all(applicationPromises);
-                    });
-                  })
-                );
-              } else {
-                processedCount++;
-                return Promise.resolve();
-              }
-            });
-
-            // Wait for all customer promises to resolve
-            Promise.all(customerPromises)
-              .then(() => {
-                res.status(200).json({
-                  status: true,
-                  message: "Client applications processed successfully.",
-                  token: newToken,
-                });
-              })
-              .catch((error) => {
-                console.error("Error processing applications:", error);
-                res.status(500).json({
-                  status: false,
-                  message: "An error occurred while processing applications.",
-                  token: newToken,
-                });
-              });
-          } else {
-            res.json({
-              status: true,
-              message: "Customers fetched successfully",
-              customers: customers,
-              totalResults: customers ? customers.data.length : 0,
-              token: newToken,
-            });
-          }
+          res.json({
+            status: true,
+            message: "Customers fetched successfully",
+            customers: customers,
+            totalResults: customers ? customers.length : 0,
+            token: newToken,
+          });
         });
       });
     });
