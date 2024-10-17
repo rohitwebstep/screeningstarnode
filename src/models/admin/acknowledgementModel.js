@@ -27,7 +27,7 @@ const Acknowledgement = {
       const processResults = (result) => {
         const { branch_id, customer_id, application_count } = result;
         const customerSql = `SELECT \`id\`, \`admin_id\`, \`client_unique_id\`, \`name\` FROM \`customers\` WHERE \`id\` = ? AND \`status\` = ?`;
-        const branchSql = `SELECT \`id\`, \`customer_id\`, \`name\`, \`is_head\`, \`head_id\`, \`applicationCount\` FROM \`branches\` WHERE \`id\` = ? AND \`status\` = ?`;
+        const branchSql = `SELECT \`id\`, \`customer_id\`, \`name\`, \`is_head\`, \`head_id\` FROM \`branches\` WHERE \`id\` = ? AND \`status\` = ?`;
 
         // Fetch customer details
         pool.query(
