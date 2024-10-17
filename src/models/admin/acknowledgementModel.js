@@ -26,18 +26,18 @@ const Acknowledgement = {
   
       const processResults = (result) => {
         const { branch_id, customer_id, application_count } = result;
-        const customerSql = `SELECT * FROM \`customers\` WHERE \`id\` = ?`;
-        const branchSql = `SELECT * FROM \`branches\` WHERE \`id\` = ?`;
+        const customerSql = `SELECT * FROM \`customers\` WHERE \`id\` = ? AND \`status\` = ?`;
+        const branchSql = `SELECT * FROM \`branches\` WHERE \`id\` = ? AND \`status\` = ?`;
   
         // Fetch customer details
-        pool.query(customerSql, [customer_id], (customerErr, customerResult) => {
+        pool.query(customerSql, [customer_id, '1'], (customerErr, customerResult) => {
           if (customerErr) {
             console.error("Error fetching customer:", customerErr);
             return callback(customerErr, null);
           }
   
           // Fetch branch details
-          pool.query(branchSql, [branch_id], (branchErr, branchResult) => {
+          pool.query(branchSql, [branch_id, '1'], (branchErr, branchResult) => {
             if (branchErr) {
               console.error("Error fetching branch:", branchErr);
               return callback(branchErr, null);
