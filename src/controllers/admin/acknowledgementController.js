@@ -175,16 +175,14 @@ exports.sendNotification = (req, res) => {
                     : [];
 
                 // Initialize an array to hold service names for this application
-                application.serviceNames = []; // Create a new property for service names
+                serviceNames = [];
 
                 // Function to fetch service names
                 const fetchServiceNames = (index = 0) => {
                   if (index >= serviceIds.length) {
                     // Log the service names for the application
                     console.log(
-                      `    Service Names: ${application.serviceNames.join(
-                        ", "
-                      )}`
+                      `    Service Names: ${serviceNames.join(", ")}`
                     );
                     return;
                   }
@@ -207,12 +205,13 @@ exports.sendNotification = (req, res) => {
                     }
 
                     // Add the current service name to the application's array
-                    application.serviceNames.push(currentService.title);
+                    serviceNames.push(currentService.title);
 
                     // Recursively fetch the next service
                     fetchServiceNames(index + 1);
                   });
                 };
+                console.log(`  serviceNames: ${serviceNames}`);
 
                 // Start fetching service names
                 fetchServiceNames();
