@@ -96,7 +96,6 @@ exports.sendNotification = (req, res) => {
     // Verify admin token
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
       if (err) {
-        console.error("Error checking token validity:", err);
         return res.status(500).json({ status: false, message: err.message });
       }
 
@@ -112,7 +111,6 @@ exports.sendNotification = (req, res) => {
       // Fetch the specific customer
       Customer.getActiveCustomerById(customer_id, (err, currentCustomer) => {
         if (err) {
-          console.error("Database error during customer retrieval:", err);
           return res.status(500).json({
             status: false,
             message: "Failed to retrieve customer. Please try again.",
@@ -128,10 +126,18 @@ exports.sendNotification = (req, res) => {
           });
         }
 
+        // Initialize the array to hold customer data
+        const customerArr = {
+          customerInfo: {
+            id: currentCustomer.id,
+            name: currentCustomer.name,
+            branches: [],
+          },
+        };
+
         // Fetch all customers from the Acknowledgement model
         Acknowledgement.list((err, customers) => {
           if (err) {
-            console.error("Database error:", err);
             return res.status(500).json({
               status: false,
               message: err.message,
@@ -143,162 +149,100 @@ exports.sendNotification = (req, res) => {
             let processedCount = 0; // Counter for processed customers
 
             customers.data.forEach((customer) => {
-              const {
-                id: customerId,
-                admin_id: adminId,
-                client_unique_id: clientUniqueId,
-                name,
-                applicationCount: totalApplications,
-                branches,
-              } = customer;
-
-              console.log(`Customer ID: ${customerId}`);
-              console.log(`Admin ID: ${adminId}`);
-              console.log(`Client Unique ID: ${clientUniqueId}`);
-              console.log(`Customer Name: ${name.trim()}`);
-              console.log(`Total Applications: ${totalApplications}`);
+              const { id: customerId, branches } = customer;
 
               // Check if branches exist
               if (branches && branches.length > 0) {
-                branches.forEach((branch) => {
-                  const {
-                    id: branchId,
-                    customer_id: branchCustomerId,
-                    name: branchName,
-                    is_head: isHead,
-                    head_id: headId,
-                    applicationCount: branchApplications,
-                  } = branch;
-
-                  console.log(`  Branch ID: ${branchId}`);
-                  console.log(`  Branch Customer ID: ${branchCustomerId}`);
-                  console.log(`  Branch Name: ${branchName.trim()}`);
-                  console.log(`  Is Head: ${isHead}`);
-                  console.log(`  Head ID: ${headId}`);
-                  console.log(
-                    `  Branch Application Count: ${branchApplications}`
-                  );
+                const branchPromises = branches.map((branch) => {
+                  const { id: branchId, name: branchName } = branch;
 
                   // Fetch client applications by branch ID
-                  Acknowledgement.getClientApplicationByBranchIDForAckEmail(
-                    branchId,
-                    (err, applications) => {
-                      if (err) {
-                        console.error("Database error:", err);
-                        return res.status(500).json({
-                          status: false,
-                          message:
-                            "An error occurred while fetching client applications.",
-                          token: newToken,
-                        });
-                      }
+                  return Acknowledgement.getClientApplicationByBranchIDForAckEmail(
+                    branchId
+                  ).then((applications) => {
+                    if (!applications.data.length) {
+                      return { branchId, branchName, applications: [] };
+                    }
 
-                      if (!applications.data.length) {
-                        console.log(
-                          `No client applications found for branch ID: ${branchId}`
-                        );
-                        processedCount++;
-                        if (processedCount === customers.data.length) {
-                          return res.status(200).json({
-                            status: true,
-                            message:
-                              "Client applications processed successfully.",
-                            token: newToken,
+                    // Loop through applications
+                    const applicationPromises = applications.data.map((app) => {
+                      const {
+                        application_id: applicationId,
+                        name,
+                        services,
+                      } = app;
+
+                      // Split services and process each one
+                      const serviceIds = services
+                        .split(",")
+                        .map((service) => service.trim());
+                      const serviceFetchPromises = serviceIds.map(
+                        (serviceId) => {
+                          return new Promise((resolve) => {
+                            // Fetch the service title by ID
+                            Service.getServiceById(
+                              serviceId,
+                              (err, currentService) => {
+                                if (err || !currentService) {
+                                  return resolve(null); // Skip if not found
+                                }
+                                resolve(currentService.title);
+                              }
+                            );
                           });
-                        }
-                        return; // Exit this branch's loop
-                      }
-
-                      // Loop through applications
-                      const applicationPromises = applications.data.map(
-                        (app) => {
-                          const {
-                            application_id: applicationId,
-                            name,
-                            services,
-                          } = app;
-
-                          console.log(`Application ID: ${applicationId}`);
-                          console.log(`Name: ${name}`);
-
-                          // Split services and process each one
-                          const serviceIds = services
-                            .split(",")
-                            .map((service) => service.trim());
-                          const serviceFetchPromises = serviceIds.map(
-                            (serviceId) => {
-                              return new Promise((resolve) => {
-                                // Fetch the service title by ID
-                                Service.getServiceById(
-                                  serviceId,
-                                  (err, currentService) => {
-                                    if (err) {
-                                      console.error(
-                                        "Error fetching service data:",
-                                        err
-                                      );
-                                      return resolve(null); // Skip this service
-                                    }
-
-                                    if (!currentService) {
-                                      console.log(
-                                        `Service not found for ID: ${serviceId}`
-                                      );
-                                      return resolve(null); // Skip this service
-                                    }
-
-                                    resolve(currentService.title);
-                                  }
-                                );
-                              });
-                            }
-                          );
-
-                          // Return a promise that resolves with the service titles
-                          return Promise.all(serviceFetchPromises).then(
-                            (serviceTitles) => {
-                              // Filter out any null values from serviceTitles
-                              const validServiceTitles = serviceTitles.filter(
-                                (title) => title !== null
-                              );
-                              console.log(
-                                `Service Titles for Application ID ${applicationId}: ${validServiceTitles.join(
-                                  ", "
-                                )}`
-                              );
-                            }
-                          );
                         }
                       );
 
-                      // Wait for all application promises to resolve
-                      Promise.all(applicationPromises)
-                        .then(() => {
-                          processedCount++;
-                          if (processedCount === customers.data.length) {
-                            return res.status(200).json({
-                              status: true,
-                              message:
-                                "Client applications processed successfully.",
-                              token: newToken,
-                            });
-                          }
-                        })
-                        .catch((error) => {
-                          console.error(
-                            "Error processing applications:",
-                            error
-                          );
-                          return res.status(500).json({
-                            status: false,
-                            message:
-                              "An error occurred while processing applications.",
-                            token: newToken,
-                          });
-                        });
-                    }
-                  );
+                      // Return a promise that resolves with the application data
+                      return Promise.all(serviceFetchPromises).then(
+                        (serviceTitles) => {
+                          return {
+                            applicationId,
+                            name,
+                            services: serviceTitles.filter(Boolean), // Filter out nulls
+                          };
+                        }
+                      );
+                    });
+
+                    // Wait for all application promises to resolve
+                    return Promise.all(applicationPromises).then(
+                      (applicationData) => {
+                        return {
+                          branchId,
+                          branchName,
+                          applications: applicationData.filter(
+                            (app) => app.services.length > 0
+                          ), // Only keep applications with services
+                        };
+                      }
+                    );
+                  });
                 });
+
+                // Wait for all branches to be processed
+                Promise.all(branchPromises)
+                  .then((branchData) => {
+                    customerArr.customerInfo.branches = branchData;
+                    processedCount++;
+
+                    if (processedCount === customers.data.length) {
+                      // Send success response after processing all customers
+                      return res.status(200).json({
+                        status: true,
+                        message: "Client applications processed successfully.",
+                        customerData: customerArr,
+                        token: newToken,
+                      });
+                    }
+                  })
+                  .catch((error) => {
+                    return res.status(500).json({
+                      status: false,
+                      message: "An error occurred while processing branches.",
+                      token: newToken,
+                    });
+                  });
               } else {
                 processedCount++;
               }
