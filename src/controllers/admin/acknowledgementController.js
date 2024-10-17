@@ -152,6 +152,7 @@ exports.sendNotification = (req, res) => {
             });
           }
 
+          // Process each customer
           customers.data.forEach((customer) => {
             console.log(`Customer ID: ${customer.id}`);
             console.log(`Admin ID: ${customer.admin_id}`);
@@ -166,59 +167,57 @@ exports.sendNotification = (req, res) => {
               console.log(`  Is Head: ${branch.is_head ? "Yes" : "No"}`);
               console.log(`  Applications: `);
 
-              // Process applications
-              branch.applications.forEach((application) => {
-                const serviceIds =
-                  typeof application.services === "string" &&
-                  application.services.trim() !== ""
-                    ? application.services.split(",").map((id) => id.trim())
-                    : [];
+              // Process each application
+              Promise.all(
+                branch.applications.map((application) => {
+                  const serviceIds =
+                    typeof application.services === "string" &&
+                    application.services.trim() !== ""
+                      ? application.services.split(",").map((id) => id.trim())
+                      : [];
 
-                // Initialize an array to hold service names for this application
-                application.serviceNames = []; // Create a new property for service names
+                  // Initialize a variable to hold service names for this application
+                  let serviceNamesString = ""; // Create a string to hold service names
 
-                // Function to fetch service names
-                const fetchServiceNames = (index = 0) => {
-                  if (index >= serviceIds.length) {
-                    // Log the service names for the application
-                    console.log(
-                      `    Service Names: ${application.serviceNames.join(
-                        ", "
-                      )}`
-                    );
-                    return;
-                  }
+                  // Function to fetch service names as a promise
+                  const fetchServiceNames = (index = 0) => {
+                    return new Promise((resolve) => {
+                      if (index >= serviceIds.length) {
+                        // Set the application serviceNames to the comma-separated string
+                        application.serviceNames = serviceNamesString;
+                        resolve(); // Resolve the promise when done
+                        return;
+                      }
 
-                  const id = serviceIds[index];
+                      const id = serviceIds[index];
 
-                  Service.getServiceById(id, (err, currentService) => {
-                    if (err) {
-                      console.error("Error fetching service data:", err);
-                      return res.status(500).json({
-                        status: false,
-                        message: err,
-                        token: newToken,
+                      Service.getServiceById(id, (err, currentService) => {
+                        if (err) {
+                          console.error("Error fetching service data:", err);
+                          resolve(); // Resolve on error to continue
+                          return;
+                        }
+
+                        // Skip invalid services and continue to the next index
+                        if (currentService && currentService.title) {
+                          // Append the service name to the string, with a comma if not the first name
+                          serviceNamesString +=
+                            (serviceNamesString ? ", " : "") +
+                            currentService.title;
+                        }
+
+                        // Recursively fetch the next service
+                        fetchServiceNames(index + 1).then(resolve);
                       });
-                    }
+                    });
+                  };
 
-                    // Skip invalid services and continue to the next index
-                    if (!currentService || !currentService.title) {
-                      return fetchServiceNames(index + 1);
-                    }
-
-                    // Add the current service name to the application's array
-                    application.serviceNames.push(currentService.title);
-
-                    // Recursively fetch the next service
-                    fetchServiceNames(index + 1);
-                  });
-                };
-
-                // Start fetching service names
-                fetchServiceNames();
+                  // Start fetching service names and wait for the promise to resolve
+                  return fetchServiceNames();
+                })
+              ).then(() => {
+                console.log(`  Application Count: ${branch.applicationCount}`);
               });
-
-              console.log(`  Application Count: ${branch.applicationCount}`);
             });
 
             console.log("-------------------------");
