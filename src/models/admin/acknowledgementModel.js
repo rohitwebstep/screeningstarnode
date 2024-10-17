@@ -112,6 +112,25 @@ const Acknowledgement = {
       results.forEach(processResults);
     });
   },
+  
+  getClientApplicationByBranchIDForAckEmail: (branchId, callback) => {
+    const sql = `
+      SELECT \`id\`, \`application_id\`, \`name\`, \`services\` 
+      FROM \`client_applications\` 
+      WHERE \`branch_id\` = ?
+    `;
+
+    pool.query(sql, [branchId], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err);
+      }
+
+      // Return an empty array if no results
+      const data = results.length ? results : [];
+      callback(null, { data, totalResults: data.length });
+    });
+  },
 };
 
 module.exports = Acknowledgement;
