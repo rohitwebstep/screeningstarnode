@@ -347,15 +347,15 @@ const clientApplication = {
     `;
 
     const values = [
-      name,
-      employee_id,
-      spoc,
-      location,
-      batch_number,
-      sub_client,
-      services,
-      package,
-      client_application_id,
+      `${name}`,
+      `${employee_id}`,
+      `${spoc}`,
+      `${location}`,
+      `${batch_number}`,
+      `${sub_client}`,
+      `${services}`,
+      `${package}`,
+      `${client_application_id}`,
     ];
 
     pool.query(sql, values, (err, results) => {
