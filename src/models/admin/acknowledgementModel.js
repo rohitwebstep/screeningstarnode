@@ -13,81 +13,105 @@ const Acknowledgement = {
       WHERE ack_sent = 0
       GROUP BY \`branch_id\`, \`customer_id\`
     `;
-  
+
     pool.query(sql, (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback(err, null);
       }
-  
+
       // Create a mapping of customers to group their branches
       const customerMap = new Map();
       let totalResults = 0;
-  
+
       const processResults = (result) => {
         const { branch_id, customer_id, application_count } = result;
         const customerSql = `SELECT * FROM \`customers\` WHERE \`id\` = ? AND \`status\` = ?`;
         const branchSql = `SELECT * FROM \`branches\` WHERE \`id\` = ? AND \`status\` = ?`;
-  
+
         // Fetch customer details
-        pool.query(customerSql, [customer_id, '1'], (customerErr, customerResult) => {
-          if (customerErr) {
-            console.error("Error fetching customer:", customerErr);
-            return callback(customerErr, null);
+        pool.query(
+          customerSql,
+          [customer_id, "1"],
+          (customerErr, customerResult) => {
+            if (customerErr || !customerResult.length) {
+              console.error(
+                "Error fetching customer:",
+                customerErr || "Customer not found"
+              );
+              remainingQueries--;
+              if (remainingQueries === 0) {
+                const finalResult = Array.from(customerMap.values());
+                return callback(null, { data: finalResult, totalResults });
+              }
+              return;
+            }
+
+            // Fetch branch details
+            pool.query(
+              branchSql,
+              [branch_id, "1"],
+              (branchErr, branchResult) => {
+                if (branchErr || !branchResult.length) {
+                  console.error(
+                    "Error fetching branch:",
+                    branchErr || "Branch not found"
+                  );
+                  remainingQueries--;
+                  if (remainingQueries === 0) {
+                    const finalResult = Array.from(customerMap.values());
+                    return callback(null, { data: finalResult, totalResults });
+                  }
+                  return;
+                }
+
+                const branchData = {
+                  id: branchResult[0].id,
+                  customer_id: branchResult[0].customer_id,
+                  name: branchResult[0].name,
+                  is_head: branchResult[0].is_head,
+                  head_id: branchResult[0].head_id,
+                  applicationCount: application_count,
+                };
+
+                // Group data under the customer ID
+                if (!customerMap.has(customer_id)) {
+                  const customerData = customerResult[0];
+                  customerData.applicationCount = 0; // Initialize total application count
+                  customerData.branches = []; // Initialize branches array
+                  customerMap.set(customer_id, customerData);
+                }
+
+                // Add branch data and update counts
+                const customerData = customerMap.get(customer_id);
+                customerData.branches.push(branchData);
+                customerData.applicationCount += application_count; // Update total for customer
+                totalResults += application_count; // Update overall total
+
+                // Resolve when all queries are done
+                remainingQueries--;
+                if (remainingQueries === 0) {
+                  const finalResult = Array.from(customerMap.values());
+                  callback(null, { data: finalResult, totalResults });
+                }
+              }
+            );
           }
-  
-          // Fetch branch details
-          pool.query(branchSql, [branch_id, '1'], (branchErr, branchResult) => {
-            if (branchErr) {
-              console.error("Error fetching branch:", branchErr);
-              return callback(branchErr, null);
-            }
-  
-            const branchData = {
-              id: branchResult[0].id,
-              customer_id: branchResult[0].customer_id,
-              name: branchResult[0].name,
-              is_head: branchResult[0].is_head,
-              head_id: branchResult[0].head_id,
-              applicationCount: application_count,
-            };
-  
-            // Group data under the customer ID
-            if (!customerMap.has(customer_id)) {
-              const customerData = customerResult[0];
-              customerData.applicationCount = 0; // Initialize total application count
-              customerData.branches = []; // Initialize branches array
-              customerMap.set(customer_id, customerData);
-            }
-  
-            // Add branch data and update counts
-            const customerData = customerMap.get(customer_id);
-            customerData.branches.push(branchData);
-            customerData.applicationCount += application_count; // Update total for customer
-            totalResults += application_count; // Update overall total
-  
-            // Resolve when all queries are done
-            if (--remainingQueries === 0) {
-              const finalResult = Array.from(customerMap.values());
-              callback(null, { data: finalResult, totalResults });
-            }
-          });
-        });
+        );
       };
-  
+
       // Track number of remaining results to process
       let remainingQueries = results.length;
-  
+
       // Early return if no results
       if (remainingQueries === 0) {
         return callback(null, { data: [], totalResults: 0 });
       }
-  
+
       // Process each result
       results.forEach(processResults);
     });
-  }
-  
+  },
 };
 
 module.exports = Acknowledgement;
