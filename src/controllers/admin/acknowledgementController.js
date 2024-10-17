@@ -180,7 +180,7 @@ exports.sendNotification = (req, res) => {
                 // Function to fetch service names
                 const fetchServiceNames = (index = 0) => {
                   if (index >= serviceIds.length) {
-                    application.serviceNames = serviceNames.join(", ");
+                    // Log the service names for the application
                     console.log(
                       `    Service Names: ${serviceNames.join(", ")}`
                     );
@@ -211,9 +211,9 @@ exports.sendNotification = (req, res) => {
                     fetchServiceNames(index + 1);
                   });
                 };
-                fetchServiceNames();
 
-                console.log(`Final Service String - `, serviceNames);
+                // Start fetching service names
+                fetchServiceNames();
               });
 
               console.log(`  Application Count: ${branch.applicationCount}`);
