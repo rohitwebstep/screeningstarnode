@@ -3,7 +3,6 @@ const connection = require("../../../../config/db"); // Import the existing MySQ
 
 // Function to generate HTML table from service details
 const generateTable = (services) => {
-  console.log(services);
   if (!Array.isArray(services) || services.length === 0) {
     return `<tr>
               <td colspan="3" style="text-align: center;">No instructions available for the selected services.</td>
@@ -123,10 +122,6 @@ async function createMail(
     const toList = toArr
       .map((email) => `"${email.name}" <${email.email}>`)
       .join(", ");
-
-    // Debugging: Log the email lists
-    console.log("Recipient List:", toList);
-    console.log("CC List:", ccList);
 
     // Send email
     const info = await transporter.sendMail({

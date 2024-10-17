@@ -1104,9 +1104,6 @@ exports.generateReport = (req, res) => {
                                                 ccArr
                                               )
                                                 .then(() => {
-                                                  console.log(
-                                                    "Send Mail for Final Report"
-                                                  );
 
                                                   return res.status(200).json({
                                                     status: true,
@@ -1167,9 +1164,6 @@ exports.generateReport = (req, res) => {
                                                 ccArr
                                               )
                                                 .then(() => {
-                                                  console.log(
-                                                    "Send Mail for Report For Quality Check"
-                                                  );
 
                                                   return res.status(200).json({
                                                     status: true,
@@ -1288,10 +1282,6 @@ exports.generateReport = (req, res) => {
                                                 ccArr
                                               )
                                                 .then(() => {
-                                                  console.log(
-                                                    "Send Mail for Report For Report"
-                                                  );
-
                                                   return res.status(200).json({
                                                     status: true,
                                                     message: `CMT Application ${
@@ -1585,7 +1575,6 @@ exports.annexureDataByServiceIdofApplication = (req, res) => {
 };
 
 exports.upload = async (req, res) => {
-  console.log("Upload function started");
 
   // Use multer to handle the upload
   upload(req, res, async (err) => {
@@ -1596,8 +1585,6 @@ exports.upload = async (req, res) => {
         message: "Error uploading file.",
       });
     }
-
-    console.log("File uploaded successfully");
 
     const {
       admin_id: adminId,
@@ -1610,18 +1597,6 @@ exports.upload = async (req, res) => {
       send_mail: sendMail,
       email_status: emailStatus,
     } = req.body;
-
-    console.log("Extracted request body:", {
-      adminId,
-      branchId,
-      token,
-      customerCode,
-      appId,
-      dbTable,
-      dbColumn,
-      sendMail,
-      emailStatus,
-    });
 
     // Validate required fields and collect missing ones
     const requiredFields = {
@@ -1680,34 +1655,25 @@ exports.upload = async (req, res) => {
         }
 
         const newToken = result.newToken;
-        console.log("New token generated:", newToken);
-
         // Define the target directory for uploads
         const targetDirectory = `uploads/customer/${customerCode}/${dbTable}`;
-        console.log("Target directory for uploads:", targetDirectory);
-
         // Create the target directory for uploads
         await fs.promises.mkdir(targetDirectory, { recursive: true });
-        console.log("Target directory created successfully");
 
         let savedImagePaths = [];
 
         // Check for multiple files under the "images" field
         if (req.files.images) {
-          console.log("Processing multiple images");
           savedImagePaths = await saveImages(req.files.images, targetDirectory);
-          console.log("Saved multiple images:", savedImagePaths);
         }
 
         // Check for a single file under the "image" field
         if (req.files.image && req.files.image.length > 0) {
-          console.log("Processing single image");
           const savedImagePath = await saveImage(
             req.files.image[0],
             targetDirectory
           );
           savedImagePaths.push(savedImagePath);
-          console.log("Saved single image:", savedImagePath);
         }
 
         // Call the model to upload images
@@ -1731,14 +1697,8 @@ exports.upload = async (req, res) => {
               });
             }
 
-            console.log(
-              "Upload successful, affected rows:",
-              result.affectedRows
-            );
-
             // Handle the case where the upload was successful
             if (result && result.affectedRows > 0) {
-              console.log("Checking if email should be sent...");
               // Handle sending email notifications if required
               if (sendMail == 1) {
                 BranchCommon.getBranchandCustomerEmailsForNotification(
@@ -1754,7 +1714,6 @@ exports.upload = async (req, res) => {
                       });
                     }
 
-                    console.log("Fetched email data:", emailData);
                     const { branch, customer } = emailData;
                     const companyName = customer.name;
 
@@ -1764,11 +1723,6 @@ exports.upload = async (req, res) => {
                       name: customer.name,
                       email: email.trim(),
                     }));
-
-                    console.log("Email recipients prepared:", {
-                      toArr,
-                      ccArr,
-                    });
 
                     ClientMasterTrackerModel.applicationByID(
                       appId,
@@ -1783,8 +1737,6 @@ exports.upload = async (req, res) => {
                             savedImagePaths
                           });
                         }
-
-                        console.log("Application fetched:", application);
 
                         if (!application) {
                           console.warn("Application not found");
@@ -1812,8 +1764,6 @@ exports.upload = async (req, res) => {
                               });
                             }
 
-                            console.log("Fetched attachments:", attachments);
-
                             const gender = application.gender?.toLowerCase();
                             const maritalStatus =
                               application.marital_status?.toLowerCase();
@@ -1826,18 +1776,9 @@ exports.upload = async (req, res) => {
                                 maritalStatus === "married" ? "Mrs." : "Ms.";
                             }
 
-                            console.log(
-                              "Gender title determined:",
-                              genderTitle
-                            );
-
                             // Prepare and send email based on application status
                             // Final report email
                             if (emailStatus == 1) {
-                              console.log(
-                                "Preparing to send Final Report Mail"
-                              );
-
                               finalReportMail(
                                 "cmt",
                                 "final",
@@ -1850,7 +1791,6 @@ exports.upload = async (req, res) => {
                                 ccArr
                               )
                                 .then(() => {
-                                  console.log("Sent Mail for Final Report");
                                   return res.status(200).json({
                                     status: true,
                                     message: "CMT Final Report mail sent.",
@@ -1873,9 +1813,6 @@ exports.upload = async (req, res) => {
                             }
                             // QC report email
                             else if (emailStatus == 2) {
-                              console.log(
-                                "Preparing to send Quality Check Report Mail"
-                              );
 
                               qcReportCheckMail(
                                 "cmt",
@@ -1888,9 +1825,6 @@ exports.upload = async (req, res) => {
                                 ccArr
                               )
                                 .then(() => {
-                                  console.log(
-                                    "Sent Mail for Quality Check Report"
-                                  );
                                   return res.status(200).json({
                                     status: true,
                                     message:
@@ -1914,9 +1848,6 @@ exports.upload = async (req, res) => {
                             }
                             // Handling for other statuses
                             else if (emailStatus == 3) {
-                              console.log(
-                                "Preparing to send Ready for Report Mail"
-                              );
 
                               readyForReport(
                                 "cmt",
@@ -1926,7 +1857,6 @@ exports.upload = async (req, res) => {
                                 ccArr
                               )
                                 .then(() => {
-                                  console.log("Sent Mail for Report");
                                   return res.status(200).json({
                                     status: true,
                                     message: "Ready for Report mail sent.",
@@ -1963,7 +1893,6 @@ exports.upload = async (req, res) => {
                   }
                 );
               } else {
-                console.log("Email not required, returning success response");
                 return res.status(200).json({
                   status: true,
                   message: "Images uploaded successfully.",

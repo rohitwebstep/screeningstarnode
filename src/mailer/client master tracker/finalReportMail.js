@@ -142,12 +142,7 @@ async function finalReportMail(
     const toList = toArr
       .map((email) => `"${email.name}" <${email.email}>`)
       .join(", ");
-
-    // Debugging: Log the email lists
-    console.log("Recipient List:", toList);
-    console.log("CC List:", ccList);
-
-    console.log(`Going For Email - `, attachments);
+      
     // Send email
     const mailOptions = {
       from: smtp.username,

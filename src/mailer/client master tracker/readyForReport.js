@@ -83,10 +83,6 @@ async function readyForReport(module, action, application_id, toArr, ccArr) {
       .map((email) => `"${email.name}" <${email.email}>`)
       .join(", ");
 
-    // Debugging: Log the email lists
-    console.log("Recipient List:", toList);
-    console.log("CC List:", ccList);
-
     // Send email
     const info = await transporter.sendMail({
       from: smtp.username,

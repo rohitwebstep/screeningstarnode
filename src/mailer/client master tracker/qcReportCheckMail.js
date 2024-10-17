@@ -133,10 +133,6 @@ async function qcReportCheckMail(
       .map((email) => `"${email.name}" <${email.email.trim()}>`) // Trim to remove whitespace
       .join(", ");
 
-    // Debugging: Log the email lists
-    console.log("Recipient List:", toList);
-    console.log("CC List:", ccList);
-
     // Main function to create attachments
     const attachments = await createAttachments(attachments_url);
 
