@@ -153,36 +153,6 @@ exports.sendNotification = (req, res) => {
           }
 
           // Process each customer
-          const processApplications = (applications) => {
-            return Promise.all(
-              applications.map((application) => {
-                const serviceIds =
-                  typeof application.services === "string" &&
-                  application.services.trim() !== ""
-                    ? application.services.split(",").map((id) => id.trim())
-                    : [];
-
-                return Promise.all(
-                  serviceIds.map((id) => {
-                    return new Promise((resolve) => {
-                      Service.getServiceById(id, (err, currentService) => {
-                        if (err) {
-                          console.error("Error fetching service data:", err);
-                          return resolve(null); // Skip on error
-                        }
-
-                        return resolve(
-                          currentService ? currentService.title : null
-                        );
-                      });
-                    });
-                  })
-                );
-              })
-            );
-          };
-
-          // Process each customer
           customers.data.forEach((customer) => {
             console.log(`Customer ID: ${customer.id}`);
             console.log(`Admin ID: ${customer.admin_id}`);
@@ -197,25 +167,26 @@ exports.sendNotification = (req, res) => {
               console.log(`  Is Head: ${branch.is_head ? "Yes" : "No"}`);
               console.log(`  Applications:`);
 
-              processApplications(branch.applications).then(
-                (serviceNamesArray) => {
-                  serviceNamesArray.forEach((serviceNames) => {
-                    console.log(
-                      `Service Names: ${
-                        serviceNames
-                          ? serviceNames.join(", ")
-                          : "No services found"
-                      }`
-                    );
-                  });
-                }
-              );
-              console.log("-------------------------");
+              // Process applications
+              branch.applications.forEach((application) => {
+                branch.applications.forEach((application) => {
+                  console.log(
+                    `    Application ID: ${application.application_id}`
+                  );
+                  console.log(`    Application Name: ${application.name}`);
+                  console.log(`    Services: ${application.services}`);
+                });
+                const serviceIds =
+                  typeof application.services === "string" &&
+                  application.services.trim() !== ""
+                    ? application.services.split(",").map((id) => id.trim())
+                    : [];
+              });
 
               console.log(`  Application Count: ${branch.applicationCount}`);
             });
 
-            console.log("***************************");
+            console.log("-------------------------");
           });
 
           // Send response
