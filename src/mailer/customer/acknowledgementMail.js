@@ -25,8 +25,9 @@ const generateTable = (branches, password) => {
 async function createMail(
   module,
   action,
-  client_name,
-  applications,
+  name,
+  branches,
+  password,
   is_head,
   customerData
 ) {
@@ -67,7 +68,7 @@ async function createMail(
 
     // Replace placeholders in the email template
     let template = email.template
-      .replace(/{{dynamic_name}}/g, client_name)
+      .replace(/{{dynamic_name}}/g, name)
       .replace(/{{table}}/g, table);
 
     // Prepare recipient list based on whether the branch is a head branch

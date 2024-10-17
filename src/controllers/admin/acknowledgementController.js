@@ -152,6 +152,9 @@ exports.sendNotification = (req, res) => {
             res.json({
               status: false,
               message: "No applications for acknowledgement",
+              customers: customers,
+              totalResults: customers.length,
+              token: newToken,
             });
           }
         });
