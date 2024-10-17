@@ -152,82 +152,84 @@ exports.sendNotification = (req, res) => {
             });
           }
 
-          // Process each customer and their branches
-          const enrichedCustomers = customers.data.map((customer) => {
-            const enrichedBranches = customer.branches.map((branch) => {
-              const enrichedApplications = branch.applications.map(
-                (application) => {
-                  const serviceIds =
-                    typeof application.services === "string" &&
-                    application.services.trim() !== ""
-                      ? application.services.split(",").map((id) => id.trim())
-                      : [];
+          // Process each customer
+          customers.data.forEach((customer) => {
+            console.log(`Customer ID: ${customer.id}`);
+            console.log(`Admin ID: ${customer.admin_id}`);
+            console.log(`Client Unique ID: ${customer.client_unique_id}`);
+            console.log(`Customer Name: ${customer.name.trim()}`);
+            console.log(`Application Count: ${customer.applicationCount}`);
 
-                  // Initialize an array to hold service names for this application
-                  const serviceNames = [];
+            // Loop through the branches
+            customer.branches.forEach((branch) => {
+              console.log(`  Branch ID: ${branch.id}`);
+              console.log(`  Branch Name: ${branch.name.trim()}`);
+              console.log(`  Is Head: ${branch.is_head ? "Yes" : "No"}`);
+              console.log(`  Applications:`);
 
-                  // Function to fetch service names
-                  const fetchServiceNames = (index = 0) => {
-                    if (index >= serviceIds.length) {
-                      // Return enriched application with services
-                      return {
-                        ...application,
-                        serviceNames: serviceNames.join(", "),
-                      };
+              // Process applications
+              branch.applications.forEach((application) => {
+                const serviceIds =
+                  typeof application.services === "string" &&
+                  application.services.trim() !== ""
+                    ? application.services.split(",").map((id) => id.trim())
+                    : [];
+
+                const serviceNames = [];
+
+                // Function to fetch service names
+                const fetchServiceNames = (index = 0) => {
+                  if (index >= serviceIds.length) {
+                    console.log(`Service Names: ${serviceNames.join(", ")}`);
+                    return;
+                  }
+
+                  const id = serviceIds[index];
+
+                  Service.getServiceById(id, (err, currentService) => {
+                    if (err) {
+                      console.error("Error fetching service data:", err);
+                      return res.status(500).json({
+                        status: false,
+                        message: err,
+                        token: newToken,
+                      });
                     }
 
-                    const id = serviceIds[index];
+                    // Skip invalid services and continue to the next index
+                    if (!currentService || !currentService.title) {
+                      return fetchServiceNames(index + 1);
+                    }
 
-                    // Fetch service name by ID
-                    Service.getServiceById(id, (err, currentService) => {
-                      if (err) {
-                        console.error("Error fetching service data:", err);
-                        return;
-                      }
+                    // Add the current service name to the array
+                    serviceNames.push(currentService.title);
 
-                      // Skip invalid services
-                      if (currentService && currentService.title) {
-                        serviceNames.push(currentService.title);
-                      }
+                    // Recursively fetch the next service
+                    fetchServiceNames(index + 1);
+                  });
+                };
 
-                      // Recursively fetch the next service
-                      fetchServiceNames(index + 1);
-                    });
+                // Start fetching service names
+                fetchServiceNames();
+              });
 
-                    // Returning the application is not immediate due to async calls, handle response after loop
-                    return {
-                      ...application,
-                      serviceNames: serviceNames.join(", "),
-                    };
-                  };
-
-                  return fetchServiceNames(); // Call the function to fetch service names
-                }
-              );
-
-              return {
-                ...branch,
-                applications: enrichedApplications,
-              };
+              console.log(`  Application Count: ${branch.applicationCount}`);
             });
 
-            return {
-              ...customer,
-              branches: enrichedBranches,
-            };
+            console.log("-------------------------");
           });
 
           // Send response
-          if (enrichedCustomers.length > 0) {
-            res.json({
+          if (customers.data.length > 0) {
+            return res.json({
               status: true,
               message: "Customers fetched successfully",
-              customers: enrichedCustomers,
-              totalResults: enrichedCustomers.length,
+              customers: customers.data,
+              totalResults: customers.data.length,
               token: newToken,
             });
           } else {
-            res.json({
+            return res.json({
               status: false,
               message: "No applications for acknowledgement",
               token: newToken,
