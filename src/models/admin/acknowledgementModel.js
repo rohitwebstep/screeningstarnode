@@ -26,7 +26,7 @@ const Acknowledgement = {
 
       const processResults = (result) => {
         const { branch_id, customer_id, application_count } = result;
-        const customerSql = `SELECT * FROM \`customers\` WHERE \`id\` = ? AND \`status\` = ?`;
+        const customerSql = `SELECT \`id\`, \`admin_id\`, \`client_unique_id\`, \`name\` FROM \`customers\` WHERE \`id\` = ? AND \`status\` = ?`;
         const branchSql = `SELECT * FROM \`branches\` WHERE \`id\` = ? AND \`status\` = ?`;
 
         // Fetch customer details
