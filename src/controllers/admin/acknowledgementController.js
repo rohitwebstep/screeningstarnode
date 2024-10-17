@@ -44,16 +44,18 @@ exports.list = (req, res) => {
       Acknowledgement.list((err, customers) => {
         if (err) {
           console.error("Database error:", err);
-          return res
-            .status(500)
-            .json({ status: false, message: err.message, token: newToken });
+          return res.status(500).json({
+            status: false,
+            message: err.message,
+            token: newToken,
+          });
         }
 
         res.json({
           status: true,
           message: "Customers fetched successfully",
           customers: customers,
-          totalResults: customers.length,
+          totalResults: customers ? customers.length : 0,
           token: newToken,
         });
       });
