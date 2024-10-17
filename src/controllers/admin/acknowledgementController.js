@@ -157,70 +157,55 @@ exports.sendNotification = (req, res) => {
             console.log(`Customer ID: ${customer.id}`);
             console.log(`Admin ID: ${customer.admin_id}`);
             console.log(`Client Unique ID: ${customer.client_unique_id}`);
-            console.log(`Customer Name: ${customer.name.trim()}`); // trim() to remove whitespace
+            console.log(`Customer Name: ${customer.name.trim()}`);
             console.log(`Application Count: ${customer.applicationCount}`);
 
             // Loop through the branches
             customer.branches.forEach((branch) => {
               console.log(`  Branch ID: ${branch.id}`);
-              console.log(`  Branch Name: ${branch.name.trim()}`); // trim() to remove whitespace
+              console.log(`  Branch Name: ${branch.name.trim()}`);
               console.log(`  Is Head: ${branch.is_head ? "Yes" : "No"}`);
               console.log(`  Applications: `);
 
               // Process each application
-              Promise.all(
-                branch.applications.map((application) => {
+              const applicationPromises = branch.applications.map(
+                (application) => {
                   const serviceIds =
                     typeof application.services === "string" &&
                     application.services.trim() !== ""
                       ? application.services.split(",").map((id) => id.trim())
                       : [];
 
-                  // Initialize a variable to hold service names for this application
-                  let serviceNamesString = ""; // Create a string to hold service names
+                  // Fetch service names for this application
+                  return Promise.all(
+                    serviceIds.map((id) => {
+                      return new Promise((resolve) => {
+                        Service.getServiceById(id, (err, currentService) => {
+                          if (err) {
+                            console.error("Error fetching service data:", err);
+                            resolve(null); // Resolve with null on error to continue
+                            return;
+                          }
 
-                  // Function to fetch service names as a promise
-                  const fetchServiceNames = (index = 0) => {
-                    return new Promise((resolve) => {
-                      if (index >= serviceIds.length) {
-                        // Set the application serviceNames to the comma-separated string
-                        application.serviceNames = serviceNamesString;
-                        resolve(); // Resolve the promise when done
-                        return;
-                      }
-
-                      const id = serviceIds[index];
-
-                      Service.getServiceById(id, (err, currentService) => {
-                        if (err) {
-                          console.error("Error fetching service data:", err);
-                          resolve(); // Resolve on error to continue
-                          return;
-                        }
-
-                        // Skip invalid services and continue to the next index
-                        if (currentService && currentService.title) {
-                          // Append the service name to the string, with a comma if not the first name
-                          serviceNamesString +=
-                            (serviceNamesString ? ", " : "") +
-                            currentService.title;
-                        }
-
-                        // Recursively fetch the next service
-                        fetchServiceNames(index + 1).then(resolve);
+                          // Return service title or null if not found
+                          resolve(currentService ? currentService.title : null);
+                        });
                       });
-                    });
-                  };
+                    })
+                  ).then((serviceNames) => {
+                    // Filter out null values and join the service names into a string
+                    application.serviceNames = serviceNames
+                      .filter(Boolean)
+                      .join(", ");
+                  });
+                }
+              );
 
-                  // Start fetching service names and wait for the promise to resolve
-                  return fetchServiceNames();
-                })
-              ).then(() => {
+              // Wait for all applications to finish processing
+              return Promise.all(applicationPromises).then(() => {
                 console.log(`  Application Count: ${branch.applicationCount}`);
               });
             });
-
-            console.log("-------------------------");
           });
 
           // Send response
