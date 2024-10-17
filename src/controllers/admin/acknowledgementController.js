@@ -211,6 +211,7 @@ exports.sendNotification = (req, res) => {
                     fetchServiceNames(index + 1);
                   });
                 };
+                console.log(`  serviceNames: ${serviceNames}`);
 
                 // Start fetching service names
                 fetchServiceNames();
