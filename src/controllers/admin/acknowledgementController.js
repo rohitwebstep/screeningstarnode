@@ -152,80 +152,72 @@ exports.sendNotification = (req, res) => {
             });
           }
 
-          // Process each customer
-          customers.data.forEach((customer) => {
-            console.log(`Customer ID: ${customer.id}`);
-            console.log(`Admin ID: ${customer.admin_id}`);
-            console.log(`Client Unique ID: ${customer.client_unique_id}`);
-            console.log(`Customer Name: ${customer.name.trim()}`);
-            console.log(`Application Count: ${customer.applicationCount}`);
+          // New structure to store customers with service names
+          const newCustomersArray = customers.data.map((customer) => {
+            return {
+              ...customer,
+              branches: customer.branches.map((branch) => {
+                const applicationsWithServices = branch.applications.map(
+                  (application) => {
+                    const serviceIds =
+                      typeof application.services === "string" &&
+                      application.services.trim() !== ""
+                        ? application.services.split(",").map((id) => id.trim())
+                        : [];
 
-            // Loop through the branches
-            customer.branches.forEach((branch) => {
-              console.log(`  Branch ID: ${branch.id}`);
-              console.log(`  Branch Name: ${branch.name.trim()}`);
-              console.log(`  Is Head: ${branch.is_head ? "Yes" : "No"}`);
-              console.log(`  Applications:`);
+                    const serviceNames = [];
 
-              // Process applications
-              branch.applications.forEach((application) => {
-                const serviceIds =
-                  typeof application.services === "string" &&
-                  application.services.trim() !== ""
-                    ? application.services.split(",").map((id) => id.trim())
-                    : [];
+                    // Function to fetch service names
+                    const fetchServiceNames = (index = 0) => {
+                      if (index >= serviceIds.length) {
+                        return serviceNames; // Return the array of service names
+                      }
 
-                const serviceNames = [];
+                      const id = serviceIds[index];
 
-                // Function to fetch service names
-                const fetchServiceNames = (index = 0) => {
-                  if (index >= serviceIds.length) {
-                    console.log(`Service Names: ${serviceNames.join(", ")}`);
-                    return;
-                  }
+                      // Fetch service by ID
+                      Service.getServiceById(id, (err, currentService) => {
+                        if (err) {
+                          console.error("Error fetching service data:", err);
+                          return;
+                        }
 
-                  const id = serviceIds[index];
+                        // Skip invalid services
+                        if (currentService && currentService.title) {
+                          serviceNames.push(currentService.title);
+                        }
 
-                  Service.getServiceById(id, (err, currentService) => {
-                    if (err) {
-                      console.error("Error fetching service data:", err);
-                      return res.status(500).json({
-                        status: false,
-                        message: err,
-                        token: newToken,
+                        // Recursively fetch the next service
+                        fetchServiceNames(index + 1);
                       });
-                    }
+                    };
 
-                    // Skip invalid services and continue to the next index
-                    if (!currentService || !currentService.title) {
-                      return fetchServiceNames(index + 1);
-                    }
+                    // Start fetching service names
+                    fetchServiceNames();
 
-                    // Add the current service name to the array
-                    serviceNames.push(currentService.title);
+                    // Map service names to application
+                    return {
+                      ...application,
+                      services: serviceNames.join(", ") || application.services, // Default to original services if none found
+                    };
+                  }
+                );
 
-                    // Recursively fetch the next service
-                    fetchServiceNames(index + 1);
-                  });
+                return {
+                  ...branch,
+                  applications: applicationsWithServices,
                 };
-
-                // Start fetching service names
-                fetchServiceNames();
-              });
-
-              console.log(`  Application Count: ${branch.applicationCount}`);
-            });
-
-            console.log("-------------------------");
+              }),
+            };
           });
 
           // Send response
-          if (customers.data.length > 0) {
+          if (newCustomersArray.length > 0) {
             return res.json({
               status: true,
               message: "Customers fetched successfully",
-              customers: customers.data,
-              totalResults: customers.data.length,
+              customers: newCustomersArray,
+              totalResults: newCustomersArray.length,
               token: newToken,
             });
           } else {
