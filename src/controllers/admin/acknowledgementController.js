@@ -4,6 +4,10 @@ const Customer = require("../../models/customer/customerModel");
 const AdminCommon = require("../../models/admin/commonModel");
 const Service = require("../../models/admin/serviceModel");
 
+const {
+  acknowledgementMail,
+} = require("../../mailer/customer/acknowledgementMail");
+
 // Controller to list all customers
 exports.list = (req, res) => {
   const { admin_id, _token } = req.query;
@@ -130,7 +134,6 @@ exports.sendNotification = (req, res) => {
 
         // Fetch acknowledgements for the customer
         Acknowledgement.listByCustomerID(customer_id, (err, customers) => {
-          // Pass customer_id to the function
           if (err) {
             console.error("Database error:", err);
             return res.status(500).json({
@@ -140,20 +143,100 @@ exports.sendNotification = (req, res) => {
             });
           }
 
-          if (customers && customers.data && customers.data > 0) {
+          // Ensure customers is in the correct format
+          if (!Array.isArray(customers.data)) {
+            return res.status(500).json({
+              status: false,
+              message: "Invalid data format.",
+              token: newToken,
+            });
+          }
+
+          customers.data.forEach((customer) => {
+            console.log(`Customer ID: ${customer.id}`);
+            console.log(`Admin ID: ${customer.admin_id}`);
+            console.log(`Client Unique ID: ${customer.client_unique_id}`);
+            console.log(`Customer Name: ${customer.name.trim()}`); // trim() to remove whitespace
+            console.log(`Application Count: ${customer.applicationCount}`);
+
+            // Loop through the branches
+            customer.branches.forEach((branch) => {
+              console.log(`  Branch ID: ${branch.id}`);
+              console.log(`  Branch Name: ${branch.name.trim()}`); // trim() to remove whitespace
+              console.log(`  Is Head: ${branch.is_head ? "Yes" : "No"}`);
+              console.log(`  Applications: `);
+
+              // Print applications directly
+              branch.applications.forEach((application) => {
+                const serviceIds =
+                  typeof application.services === "string" &&
+                  application.services.trim() !== ""
+                    ? application.services.split(",").map((id) => id.trim())
+                    : [];
+
+                const serviceNames = [];
+
+                // Function to fetch service names
+                const fetchServiceNames = (index = 0) => {
+                  if (index >= serviceIds.length) {
+                    console.log(
+                      `    Application ID: ${application.application_id}`
+                    );
+                    console.log(`    Application Name: ${application.name}`);
+                    console.log(
+                      `    Service Names: ${serviceNames.join(", ")}`
+                    );
+                    return;
+                  }
+
+                  const id = serviceIds[index];
+
+                  Service.getServiceById(id, (err, currentService) => {
+                    if (err) {
+                      console.error("Error fetching service data:", err);
+                      return res.status(500).json({
+                        status: false,
+                        message: err,
+                        token: newToken,
+                      });
+                    }
+
+                    // Skip invalid services and continue to the next index
+                    if (!currentService || !currentService.title) {
+                      return fetchServiceNames(index + 1);
+                    }
+
+                    // Add the current service name to the array
+                    serviceNames.push(currentService.title);
+
+                    // Recursively fetch the next service
+                    fetchServiceNames(index + 1);
+                  });
+                };
+
+                // Start fetching service names
+                fetchServiceNames();
+              });
+
+              console.log(`  Application Count: ${branch.applicationCount}`);
+            });
+
+            console.log("-------------------------");
+          });
+
+          // Send response
+          if (customers.data.length > 0) {
             res.json({
               status: true,
               message: "Customers fetched successfully",
-              customers: customers,
-              totalResults: customers.length,
+              customers: customers.data,
+              totalResults: customers.data.length,
               token: newToken,
             });
           } else {
             res.json({
               status: false,
               message: "No applications for acknowledgement",
-              customers: customers,
-              totalResults: customers.length,
               token: newToken,
             });
           }

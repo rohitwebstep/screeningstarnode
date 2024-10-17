@@ -22,7 +22,7 @@ const generateTable = (branches, password) => {
 };
 
 // Function to send email
-async function createMail(
+async function acknowledgementMail(
   module,
   action,
   name,
@@ -99,4 +99,4 @@ async function createMail(
   }
 }
 
-module.exports = { createMail };
+module.exports = { acknowledgementMail };
