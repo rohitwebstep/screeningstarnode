@@ -190,35 +190,8 @@ exports.sendNotification = async (req, res) => {
 
                   // Process each customer
                   for (const customer of customers.data) {
-                    console.log(`Customer ID: ${customer.id}`);
-                    console.log(`Admin ID: ${customer.admin_id}`);
-                    console.log(
-                      `Client Unique ID: ${customer.client_unique_id}`
-                    );
-                    console.log(`Customer Name: ${customer.name.trim()}`);
-                    console.log(
-                      `Application Count: ${customer.applicationCount}`
-                    );
-
-                    // Loop through the branches
                     for (const branch of customer.branches) {
-                      console.log(`  Branch ID: ${branch.id}`);
-                      console.log(`  Branch Name: ${branch.name.trim()}`);
-                      console.log(
-                        `  Is Head: ${branch.is_head ? "Yes" : "No"}`
-                      );
-                      console.log(`  Applications:`);
-
-                      // Process applications
                       for (const application of branch.applications) {
-                        console.log(
-                          `    Application ID: ${application.application_id}`
-                        );
-                        console.log(
-                          `    Application Name: ${application.name}`
-                        );
-                        console.log(`    Services: ${application.services}`);
-
                         const serviceIds =
                           typeof application.services === "string" &&
                           application.services.trim() !== ""
@@ -229,19 +202,56 @@ exports.sendNotification = async (req, res) => {
 
                         // Fetch and log service names in series
                         const serviceNames = await getServiceNames(serviceIds);
-                        console.log(
-                          `    Service Names: ${serviceNames.join(", ")}`
-                        );
+                        application.serviceNames = serviceNames.join(", ");
                       }
-
-                      console.log(
-                        `  Application Count: ${branch.applicationCount}`
-                      );
                     }
-
-                    console.log("-------------------------");
                   }
+                  if (customers.data.length > 0) {
+                    for (const customer of customers.data) {
+                      // Loop through the branches
+                      for (const branch of customer.branches) {
+                        let emailApplicationArr;
+                        let ccArr;
+                        if (branch.is_head !== 1) {
+                          emailApplicationArr = branch.applications;
+                          ccArr = [];
+                        } else {
+                          emailApplicationArr = customers.data;
+                          ccArr = JSON.parse(currentCustomer.emails).map(
+                            (email) => ({
+                              name: currentCustomer.name,
+                              email: email.trim(),
+                            })
+                          );
+                        }
 
+                        const toArr = [
+                          { name: branch.name, email: branch.email },
+                        ];
+
+                        acknowledgementMail(
+                          "acknowledgement",
+                          "email",
+                          branch.is_head,
+                          customer.name.trim(),
+                          customer.client_unique_id,
+                          emailApplicationArr,
+                          toArr,
+                          ccArr
+                        )
+                          .then(() => {})
+                          .catch((emailError) => {
+                            console.error("Error sending email:", emailError);
+
+                            return res.status(200).json({
+                              status: true,
+                              message: `failed to send mail.`,
+                              token: newToken,
+                            });
+                          });
+                      }
+                    }
+                  }
                   // Send response
                   if (customers.data.length > 0) {
                     return res.json({

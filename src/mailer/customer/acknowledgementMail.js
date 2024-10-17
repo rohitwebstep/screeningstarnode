@@ -2,22 +2,45 @@ const nodemailer = require("nodemailer");
 const connection = require("../../config/db"); // Import the existing MySQL connection
 
 // Function to generate an HTML table from branch details
-const generateTable = (branches, password) => {
-  let table =
-    '<table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse;">';
-  table +=
-    "<tr><th>Sr. No.</th><th>Email</th><th>Name</th><th>Password</th></tr>";
+// Function to generate an HTML table from branch details
+const generateTable = (applications, clientCode, is_head) => {
+  let table = "";
 
-  branches.forEach((branch, index) => {
-    table += `<tr>
-                <td>${index + 1}</td>
-                <td>${branch.email}</td>
-                <td>${branch.name}</td>
-                <td>${password}</td>
-              </tr>`;
-  });
+  if (is_head == 1) {
+    applications.forEach((app) => {
+      if (app.branches && Array.isArray(app.branches)) {
+        for (const branch of app.branches) {
+          // Inline styles for the branch name
+          table += `<tr><td colspan="5" style="font-weight: bold; background-color: #f5f5f5; color: #333; padding: 10px; text-align: center; border-bottom: 2px solid #ddd;">${branch.name}</td></tr>`;
+          for (const [index, application] of branch.applications.entries()) {
+            table += `<tr>
+              <td>${index + 1}</td>
+              <td>${application.application_id}</td>
+              <td>${clientCode}</td>
+              <td>${application.name}</td>
+              <td>${application.serviceNames}</td>
+            </tr>`;
+          }
+        }
+      } else {
+        console.error(
+          "Error: `app.branches` is not iterable. Please check the data structure."
+        );
+        table += "<tr><td colspan='5'>Invalid data structure</td></tr>";
+      }
+    });
+  } else {
+    applications.forEach((application, index) => {
+      table += `<tr>
+                  <td>${index + 1}</td>
+                  <td>${application.application_id}</td>
+                  <td>${clientCode}</td>
+                  <td>${application.name}</td>
+                  <td>${application.serviceNames}</td>
+                </tr>`;
+    });
+  }
 
-  table += "</table>";
   return table;
 };
 
@@ -25,11 +48,12 @@ const generateTable = (branches, password) => {
 async function acknowledgementMail(
   module,
   action,
-  name,
-  branches,
-  password,
   is_head,
-  customerData
+  branchName,
+  clientCode,
+  applications,
+  toArr,
+  ccArr
 ) {
   try {
     // Fetch email template
@@ -64,31 +88,61 @@ async function acknowledgementMail(
     });
 
     // Generate the HTML table from branch details
-    const table = generateTable(branches, password);
+    const table = generateTable(applications, clientCode, is_head);
 
     // Replace placeholders in the email template
     let template = email.template
-      .replace(/{{dynamic_name}}/g, name)
-      .replace(/{{table}}/g, table);
+      .replace(/{{client_name}}/g, branchName)
+      .replace(/{{table_row}}/g, table);
 
-    // Prepare recipient list based on whether the branch is a head branch
     let recipientList;
     if (is_head === 1) {
-      // Include all customers in the recipient list for head branches
-      recipientList = customerData.map(
+      recipientList = toArr.map(
         (customer) => `"${customer.name}" <${customer.email}>`
       );
     } else {
-      // If not a head branch, only include the specific branches
-      recipientList = branches.map(
+      recipientList = toArr.map(
         (branch) => `"${branch.name}" <${branch.email}>`
       );
     }
 
-    // Send email to the prepared recipient list
+    const ccList = ccArr
+      .map((entry) => {
+        let emails = [];
+
+        try {
+          if (Array.isArray(entry.email)) {
+            emails = entry.email;
+          } else if (typeof entry.email === "string") {
+            let cleanedEmail = entry.email
+              .trim()
+              .replace(/\\"/g, '"')
+              .replace(/^"|"$/g, "");
+
+            if (cleanedEmail.startsWith("[") && cleanedEmail.endsWith("]")) {
+              emails = JSON.parse(cleanedEmail);
+            } else {
+              emails = [cleanedEmail];
+            }
+          }
+        } catch (e) {
+          console.error("Error parsing email JSON:", entry.email, e);
+          return ""; // Skip this entry if parsing fails
+        }
+
+        // Ensure it's a valid non-empty string
+        return emails
+          .filter((email) => email) // Filter out invalid emails
+          .map((email) => `"${entry.name}" <${email.trim()}>`) // Trim to remove whitespace
+          .join(", ");
+      })
+      .filter((cc) => cc !== "") // Remove any empty CCs from failed parses
+      .join(", ");
+
     const info = await transporter.sendMail({
       from: smtp.username,
-      to: recipientList.join(", "), // Join the recipient list into a string
+      to: recipientList.join(", "),
+      cc: ccList,
       subject: email.title,
       html: template,
     });
