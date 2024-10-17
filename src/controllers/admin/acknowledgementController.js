@@ -140,7 +140,7 @@ exports.sendNotification = (req, res) => {
             });
           }
 
-          if (customers && customers.length > 0) {
+          if (customers && customers.data && customers.data > 0) {
             res.json({
               status: true,
               message: "Customers fetched successfully",
