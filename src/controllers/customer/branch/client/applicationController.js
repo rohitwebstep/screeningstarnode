@@ -377,13 +377,11 @@ exports.update = (req, res) => {
     _token,
     client_application_id,
     name,
-    attach_documents,
     employee_id,
     spoc,
     location,
     batch_number,
     sub_client,
-    photo,
     services,
     package,
   } = req.body;
@@ -394,13 +392,11 @@ exports.update = (req, res) => {
     _token,
     client_application_id,
     name,
-    attach_documents,
     employee_id,
     spoc,
     location,
     batch_number,
     sub_client,
-    photo,
   };
 
   // Check for missing fields
@@ -464,12 +460,6 @@ exports.update = (req, res) => {
           if (currentClientApplication.name !== name) {
             changes.name = { old: currentClientApplication.name, new: name };
           }
-          if (currentClientApplication.attach_documents !== attach_documents) {
-            changes.attach_documents = {
-              old: currentClientApplication.attach_documents,
-              new: attach_documents,
-            };
-          }
           if (currentClientApplication.employee_id !== employee_id) {
             changes.employee_id = {
               old: currentClientApplication.employee_id,
@@ -498,12 +488,6 @@ exports.update = (req, res) => {
             changes.sub_client = {
               old: currentClientApplication.sub_client,
               new: sub_client,
-            };
-          }
-          if (currentClientApplication.photo !== photo) {
-            changes.photo = {
-              old: currentClientApplication.photo,
-              new: photo,
             };
           }
           if (
@@ -548,13 +532,11 @@ exports.update = (req, res) => {
               Client.update(
                 {
                   name,
-                  attach_documents,
                   employee_id,
                   spoc,
                   location,
                   batch_number,
                   sub_client,
-                  photo,
                   services,
                   package,
                 },
@@ -791,7 +773,6 @@ exports.upload = async (req, res) => {
 
                           // Loop through each document
                           documentsArray.forEach((doc, index) => {
-                            console.log(`Document ${index + 1}: ${doc}`);
                             newAttachedDocsString += `${appHost}/${doc}`;
                           });
                         }

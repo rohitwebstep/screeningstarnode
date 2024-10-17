@@ -101,8 +101,6 @@ const clientApplication = {
 
   // Method to create a new client application
   create: (data, callback) => {
-    console.log("Create function initiated with data:", data);
-
     const {
       name,
       employee_id,
@@ -125,11 +123,8 @@ const clientApplication = {
       Array.isArray(package) && package.length > 0
         ? package.map((id) => id.trim()).join(",")
         : "";
-    console.log("Processed Services:", serviceIds);
-    console.log("Processed Package:", packageIds);
 
     // Generate a new application ID
-    console.log("Generating new application ID for branch:", branch_id);
     clientApplication.generateApplicationID(
       branch_id,
       (err, new_application_id) => {
@@ -137,8 +132,6 @@ const clientApplication = {
           console.error("Error generating new application ID:", err);
           return callback(err, null);
         }
-
-        console.log("Generated new application ID:", new_application_id);
 
         const sql = `
         INSERT INTO \`client_applications\` (
@@ -329,13 +322,11 @@ const clientApplication = {
   update: (data, client_application_id, callback) => {
     const {
       name,
-      attach_documents,
       employee_id,
       spoc,
       location,
       batch_number,
       sub_client,
-      photo,
       services,
       package,
     } = data;
@@ -344,13 +335,11 @@ const clientApplication = {
       UPDATE \`client_applications\`
       SET
         \`name\` = ?,
-        \`attach_documents\` = ?,
         \`employee_id\` = ?,
         \`spoc\` = ?,
         \`location\` = ?,
         \`batch_number\` = ?,
         \`sub_client\` = ?,
-        \`photo\` = ?,
         \`services\` = ?,
         \`package\` = ?
       WHERE
@@ -359,13 +348,11 @@ const clientApplication = {
 
     const values = [
       name,
-      attach_documents,
       employee_id,
       spoc,
       location,
       batch_number,
       sub_client,
-      photo,
       services,
       package,
       client_application_id,

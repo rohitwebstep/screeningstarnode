@@ -338,7 +338,6 @@ exports.create = (req, res) => {
 
                               const emailPromises = dbBranches.map(
                                 (dbBranch) => {
-                                  console.log(`Branch:`, dbBranch);
 
                                   if (dbBranch.is_head == 1) {
                                     // For head branches, fetch customer details
@@ -657,7 +656,6 @@ exports.upload = async (req, res) => {
 
                       // Iterate through each branch
                       dbBranches.forEach((dbBranch) => {
-                        console.log(`Branch:`, dbBranch);
 
                         // Check if the branch is a head branch
                         if (dbBranch.is_head == 1) {
