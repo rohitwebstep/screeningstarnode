@@ -157,64 +157,73 @@ exports.sendNotification = (req, res) => {
                   const { id: branchId, name: branchName } = branch;
 
                   // Fetch client applications by branch ID
-                  return Acknowledgement.getClientApplicationByBranchIDForAckEmail(
-                    branchId
-                  ).then((applications) => {
-                    if (!applications.data.length) {
-                      return { branchId, branchName, applications: [] };
-                    }
+                  return new Promise((resolve) => {
+                    Acknowledgement.getClientApplicationByBranchIDForAckEmail(
+                      branchId,
+                      (err, applications) => {
+                        if (err || !applications) {
+                          return resolve({
+                            branchId,
+                            branchName,
+                            applications: [],
+                          }); // Return empty applications if error occurs
+                        }
 
-                    // Loop through applications
-                    const applicationPromises = applications.data.map((app) => {
-                      const {
-                        application_id: applicationId,
-                        name,
-                        services,
-                      } = app;
+                        // Loop through applications
+                        const applicationPromises = applications.data.map(
+                          (app) => {
+                            const {
+                              application_id: applicationId,
+                              name,
+                              services,
+                            } = app;
 
-                      // Split services and process each one
-                      const serviceIds = services
-                        .split(",")
-                        .map((service) => service.trim());
-                      const serviceFetchPromises = serviceIds.map(
-                        (serviceId) => {
-                          return new Promise((resolve) => {
-                            // Fetch the service title by ID
-                            Service.getServiceById(
-                              serviceId,
-                              (err, currentService) => {
-                                if (err || !currentService) {
-                                  return resolve(null); // Skip if not found
-                                }
-                                resolve(currentService.title);
+                            // Split services and process each one
+                            const serviceIds = services
+                              .split(",")
+                              .map((service) => service.trim());
+                            const serviceFetchPromises = serviceIds.map(
+                              (serviceId) => {
+                                return new Promise((resolve) => {
+                                  // Fetch the service title by ID
+                                  Service.getServiceById(
+                                    serviceId,
+                                    (err, currentService) => {
+                                      if (err || !currentService) {
+                                        return resolve(null); // Skip if not found
+                                      }
+                                      resolve(currentService.title);
+                                    }
+                                  );
+                                });
                               }
                             );
-                          });
-                        }
-                      );
 
-                      // Return a promise that resolves with the application data
-                      return Promise.all(serviceFetchPromises).then(
-                        (serviceTitles) => {
-                          return {
-                            applicationId,
-                            name,
-                            services: serviceTitles.filter(Boolean), // Filter out nulls
-                          };
-                        }
-                      );
-                    });
+                            // Return a promise that resolves with the application data
+                            return Promise.all(serviceFetchPromises).then(
+                              (serviceTitles) => {
+                                return {
+                                  applicationId,
+                                  name,
+                                  services: serviceTitles.filter(Boolean), // Filter out nulls
+                                };
+                              }
+                            );
+                          }
+                        );
 
-                    // Wait for all application promises to resolve
-                    return Promise.all(applicationPromises).then(
-                      (applicationData) => {
-                        return {
-                          branchId,
-                          branchName,
-                          applications: applicationData.filter(
-                            (app) => app.services.length > 0
-                          ), // Only keep applications with services
-                        };
+                        // Wait for all application promises to resolve
+                        return Promise.all(applicationPromises).then(
+                          (applicationData) => {
+                            return {
+                              branchId,
+                              branchName,
+                              applications: applicationData.filter(
+                                (app) => app.services.length > 0
+                              ), // Only keep applications with services
+                            };
+                          }
+                        );
                       }
                     );
                   });
