@@ -323,9 +323,9 @@ exports.applicationByID = (req, res) => {
             });
           }
 
-          ClientMasterTrackerModel.getCMTApplicationIDByClientApplicationId(
+          ClientMasterTrackerModel.getCMTApplicationById(
             application_id,
-            (err, CMTApplicationID) => {
+            (err, CMTApplicationData) => {
               if (err) {
                 console.error("Database error:", err);
                 return res.status(500).json({
@@ -335,7 +335,7 @@ exports.applicationByID = (req, res) => {
                 });
               }
 
-              if (!CMTApplicationID) {
+              if (!CMTApplicationData) {
                 return res.json({
                   status: true,
                   message: "Application fetched successfully 1",
@@ -344,36 +344,13 @@ exports.applicationByID = (req, res) => {
                 });
               }
 
-              ClientMasterTrackerModel.getCMTApplicationById(
-                CMTApplicationID,
-                (err, CMTApplicationData) => {
-                  if (err) {
-                    console.error("Database error:", err);
-                    return res.status(500).json({
-                      status: false,
-                      message: err.message,
-                      token: newToken,
-                    });
-                  }
-
-                  if (!CMTApplicationData) {
-                    return res.json({
-                      status: true,
-                      message: "Application fetched successfully 2",
-                      application,
-                      token: newToken,
-                    });
-                  }
-
-                  return res.json({
-                    status: true,
-                    message: "Application fetched successfully 3",
-                    application,
-                    CMTData: CMTApplicationData,
-                    token: newToken,
-                  });
-                }
-              );
+              return res.json({
+                status: true,
+                message: "Application fetched successfully 2",
+                application,
+                CMTData: CMTApplicationData,
+                token: newToken,
+              });
             }
           );
         }
@@ -1104,7 +1081,6 @@ exports.generateReport = (req, res) => {
                                                 ccArr
                                               )
                                                 .then(() => {
-
                                                   return res.status(200).json({
                                                     status: true,
                                                     message: `CMT Application ${
@@ -1164,7 +1140,6 @@ exports.generateReport = (req, res) => {
                                                 ccArr
                                               )
                                                 .then(() => {
-
                                                   return res.status(200).json({
                                                     status: true,
                                                     message: `CMT Application ${
@@ -1575,7 +1550,6 @@ exports.annexureDataByServiceIdofApplication = (req, res) => {
 };
 
 exports.upload = async (req, res) => {
-
   // Use multer to handle the upload
   upload(req, res, async (err) => {
     if (err) {
@@ -1710,7 +1684,7 @@ exports.upload = async (req, res) => {
                         status: false,
                         message: "Failed to retrieve email addresses.",
                         token: newToken,
-                        savedImagePaths
+                        savedImagePaths,
                       });
                     }
 
@@ -1734,7 +1708,7 @@ exports.upload = async (req, res) => {
                             status: false,
                             message: err.message,
                             token: newToken,
-                            savedImagePaths
+                            savedImagePaths,
                           });
                         }
 
@@ -1744,7 +1718,7 @@ exports.upload = async (req, res) => {
                             status: false,
                             message: "Application not found",
                             token: newToken,
-                            savedImagePaths
+                            savedImagePaths,
                           });
                         }
 
@@ -1760,7 +1734,7 @@ exports.upload = async (req, res) => {
                                 status: false,
                                 message: "Database error occurred",
                                 token: newToken,
-                                savedImagePaths
+                                savedImagePaths,
                               });
                             }
 
@@ -1795,7 +1769,7 @@ exports.upload = async (req, res) => {
                                     status: true,
                                     message: "CMT Final Report mail sent.",
                                     token: newToken,
-                                    savedImagePaths
+                                    savedImagePaths,
                                   });
                                 })
                                 .catch((emailError) => {
@@ -1807,13 +1781,12 @@ exports.upload = async (req, res) => {
                                     status: true,
                                     message: "Failed to send CMT mail.",
                                     token: newToken,
-                                    savedImagePaths
+                                    savedImagePaths,
                                   });
                                 });
                             }
                             // QC report email
                             else if (emailStatus == 2) {
-
                               qcReportCheckMail(
                                 "cmt",
                                 "qc",
@@ -1830,7 +1803,7 @@ exports.upload = async (req, res) => {
                                     message:
                                       "CMT Quality Check Report mail sent.",
                                     token: newToken,
-                                    savedImagePaths
+                                    savedImagePaths,
                                   });
                                 })
                                 .catch((emailError) => {
@@ -1842,13 +1815,12 @@ exports.upload = async (req, res) => {
                                     status: true,
                                     message: "Failed to send CMT mail.",
                                     token: newToken,
-                                    savedImagePaths
+                                    savedImagePaths,
                                   });
                                 });
                             }
                             // Handling for other statuses
                             else if (emailStatus == 3) {
-
                               readyForReport(
                                 "cmt",
                                 "ready",
@@ -1861,7 +1833,7 @@ exports.upload = async (req, res) => {
                                     status: true,
                                     message: "Ready for Report mail sent.",
                                     token: newToken,
-                                    savedImagePaths
+                                    savedImagePaths,
                                   });
                                 })
                                 .catch((emailError) => {
@@ -1873,7 +1845,7 @@ exports.upload = async (req, res) => {
                                     status: true,
                                     message: "Failed to send CMT mail.",
                                     token: newToken,
-                                    savedImagePaths
+                                    savedImagePaths,
                                   });
                                 });
                             }
@@ -1883,7 +1855,7 @@ exports.upload = async (req, res) => {
                                 status: true,
                                 message: "Images uploaded successfully.",
                                 token: newToken,
-                                savedImagePaths
+                                savedImagePaths,
                               });
                             }
                           }
@@ -1897,7 +1869,7 @@ exports.upload = async (req, res) => {
                   status: true,
                   message: "Images uploaded successfully.",
                   token: newToken,
-                  savedImagePaths
+                  savedImagePaths,
                 });
               }
             } else {
@@ -1906,7 +1878,7 @@ exports.upload = async (req, res) => {
                 status: false,
                 message: "No records were updated or created.",
                 token: newToken,
-                savedImagePaths
+                savedImagePaths,
               });
             }
           }
