@@ -175,7 +175,7 @@ exports.sendNotification = (req, res) => {
                     : [];
 
                 // Initialize an array to hold service names for this application
-                serviceNames = "";
+                serviceNames = [];
 
                 // Function to fetch service names
                 const fetchServiceNames = (index = 0) => {
