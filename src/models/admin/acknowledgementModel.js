@@ -140,7 +140,7 @@ const Acknowledgement = {
         const { branch_id, application_id, name, services } = result; // Include application details
 
         const customerSql = `SELECT id, admin_id, client_unique_id, name FROM customers WHERE id = ? AND status = ?`;
-        const branchSql = `SELECT id, customer_id, name, is_head, head_id FROM branches WHERE id = ? AND status = ?`;
+        const branchSql = `SELECT id, customer_id, name, email, is_head, head_id FROM branches WHERE id = ? AND status = ?`;
 
         // Fetch customer details
         pool.query(
@@ -177,6 +177,7 @@ const Acknowledgement = {
                   customer_id: branchResult[0].customer_id,
                   name: branchResult[0].name,
                   is_head: branchResult[0].is_head,
+                  email: branchResult[0].email,
                   head_id: branchResult[0].head_id,
                   applications: [], // Initialize applications array
                   applicationCount: 0, // Initialize application count for the branch
