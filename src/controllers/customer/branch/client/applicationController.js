@@ -967,6 +967,7 @@ exports.upload = async (req, res) => {
                 message:
                   "No changes were made. Please check the client application ID.",
                 token: newToken,
+                result,
                 savedImagePaths,
               });
             }
