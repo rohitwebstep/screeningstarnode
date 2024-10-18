@@ -237,22 +237,21 @@ const Acknowledgement = {
     });
   },
 
-  getClientApplicationByBranchIDForAckEmail: (branchId, callback) => {
-    const sql = `
-      SELECT \`id\`, \`application_id\`, \`name\`, \`services\` 
-      FROM \`client_applications\` 
-      WHERE \`branch_id\` = ?
+  updateAckByCustomerID: (customer_id, callback) => {
+    const sqlUpdate = `
+      UPDATE client_applications
+      SET ack_sent = 1
+      WHERE customer_id = ? AND ack_sent = 0
     `;
 
-    pool.query(sql, [branchId], (err, results) => {
+    pool.query(sqlUpdate, [customer_id], (err, results) => {
       if (err) {
-        console.error("Database query error:", err);
-        return callback(err);
+        console.error("Database update error:", err);
+        return callback(err, null);
       }
 
-      // Return an empty array if no results
-      const data = results.length ? results : [];
-      callback(null, { data, totalResults: data.length });
+      // Return the number of affected rows (if needed)
+      callback(null, results.affectedRows);
     });
   },
 };
