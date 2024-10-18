@@ -254,13 +254,25 @@ exports.sendNotification = async (req, res) => {
                   }
                   // Send response
                   if (customers.data.length > 0) {
-                    return res.json({
-                      status: true,
-                      message: "Customers fetched successfully",
-                      customers: customers.data,
-                      totalResults: customers.data.length,
-                      token: newToken,
-                    });
+                    Acknowledgement.updateAckByCustomerID(
+                      customer_id,
+                      (err, affectedRows) => {
+                        if (err) {
+                          return res.status(500).json({
+                            message: "Error updating acknowledgment status",
+                            error: err,
+                          });
+                        }
+
+                        return res.json({
+                          status: true,
+                          message: "Customers fetched successfully",
+                          customers: customers.data,
+                          totalResults: customers.data.length,
+                          token: newToken,
+                        });
+                      }
+                    );
                   } else {
                     return res.json({
                       status: false,
