@@ -155,7 +155,7 @@ const Admin = {
   },
   findById: (id, callback) => {
     const sql = `
-      SELECT \`id\`, \`emp_id\`, \`name\`, \`profile_picture\`, \`email\`, \`mobile\`, \`permissions\`, \`status\`
+      SELECT \`id\`, \`emp_id\`, \`name\`, \`profile_picture\`, \`email\`, \`mobile\`, \`status\`
       FROM \`admins\`
       WHERE \`id\` = ?
     `;
