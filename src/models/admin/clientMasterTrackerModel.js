@@ -148,15 +148,26 @@ const Customer = {
     }
   },
 
-  listByCustomerID: (customer_id, callback) => {
-    const sql = `SELECT b.id AS branch_id, b.name AS branch_name, COUNT(ca.id) AS application_count
-FROM client_applications ca
-INNER JOIN branches b ON ca.branch_id = b.id
-WHERE ca.status != 'closed'
-AND b.customer_id = ?
-GROUP BY b.name;
-`;
-    pool.query(sql, [customer_id], (err, results) => {
+  listByCustomerID: (customer_id, filter_status, callback) => {
+    // Base SQL query with mandatory condition for status
+    let sql = `SELECT b.id AS branch_id, b.name AS branch_name, COUNT(ca.id) AS application_count
+               FROM client_applications ca
+               INNER JOIN branches b ON ca.branch_id = b.id
+               WHERE b.customer_id = ? AND ca.status != 'closed'`;
+
+    // Array to hold query parameters
+    const queryParams = [customer_id];
+
+    // Check if filter_status is provided
+    if (filter_status && filter_status !== null && filter_status !== "") {
+      sql += ` AND ca.status = ?`;
+      queryParams.push(filter_status);
+    }
+
+    sql += ` GROUP BY b.name;`;
+
+    // Execute the query
+    pool.query(sql, queryParams, (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback(err, null);
@@ -165,16 +176,24 @@ GROUP BY b.name;
     });
   },
 
-  applicationListByBranch: (branch_id, status, callback) => {
+  applicationListByBranch: (filter_status, branch_id, status, callback) => {
+    // Base SQL query with mandatory condition for closed status
     let sql = `SELECT * FROM \`client_applications\` WHERE \`branch_id\` = ? AND \`status\` != 'closed'`;
-    const params = [branch_id];
+    const params = [branch_id]; // Start with branch_id
 
-    // Check if status is not null and add the corresponding condition
+    // Check if filter_status is provided
+    if (filter_status && filter_status !== null && filter_status !== "") {
+      sql += ` AND \`status\` = ?`; // Add filter for filter_status
+      params.push(filter_status);
+    }
+
+    // Check if status is provided and add the corresponding condition
     if (typeof status === "string" && status.trim() !== "") {
-      sql += ` AND \`status\` = ?`;
+      sql += ` AND \`status\` = ?`; // Add filter for status
       params.push(status);
     }
 
+    // Execute the query
     pool.query(sql, params, (err, results) => {
       if (err) {
         console.error("Database query error:", err);
