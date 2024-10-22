@@ -181,7 +181,8 @@ const clientApplication = {
 
   list: (branch_id, callback) => {
     // First query to fetch data from client_applications
-    const sqlClient = "SELECT * FROM client_applications WHERE branch_id = ?";
+    const sqlClient =
+      "SELECT * FROM client_applications WHERE branch_id = ? ORDER BY created_at DESC";
 
     pool.query(sqlClient, [branch_id], (err, clientResults) => {
       if (err) {

@@ -103,47 +103,50 @@ const Customer = {
       // If no filter_status is provided, proceed with the final SQL query without filters
       const finalSql = `
         WITH BranchesCTE AS (
-          SELECT 
-            b.id AS branch_id,
-            b.customer_id
-          FROM 
-            branches b
+            SELECT 
+                b.id AS branch_id,
+                b.customer_id
+            FROM 
+                branches b
         )
         SELECT 
-          customers.client_unique_id,
-          customers.name,
-          customer_metas.single_point_of_contact,
-          customers.id AS main_id,
-          COALESCE(branch_counts.branch_count, 0) AS branch_count,
-          COALESCE(application_counts.application_count, 0) AS application_count
+            customers.client_unique_id,
+            customers.name,
+            customer_metas.single_point_of_contact,
+            customers.id AS main_id,
+            COALESCE(branch_counts.branch_count, 0) AS branch_count,
+            COALESCE(application_counts.application_count, 0) AS application_count
         FROM 
-          customers
+            customers
         LEFT JOIN 
-          customer_metas ON customers.id = customer_metas.customer_id
+            customer_metas ON customers.id = customer_metas.customer_id
         LEFT JOIN (
-          SELECT 
-            customer_id, 
-            COUNT(*) AS branch_count
-          FROM 
-            branches
-          GROUP BY 
-            customer_id
+            SELECT 
+                customer_id, 
+                COUNT(*) AS branch_count
+            FROM 
+                branches
+            GROUP BY 
+                customer_id
         ) AS branch_counts ON customers.id = branch_counts.customer_id
         LEFT JOIN (
-          SELECT 
-            b.customer_id, 
-            COUNT(ca.id) AS application_count
-          FROM 
-            BranchesCTE b
-          INNER JOIN 
-            client_applications ca ON b.branch_id = ca.branch_id
-          WHERE 
-            ca.status != 'closed'
-          GROUP BY 
-            b.customer_id
+            SELECT 
+                b.customer_id, 
+                COUNT(ca.id) AS application_count,
+                MAX(ca.created_at) AS latest_application_date
+            FROM 
+                BranchesCTE b
+            INNER JOIN 
+                client_applications ca ON b.branch_id = ca.branch_id
+            WHERE 
+                ca.status != 'closed'
+            GROUP BY 
+                b.customer_id
         ) AS application_counts ON customers.id = application_counts.customer_id
         WHERE 
-          COALESCE(application_counts.application_count, 0) > 0;
+            COALESCE(application_counts.application_count, 0) > 0
+        ORDER BY 
+            application_counts.latest_application_date DESC;
       `;
 
       pool.query(finalSql, (err, results) => {

@@ -24,38 +24,43 @@ const Branch = {
   index: (branch_id, callback) => {
     // SQL query to fetch client applications grouped by status
     const query = `
-        SELECT 
-            \`id\`, 
-            \`application_id\`, 
-            \`employee_id\`, 
-            \`name\`, 
-            \`status\`
-        FROM 
-            \`client_applications\`
-        WHERE 
-            \`status\` IN (
-                'Completed', 
-                'WIP', 
-                'Completed Green', 
-                'Completed Red', 
-                'Completed Yellow', 
-                'Completed Pink', 
-                'Completed Orange'
-            )
-            AND \`branch_id\` = ?
-        ORDER BY 
-            CASE 
-                WHEN \`status\` = 'Completed' THEN 1
-                WHEN \`status\` = 'WIP' THEN 2
-                WHEN \`status\` = 'Completed Green' THEN 3
-                WHEN \`status\` = 'Completed Red' THEN 4
-                WHEN \`status\` = 'Completed Yellow' THEN 5
-                WHEN \`status\` = 'Completed Pink' THEN 6
-                WHEN \`status\` = 'Completed Orange' THEN 7
-                ELSE 8
-            END;
-    `;
-
+    SELECT 
+        \`id\`, 
+        \`application_id\`, 
+        \`employee_id\`, 
+        \`name\`, 
+        \`status\`
+    FROM 
+        \`client_applications\`
+    WHERE 
+        \`status\` IN (
+            'wip', 
+            'not_ready', 
+            'ready', 
+            'completed', 
+            'completed_green', 
+            'completed_red', 
+            'completed_yellow', 
+            'completed_pink', 
+            'completed_orange', 
+            'closed'
+        )
+        AND \`branch_id\` = ?
+    ORDER BY 
+        FIELD(\`status\`, 
+            'completed', 
+            'completed_green', 
+            'completed_red', 
+            'completed_yellow', 
+            'completed_pink', 
+            'completed_orange', 
+            'wip', 
+            'not_ready', 
+            'ready', 
+            'closed'
+        ),
+        \`created_at\` DESC;
+`;
     // Execute the query to retrieve the data from the database
     pool.query(query, [branch_id], (err, results) => {
       if (err) {
@@ -161,6 +166,38 @@ const Branch = {
   list: (callback) => {
     const sql = `SELECT * FROM \`branches\``;
     pool.query(sql, (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results);
+    });
+  },
+
+  filterOptionsForClientApplications: (branch_id, callback) => {
+    const sql = `
+      SELECT \`status\`, COUNT(*) AS \`count\` 
+      FROM \`client_applications\` 
+      WHERE \`branch_id\` = ?
+      GROUP BY \`status\`, \`branch_id\`
+    `;
+    pool.query(sql, [branch_id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results);
+    });
+  },
+
+  filterOptionsForCandidateApplications: (branch_id, callback) => {
+    const sql = `
+      SELECT \`status\`, COUNT(*) AS \`count\` 
+      FROM \`candidate_applications\` 
+      WHERE \`branch_id\` = ?
+      GROUP BY \`status\`, \`branch_id\`
+    `;
+    pool.query(sql, [branch_id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback(err, null);

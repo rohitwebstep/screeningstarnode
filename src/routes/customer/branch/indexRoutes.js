@@ -12,6 +12,8 @@ router.get("/logout", authController.logout);
 router.get("/", profileController.index);
 router.post("/verify-branch-login", authController.validateLogin);
 router.get("/list", profileController.list);
+router.get("/client-applications-filter-options", profileController.filterOptionsForClientApplications);
+router.get("/candidate-applications-filter-options", profileController.filterOptionsForCandidateApplications);
 router.get("/is-email-used", profileController.isEmailUsed);
 router.get(
   "/customer-info",
