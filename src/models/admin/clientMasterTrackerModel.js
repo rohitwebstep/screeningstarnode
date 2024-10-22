@@ -12,12 +12,17 @@ const Customer = {
     if (filter_status && filter_status !== null && filter_status !== "") {
       // Query when `filter_status` exists
       const sql = `
-        SELECT b.customer_id, b.id AS branch_id, b.name AS branch_name, COUNT(ca.id) AS application_count
-        FROM client_applications ca
-        INNER JOIN branches b ON ca.branch_id = b.id
-        WHERE ca.status = ?
-        GROUP BY b.customer_id, b.id, b.name;
-      `;
+      SELECT b.customer_id, 
+             b.id AS branch_id, 
+             b.name AS branch_name, 
+             COUNT(ca.id) AS application_count,
+             MAX(ca.created_at) AS latest_application_date
+      FROM client_applications ca
+      INNER JOIN branches b ON ca.branch_id = b.id
+      WHERE ca.status = ?
+      GROUP BY b.customer_id, b.id, b.name
+      ORDER BY latest_application_date DESC;
+  `;
 
       pool.query(sql, [filter_status], (err, results) => {
         if (err) {
@@ -38,50 +43,53 @@ const Customer = {
         }
 
         const finalSql = `
-          WITH BranchesCTE AS (
+        WITH BranchesCTE AS (
             SELECT 
-              b.id AS branch_id,
-              b.customer_id
+                b.id AS branch_id,
+                b.customer_id
             FROM 
-              branches b
-          )
-          SELECT 
+                branches b
+        )
+        SELECT 
             customers.client_unique_id,
             customers.name,
             customer_metas.single_point_of_contact,
             customers.id AS main_id,
             COALESCE(branch_counts.branch_count, 0) AS branch_count,
             COALESCE(application_counts.application_count, 0) AS application_count
-          FROM 
+        FROM 
             customers
-          LEFT JOIN 
+        LEFT JOIN 
             customer_metas ON customers.id = customer_metas.customer_id
-          LEFT JOIN (
+        LEFT JOIN (
             SELECT 
-              customer_id, 
-              COUNT(*) AS branch_count
+                customer_id, 
+                COUNT(*) AS branch_count
             FROM 
-              branches
+                branches
             GROUP BY 
-              customer_id
-          ) AS branch_counts ON customers.id = branch_counts.customer_id
-          LEFT JOIN (
+                customer_id
+        ) AS branch_counts ON customers.id = branch_counts.customer_id
+        LEFT JOIN (
             SELECT 
-              b.customer_id, 
-              COUNT(ca.id) AS application_count
+                b.customer_id, 
+                COUNT(ca.id) AS application_count,
+                MAX(ca.created_at) AS latest_application_date
             FROM 
-              BranchesCTE b
+                BranchesCTE b
             INNER JOIN 
-              client_applications ca ON b.branch_id = ca.branch_id
+                client_applications ca ON b.branch_id = ca.branch_id
             WHERE 
-              ca.status != 'closed'
+                ca.status != 'closed'
             GROUP BY 
-              b.customer_id
-          ) AS application_counts ON customers.id = application_counts.customer_id
-          WHERE 
+                b.customer_id
+        ) AS application_counts ON customers.id = application_counts.customer_id
+        WHERE 
             COALESCE(application_counts.application_count, 0) > 0
-            ${customersIDConditionString};
-        `;
+            ${customersIDConditionString}
+        ORDER BY 
+            application_counts.latest_application_date DESC;
+    `;
 
         pool.query(finalSql, (err, results) => {
           if (err) {
@@ -150,10 +158,14 @@ const Customer = {
 
   listByCustomerID: (customer_id, filter_status, callback) => {
     // Base SQL query with mandatory condition for status
-    let sql = `SELECT b.id AS branch_id, b.name AS branch_name, COUNT(ca.id) AS application_count
-               FROM client_applications ca
-               INNER JOIN branches b ON ca.branch_id = b.id
-               WHERE b.customer_id = ? AND ca.status != 'closed'`;
+    let sql = `
+        SELECT b.id AS branch_id, 
+               b.name AS branch_name, 
+               COUNT(ca.id) AS application_count,
+               MAX(ca.created_at) AS latest_application_date
+        FROM client_applications ca
+        INNER JOIN branches b ON ca.branch_id = b.id
+        WHERE b.customer_id = ? AND ca.status != 'closed'`;
 
     // Array to hold query parameters
     const queryParams = [customer_id];
@@ -164,7 +176,8 @@ const Customer = {
       queryParams.push(filter_status);
     }
 
-    sql += ` GROUP BY b.name;`;
+    sql += ` GROUP BY b.id, b.name 
+              ORDER BY latest_application_date DESC;`;
 
     // Execute the query
     pool.query(sql, queryParams, (err, results) => {
@@ -193,6 +206,8 @@ const Customer = {
       params.push(status);
     }
 
+    sql += ` ORDER BY \`created_at\` DESC;`;
+
     // Execute the query
     pool.query(sql, params, (err, results) => {
       if (err) {
@@ -206,7 +221,7 @@ const Customer = {
   applicationByID: (application_id, branch_id, callback) => {
     // Use a parameterized query to prevent SQL injection
     const sql =
-      "SELECT * FROM `client_applications` WHERE `id` = ? AND `branch_id` = ?";
+      "SELECT * FROM `client_applications` WHERE `id` = ? AND `branch_id` = ? ORDER BY `created_at` DESC";
     pool.query(sql, [application_id, branch_id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
