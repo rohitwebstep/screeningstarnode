@@ -69,7 +69,7 @@ const candidateApplication = {
   },
 
   list: (branch_id, callback) => {
-    const sql = "SELECT * FROM `candidate_applications` WHERE `branch_id` = ?";
+    const sql = "SELECT * FROM `candidate_applications` WHERE `branch_id` = ? ORDER BY created_at DESC";
     pool.query(sql, [branch_id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
