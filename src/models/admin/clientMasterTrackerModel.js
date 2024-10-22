@@ -7,83 +7,95 @@ const hashPassword = (password) =>
 
 const Customer = {
   list: (filter_status, callback) => {
+    let customers_id = [];
+
     if (filter_status && filter_status !== null && filter_status !== "") {
       // Query when `filter_status` exists
       const sql = `
-        SELECT b.customer_id, b.id AS branch_id, b.name AS branch_name, COUNT(ca.id) AS application_count
-        FROM client_applications ca
-        INNER JOIN branches b ON ca.branch_id = b.id
-        WHERE ca.status = ?
-        GROUP BY b.customer_id, b.id, b.name;
-      `;
+            SELECT b.customer_id, b.id AS branch_id, b.name AS branch_name, COUNT(ca.id) AS application_count
+            FROM client_applications ca
+            INNER JOIN branches b ON ca.branch_id = b.id
+            WHERE ca.status = ?
+            GROUP BY b.customer_id, b.id, b.name;
+        `;
 
       pool.query(sql, [filter_status], (err, results) => {
         if (err) {
           console.error("Database query error:", err);
           return callback(err, null);
         }
-        callback(null, results);
+
+        // Loop through results and push customer_id to the array
+        results.forEach((row) => {
+          customers_id.push(row.customer_id);
+        });
+
+        // Now you can use customers_id as needed
+        console.log(customers_id);
+
+        // Proceed with the next query if customers_id is populated
+        const customersIDConditionString =
+          customers_id.length > 0
+            ? ` AND customers.id IN (${customers_id.join(",")})`
+            : "";
+
+        const sqlCustomers = `
+                WITH BranchesCTE AS (
+                    SELECT b.id AS branch_id, b.customer_id
+                    FROM branches b
+                )
+                SELECT 
+                    customers.client_unique_id,
+                    customers.name,
+                    customer_metas.single_point_of_contact,
+                    customers.id AS main_id,
+                    COALESCE(branch_counts.branch_count, 0) AS branch_count,
+                    COALESCE(application_counts.application_count, 0) AS application_count
+                FROM 
+                    customers
+                LEFT JOIN 
+                    customer_metas ON customers.id = customer_metas.customer_id
+                LEFT JOIN 
+                    (
+                        SELECT 
+                            customer_id, 
+                            COUNT(*) AS branch_count
+                        FROM 
+                            branches
+                        GROUP BY 
+                            customer_id
+                    ) AS branch_counts ON customers.id = branch_counts.customer_id
+                LEFT JOIN 
+                    (
+                        SELECT 
+                            b.customer_id, 
+                            COUNT(ca.id) AS application_count
+                        FROM 
+                            BranchesCTE b
+                        INNER JOIN 
+                            client_applications ca ON b.branch_id = ca.branch_id
+                        WHERE 
+                            ca.status != 'closed'
+                        GROUP BY 
+                            b.customer_id
+                    ) AS application_counts ON customers.id = application_counts.customer_id
+                WHERE 
+                    COALESCE(application_counts.application_count, 0) > 0
+                    ${customersIDConditionString};
+            `;
+
+        // Execute the second query
+        pool.query(sqlCustomers, (err, results) => {
+          if (err) {
+            console.error("Database query error:", err);
+            return callback(err, null);
+          }
+          callback(null, results);
+        });
       });
     } else {
-      const sql = `WITH BranchesCTE AS (
-  SELECT 
-    b.id AS branch_id,
-    b.customer_id
-  FROM 
-    branches b
-)
-SELECT 
-  customers.client_unique_id,
-  customers.name,
-  customer_metas.single_point_of_contact,
-  customers.id AS main_id,
-  COALESCE(branch_counts.branch_count, 0) AS branch_count,
-  COALESCE(application_counts.application_count, 0) AS application_count
-FROM 
-  customers
-LEFT JOIN 
-  customer_metas 
-ON 
-  customers.id = customer_metas.customer_id
-LEFT JOIN 
-  (
-    SELECT 
-      customer_id, 
-      COUNT(*) AS branch_count
-    FROM 
-      branches
-    GROUP BY 
-      customer_id
-  ) AS branch_counts
-ON 
-  customers.id = branch_counts.customer_id
-LEFT JOIN 
-  (
-    SELECT 
-      b.customer_id, 
-      COUNT(ca.id) AS application_count
-    FROM 
-      BranchesCTE b
-    INNER JOIN 
-      client_applications ca ON b.branch_id = ca.branch_id
-    WHERE 
-      ca.status != 'closed'
-    GROUP BY 
-      b.customer_id
-  ) AS application_counts
-ON 
-  customers.id = application_counts.customer_id
-WHERE 
-  COALESCE(application_counts.application_count, 0) > 0;
-    `;
-
-      pool.query(sql, (err, results) => {
-        if (err) {
-          console.error("Database query error:", err);
-          return callback(err, null);
-        }
-        callback(null, results);
-      });
+      // Handle the case where filter_status is not provided
+      callback(null, []);
     }
   },
 
