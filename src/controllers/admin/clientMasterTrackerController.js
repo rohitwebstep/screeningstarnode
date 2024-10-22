@@ -105,7 +105,7 @@ exports.test = (req, res) => {
 };
 
 exports.listByCustomerId = (req, res) => {
-  const { customer_id, admin_id, _token } = req.query;
+  const { customer_id, filter_status, admin_id, _token } = req.query;
 
   let missingFields = [];
   if (!customer_id || customer_id === "") missingFields.push("Customer ID");
@@ -141,7 +141,7 @@ exports.listByCustomerId = (req, res) => {
 
       const newToken = result.newToken;
 
-      ClientMasterTrackerModel.listByCustomerID(customer_id, (err, result) => {
+      ClientMasterTrackerModel.listByCustomerID(customer_id, filter_status, (err, result) => {
         if (err) {
           console.error("Database error:", err);
           return res
@@ -162,7 +162,7 @@ exports.listByCustomerId = (req, res) => {
 };
 
 exports.applicationListByBranch = (req, res) => {
-  const { branch_id, admin_id, _token, status } = req.query;
+  const { filter_status, branch_id, admin_id, _token, status } = req.query;
 
   let missingFields = [];
   if (
@@ -226,7 +226,7 @@ exports.applicationListByBranch = (req, res) => {
       }
 
       ClientMasterTrackerModel.applicationListByBranch(
-        branch_id,
+        filter_status, branch_id,
         status,
         (err, result) => {
           if (err) {
