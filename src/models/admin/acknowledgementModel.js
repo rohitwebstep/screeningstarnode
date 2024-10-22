@@ -118,6 +118,7 @@ const Acknowledgement = {
       SELECT id, application_id, name, services, ack_sent, branch_id, customer_id
       FROM client_applications
       WHERE ack_sent = 0 AND customer_id = ?
+      ORDER BY created_at DESC";
     `;
 
     pool.query(sql, [customer_id], (err, results) => {

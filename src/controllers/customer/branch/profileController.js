@@ -258,6 +258,194 @@ exports.listByCustomerID = (req, res) => {
   });
 };
 
+exports.filterOptionsForClientApplications = (req, res) => {
+  const { branch_id, _token } = req.query;
+
+  let missingFields = [];
+  if (
+    !branch_id ||
+    branch_id === "" ||
+    branch_id === undefined ||
+    branch_id === "undefined"
+  ) {
+    missingFields.push("Branch ID");
+  }
+
+  if (
+    !_token ||
+    _token === "" ||
+    _token === undefined ||
+    _token === "undefined"
+  ) {
+    missingFields.push("Token");
+  }
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  const action = JSON.stringify({ index: "view" });
+  // Step 2: Check if the branch is authorized for the action
+  BranchCommon.isBranchAuthorizedForAction(branch_id, action, (authResult) => {
+    if (!authResult.status) {
+      return res.status(403).json({
+        status: false,
+        message: authResult.message, // Return the authorization error message
+      });
+    }
+
+    // Step 3: Verify the branch token
+    BranchCommon.isBranchTokenValid(
+      _token,
+      branch_id,
+      (tokenErr, tokenResult) => {
+        if (tokenErr) {
+          console.error("Error checking token validity:", tokenErr);
+          return res.status(500).json({
+            status: false,
+            message: "Server error while verifying token.",
+          });
+        }
+
+        if (!tokenResult.status) {
+          return res.status(401).json({
+            status: false,
+            message: tokenResult.message, // Return the token validation message
+          });
+        }
+
+        Branch.filterOptionsForClientApplications(
+          branch_id,
+          (err, filterOptions) => {
+            if (err) {
+              console.error("Database error:", err);
+              return res.status(500).json({
+                status: false,
+                message:
+                  "An error occurred while fetching Filter options data.",
+                error: err.message,
+                token: newToken,
+              });
+            }
+
+            if (!filterOptions) {
+              return res.status(404).json({
+                status: false,
+                message: "Filter options Data not found.",
+                token: newToken,
+              });
+            }
+
+            res.status(200).json({
+              status: true,
+              message: "Filter options fetched successfully.",
+              filterOptions,
+              token: newToken,
+            });
+          }
+        );
+      }
+    );
+  });
+};
+
+exports.filterOptionsForCandidateApplications = (req, res) => {
+  const { branch_id, _token } = req.query;
+
+  let missingFields = [];
+  if (
+    !branch_id ||
+    branch_id === "" ||
+    branch_id === undefined ||
+    branch_id === "undefined"
+  ) {
+    missingFields.push("Branch ID");
+  }
+
+  if (
+    !_token ||
+    _token === "" ||
+    _token === undefined ||
+    _token === "undefined"
+  ) {
+    missingFields.push("Token");
+  }
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  const action = JSON.stringify({ index: "view" });
+  // Step 2: Check if the branch is authorized for the action
+  BranchCommon.isBranchAuthorizedForAction(branch_id, action, (authResult) => {
+    if (!authResult.status) {
+      return res.status(403).json({
+        status: false,
+        message: authResult.message, // Return the authorization error message
+      });
+    }
+
+    // Step 3: Verify the branch token
+    BranchCommon.isBranchTokenValid(
+      _token,
+      branch_id,
+      (tokenErr, tokenResult) => {
+        if (tokenErr) {
+          console.error("Error checking token validity:", tokenErr);
+          return res.status(500).json({
+            status: false,
+            message: "Server error while verifying token.",
+          });
+        }
+
+        if (!tokenResult.status) {
+          return res.status(401).json({
+            status: false,
+            message: tokenResult.message, // Return the token validation message
+          });
+        }
+
+        Branch.filterOptionsForCandidateApplications(
+          branch_id,
+          (err, filterOptions) => {
+            if (err) {
+              console.error("Database error:", err);
+              return res.status(500).json({
+                status: false,
+                message:
+                  "An error occurred while fetching Filter options data.",
+                error: err.message,
+                token: newToken,
+              });
+            }
+
+            if (!filterOptions) {
+              return res.status(404).json({
+                status: false,
+                message: "Filter options Data not found.",
+                token: newToken,
+              });
+            }
+
+            res.status(200).json({
+              status: true,
+              message: "Filter options fetched successfully.",
+              filterOptions,
+              token: newToken,
+            });
+          }
+        );
+      }
+    );
+  });
+};
+
 // Controller to update a branch
 exports.update = (req, res) => {
   const { id, name, email, admin_id, _token } = req.body;
