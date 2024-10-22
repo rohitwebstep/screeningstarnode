@@ -159,54 +159,75 @@ const common = {
   },
 
   isAdminAuthorizedForAction: (admin_id, action, callback) => {
-    const sql = `
-      SELECT \`permissions\`
-      FROM \`admins\`
-      WHERE \`id\` = ?
-    `;
-
-    pool.query(sql, [admin_id], (err, results) => {
+    const adminSQL = `SELECT \`role\` FROM \`admins\` WHERE \`id\` = ?`;
+    pool.query(adminSQL, [admin_id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
-        return callback({ status: false, message: "Database query error" });
+        return callback({ message: "Database query error", error: err }, null);
       }
+
       if (results.length === 0) {
-        return callback({ status: false, message: "Admin not found" });
+        return callback(
+          { message: "No admin found with the provided email or mobile" },
+          null
+        );
       }
 
-      const permissionsJson = JSON.parse(results[0].permissions);
-      const permissions =
-        typeof permissionsJson === "string"
-          ? JSON.parse(permissionsJson)
-          : permissionsJson;
+      // Console log the role
+      const role = results[0].role;
 
-      const actionObj =
-        typeof action === "string" ? JSON.parse(action) : action;
+      const permissionsJsonByRoleSQL = `SELECT \`json\` FROM \`permissions\` WHERE \`role\` = ?`;
+      pool.query(permissionsJsonByRoleSQL, [role], (err, results) => {
+        if (err) {
+          console.error("Database query error:", err);
+          return callback(
+            { message: "Database query error", error: err },
+            null
+          );
+        }
 
-      // Extract action type and action name from the action object
-      const [actionType, actionName] = Object.entries(actionObj)[0] || [];
+        if (results.length === 0) {
+          return callback(
+            { message: "No admin found with the provided email or mobile" },
+            null
+          );
+        }
 
-      // Check if action type and action name are valid
-      if (!actionType || !actionName) {
-        console.error("Invalid action format");
-        return callback({ status: false, message: "Access Denied" });
-      }
+        // Console log the json
+        const permissionsJson = JSON.parse(results[0].json);
+        const permissions =
+          typeof permissionsJson === "string"
+            ? JSON.parse(permissionsJson)
+            : permissionsJson;
 
-      // Check if the action type exists in the permissions object
-      if (!permissions[actionType]) {
-        console.error("Action type not found in permissions");
+        const actionObj =
+          typeof action === "string" ? JSON.parse(action) : action;
+
+        // Extract action type and action name from the action object
+        const [actionType, actionName] = Object.entries(actionObj)[0] || [];
+
+        // Check if action type and action name are valid
+        if (!actionType || !actionName) {
+          console.error("Invalid action format");
+          return callback({ status: false, message: "Access Denied" });
+        }
+
+        // Check if the action type exists in the permissions object
+        if (!permissions[actionType]) {
+          console.error("Action type not found in permissions");
+          return callback({
+            status: false,
+            message: "Access Denied",
+          });
+        }
+
+        // Check if the action name is authorized
+        const isAuthorized = permissions[actionType][actionName] === true;
+
         return callback({
-          status: false,
-          message: "Access Denied",
+          status: isAuthorized,
+          message: isAuthorized ? "Authorization Successful" : "Access Denied",
         });
-      }
-
-      // Check if the action name is authorized
-      const isAuthorized = permissions[actionType][actionName] === true;
-
-      return callback({
-        status: isAuthorized,
-        message: isAuthorized ? "Authorization Successful" : "Access Denied",
       });
     });
   },
