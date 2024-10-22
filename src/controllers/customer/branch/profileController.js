@@ -69,13 +69,18 @@ exports.index = (req, res) => {
             });
           }
 
+          // Calculate total application count
+          const totalApplicationCount = clientApplications
+            ? Object.values(clientApplications).reduce((total, statusGroup) => {
+                return total + statusGroup.applicationCount;
+              }, 0)
+            : 0;
+
           res.status(200).json({
             status: true,
             message: "Client applications fetched successfully.",
             clientApplications,
-            totalResults: clientApplications
-              ? Object.keys(clientApplications).length
-              : 0,
+            totalApplicationCount,
             token: newToken,
           });
         });
