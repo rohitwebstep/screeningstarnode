@@ -14,7 +14,8 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME,
   waitForConnections: true, // Ensures waiting for connections rather than failing immediately
   connectionLimit: 10, // Maximum number of connections to the database
-  queueLimit: 0 // Unlimited number of queued connection requests
+  queueLimit: 0, // Unlimited number of queued connection requests
+  connectTimeout: 10000, // Timeout after 10 seconds
 });
 
 // Test connection
