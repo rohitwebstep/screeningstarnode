@@ -542,17 +542,17 @@ exports.filterOptions = (req, res) => {
   });
 };
 
-exports.filterOptionsForCustomer = (req, res) => {
-  const { customer_id, admin_id, _token } = req.query;
+exports.filterOptionsForBranch = (req, res) => {
+  const { branch_id, admin_id, _token } = req.query;
 
   let missingFields = [];
   if (
-    !customer_id ||
-    customer_id === "" ||
-    customer_id === undefined ||
-    customer_id === "undefined"
+    !branch_id ||
+    branch_id === "" ||
+    branch_id === undefined ||
+    branch_id === "undefined"
   ) {
-    missingFields.push("Customer ID");
+    missingFields.push("Branch ID");
   }
   if (
     !admin_id ||
@@ -600,7 +600,7 @@ exports.filterOptionsForCustomer = (req, res) => {
 
       const newToken = result.newToken;
 
-      ClientMasterTrackerModel.filterOptionsForCustomer(customer_id, (err, filterOptions) => {
+      ClientMasterTrackerModel.filterOptionsForBranch(branch_id, (err, filterOptions) => {
         if (err) {
           console.error("Database error:", err);
           return res.status(500).json({
