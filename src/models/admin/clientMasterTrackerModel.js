@@ -292,14 +292,14 @@ const Customer = {
     });
   },
 
-  filterOptionsForCustomer: (customer_id, callback) => {
+  filterOptionsForBranch: (branch_id, callback) => {
     const sql = `
       SELECT \`status\`, COUNT(*) AS \`count\` 
       FROM \`client_applications\` 
-      WHERE \`customer_id\` = ?
-      GROUP BY \`status\`, \`customer_id\`
+      WHERE \`branch_id\` = ?
+      GROUP BY \`status\`, \`branch_id\`
     `;
-    pool.query(sql, [customer_id], (err, results) => {
+    pool.query(sql, [branch_id], (err, results) => {
       if (err) {
         console.error("Database query error:", err);
         return callback(err, null);
