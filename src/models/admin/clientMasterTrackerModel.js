@@ -6,8 +6,26 @@ const hashPassword = (password) =>
   crypto.createHash("md5").update(password).digest("hex");
 
 const Customer = {
-  list: (callback) => {
-    const sql = `WITH BranchesCTE AS (
+  list: (filter_status, callback) => {
+    if (filter_status && filter_status !== null && filter_status !== "") {
+      // Query when `filter_status` exists
+      const sql = `
+        SELECT b.customer_id, b.id AS branch_id, b.name AS branch_name, COUNT(ca.id) AS application_count
+        FROM client_applications ca
+        INNER JOIN branches b ON ca.branch_id = b.id
+        WHERE ca.status = ?
+        GROUP BY b.customer_id, b.id, b.name;
+      `;
+
+      pool.query(sql, [filter_status], (err, results) => {
+        if (err) {
+          console.error("Database query error:", err);
+          return callback(err, null);
+        }
+        callback(null, results);
+      });
+    } else {
+      const sql = `WITH BranchesCTE AS (
   SELECT 
     b.id AS branch_id,
     b.customer_id
@@ -59,13 +77,14 @@ WHERE
   COALESCE(application_counts.application_count, 0) > 0;
     `;
 
-    pool.query(sql, (err, results) => {
-      if (err) {
-        console.error("Database query error:", err);
-        return callback(err, null);
-      }
-      callback(null, results);
-    });
+      pool.query(sql, (err, results) => {
+        if (err) {
+          console.error("Database query error:", err);
+          return callback(err, null);
+        }
+        callback(null, results);
+      });
+    }
   },
 
   listByCustomerID: (customer_id, callback) => {
