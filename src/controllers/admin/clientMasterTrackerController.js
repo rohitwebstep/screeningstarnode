@@ -543,23 +543,33 @@ exports.filterOptions = (req, res) => {
 };
 
 exports.filterOptionsForCustomer = (req, res) => {
-  const { admin_id, _token } = req.query;
+  const { customer_id, admin_id, _token } = req.query;
 
   let missingFields = [];
+  if (
+    !customer_id ||
+    customer_id === "" ||
+    customer_id === undefined ||
+    customer_id === "undefined"
+  ) {
+    missingFields.push("Customer ID");
+  }
   if (
     !admin_id ||
     admin_id === "" ||
     admin_id === undefined ||
     admin_id === "undefined"
-  )
+  ) {
     missingFields.push("Admin ID");
+  }
   if (
     !_token ||
     _token === "" ||
     _token === undefined ||
     _token === "undefined"
-  )
+  ) {
     missingFields.push("Token");
+  }
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -590,7 +600,7 @@ exports.filterOptionsForCustomer = (req, res) => {
 
       const newToken = result.newToken;
 
-      ClientMasterTrackerModel.filterOptions((err, filterOptions) => {
+      ClientMasterTrackerModel.filterOptionsForCustomer(customer_id, (err, filterOptions) => {
         if (err) {
           console.error("Database error:", err);
           return res.status(500).json({

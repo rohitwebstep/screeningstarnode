@@ -273,6 +273,22 @@ GROUP BY b.name;
     });
   },
 
+  filterOptionsForCustomer: (customer_id, callback) => {
+    const sql = `
+      SELECT \`status\`, COUNT(*) AS \`count\` 
+      FROM \`client_applications\` 
+      WHERE \`customer_id\` = ?
+      GROUP BY \`status\`, \`customer_id\`
+    `;
+    pool.query(sql, [customer_id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback(err, null);
+      }
+      callback(null, results);
+    });
+  },
+
   getCMTApplicationById: (client_application_id, callback) => {
     const sql =
       "SELECT * FROM `cmt_applications` WHERE `client_application_id` = ?";
