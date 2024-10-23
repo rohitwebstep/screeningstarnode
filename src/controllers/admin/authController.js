@@ -379,7 +379,7 @@ exports.updatePassword = (req, res) => {
   });
 };
 
-exports.forgotPassword = (req, res) => {
+exports.forgotPasswordRequest = (req, res) => {
   const { email } = req.body;
 
   // Validate the input email
@@ -496,7 +496,7 @@ exports.forgotPassword = (req, res) => {
   });
 };
 
-exports.validatePasswordResetToken = (req, res) => {
+exports.forgotPassword = (req, res) => {
   const { new_password, email, password_token } = req.body;
   const missingFields = [];
 
