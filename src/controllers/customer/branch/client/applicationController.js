@@ -756,7 +756,7 @@ exports.upload = async (req, res) => {
                       currentClientApplication.attach_documents &&
                       currentClientApplication.attach_documents.trim() !== ""
                     ) {
-                      AppModel.info("backend", (err, appInfo) => {
+                      AppModel.appInfo("backend", (err, appInfo) => {
                         if (err) {
                           console.error("Database error:", err);
                           return res.status(500).json({
