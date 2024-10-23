@@ -106,6 +106,32 @@ const Admin = {
     });
   },
 
+  setResetPasswordToken: (id, token, tokenExpiry, callback) => {
+    const sql = `
+      UPDATE \`admins\`
+      SET \`reset_password_token\` = ?, \`password_token_expiry\` = ?
+      WHERE \`id\` = ?
+    `;
+
+    pool.query(sql, [token, tokenExpiry, id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback({ message: "Database update error", error: err }, null);
+      }
+
+      if (results.affectedRows === 0) {
+        return callback(
+          {
+            message: "Token update failed. Admin not found or no changes made.",
+          },
+          null
+        );
+      }
+
+      callback(null, results);
+    });
+  },
+
   validateLogin: (id, callback) => {
     const sql = `
       SELECT \`login_token\`

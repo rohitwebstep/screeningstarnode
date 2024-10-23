@@ -1,12 +1,15 @@
 const crypto = require("crypto");
 const Admin = require("../../models/admin/adminModel");
 const Common = require("../../models/admin/commonModel");
+const AppModel = require("../../models/appModel");
 
 // Utility function to generate a random token
 const generateToken = () => crypto.randomBytes(32).toString("hex");
 
 // Utility function to get token expiry time (1 hour from current time)
 const getTokenExpiry = () => new Date(Date.now() + 3600000).toISOString();
+
+const { forgetPassword } = require("../../mailer/admin/auth/forgetPassword");
 
 // Admin login handler
 exports.login = (req, res) => {
@@ -378,21 +381,117 @@ exports.updatePassword = (req, res) => {
 
 exports.forgotPassword = (req, res) => {
   const { email } = req.body;
-  const missingFields = [];
 
-  if (!email || email === "" || email === undefined || email === "undefined") {
-    missingFields.push("Email");
-  }
-
-  if (missingFields.length > 0) {
+  // Validate the input email
+  if (!email || email.trim() === "") {
     return res.status(400).json({
       status: false,
-      message: `Missing required fields: ${missingFields.join(", ")}`,
+      message: "Email is required.",
     });
   }
 
-  res.status(200).json({
-    status: true,
-    message: "Password reset link has been sent to your email.",
+  // Check if an admin exists with the provided email
+  Admin.findByEmailOrMobile(email, (err, result) => {
+    if (err) {
+      console.error("Database error:", err);
+      return res.status(500).json({
+        status: false,
+        message:
+          "An error occurred while processing your request. Please try again.",
+      });
+    }
+
+    // If no admin found, return a 404 response
+    if (result.length === 0) {
+      return res.status(404).json({
+        status: false,
+        message: "No admin found with the provided email.",
+      });
+    }
+
+    const admin = result[0];
+
+    // Retrieve application information for the reset link
+    AppModel.appInfo("frontend", (err, appInfo) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res.status(500).json({
+          status: false,
+          message:
+            "An error occurred while retrieving application information. Please try again.",
+        });
+      }
+
+      if (appInfo) {
+        const token = generateToken();
+        const tokenExpiry = getTokenExpiry(); // ISO string for expiry time
+
+        // Update the reset password token in the database
+        Admin.setResetPasswordToken(admin.id, token, tokenExpiry, (err) => {
+          if (err) {
+            console.error("Error updating reset password token:", err);
+            Common.adminLoginLog(
+              admin.id,
+              "forgot-password",
+              "0",
+              `Error updating token: ${err.message}`,
+              () => {}
+            );
+            return res.status(500).json({
+              status: false,
+              message:
+                "An error occurred while generating the reset password token. Please try again.",
+            });
+          }
+
+          // Send password reset email
+          const resetLink = `${
+            appInfo.host || "https://www.goldquestglobal.com"
+          }/reset-password?email=${admin.email}&token=${token}`;
+          const toArr = [{ name: admin.name, email: admin.email }];
+
+          forgetPassword(
+            "admin auth",
+            "forget-password",
+            admin.name,
+            resetLink,
+            toArr
+          )
+            .then(() => {
+              Common.adminLoginLog(
+                admin.id,
+                "forgot-password",
+                "1",
+                null,
+                () => {}
+              );
+              return res.status(200).json({
+                status: true,
+                message: `A password reset email has been successfully sent to ${admin.name}.`,
+              });
+            })
+            .catch((emailError) => {
+              console.error("Error sending password reset email:", emailError);
+              Common.adminLoginLog(
+                admin.id,
+                "forgot-password",
+                "0",
+                `Failed to send email: ${emailError.message}`,
+                () => {}
+              );
+              return res.status(500).json({
+                status: false,
+                message: `Failed to send password reset email to ${admin.name}. Please try again later.`,
+              });
+            });
+        });
+      } else {
+        return res.status(500).json({
+          status: false,
+          message:
+            "Application information is not available. Please try again later.",
+        });
+      }
+    });
   });
 };
