@@ -65,9 +65,7 @@ exports.generateInvoice = (req, res) => {
         }
 
         const newToken = tokenResult.newToken;
-
-        // Fetch customer information and applications
-        generateInvoiceModel.generateInvoice(customer_id, (err, results) => {
+        AppModel.appInfo("frontend", (err, appInfo) => {
           if (err) {
             console.error("Database error:", err);
             return res.status(500).json({
@@ -77,17 +75,30 @@ exports.generateInvoice = (req, res) => {
             });
           }
 
-          // Respond with the fetched customer data and applications
-          return res.json({
-            status: true,
-            message: "Data fetched successfully.",
-            customer: results.customerInfo, // Customer information
-            applications: results.applicationsByBranch, // Client applications organized by branch
-            totalApplications: results.applicationsByBranch.reduce(
-              (sum, branch) => sum + branch.applications.length,
-              0
-            ), // Total count of applications across all branches
-            token: newToken,
+          // Fetch customer information and applications
+          generateInvoiceModel.generateInvoice(customer_id, (err, results) => {
+            if (err) {
+              console.error("Database error:", err);
+              return res.status(500).json({
+                status: false,
+                message: err.message,
+                token: newToken,
+              });
+            }
+
+            // Respond with the fetched customer data and applications
+            return res.json({
+              status: true,
+              message: "Data fetched successfully.",
+              customer: results.customerInfo, // Customer information
+              applications: results.applicationsByBranch, // Client applications organized by branch
+              totalApplications: results.applicationsByBranch.reduce(
+                (sum, branch) => sum + branch.applications.length,
+                0
+              ),
+              appInfo,
+              token: newToken,
+            });
           });
         });
       });
