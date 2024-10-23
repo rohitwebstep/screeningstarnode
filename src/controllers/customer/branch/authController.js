@@ -550,7 +550,7 @@ exports.forgotPassword = (req, res) => {
     if (!result || result.length === 0) {
       return res.status(404).json({
         status: false,
-        message: "No branch found with the provided email 2.",
+        message: "No branch found with the provided email 21.",
       });
     }
 
