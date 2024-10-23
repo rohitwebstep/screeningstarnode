@@ -5,6 +5,7 @@ const ClientApplication = require("../../models/customer/branch/clientApplicatio
 const Branch = require("../../models/customer/branch/branchModel");
 const AdminCommon = require("../../models/admin/commonModel");
 const BranchCommon = require("../../models/customer/branch/commonModel");
+const AppModel = require("../../models/appModel");
 const {
   finalReportMail,
 } = require("../../mailer/client master tracker/finalReportMail");
@@ -65,7 +66,7 @@ exports.generateInvoice = (req, res) => {
         }
 
         const newToken = tokenResult.newToken;
-        AppModel.appInfo("frontend", (err, appInfo) => {
+        AppModel.companyInfo((err, companyInfo) => {
           if (err) {
             console.error("Database error:", err);
             return res.status(500).json({
@@ -96,7 +97,7 @@ exports.generateInvoice = (req, res) => {
                 (sum, branch) => sum + branch.applications.length,
                 0
               ),
-              appInfo,
+              companyInfo,
               token: newToken,
             });
           });
