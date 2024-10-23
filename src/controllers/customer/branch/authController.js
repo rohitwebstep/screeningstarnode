@@ -407,8 +407,7 @@ exports.forgotPasswordRequest = (req, res) => {
       console.error("Database error:", err);
       return res.status(500).json({
         status: false,
-        message:
-          "An error occurred while processing your request. Please try again.",
+        message: err.message,
       });
     }
 

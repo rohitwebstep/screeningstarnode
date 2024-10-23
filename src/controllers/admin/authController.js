@@ -439,8 +439,7 @@ exports.forgotPasswordRequest = (req, res) => {
             );
             return res.status(500).json({
               status: false,
-              message:
-                "An error occurred while generating the reset password token. Please try again.",
+              message: err.message,
             });
           }
 
