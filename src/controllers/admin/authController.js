@@ -391,7 +391,7 @@ exports.forgotPassword = (req, res) => {
   }
 
   // Check if an admin exists with the provided email
-  Admin.findByEmailOrMobile(email, (err, result) => {
+  Admin.findByEmailOrMobileAllInfo(email, (err, result) => {
     if (err) {
       console.error("Database error:", err);
       return res.status(500).json({
@@ -492,6 +492,104 @@ exports.forgotPassword = (req, res) => {
             "Application information is not available. Please try again later.",
         });
       }
+    });
+  });
+};
+
+exports.validatePasswordResetToken = (req, res) => {
+  const { new_password, email, password_token } = req.body;
+  const missingFields = [];
+
+  // Validate required fields
+  if (!new_password || new_password.trim() === "") {
+    missingFields.push("New Password");
+  }
+  if (!email || email.trim() === "") {
+    missingFields.push("Email");
+  }
+  if (!password_token || password_token.trim() === "") {
+    missingFields.push("Password Token");
+  }
+
+  // Return error if there are missing fields
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  // Fetch admin details using the provided email
+  Admin.findByEmailOrMobileAllInfo(email, (err, result) => {
+    if (err) {
+      console.error("Database error:", err);
+      return res
+        .status(500)
+        .json({ status: false, message: "Internal server error." });
+    }
+
+    // Return error if no admin found
+    if (!result || result.length === 0) {
+      return res.status(404).json({
+        status: false,
+        message: "No admin found with the provided email.",
+      });
+    }
+
+    const admin = result[0];
+    const tokenExpiry = new Date(admin.password_token_expiry);
+    const currentTime = new Date();
+
+    // Check if the token is still valid
+    if (currentTime > tokenExpiry) {
+      return res.status(401).json({
+        status: false,
+        message: "Password reset token has expired. Please request a new one.",
+      });
+    }
+
+    // Verify if the token matches
+    if (admin.reset_password_token !== password_token) {
+      return res.status(401).json({
+        status: false,
+        message: "Invalid password reset token.",
+      });
+    }
+
+    // Proceed to update the password
+    Admin.updatePassword(new_password, admin.id, (err, result) => {
+      if (err) {
+        console.error("Database error during password update:", err.message);
+        Common.adminActivityLog(
+          admin.id,
+          "Password",
+          "Update",
+          "0",
+          "Failed password update attempt",
+          err.message,
+          () => {}
+        );
+        return res.status(500).json({
+          status: false,
+          message: "Failed to update password. Please try again later.",
+        });
+      }
+
+      // Log successful password update
+      Common.adminActivityLog(
+        admin.id,
+        "Password",
+        "Update",
+        "1",
+        "Admin password updated successfully",
+        null,
+        () => {}
+      );
+
+      return res.status(200).json({
+        status: true,
+        message: "Password updated successfully.",
+      });
     });
   });
 };

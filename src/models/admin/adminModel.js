@@ -25,6 +25,30 @@ const Admin = {
     });
   },
 
+  findByEmailOrMobileAllInfo: (username, callback) => {
+    const sql = `
+      SELECT *
+      FROM \`admins\`
+      WHERE \`email\` = ? OR \`mobile\` = ?
+    `;
+
+    pool.query(sql, [username, username], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback({ message: "Database query error", error: err }, null);
+      }
+
+      if (results.length === 0) {
+        return callback(
+          { message: "No admin found with the provided email or mobile" },
+          null
+        );
+      }
+
+      callback(null, results);
+    });
+  },
+
   validatePassword: (username, password, callback) => {
     const sql = `
       SELECT \`id\`, \`emp_id\`, \`name\`, \`profile_picture\`, \`email\`, \`mobile\`, \`status\`
@@ -48,7 +72,7 @@ const Admin = {
   },
 
   updatePassword: (new_password, admin_id, callback) => {
-    const sql = `UPDATE \`admins\` SET \`password\` = MD5(?) WHERE \`id\` = ?`;
+    const sql = `UPDATE \`admins\` SET \`password\` = MD5(?), \`reset_password_token\` = null, \`password_token_expiry\` = null WHERE \`id\` = ?`;
 
     pool.query(sql, [new_password, admin_id], (err, results) => {
       if (err) {
