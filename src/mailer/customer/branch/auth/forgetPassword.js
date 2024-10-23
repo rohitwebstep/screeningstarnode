@@ -2,7 +2,7 @@ const nodemailer = require("nodemailer");
 const connection = require("../../../../config/db"); // Import the existing MySQL connection
 
 // Function to send email
-async function forgetPassword(module, action, admin_name, reset_link, toArr) {
+async function forgetPassword(module, action, branch_name, reset_link, toArr) {
   try {
     // Fetch email template
     const [emailRows] = await connection
@@ -37,7 +37,7 @@ async function forgetPassword(module, action, admin_name, reset_link, toArr) {
 
     // Replace placeholders in the email template
     let template = email.template;
-    template = template.replace(/{{admin_name}}/g, admin_name).replace(/{{reset_link}}/g, reset_link);
+    template = template.replace(/{{branch_name}}/g, branch_name).replace(/{{reset_link}}/g, reset_link);
 
 
     // Validate recipient email(s)
