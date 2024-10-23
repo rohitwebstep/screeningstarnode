@@ -16,7 +16,7 @@ const Branch = {
 
       if (results.length === 0) {
         return callback(
-          { message: "No branch found with the provided email" },
+          { message: "No branch found with the provided email 1" },
           null
         );
       }
@@ -40,7 +40,7 @@ const Branch = {
 
       if (results.length === 0) {
         return callback(
-          { message: "No branch found with the provided email" },
+          { message: "No branch found with the provided email 2" },
           null
         );
       }
