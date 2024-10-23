@@ -25,6 +25,56 @@ const Branch = {
     });
   },
 
+  findByEmailOrMobileAllInfo: (username, callback) => {
+    const sql = `
+      SELECT \`id\`, \`customer_id\`, \`name\`, \`email\`, \`status\`, \`login_token\`, \`token_expiry\`
+      FROM \`branches\`
+      WHERE \`email\` = ?
+    `;
+
+    pool.query(sql, [username], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback({ message: "Database query error", error: err }, null);
+      }
+
+      if (results.length === 0) {
+        return callback(
+          { message: "No branch found with the provided email" },
+          null
+        );
+      }
+
+      callback(null, results);
+    });
+  },
+
+  setResetPasswordToken: (id, token, tokenExpiry, callback) => {
+    const sql = `
+      UPDATE \`branches\`
+      SET \`reset_password_token\` = ?, \`password_token_expiry\` = ?
+      WHERE \`id\` = ?
+    `;
+
+    pool.query(sql, [token, tokenExpiry, id], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return callback({ message: "Database update error", error: err }, null);
+      }
+
+      if (results.affectedRows === 0) {
+        return callback(
+          {
+            message: "Token update failed. Branch not found or no changes made.",
+          },
+          null
+        );
+      }
+
+      callback(null, results);
+    });
+  },
+
   validatePassword: (email, password, callback) => {
     const sql = `
       SELECT \`id\`
