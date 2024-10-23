@@ -8,13 +8,13 @@ const BranchCommon = require("../../models/customer/branch/commonModel");
 const AppModel = require("../../models/appModel");
 const {
   finalReportMail,
-} = require("../../mailer/client master tracker/finalReportMail");
+} = require("../../mailer/admin/client-master-tracker/finalReportMail");
 const {
   qcReportCheckMail,
-} = require("../../mailer/client master tracker/qcReportCheckMail");
+} = require("../../mailer/admin/client-master-tracker/qcReportCheckMail");
 const {
   readyForReport,
-} = require("../../mailer/client master tracker/readyForReport");
+} = require("../../mailer/admin/client-master-tracker/readyForReport");
 
 const fs = require("fs");
 const path = require("path");

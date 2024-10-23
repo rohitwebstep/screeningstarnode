@@ -7,13 +7,13 @@ const AdminCommon = require("../../models/admin/commonModel");
 const BranchCommon = require("../../models/customer/branch/commonModel");
 const {
   finalReportMail,
-} = require("../../mailer/client master tracker/finalReportMail");
+} = require("../../mailer/admin/client-master-tracker/finalReportMail");
 const {
   qcReportCheckMail,
-} = require("../../mailer/client master tracker/qcReportCheckMail");
+} = require("../../mailer/admin/client-master-tracker/qcReportCheckMail");
 const {
   readyForReport,
-} = require("../../mailer/client master tracker/readyForReport");
+} = require("../../mailer/admin/client-master-tracker/readyForReport");
 
 const fs = require("fs");
 const path = require("path");
@@ -918,7 +918,7 @@ exports.generateReport = (req, res) => {
 
                     AdminCommon.adminActivityLog(
                       admin_id,
-                      "Client Master Tracker",
+                      "admin/client-master-tracker",
                       logStatus,
                       "0",
                       logData,
@@ -941,7 +941,7 @@ exports.generateReport = (req, res) => {
 
                   AdminCommon.adminActivityLog(
                     admin_id,
-                    "Client Master Tracker",
+                    "admin/client-master-tracker",
                     logStatus,
                     "1",
                     logDataSuccess,
@@ -1007,7 +1007,7 @@ exports.generateReport = (req, res) => {
 
                                   AdminCommon.adminActivityLog(
                                     admin_id,
-                                    "Client Master Tracker",
+                                    "admin/client-master-tracker",
                                     annexureLogStatus,
                                     "0",
                                     annexureLogData,
@@ -1020,7 +1020,7 @@ exports.generateReport = (req, res) => {
 
                                 AdminCommon.adminActivityLog(
                                   admin_id,
-                                  "Client Master Tracker",
+                                  "admin/client-master-tracker",
                                   annexureLogStatus,
                                   "1",
                                   logDataSuccess,

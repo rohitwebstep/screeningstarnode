@@ -25,7 +25,7 @@ app.use('/uploads', express.static('uploads'));
 
 // Define routes
 app.use("/admin", adminRoutes);
-app.use("/client-master-tracker", clientMasterTrackerRoutes);
+app.use("/admin/client-master-tracker", clientMasterTrackerRoutes);
 app.use("/generate-invoice", generateInvoiceRoutes);
 app.use("/acknowledgement", acknowledgementRoutes);
 app.use("/external-login-credentials", externalLoginCredentials);

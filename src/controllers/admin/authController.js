@@ -375,3 +375,24 @@ exports.updatePassword = (req, res) => {
     });
   });
 };
+
+exports.forgotPassword = (req, res) => {
+  const { email } = req.body;
+  const missingFields = [];
+
+  if (!email || email === "" || email === undefined || email === "undefined") {
+    missingFields.push("Email");
+  }
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  res.status(200).json({
+    status: true,
+    message: "Password reset link has been sent to your email.",
+  });
+};

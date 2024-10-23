@@ -1,5 +1,5 @@
 const nodemailer = require("nodemailer");
-const connection = require("../../config/db"); // Import the existing MySQL connection
+const connection = require("../../../config/db"); // Import the existing MySQL connection
 
 // Function to check if a file exists
 const checkFileExists = async (url) => {
