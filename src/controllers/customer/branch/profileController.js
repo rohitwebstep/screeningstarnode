@@ -972,67 +972,54 @@ exports.getServiceById = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-  const action = JSON.stringify({ service: "view" });
-
-  // Step 2: Check if the branch is authorized for the action
-  BranchCommon.isBranchAuthorizedForAction(branch_id, action, (authResult) => {
-    if (!authResult.status) {
-      return res.status(403).json({
-        status: false,
-        message: authResult.message, // Return the authorization error message
-      });
-    }
-
-    // Step 3: Verify the branch token
-    BranchCommon.isBranchTokenValid(
-      _token,
-      branch_id,
-      (tokenErr, tokenResult) => {
-        if (tokenErr) {
-          console.error("Error checking token validity:", tokenErr);
-          return res.status(500).json({
-            status: false,
-            message: "Server error while verifying token.",
-          });
-        }
-
-        if (!tokenResult.status) {
-          return res.status(401).json({
-            status: false,
-            message: tokenResult.message, // Return the token validation message
-          });
-        }
-
-        const newToken = tokenResult.newToken;
-
-        Service.getServiceById(id, (err, currentService) => {
-          if (err) {
-            console.error("Error fetching service data:", err);
-            return res.status(500).json({
-              status: false,
-              message: err,
-              token: newToken,
-            });
-          }
-
-          if (!currentService) {
-            return res.status(404).json({
-              status: false,
-              message: "Service not found",
-              token: newToken,
-            });
-          }
-
-          res.json({
-            status: true,
-            message: "Service retrieved successfully",
-            service: currentService,
-            token: newToken,
-          });
+  BranchCommon.isBranchTokenValid(
+    _token,
+    branch_id,
+    (tokenErr, tokenResult) => {
+      if (tokenErr) {
+        console.error("Error checking token validity:", tokenErr);
+        return res.status(500).json({
+          status: false,
+          message: "Server error while verifying token.",
         });
       }
-    );
-  });
+
+      if (!tokenResult.status) {
+        return res.status(401).json({
+          status: false,
+          message: tokenResult.message, // Return the token validation message
+        });
+      }
+
+      const newToken = tokenResult.newToken;
+
+      Service.getServiceById(id, (err, currentService) => {
+        if (err) {
+          console.error("Error fetching service data:", err);
+          return res.status(500).json({
+            status: false,
+            message: err,
+            token: newToken,
+          });
+        }
+
+        if (!currentService) {
+          return res.status(404).json({
+            status: false,
+            message: "Service not found",
+            token: newToken,
+          });
+        }
+
+        res.json({
+          status: true,
+          message: "Service retrieved successfully",
+          service: currentService,
+          token: newToken,
+        });
+      });
+    }
+  );
 };
 
 exports.annexureDataByServiceId = (req, res) => {
@@ -1081,94 +1068,83 @@ exports.annexureDataByServiceId = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ service: "view" });
-  BranchCommon.isBranchAuthorizedForAction(branch_id, action, (authResult) => {
-    if (!authResult.status) {
-      return res.status(403).json({
-        status: false,
-        message: authResult.message, // Return the authorization error message
-      });
-    }
+  BranchCommon.isBranchTokenValid(
+    _token,
+    branch_id,
+    (tokenErr, tokenResult) => {
+      if (tokenErr) {
+        console.error("Error checking token validity:", tokenErr);
+        return res.status(500).json({
+          status: false,
+          message: "Server error while verifying token.",
+        });
+      }
 
-    // Step 3: Verify the branch token
-    BranchCommon.isBranchTokenValid(
-      _token,
-      branch_id,
-      (tokenErr, tokenResult) => {
-        if (tokenErr) {
-          console.error("Error checking token validity:", tokenErr);
-          return res.status(500).json({
-            status: false,
-            message: "Server error while verifying token.",
-          });
-        }
+      if (!tokenResult.status) {
+        return res.status(401).json({
+          status: false,
+          message: tokenResult.message, // Return the token validation message
+        });
+      }
 
-        if (!tokenResult.status) {
-          return res.status(401).json({
-            status: false,
-            message: tokenResult.message, // Return the token validation message
-          });
-        }
+      const newToken = tokenResult.newToken;
 
-        const newToken = tokenResult.newToken;
+      clientMasterTracker.reportFormJsonByServiceID(
+        service_id,
+        (err, reportFormJson) => {
+          if (err) {
+            console.error("Error fetching report form JSON:", err);
+            return res
+              .status(500)
+              .json({ status: false, message: err.message, token: newToken });
+          }
 
-        clientMasterTracker.reportFormJsonByServiceID(
-          service_id,
-          (err, reportFormJson) => {
-            if (err) {
-              console.error("Error fetching report form JSON:", err);
-              return res
-                .status(500)
-                .json({ status: false, message: err.message, token: newToken });
-            }
+          if (!reportFormJson) {
+            return res.status(404).json({
+              status: false,
+              message: "Report form JSON not found",
+              token: newToken,
+            });
+          }
 
-            if (!reportFormJson) {
-              return res.status(404).json({
-                status: false,
-                message: "Report form JSON not found",
-                token: newToken,
-              });
-            }
+          const parsedData = JSON.parse(reportFormJson.json);
+          const db_table = parsedData.db_table;
+          const heading = parsedData.heading;
+          const modifiedDbTable = db_table.replace(/-/g, "_");
 
-            const parsedData = JSON.parse(reportFormJson.json);
-            const db_table = parsedData.db_table;
-            const heading = parsedData.heading;
-            const modifiedDbTable = db_table.replace(/-/g, "_");
-
-            clientMasterTracker.annexureData(
-              application_id,
-              modifiedDbTable,
-              (err, annexureData) => {
-                if (err) {
-                  console.error("Database error:", err);
-                  return res.status(500).json({
-                    status: false,
-                    message: "An error occurred while fetching annexure data.",
-                    error: err.message,
-                    token: newToken,
-                  });
-                }
-
-                if (!annexureData) {
-                  return res.status(404).json({
-                    status: false,
-                    message: "Annexure Data not found.",
-                    token: newToken,
-                  });
-                }
-
-                res.status(200).json({
-                  status: true,
-                  message: "Application fetched successfully.",
-                  annexureData,
-                  heading,
+          clientMasterTracker.annexureData(
+            application_id,
+            modifiedDbTable,
+            (err, annexureData) => {
+              if (err) {
+                console.error("Database error:", err);
+                return res.status(500).json({
+                  status: false,
+                  message: "An error occurred while fetching annexure data.",
+                  error: err.message,
                   token: newToken,
                 });
               }
-            );
-          }
-        );
-      }
-    );
-  });
+
+              if (!annexureData) {
+                return res.status(404).json({
+                  status: false,
+                  message: "Annexure Data not found.",
+                  token: newToken,
+                });
+              }
+
+              res.status(200).json({
+                status: true,
+                message: "Application fetched successfully.",
+                annexureData,
+                heading,
+                token: newToken,
+              });
+            }
+          );
+        }
+      );
+    }
+  );
 };

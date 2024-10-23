@@ -47,7 +47,6 @@ exports.create = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ candidate_application: "create" });
   Candidate.isEmailUsedBefore(email, (err, emailUsed) => {
     if (err) {
       return res.status(500).json({
@@ -56,13 +55,14 @@ exports.create = (req, res) => {
         error: err.message,
       });
     }
-
+    
     if (emailUsed) {
       return res.status(409).json({
         status: false,
         message: "Conflict: The email address has already been used.",
       });
     }
+    const action = JSON.stringify({ candidate_application: "create" });
     BranchCommon.isBranchAuthorizedForAction(branch_id, action, (result) => {
       if (!result.status) {
         return res.status(403).json({
