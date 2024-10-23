@@ -16,7 +16,7 @@ const Branch = {
 
       if (results.length === 0) {
         return callback(
-          { message: "No branch found with the provided email 1" },
+          { message: "No branch found with the provided email" },
           null
         );
       }
@@ -27,7 +27,7 @@ const Branch = {
 
   findByEmailOrMobileAllInfo: (username, callback) => {
     const sql = `
-      SELECT \`id\`, \`customer_id\`, \`name\`, \`email\`, \`status\`, \`login_token\`, \`token_expiry\`
+      SELECT *
       FROM \`branches\`
       WHERE \`email\` = ?
     `;
@@ -40,7 +40,7 @@ const Branch = {
 
       if (results.length === 0) {
         return callback(
-          { message: "No branch found with the provided email 22" },
+          { message: "No branch found with the provided email" },
           null
         );
       }
