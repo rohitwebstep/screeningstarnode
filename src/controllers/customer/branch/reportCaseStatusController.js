@@ -125,10 +125,10 @@ exports.annexureData = (req, res) => {
   )
     missingFields.push("DB Table");
   if (
-    !admin_id ||
-    admin_id === "" ||
-    admin_id === undefined ||
-    admin_id === "undefined"
+    !branch_id ||
+    branch_id === "" ||
+    branch_id === undefined ||
+    branch_id === "undefined"
   )
     missingFields.push("Admin ID");
   if (

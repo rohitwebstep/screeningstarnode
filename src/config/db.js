@@ -34,6 +34,7 @@ pool.getConnection((err, connection) => {
   connection.release(); // Release the connection back to the pool
 });
 
+/*
 // Monitor connection events for better diagnostics
 pool.on("acquire", (connection) => {
   console.log("Connection %d acquired", connection.threadId);
@@ -50,5 +51,6 @@ pool.on("enqueue", () => {
 pool.on("error", (err) => {
   console.error("Unexpected pool error:", err);
 });
+*/
 
 module.exports = pool;
