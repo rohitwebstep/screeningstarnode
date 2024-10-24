@@ -363,7 +363,7 @@ exports.validateLogin = (req, res) => {
   }
 
   // Fetch branch by ID
-  BranchAuth.findById(branch_id, (err, result) => {
+  BranchAuth.findById(branch_id, (err, branch) => {
     if (err) {
       console.error("Database error:", err);
       return res
@@ -372,14 +372,12 @@ exports.validateLogin = (req, res) => {
     }
 
     // If no branch found, return a 404 response
-    if (result.length === 0) {
+    if (!branch) {
       return res.status(404).json({
         status: false,
         message: "Branch not found with the provided ID",
       });
     }
-
-    const branch = result[0];
 
     // Validate the token
     if (branch.login_token !== _token) {

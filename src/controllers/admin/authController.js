@@ -239,11 +239,7 @@ exports.validateLogin = (req, res) => {
     });
   }
 
-  const start = Date.now();
   Admin.findById(admin_id, (err, admin) => {
-    const duration = Date.now() - start;
-    console.log(`findById took ${duration}ms`);
-
     if (err) {
       console.error("Database error:", err);
       return res
