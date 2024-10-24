@@ -15,7 +15,8 @@ const pool = mysql.createPool({
   waitForConnections: true, // Ensures waiting for connections rather than failing immediately
   connectionLimit: 10, // Maximum number of connections to the database
   queueLimit: 0, // Unlimited number of queued connection requests
-  connectTimeout: 60000, // Timeout after 60 seconds
+  connectTimeout: 120000, // Increase to 120 seconds for long-running queries
+  acquireTimeout: 120000, // Ensure acquired connection timeout matches connectTimeout
 });
 
 // Test connection

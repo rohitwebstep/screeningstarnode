@@ -63,8 +63,7 @@ exports.index = (req, res) => {
             console.error("Database error:", dbErr);
             return res.status(500).json({
               status: false,
-              message:
-                "An error occurred while fetching client applications 1.",
+              message: "An error occurred while fetching client applications.",
               token: newToken,
             });
           }

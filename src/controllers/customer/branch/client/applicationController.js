@@ -353,7 +353,7 @@ exports.list = (req, res) => {
           console.error("Database error:", err);
           return res.status(500).json({
             status: false,
-            message: "An error occurred while fetching client applications 2.",
+            message: "An error occurred while fetching client applications.",
             token: newToken,
             err,
           });
