@@ -1,5 +1,6 @@
+// db.js
 require("dotenv").config();
-const mysql = require("mysql2");
+const mysql = require("mysql2/promise"); // Import mysql2 with promise support
 
 // Logging environment variables for debugging
 console.log("DB_HOST:", process.env.DB_HOST);
@@ -19,8 +20,12 @@ const pool = mysql.createPool({
 });
 
 // Test connection
-pool.getConnection((err, connection) => {
-  if (err) {
+(async () => {
+  try {
+    const connection = await pool.getConnection(); // Wait for the connection to be established
+    console.log("Connected to the MySQL database");
+    connection.release(); // Release the connection back to the pool
+  } catch (err) {
     // Enhanced logging with error details
     console.error("Database connection error:", {
       message: err.message,
@@ -29,12 +34,10 @@ pool.getConnection((err, connection) => {
     });
     process.exit(1); // Exit the process if there's a connection error
   }
-  console.log("Connected to the MySQL database");
-  connection.release(); // Release the connection back to the pool
-});
+})();
 
+// Uncomment to monitor connection events
 /*
-// Monitor connection events for better diagnostics
 pool.on("acquire", (connection) => {
   console.log("Connection %d acquired", connection.threadId);
 });
@@ -52,4 +55,4 @@ pool.on("error", (err) => {
 });
 */
 
-module.exports = pool;
+module.exports = pool; // Export the connection pool for use in other modules
