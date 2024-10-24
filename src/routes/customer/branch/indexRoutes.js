@@ -4,6 +4,7 @@ const authController = require("../../../controllers/customer/branch/authControl
 const profileController = require("../../../controllers/customer/branch/profileController");
 const customerController = require("../../../controllers/customer/profileController");
 const clientRoutes = require("./clientRoutes");
+const reportCaseStatusRoutes = require("./reportCaseStatusRoutes");
 const candidateRoutes = require("./candidateRoutes");
 
 // Basic routes
@@ -34,5 +35,6 @@ router.get("/annexure-by-service",profileController.annexureDataByServiceId);
 router.delete("/delete", profileController.delete);
 
 router.use("/client-application", clientRoutes);
+router.use("/report-case-status", reportCaseStatusRoutes);
 router.use("/candidate-application", candidateRoutes);
 module.exports = router;
