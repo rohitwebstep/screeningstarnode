@@ -347,7 +347,7 @@ exports.validateLogin = (req, res) => {
   const missingFields = [];
   // Validate required fields
   if (!branch_id) {
-    missingFields.push("Admin Id");
+    missingFields.push("Branch Id");
   }
 
   if (!_token) {
@@ -375,7 +375,7 @@ exports.validateLogin = (req, res) => {
     if (result.length === 0) {
       return res.status(404).json({
         status: false,
-        message: "Admin not found with the provided ID",
+        message: "Branch not found with the provided ID",
       });
     }
 
@@ -394,13 +394,13 @@ exports.validateLogin = (req, res) => {
         branch.id,
         "login",
         "0",
-        "Admin account is not yet verified.",
+        "Branch account is not yet verified.",
         () => {}
       );
       return res.status(400).json({
         status: false,
         message:
-          "Admin account is not yet verified. Please complete the verification process before proceeding.",
+          "Branch account is not yet verified. Please complete the verification process before proceeding.",
       });
     }
 
@@ -415,7 +415,7 @@ exports.validateLogin = (req, res) => {
       return res.status(400).json({
         status: false,
         message:
-          "Admin account has been suspended. Please contact the help desk for further assistance.",
+          "Branch account has been suspended. Please contact the help desk for further assistance.",
       });
     }
 
