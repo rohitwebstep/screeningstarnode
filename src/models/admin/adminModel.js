@@ -158,7 +158,7 @@ const Admin = {
 
   validateLogin: (id, callback) => {
     const sql = `
-      SELECT \`login_token\`
+      SELECT \`login_token\`, \`token_expiry\`
       FROM \`admins\`
       WHERE \`id\` = ?
     `;
@@ -205,7 +205,7 @@ const Admin = {
   },
   findById: (id, callback) => {
     const sql = `
-      SELECT \`id\`, \`emp_id\`, \`name\`, \`profile_picture\`, \`email\`, \`mobile\`, \`status\`
+      SELECT \`id\`, \`emp_id\`, \`name\`, \`profile_picture\`, \`email\`, \`mobile\`, \`status\`, \`login_token\`, \`token_expiry\`
       FROM \`admins\`
       WHERE \`id\` = ?
     `;

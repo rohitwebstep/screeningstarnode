@@ -222,21 +222,12 @@ exports.validateLogin = (req, res) => {
   const { admin_id, _token } = req.body;
   const missingFields = [];
 
-  if (
-    !admin_id ||
-    admin_id === "" ||
-    admin_id === undefined ||
-    admin_id === "undefined"
-  ) {
+  // Validate required fields
+  if (!admin_id) {
     missingFields.push("Admin Id");
   }
 
-  if (
-    !_token ||
-    _token === "" ||
-    _token === undefined ||
-    _token === "undefined"
-  ) {
+  if (!_token) {
     missingFields.push("Token");
   }
 
@@ -248,32 +239,86 @@ exports.validateLogin = (req, res) => {
     });
   }
 
-  // Fetch the admin record by admin_id to retrieve the saved token and expiry
-  Admin.validateLogin(admin_id, (err, result) => {
+  // Fetch admin by ID
+  Admin.findById(admin_id, (err, result) => {
     if (err) {
       console.error("Database error:", err);
-      return res.status(500).json({ status: false, message: err.message });
+      return res
+        .status(500)
+        .json({ status: false, message: "Internal server error." });
     }
 
+    // If no admin found, return a 404 response
     if (result.length === 0) {
-      return res
-        .status(404)
-        .json({ status: false, message: "Admin not found" });
+      return res.status(404).json({
+        status: false,
+        message: "Admin not found with the provided ID",
+      });
     }
 
     const admin = result[0];
-    const isTokenValid = admin.login_token === _token;
 
-    if (!isTokenValid) {
+    // Validate the token
+    if (admin.login_token !== _token) {
       return res
         .status(401)
         .json({ status: false, message: "Invalid or expired token" });
     }
 
-    res.json({
-      status: true,
-      message: "Login validated successfully",
-      result: admin,
+    // Check admin status
+    if (admin.status === 0) {
+      Common.adminLoginLog(
+        admin.id,
+        "login",
+        "0",
+        "Admin account is not yet verified.",
+        () => {}
+      );
+      return res.status(400).json({
+        status: false,
+        message:
+          "Admin account is not yet verified. Please complete the verification process before proceeding.",
+      });
+    }
+
+    if (admin.status === 2) {
+      Common.adminLoginLog(
+        admin.id,
+        "login",
+        "0",
+        "Admin account has been suspended.",
+        () => {}
+      );
+      return res.status(400).json({
+        status: false,
+        message:
+          "Admin account has been suspended. Please contact the help desk for further assistance.",
+      });
+    }
+
+    // Check if the existing token is still valid
+    AdminCommon.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
+      if (err) {
+        console.error("Error checking token validity:", err);
+        return res
+          .status(500)
+          .json({ status: false, message: "Internal server error." });
+      }
+
+      if (!tokenResult.status) {
+        return res
+          .status(401)
+          .json({ status: false, message: tokenResult.message });
+      }
+
+      const newToken = tokenResult.newToken;
+
+      // Here you can respond with success and the new token if applicable
+      return res.status(200).json({
+        status: true,
+        message: "Login verified successful",
+        newToken,
+      });
     });
   });
 };
