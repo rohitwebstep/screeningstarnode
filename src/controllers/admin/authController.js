@@ -239,8 +239,11 @@ exports.validateLogin = (req, res) => {
     });
   }
 
-  // Fetch admin by ID
-  Admin.findById(admin_id, (err, result) => {
+  const start = Date.now();
+  Admin.findById(admin_id, (err, admin) => {
+    const duration = Date.now() - start;
+    console.log(`findById took ${duration}ms`);
+
     if (err) {
       console.error("Database error:", err);
       return res
@@ -249,14 +252,12 @@ exports.validateLogin = (req, res) => {
     }
 
     // If no admin found, return a 404 response
-    if (result.length === 0) {
+    if (!admin) {
       return res.status(404).json({
         status: false,
         message: "Admin not found with the provided ID",
       });
     }
-
-    const admin = result[0];
 
     // Validate the token
     if (admin.login_token !== _token) {
@@ -297,7 +298,7 @@ exports.validateLogin = (req, res) => {
     }
 
     // Check if the existing token is still valid
-    AdminCommon.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
+    Common.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
       if (err) {
         console.error("Error checking token validity:", err);
         return res
@@ -316,7 +317,7 @@ exports.validateLogin = (req, res) => {
       // Here you can respond with success and the new token if applicable
       return res.status(200).json({
         status: true,
-        message: "Login verified successful",
+        message: "Login verified successfully",
         newToken,
       });
     });
