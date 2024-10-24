@@ -345,10 +345,14 @@ exports.logout = (req, res) => {
 exports.validateLogin = (req, res) => {
   const { branch_id, _token } = req.body;
   const missingFields = [];
-
   // Validate required fields
-  if (!branch_id || branch_id === "") missingFields.push("Branch ID");
-  if (!_token || _token === "") missingFields.push("Token");
+  if (!branch_id) {
+    missingFields.push("Admin Id");
+  }
+
+  if (!_token) {
+    missingFields.push("Token");
+  }
 
   // If there are missing fields, return an error response
   if (missingFields.length > 0) {
@@ -358,34 +362,82 @@ exports.validateLogin = (req, res) => {
     });
   }
 
-  // Fetch the branch record by branch_id to retrieve the saved token and expiry
-  BranchAuth.validateLogin(branch_id, (err, result) => {
+  // Fetch branch by ID
+  BranchAuth.findById(branch_id, (err, result) => {
     if (err) {
       console.error("Database error:", err);
-      return res.status(500).json({ status: false, message: err.message });
-    }
-
-    if (result.length === 0) {
       return res
-        .status(404)
-        .json({ status: false, message: "Branch not found" });
+        .status(500)
+        .json({ status: false, message: "Internal server error." });
     }
 
-    const branch = result[0];
-    const isTokenValid =
-      branch.login_token === _token &&
-      new Date(branch.token_expiry) > new Date();
-
-    if (!isTokenValid) {
-      return res.status(401).json({
+    // If no branch found, return a 404 response
+    if (result.length === 0) {
+      return res.status(404).json({
         status: false,
-        message: "Invalid or expired token",
+        message: "Admin not found with the provided ID",
       });
     }
 
-    res.json({
-      status: true,
-      message: "Login validated successfully",
+    const branch = result[0];
+
+    // Validate the token
+    if (branch.login_token !== _token) {
+      return res
+        .status(401)
+        .json({ status: false, message: "Invalid or expired token" });
+    }
+
+    // Check branch status
+    if (branch.status === 0) {
+      Common.branchLoginLog(
+        branch.id,
+        "login",
+        "0",
+        "Admin account is not yet verified.",
+        () => {}
+      );
+      return res.status(400).json({
+        status: false,
+        message:
+          "Admin account is not yet verified. Please complete the verification process before proceeding.",
+      });
+    }
+
+    if (branch.status === 2) {
+      Common.branchLoginLog(
+        branch.id,
+        "login",
+        "0",
+        "branch account has been suspended.",
+        () => {}
+      );
+      return res.status(400).json({
+        status: false,
+        message:
+          "Admin account has been suspended. Please contact the help desk for further assistance.",
+      });
+    }
+
+    // Check if the existing token is still valid
+    Common.isBranchTokenValid(_token, branch_id, (err, result) => {
+      if (err) {
+        console.error("Error checking token validity:", err);
+        return res.status(500).json({ status: false, message: err.message });
+      }
+
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
+      }
+
+      const newToken = result.newToken;
+
+      // Here you can respond with success and the new token if applicable
+      return res.status(200).json({
+        status: true,
+        message: "Login verified successful",
+        newToken,
+      });
     });
   });
 };

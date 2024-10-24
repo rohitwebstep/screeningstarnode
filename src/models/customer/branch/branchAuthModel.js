@@ -208,7 +208,7 @@ const Branch = {
 
   findById: (id, callback) => {
     const sql = `
-      SELECT \`id\`, \`name\`, \`email\`, \`permissions\`, \`status\`
+      SELECT \`id\`, \`customer_id\`, \`name\`, \`email\`, \`status\`, \`login_token\`, \`token_expiry\`
       FROM \`branches\`
       WHERE \`id\` = ?
     `;
