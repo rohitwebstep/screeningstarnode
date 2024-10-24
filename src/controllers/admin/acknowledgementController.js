@@ -254,7 +254,20 @@ exports.sendNotification = async (req, res) => {
                   }
                   // Send response
                   if (customers.data.length > 0) {
+                    let applicationIds = [];
+
+                    customers.data.forEach((customer) => {
+                      customer.branches.forEach((branch) => {
+                        branch.applications.forEach((application) => {
+                          applicationIds.push(application.id);
+                        });
+                      });
+                    });
+
+                    // Join the IDs into a comma-separated string
+                    const applicationIdsString = applicationIds.join(",");
                     Acknowledgement.updateAckByCustomerID(
+                      applicationIdsString,
                       customer_id,
                       (err, affectedRows) => {
                         if (err) {

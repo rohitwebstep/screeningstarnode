@@ -8,7 +8,7 @@ const hashPassword = (password) =>
 const Acknowledgement = {
   list: (callback) => {
     const sql = `
-      SELECT \`ack_sent\`, \`branch_id\`, \`customer_id\`, COUNT(*) AS application_count
+      SELECT \`id\`, \`ack_sent\`, \`branch_id\`, \`customer_id\`, COUNT(*) AS application_count
       FROM \`client_applications\`
       WHERE ack_sent = 0
       GROUP BY \`branch_id\`, \`customer_id\`
@@ -115,11 +115,12 @@ const Acknowledgement = {
 
   listByCustomerID: (customer_id, callback) => {
     const sql = `
-      SELECT id, application_id, name, services, ack_sent, branch_id, customer_id
-      FROM client_applications
-      WHERE ack_sent = 0 AND customer_id = ?
-      ORDER BY created_at DESC";
-    `;
+    SELECT id, application_id, name, services, ack_sent, branch_id, customer_id
+    FROM client_applications
+    WHERE ack_sent = 0 AND customer_id = ?
+    ORDER BY created_at DESC
+    LIMIT 250
+  `;
 
     pool.query(sql, [customer_id], (err, results) => {
       if (err) {
@@ -138,7 +139,7 @@ const Acknowledgement = {
       let remainingQueries = results.length; // Track number of remaining results to process
 
       const processResults = (result) => {
-        const { branch_id, application_id, name, services } = result; // Include application details
+        const { id, branch_id, application_id, name, services } = result; // Include application details
 
         const customerSql = `SELECT id, admin_id, client_unique_id, name FROM customers WHERE id = ? AND status = ?`;
         const branchSql = `SELECT id, customer_id, name, email, is_head, head_id FROM branches WHERE id = ? AND status = ?`;
@@ -186,6 +187,7 @@ const Acknowledgement = {
 
                 // Add application details to the branch
                 const applicationDetails = {
+                  id: id,
                   application_id: application_id,
                   name: name,
                   services: services,
@@ -238,22 +240,29 @@ const Acknowledgement = {
     });
   },
 
-  updateAckByCustomerID: (customer_id, callback) => {
+  updateAckByCustomerID: (applicationIdsString, customer_id, callback) => {
+    // Convert the comma-separated string into an array of integers
+    const applicationIdsArray = applicationIdsString.split(",").map(Number);
+
     const sqlUpdate = `
       UPDATE client_applications
       SET ack_sent = 1
-      WHERE customer_id = ? AND ack_sent = 0
+      WHERE customer_id = ? AND ack_sent = 0 AND id IN (?)
     `;
 
-    pool.query(sqlUpdate, [customer_id], (err, results) => {
-      if (err) {
-        console.error("Database update error:", err);
-        return callback(err, null);
-      }
+    pool.query(
+      sqlUpdate,
+      [customer_id, applicationIdsArray],
+      (err, results) => {
+        if (err) {
+          console.error("Database update error:", err);
+          return callback(err, null);
+        }
 
-      // Return the number of affected rows (if needed)
-      callback(null, results.affectedRows);
-    });
+        // Return the number of affected rows (if needed)
+        callback(null, results.affectedRows);
+      }
+    );
   },
 };
 
