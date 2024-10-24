@@ -1,6 +1,5 @@
-// db.js
 require("dotenv").config();
-const mysql = require("mysql2/promise"); // Import mysql2 with promise support
+const mysql = require("mysql2/promise"); // Use promise version
 
 // Logging environment variables for debugging
 console.log("DB_HOST:", process.env.DB_HOST);
@@ -13,28 +12,35 @@ const pool = mysql.createPool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  waitForConnections: true, // Ensures waiting for connections rather than failing immediately
-  connectionLimit: 50, // Maximum number of connections to the database
-  queueLimit: 0, // Unlimited number of queued connection requests
-  connectTimeout: 120000, // Increase to 120 seconds for long-running queries
+  waitForConnections: true,
+  connectionLimit: 50,
+  queueLimit: 0,
+  connectTimeout: 120000,
 });
 
 // Test connection
 (async () => {
   try {
-    const connection = await pool.getConnection(); // Wait for the connection to be established
+    const connection = await pool.getConnection();
     console.log("Connected to the MySQL database");
     connection.release(); // Release the connection back to the pool
   } catch (err) {
-    // Enhanced logging with error details
     console.error("Database connection error:", {
       message: err.message,
       code: err.code,
       stack: err.stack,
     });
-    process.exit(1); // Exit the process if there's a connection error
+    process.exit(1);
   }
 })();
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  console.log("Shutting down gracefully...");
+  await pool.end();
+  console.log("Connection pool closed.");
+  process.exit(0);
+});
 
 // Uncomment to monitor connection events
 /*
@@ -55,4 +61,4 @@ pool.on("error", (err) => {
 });
 */
 
-module.exports = pool; // Export the connection pool for use in other modules
+module.exports = pool;
