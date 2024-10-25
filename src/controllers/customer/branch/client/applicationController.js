@@ -717,7 +717,7 @@ exports.upload = async (req, res) => {
               return res.status(500).json({
                 status: false,
                 message:
-                  result.error || "An error occurred while saving the image.", // Use detailed error message if available
+                  result || "An error occurred while saving the image.", // Use detailed error message if available
                 token: newToken,
                 savedImagePaths,
                 // details: result.details,

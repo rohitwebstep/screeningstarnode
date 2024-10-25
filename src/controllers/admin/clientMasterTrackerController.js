@@ -1766,12 +1766,12 @@ exports.upload = async (req, res) => {
             if (!success) {
               console.error(
                 "Upload failed:",
-                result.error || "An error occurred while saving the image."
+                result || "An error occurred while saving the image."
               );
               return res.status(500).json({
                 status: false,
                 message:
-                  result.error || "An error occurred while saving the image.",
+                  result || "An error occurred while saving the image.",
                 token: newToken,
                 savedImagePaths,
               });

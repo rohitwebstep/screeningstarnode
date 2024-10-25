@@ -615,7 +615,7 @@ exports.upload = async (req, res) => {
                   );
                   return res.status(500).json({
                     status: false,
-                    message: err.message,
+                    message: err,
                     token: newToken,
                   });
                 }
