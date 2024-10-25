@@ -356,12 +356,58 @@ exports.applicationByID = (req, res) => {
                 });
               }
 
-              return res.json({
-                status: true,
-                message: "Application fetched successfully 2",
-                application,
-                CMTData: CMTApplicationData,
-                token: newToken,
+              Branch.getBranchById(branch_id, (err, currentBranch) => {
+                if (err) {
+                  console.error("Database error during branch retrieval:", err);
+                  return res.status(500).json({
+                    status: false,
+                    message: "Failed to retrieve Branch. Please try again.",
+                    token: newToken,
+                  });
+                }
+
+                if (!currentBranch) {
+                  return res.status(404).json({
+                    status: false,
+                    message: "Branch not found.",
+                    token: newToken,
+                  });
+                }
+
+                Customer.getCustomerById(
+                  parseInt(currentBranch.customer_id),
+                  (err, currentCustomer) => {
+                    if (err) {
+                      console.error(
+                        "Database error during customer retrieval:",
+                        err
+                      );
+                      return res.status(500).json({
+                        status: false,
+                        message:
+                          "Failed to retrieve Customer. Please try again.",
+                        token: newToken,
+                      });
+                    }
+
+                    if (!currentCustomer) {
+                      return res.status(404).json({
+                        status: false,
+                        message: "Customer not found.",
+                        token: newToken,
+                      });
+                    }
+                    return res.json({
+                      status: true,
+                      message: "Application fetched successfully 2",
+                      application,
+                      CMTData: CMTApplicationData,
+                      branchInfo: currentBranch,
+                      customerInfo: currentCustomer,
+                      token: newToken,
+                    });
+                  }
+                );
               });
             }
           );
@@ -1770,8 +1816,7 @@ exports.upload = async (req, res) => {
               );
               return res.status(500).json({
                 status: false,
-                message:
-                  result || "An error occurred while saving the image.",
+                message: result || "An error occurred while saving the image.",
                 token: newToken,
                 savedImagePaths,
               });
