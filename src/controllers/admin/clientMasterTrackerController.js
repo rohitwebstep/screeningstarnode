@@ -2029,7 +2029,13 @@ exports.upload = async (req, res) => {
                 });
               }
             } else {
-              console.error("No rows affected by the upload operation");
+              console.log(`appId - `, appId);
+              console.log(`dbTable - `, dbTable);
+              console.log(`dbColumn - `, dbColumn);
+              console.error(
+                "No rows affected by the upload operation - ",
+                result
+              );
               return res.status(500).json({
                 status: false,
                 message: "No records were updated or created.",
