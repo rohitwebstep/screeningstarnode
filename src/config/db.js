@@ -22,16 +22,17 @@ const pool = mysql.createPool({
 const startConnection = (callback) => {
   pool.getConnection((err, connection) => {
     if (err) {
-      return callback(err, null);
+      console.error("Error getting connection from pool:", err); // Log error for debugging
+      return callback(err, null); // Call callback with error
     }
-    callback(null, connection);
+    callback(null, connection); // Pass the connection to the callback
   });
 };
 
 // Function to release a connection
 const connectionRelease = (connection) => {
   if (connection) {
-    connection.release();
+    connection.release(); // Release the connection back to the pool
   }
 };
 

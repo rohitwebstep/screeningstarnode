@@ -261,12 +261,19 @@ const Customer = {
       metaData.client_standard,
     ];
 
-    startConnection((connection) => {
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
+
       connection.query(
         sqlCustomerMetas,
         valuesCustomerMetas,
         (err, results) => {
-          connectionRelease(connection);
+          connectionRelease(connection); // Always release the connection
           if (err) {
             console.error("Database insertion error for customer_metas:", err);
             return callback(
@@ -278,7 +285,7 @@ const Customer = {
             );
           }
 
-          callback(null, results);
+          callback(null, results); // Pass results to callback
         }
       );
     });
