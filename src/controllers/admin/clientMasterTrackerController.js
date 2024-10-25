@@ -1786,7 +1786,7 @@ exports.upload = async (req, res) => {
 
         const newToken = result.newToken;
         // Define the target directory for uploads
-        const targetDirectory = `uploads/customer/${customerCode}/${appCode}/${dbTable}`;
+        const targetDirectory = `uploads/customer/${customerCode}/application/${appCode}/${dbTable}`;
         // Create the target directory for uploads
         await fs.promises.mkdir(targetDirectory, { recursive: true });
 
