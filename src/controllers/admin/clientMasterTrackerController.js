@@ -347,15 +347,6 @@ exports.applicationByID = (req, res) => {
                 });
               }
 
-              if (!CMTApplicationData) {
-                return res.json({
-                  status: true,
-                  message: "Application fetched successfully 1",
-                  application,
-                  token: newToken,
-                });
-              }
-
               Branch.getBranchById(branch_id, (err, currentBranch) => {
                 if (err) {
                   console.error("Database error during branch retrieval:", err);
@@ -397,15 +388,27 @@ exports.applicationByID = (req, res) => {
                         token: newToken,
                       });
                     }
-                    return res.json({
-                      status: true,
-                      message: "Application fetched successfully 2",
-                      application,
-                      CMTData: CMTApplicationData,
-                      branchInfo: currentBranch,
-                      customerInfo: currentCustomer,
-                      token: newToken,
-                    });
+
+                    if (!CMTApplicationData) {
+                      return res.json({
+                        status: true,
+                        message: "Application fetched successfully 1",
+                        application,
+                        branchInfo: currentBranch,
+                        customerInfo: currentCustomer,
+                        token: newToken,
+                      });
+                    } else {
+                      return res.json({
+                        status: true,
+                        message: "Application fetched successfully 2",
+                        application,
+                        CMTData: CMTApplicationData,
+                        branchInfo: currentBranch,
+                        customerInfo: currentCustomer,
+                        token: newToken,
+                      });
+                    }
                   }
                 );
               });
