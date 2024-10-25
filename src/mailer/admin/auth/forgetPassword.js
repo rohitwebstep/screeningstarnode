@@ -1,8 +1,21 @@
 const nodemailer = require("nodemailer");
-const connection = require("../../../config/db"); // Import the existing MySQL connection
+const { startConnection, connectionRelease } = require("../../../config/db"); // Import the existing MySQL connection
 
 // Function to send email
 async function forgetPassword(module, action, admin_name, reset_link, toArr) {
+  const connection = await new Promise((resolve, reject) => {
+    startConnection((err, conn) => {
+      if (err) {
+        console.error("Failed to connect to the database:", err);
+        return reject({
+          message: "Failed to connect to the database",
+          error: err,
+        });
+      }
+      resolve(conn);
+    });
+  });
+
   try {
     // Fetch email template
     const [emailRows] = await connection
@@ -11,6 +24,7 @@ async function forgetPassword(module, action, admin_name, reset_link, toArr) {
         "SELECT * FROM emails WHERE module = ? AND action = ? AND status = 1",
         [module, action]
       );
+
     if (emailRows.length === 0) throw new Error("Email template not found");
     const email = emailRows[0];
 
@@ -21,6 +35,7 @@ async function forgetPassword(module, action, admin_name, reset_link, toArr) {
         "SELECT * FROM smtp_credentials WHERE module = ? AND action = ? AND status = '1'",
         [module, action]
       );
+
     if (smtpRows.length === 0) throw new Error("SMTP credentials not found");
     const smtp = smtpRows[0];
 
@@ -37,8 +52,9 @@ async function forgetPassword(module, action, admin_name, reset_link, toArr) {
 
     // Replace placeholders in the email template
     let template = email.template;
-    template = template.replace(/{{admin_name}}/g, admin_name).replace(/{{reset_link}}/g, reset_link);
-
+    template = template
+      .replace(/{{admin_name}}/g, admin_name)
+      .replace(/{{reset_link}}/g, reset_link);
 
     // Validate recipient email(s)
     if (!toArr || toArr.length === 0) {
@@ -61,6 +77,8 @@ async function forgetPassword(module, action, admin_name, reset_link, toArr) {
     console.log("Email sent:", info.response);
   } catch (error) {
     console.error("Error sending email:", error);
+  } finally {
+    connectionRelease(connection); // Ensure the connection is released
   }
 }
 

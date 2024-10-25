@@ -8,8 +8,12 @@ const {
 const cef = {
   formJson: (service_id, callback) => {
     startConnection((err, connection) => {
-      if (err) return callback(err, null);
-
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
       const sql = "SELECT * FROM `cef_service_forms` WHERE `service_id` = ?";
       connection.query(sql, [service_id], (queryErr, results) => {
         connectionRelease(connection);
@@ -28,8 +32,12 @@ const cef = {
     callback
   ) => {
     startConnection((err, connection) => {
-      if (err) return callback(err);
-
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
       const checkTableSql = `
         SELECT COUNT(*) AS count 
         FROM information_schema.tables 
@@ -100,8 +108,12 @@ const cef = {
 
   getCEFApplicationById: (candidate_application_id, callback) => {
     startConnection((err, connection) => {
-      if (err) return callback(err, null);
-
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
       const sql =
         "SELECT * FROM `cef_applications` WHERE `candidate_application_id` = ?";
       connection.query(sql, [candidate_application_id], (queryErr, results) => {
@@ -125,8 +137,12 @@ const cef = {
     const fields = Object.keys(personal_information);
 
     startConnection((err, connection) => {
-      if (err) return callback(err, null);
-
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
       const checkColumnsSql = `
         SELECT COLUMN_NAME 
         FROM INFORMATION_SCHEMA.COLUMNS 
@@ -199,8 +215,12 @@ const cef = {
     callback
   ) => {
     startConnection((err, connection) => {
-      if (err) return callback(err, null);
-
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
       const checkEntrySql =
         "SELECT * FROM cef_applications WHERE candidate_application_id = ?";
       connection.query(
@@ -270,8 +290,12 @@ const cef = {
     const fields = Object.keys(mainJson);
 
     startConnection((err, connection) => {
-      if (err) return callback(err, null);
-
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
       // 1. Check if the table exists
       const checkTableSql = `
             SELECT COUNT(*) AS count 

@@ -15,60 +15,97 @@ const common = {
    * @param {function} callback - Callback function
    */
   isCustomerTokenValid: (_token, customer_id, callback) => {
-    if (typeof callback !== 'function') {
-      console.error('Callback is not a function');
+    if (typeof callback !== "function") {
+      console.error("Callback is not a function");
       return;
     }
 
-    const sql = `
-      SELECT \`login_token\`, \`token_expiry\`
-      FROM \`customers\`
-      WHERE \`id\` = ?
-    `;
-
-    pool.query(sql, [customer_id], (err, results) => {
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
-        return callback({ status: false, message: "Database error" }, null);
+        console.error("Failed to connect to the database:", err);
+        return callback(
+          { status: false, message: "Database connection error" },
+          null
+        );
       }
 
-      if (results.length === 0) {
-        return callback({ status: false, message: "Customer not found" }, null);
-      }
+      const sql = `
+        SELECT \`login_token\`, \`token_expiry\`
+        FROM \`customers\`
+        WHERE \`id\` = ?
+      `;
 
-      const currentToken = results[0].login_token;
-      const tokenExpiry = new Date(results[0].token_expiry);
-      const currentTime = new Date();
+      connection.query(sql, [customer_id], (queryErr, results) => {
+        connectionRelease(connection); // Release connection
 
-      if (_token !== currentToken) {
-        return callback({ status: false, message: "Invalid token provided" }, null);
-      }
+        if (queryErr) {
+          console.error("Database query error:", queryErr);
+          return callback({ status: false, message: "Database error" }, null);
+        }
 
-      if (tokenExpiry > currentTime) {
-        callback(null, { status: true, message: "Token is valid" });
-      } else {
-        const newToken = generateToken();
-        const newTokenExpiry = getTokenExpiry();
+        if (results.length === 0) {
+          return callback(
+            { status: false, message: "Customer not found" },
+            null
+          );
+        }
 
-        const updateSql = `
-          UPDATE \`customers\`
-          SET \`login_token\` = ?, \`token_expiry\` = ?
-          WHERE \`id\` = ?
-        `;
+        const currentToken = results[0].login_token;
+        const tokenExpiry = new Date(results[0].token_expiry);
+        const currentTime = new Date();
 
-        pool.query(updateSql, [newToken, newTokenExpiry, customer_id], (updateErr) => {
-          if (updateErr) {
-            console.error("Error updating token:", updateErr);
-            return callback({ status: false, message: "Error updating token" }, null);
-          }
+        if (_token !== currentToken) {
+          return callback(
+            { status: false, message: "Invalid token provided" },
+            null
+          );
+        }
 
-          callback(null, {
-            status: true,
-            message: "Token was expired and has been refreshed",
-            newToken,
+        if (tokenExpiry > currentTime) {
+          callback(null, { status: true, message: "Token is valid" });
+        } else {
+          const newToken = generateToken();
+          const newTokenExpiry = getTokenExpiry();
+
+          const updateSql = `
+            UPDATE \`customers\`
+            SET \`login_token\` = ?, \`token_expiry\` = ?
+            WHERE \`id\` = ?
+          `;
+
+          startConnection((updateErr, connection) => {
+            if (updateErr) {
+              console.error("Failed to connect to the database:", updateErr);
+              return callback(
+                { status: false, message: "Database connection error" },
+                null
+              );
+            }
+
+            connection.query(
+              updateSql,
+              [newToken, newTokenExpiry, customer_id],
+              (updateErr) => {
+                connectionRelease(connection); // Release connection
+
+                if (updateErr) {
+                  console.error("Error updating token:", updateErr);
+                  return callback(
+                    { status: false, message: "Error updating token" },
+                    null
+                  );
+                }
+
+                callback(null, {
+                  status: true,
+                  message: "Token was expired and has been refreshed",
+                  newToken,
+                });
+              }
+            );
           });
-        });
-      }
+        }
+      });
     });
   },
 
@@ -81,26 +118,42 @@ const common = {
    * @param {function} callback - Callback function
    */
   customerLoginLog: (customer_id, action, result, error, callback) => {
-    if (typeof callback !== 'function') {
-      console.error('Callback is not a function');
+    if (typeof callback !== "function") {
+      console.error("Callback is not a function");
       return;
     }
 
-    const insertSql = `
-      INSERT INTO \`customer_login_logs\` (\`customer_id\`, \`action\`, \`result\`, \`error\`, \`created_at\`)
-      VALUES (?, ?, ?, ?, NOW())
-    `;
-
-    pool.query(insertSql, [customer_id, action, result, error], (err) => {
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database insertion error:", err);
-        return callback({ status: false, message: "Database error" }, null);
+        console.error("Failed to connect to the database:", err);
+        return callback(
+          { status: false, message: "Database connection error" },
+          null
+        );
       }
 
-      callback(null, {
-        status: true,
-        message: "Customer login log entry added successfully",
-      });
+      const insertSql = `
+        INSERT INTO \`customer_login_logs\` (\`customer_id\`, \`action\`, \`result\`, \`error\`, \`created_at\`)
+        VALUES (?, ?, ?, ?, NOW())
+      `;
+
+      connection.query(
+        insertSql,
+        [customer_id, action, result, error],
+        (insertErr) => {
+          connectionRelease(connection); // Release connection
+
+          if (insertErr) {
+            console.error("Database insertion error:", insertErr);
+            return callback({ status: false, message: "Database error" }, null);
+          }
+
+          callback(null, {
+            status: true,
+            message: "Customer login log entry added successfully",
+          });
+        }
+      );
     });
   },
 
@@ -114,24 +167,51 @@ const common = {
    * @param {string} error - Error message if any
    * @param {function} callback - Callback function
    */
-  customerActivityLog: (customer_id, module, action, result, update, error, callback) => {
-    if (typeof callback !== 'function') {
-      console.error('Callback is not a function');
+  customerActivityLog: (
+    customer_id,
+    module,
+    action,
+    result,
+    update,
+    error,
+    callback
+  ) => {
+    if (typeof callback !== "function") {
+      console.error("Callback is not a function");
       return;
     }
-    const insertSql = `
-      INSERT INTO \`customer_activity_logs\` (\`customer_id\`, \`module\`, \`action\`, \`result\`, \`update\`, \`error\`, \`created_at\`)
-      VALUES (?, ?, ?, ?, ?, ?, NOW())
-    `;
-    pool.query(insertSql, [customer_id, module, action, result, update, error], (err) => {
+
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database insertion error:", err);
-        return callback({ status: false, message: "Database error" }, null);
+        console.error("Failed to connect to the database:", err);
+        return callback(
+          { status: false, message: "Database connection error" },
+          null
+        );
       }
-      callback(null, {
-        status: true,
-        message: "Customer activity log entry added successfully",
-      });
+
+      const insertSql = `
+        INSERT INTO \`customer_activity_logs\` (\`customer_id\`, \`module\`, \`action\`, \`result\`, \`update\`, \`error\`, \`created_at\`)
+        VALUES (?, ?, ?, ?, ?, ?, NOW())
+      `;
+
+      connection.query(
+        insertSql,
+        [customer_id, module, action, result, update, error],
+        (insertErr) => {
+          connectionRelease(connection); // Release connection
+
+          if (insertErr) {
+            console.error("Database insertion error:", insertErr);
+            return callback({ status: false, message: "Database error" }, null);
+          }
+
+          callback(null, {
+            status: true,
+            message: "Customer activity log entry added successfully",
+          });
+        }
+      );
     });
   },
 };

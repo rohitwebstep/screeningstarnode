@@ -1,8 +1,21 @@
 const nodemailer = require("nodemailer");
-const connection = require("../../../config/db"); // Import the existing MySQL connection
+const { startConnection, connectionRelease } = require("../../../config/db");
 
 // Function to send email
 async function readyForReport(module, action, application_id, toArr, ccArr) {
+  const connection = await new Promise((resolve, reject) => {
+    startConnection((err, conn) => {
+      if (err) {
+        console.error("Failed to connect to the database:", err);
+        return reject({
+          message: "Failed to connect to the database",
+          error: err,
+        });
+      }
+      resolve(conn);
+    });
+  });
+
   try {
     // Fetch email template
     const [emailRows] = await connection
@@ -11,6 +24,7 @@ async function readyForReport(module, action, application_id, toArr, ccArr) {
         "SELECT * FROM emails WHERE module = ? AND action = ? AND status = 1",
         [module, action]
       );
+
     if (emailRows.length === 0) throw new Error("Email template not found");
     const email = emailRows[0];
 
@@ -21,6 +35,7 @@ async function readyForReport(module, action, application_id, toArr, ccArr) {
         "SELECT * FROM smtp_credentials WHERE module = ? AND action = ? AND status = '1'",
         [module, action]
       );
+
     if (smtpRows.length === 0) throw new Error("SMTP credentials not found");
     const smtp = smtpRows[0];
 
@@ -80,7 +95,7 @@ async function readyForReport(module, action, application_id, toArr, ccArr) {
 
     // Prepare recipient list
     const toList = toArr
-      .map((email) => `"${email.name}" <${email.email}>`)
+      .map((email) => `"${email.name}" <${email.email.trim()}>`) // Trim to remove whitespace
       .join(", ");
 
     // Send email
@@ -95,6 +110,8 @@ async function readyForReport(module, action, application_id, toArr, ccArr) {
     console.log("Email sent:", info.response);
   } catch (error) {
     console.error("Error sending email:", error);
+  } finally {
+    connectionRelease(connection); // Ensure the connection is released
   }
 }
 

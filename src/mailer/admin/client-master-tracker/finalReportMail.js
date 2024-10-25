@@ -1,5 +1,5 @@
 const nodemailer = require("nodemailer");
-const connection = require("../../../config/db"); // Import the existing MySQL connection
+const { startConnection, connectionRelease } = require("../../../config/db");
 
 // Function to check if a file exists
 const checkFileExists = async (url) => {
@@ -54,6 +54,15 @@ async function finalReportMail(
   toArr,
   ccArr
 ) {
+  const connection = await new Promise((resolve, reject) => {
+    startConnection((err, conn) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(conn);
+    });
+  });
+
   try {
     // Fetch email template
     const [emailRows] = await connection
@@ -104,7 +113,6 @@ async function finalReportMail(
     const ccList = ccArr
       .map((entry) => {
         let emails = [];
-
         try {
           if (Array.isArray(entry.email)) {
             emails = entry.email;
@@ -125,7 +133,6 @@ async function finalReportMail(
           return ""; // Skip this entry if parsing fails
         }
 
-        // Ensure it's a valid non-empty string
         return emails
           .filter((email) => email) // Filter out invalid emails
           .map((email) => `"${entry.name}" <${email.trim()}>`) // Trim to remove whitespace
@@ -133,6 +140,7 @@ async function finalReportMail(
       })
       .filter((cc) => cc !== "") // Remove any empty CCs from failed parses
       .join(", ");
+      
     // Validate recipient email(s)
     if (!toArr || toArr.length === 0) {
       throw new Error("No recipient email provided");
@@ -157,6 +165,8 @@ async function finalReportMail(
     console.log("Email sent:", info.response);
   } catch (error) {
     console.error("Error sending email:", error);
+  } finally {
+    connectionRelease(connection); // Ensure the connection is released
   }
 }
 

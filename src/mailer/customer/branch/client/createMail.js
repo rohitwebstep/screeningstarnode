@@ -1,5 +1,5 @@
 const nodemailer = require("nodemailer");
-const connection = require("../../../../config/db"); // Import the existing MySQL connection
+const { startConnection, connectionRelease } = require("../../../../config/db"); // Import the existing MySQL connection
 
 // Function to generate HTML table from service details
 const generateTable = (services) => {
@@ -11,7 +11,7 @@ const generateTable = (services) => {
 
   let rows = "";
 
-  services.forEach((service, index) => {
+  services.forEach((service) => {
     rows += `<tr>
                 <td>${service}</td>
               </tr>`;
@@ -33,7 +33,6 @@ const generateDocs = (docs) => {
 
   // Generate <a> tags for each document
   docsArr.forEach((doc, index) => {
-    // Using the index to create unique identifiers for each document link
     links += `<a href="${doc}"><span>Doc ${index + 1}</span></a> `;
   });
 
@@ -53,6 +52,19 @@ async function createMail(
   toArr,
   ccArr
 ) {
+  const connection = await new Promise((resolve, reject) => {
+    startConnection((err, conn) => {
+      if (err) {
+        console.error("Failed to connect to the database:", err);
+        return reject({
+          message: "Failed to connect to the database",
+          error: err,
+        });
+      }
+      resolve(conn);
+    });
+  });
+
   try {
     // Fetch email template
     const [emailRows] = await connection
@@ -110,11 +122,9 @@ async function createMail(
     }
 
     // Prepare CC list
-    // Prepare CC list
     const ccList = ccArr
       .map((entry) => {
         let emails = [];
-
         try {
           if (Array.isArray(entry.email)) {
             emails = entry.email;
@@ -135,7 +145,6 @@ async function createMail(
           return ""; // Skip this entry if parsing fails
         }
 
-        // Ensure it's a valid non-empty string
         return emails
           .filter((email) => email) // Filter out invalid emails
           .map((email) => `"${entry.name}" <${email.trim()}>`) // Trim to remove whitespace
@@ -170,6 +179,8 @@ async function createMail(
     console.log("Email sent:", info.response);
   } catch (error) {
     console.error("Error sending email:", error);
+  } finally {
+    connectionRelease(connection); // Ensure the connection is released
   }
 }
 

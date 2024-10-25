@@ -1,5 +1,5 @@
 const nodemailer = require("nodemailer");
-const connection = require("../../config/db"); // Import the existing MySQL connection
+const { startConnection, connectionRelease } = require("../../config/db"); // Import the existing MySQL connection
 
 // Function to generate an HTML table from branch details
 const generateTable = (branches, password) => {
@@ -26,11 +26,16 @@ async function createMail(
   module,
   action,
   client_name,
-  applications,
+  branches,
   is_head,
-  customerData
+  customerData,
+  password // Added password parameter
 ) {
+  let connection;
+
   try {
+    connection = await startConnection(); // Start the connection
+
     // Fetch email template
     const [emailRows] = await connection
       .promise()
@@ -95,6 +100,10 @@ async function createMail(
     console.log("Email sent successfully:", info.response);
   } catch (error) {
     console.error("Error sending email:", error.message);
+  } finally {
+    if (connection) {
+      connectionRelease(connection); // Ensure the connection is released
+    }
   }
 }
 

@@ -1,5 +1,5 @@
 const nodemailer = require("nodemailer");
-const connection = require("../../../config/db"); // Import the existing MySQL connection
+const { startConnection, connectionRelease } = require("../../../config/db");
 
 // Function to check if a file exists
 const checkFileExists = async (url) => {
@@ -53,6 +53,19 @@ async function qcReportCheckMail(
   toArr,
   ccArr
 ) {
+  const connection = await new Promise((resolve, reject) => {
+    startConnection((err, conn) => {
+      if (err) {
+        console.error("Failed to connect to the database:", err);
+        return reject({
+          message: "Failed to connect to the database",
+          error: err,
+        });
+      }
+      resolve(conn);
+    });
+  });
+
   try {
     // Fetch email template
     const [emailRows] = await connection
@@ -150,6 +163,8 @@ async function qcReportCheckMail(
     console.log("Email sent:", info.response);
   } catch (error) {
     console.error("Error sending email:", error);
+  } finally {
+    connectionRelease(connection); // Ensure the connection is released
   }
 }
 

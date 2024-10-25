@@ -38,9 +38,13 @@ const Customer = {
 
   checkUniqueIdForUpdate: (customer_id, clientUniqueId, callback) => {
     startConnection((err, connection) => {
-      if (err)
-        return callback({ message: "Connection error", error: err }, null);
-
+      if (err) {
+        console.error("Failed to connect to the database:", err);
+        return callback(
+          { status: false, message: "Database connection error" },
+          null
+        );
+      }
       const sql = `
         SELECT COUNT(*) AS count
         FROM \`customers\`
@@ -65,9 +69,13 @@ const Customer = {
 
   checkUsername: (username, callback) => {
     startConnection((err, connection) => {
-      if (err)
-        return callback({ message: "Connection error", error: err }, null);
-
+      if (err) {
+        console.error("Failed to connect to the database:", err);
+        return callback(
+          { status: false, message: "Database connection error" },
+          null
+        );
+      }
       const sql = `
         SELECT COUNT(*) AS count
         FROM \`customers\`
@@ -92,9 +100,13 @@ const Customer = {
 
   checkUsernameForUpdate: (customer_id, username, callback) => {
     startConnection((err, connection) => {
-      if (err)
-        return callback({ message: "Connection error", error: err }, null);
-
+      if (err) {
+        console.error("Failed to connect to the database:", err);
+        return callback(
+          { status: false, message: "Database connection error" },
+          null
+        );
+      }
       const sql = `
         SELECT COUNT(*) AS count
         FROM \`customers\`
@@ -119,9 +131,13 @@ const Customer = {
 
   create: (customerData, callback) => {
     startConnection((err, connection) => {
-      if (err)
-        return callback({ message: "Connection error", error: err }, null);
-
+      if (err) {
+        console.error("Failed to connect to the database:", err);
+        return callback(
+          { status: false, message: "Database connection error" },
+          null
+        );
+      }
       const sqlCustomers = `
         INSERT INTO \`customers\` (\`client_unique_id\`, \`name\`, \`additional_login\`, \`username\`, \`profile_picture\`, \`emails\`, \`mobile\`, \`services\`, \`admin_id\`
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)

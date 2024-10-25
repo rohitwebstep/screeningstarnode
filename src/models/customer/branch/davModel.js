@@ -1,16 +1,32 @@
 const crypto = require("crypto");
-const { pool, startConnection, connectionRelease } = require("../../../config/db");
+const {
+  pool,
+  startConnection,
+  connectionRelease,
+} = require("../../../config/db");
 
 const dav = {
   getDAVApplicationById: (candidate_application_id, callback) => {
-    const sql =
-      "SELECT * FROM `dav_applications` WHERE `candidate_application_id` = ?";
-    pool.query(sql, [candidate_application_id], (err, results) => {
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
-        return callback(err, null);
+        console.error("Failed to connect to the database:", err);
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
       }
-      callback(null, results[0]);
+
+      const sql =
+        "SELECT * FROM `dav_applications` WHERE `candidate_application_id` = ?";
+      connection.query(sql, [candidate_application_id], (queryErr, results) => {
+        connectionRelease(connection); // Ensure the connection is released
+
+        if (queryErr) {
+          console.error("Database query error:", queryErr);
+          return callback(queryErr, null);
+        }
+        callback(null, results[0]);
+      });
     });
   },
 
@@ -23,74 +39,89 @@ const dav = {
   ) => {
     const fields = Object.keys(personal_information);
 
-    // 1. Check for existing columns in dav_applications
-    const checkColumnsSql = `
-      SELECT COLUMN_NAME 
-      FROM INFORMATION_SCHEMA.COLUMNS 
-      WHERE TABLE_NAME = 'dav_applications' AND COLUMN_NAME IN (?)`;
-
-    pool.query(checkColumnsSql, [fields], (err, results) => {
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Error checking columns:", err);
-        return callback(err, null);
+        console.error("Failed to connect to the database:", err);
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
       }
 
-      const existingColumns = results.map((row) => row.COLUMN_NAME);
-      const missingColumns = fields.filter(
-        (field) => !existingColumns.includes(field)
-      );
+      // 1. Check for existing columns in dav_applications
+      const checkColumnsSql = `
+        SELECT COLUMN_NAME 
+        FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_NAME = 'dav_applications' AND COLUMN_NAME IN (?)`;
 
-      // 2. If there are missing columns, alter the table to add them
-      if (missingColumns.length > 0) {
-        const alterQueries = missingColumns.map((column) => {
-          return `ALTER TABLE dav_applications ADD COLUMN ${column} VARCHAR(255)`; // Adjust data type as necessary
-        });
+      connection.query(checkColumnsSql, [fields], (err, results) => {
+        if (err) {
+          console.error("Error checking columns:", err);
+          connectionRelease(connection);
+          return callback(err, null);
+        }
 
-        // Run all ALTER statements
-        const alterPromises = alterQueries.map(
-          (query) =>
-            new Promise((resolve, reject) => {
-              pool.query(query, (alterErr) => {
-                if (alterErr) {
-                  console.error("Error adding column:", alterErr);
-                  return reject(alterErr);
-                }
-                resolve();
-              });
-            })
+        const existingColumns = results.map((row) => row.COLUMN_NAME);
+        const missingColumns = fields.filter(
+          (field) => !existingColumns.includes(field)
         );
 
-        // After altering the table, proceed to insert or update the data
-        Promise.all(alterPromises)
-          .then(() => {
-            // Insert or update entry after table alteration
-            dav.insertOrUpdateEntry(
-              personal_information,
-              candidate_application_id,
-              branch_id,
-              customer_id,
-              callback
-            );
-          })
-          .catch((alterErr) => {
-            console.error("Error executing ALTER statements:", alterErr);
-            callback(alterErr, null);
+        // 2. If there are missing columns, alter the table to add them
+        if (missingColumns.length > 0) {
+          const alterQueries = missingColumns.map((column) => {
+            return `ALTER TABLE dav_applications ADD COLUMN \`${column}\` VARCHAR(255)`; // Adjust data type as necessary
           });
-      } else {
-        // If no columns are missing, proceed to check and insert or update the entry
-        dav.insertOrUpdateEntry(
-          personal_information,
-          candidate_application_id,
-          branch_id,
-          customer_id,
-          callback
-        );
-      }
+
+          // Run all ALTER statements
+          const alterPromises = alterQueries.map(
+            (query) =>
+              new Promise((resolve, reject) => {
+                connection.query(query, (alterErr) => {
+                  if (alterErr) {
+                    console.error("Error adding column:", alterErr);
+                    return reject(alterErr);
+                  }
+                  resolve();
+                });
+              })
+          );
+
+          // After altering the table, proceed to insert or update the data
+          Promise.all(alterPromises)
+            .then(() => {
+              // Insert or update entry after table alteration
+              dav.insertOrUpdateEntry(
+                connection,
+                personal_information,
+                candidate_application_id,
+                branch_id,
+                customer_id,
+                callback
+              );
+            })
+            .catch((alterErr) => {
+              console.error("Error executing ALTER statements:", alterErr);
+              connectionRelease(connection);
+              callback(alterErr, null);
+            });
+        } else {
+          // If no columns are missing, proceed to check and insert or update the entry
+          dav.insertOrUpdateEntry(
+            connection,
+            personal_information,
+            candidate_application_id,
+            branch_id,
+            customer_id,
+            callback
+          );
+        }
+      });
     });
   },
 
   // Helper function for inserting or updating the entry
   insertOrUpdateEntry: (
+    connection,
     personal_information,
     candidate_application_id,
     branch_id,
@@ -100,7 +131,7 @@ const dav = {
     // Check if entry exists by candidate_application_id
     const checkEntrySql =
       "SELECT * FROM dav_applications WHERE candidate_application_id = ?";
-    pool.query(
+    connection.query(
       checkEntrySql,
       [candidate_application_id],
       (entryErr, entryResults) => {
@@ -116,10 +147,11 @@ const dav = {
 
           const updateSql =
             "UPDATE dav_applications SET ? WHERE candidate_application_id = ?";
-          pool.query(
+          connection.query(
             updateSql,
             [personal_information, candidate_application_id],
             (updateErr, updateResult) => {
+              connectionRelease(connection); // Ensure the connection is released
               if (updateErr) {
                 console.error("Error updating application:", updateErr);
                 return callback(updateErr, null);
@@ -130,7 +162,7 @@ const dav = {
         } else {
           // Entry does not exist, so insert it
           const insertSql = "INSERT INTO dav_applications SET ?";
-          pool.query(
+          connection.query(
             insertSql,
             {
               ...personal_information,
@@ -139,6 +171,7 @@ const dav = {
               customer_id,
             },
             (insertErr, insertResult) => {
+              connectionRelease(connection); // Ensure the connection is released
               if (insertErr) {
                 console.error("Error inserting application:", insertErr);
                 return callback(insertErr, null);
