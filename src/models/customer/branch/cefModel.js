@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const pool = require("../../../config/db");
+const { pool, startConnection, connectionRelease } = require("../../../config/db");
 
 const cef = {
   formJson: (service_id, callback) => {

@@ -1,4 +1,4 @@
-const pool = require("../config/db");
+const { pool, startConnection, connectionRelease } = require("../config/db");
 
 const AppCommon = {
   appInfo: (interfaceType, callback) => {
