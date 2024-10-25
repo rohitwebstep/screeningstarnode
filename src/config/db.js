@@ -15,19 +15,21 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  connectTimeout: 60000, // 60 seconds
+  connectTimeout: 120000, // 2 minutes for individual connection attempts
 });
 
-// Function to connect with indefinite retry
-function connectWithRetry() {
+// Function to connect with retry and backoff
+function connectWithRetry(attempt = 1) {
   pool.getConnection((err, connection) => {
     if (err) {
-      // Handle specific errors
       console.error("Database connection error:", err);
-      console.log("Retrying connection...");
 
-      // Wait for 5 seconds before trying again
-      setTimeout(connectWithRetry, 5000);
+      // Calculate backoff time (increasing with each attempt)
+      const backoffTime = Math.min(30000, 5000 * attempt); // Max backoff of 30 seconds
+      console.log(`Retrying connection in ${backoffTime / 1000} seconds...`);
+
+      // Retry connection after the backoff period
+      setTimeout(() => connectWithRetry(attempt + 1), backoffTime);
     } else {
       console.log("Connected to the MySQL database");
       connection.release();
@@ -56,5 +58,4 @@ pool.on("error", (err) => {
   console.error("Unexpected pool error:", err);
 });
 */
-
 module.exports = pool;
