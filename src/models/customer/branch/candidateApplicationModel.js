@@ -3,22 +3,31 @@ const { pool, startConnection, connectionRelease } = require("../../../config/db
 const candidateApplication = {
   // Method to check if an email has been used before
   isEmailUsedBefore: (email, callback) => {
-    // Step 1: Check if the email exists in candidate_applications
-    const emailCheckSql = `
-    SELECT COUNT(*) as count
-    FROM \`candidate_applications\`
-    WHERE \`email\` = ?
-  `;
-
-    pool.query(emailCheckSql, [email], (err, emailCheckResults) => {
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Error checking email in candidate_applications:", err);
-        return callback(err, null);
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
       }
 
-      // Check if the email exists
-      const emailExists = emailCheckResults[0].count > 0;
-      return callback(null, emailExists);
+      const emailCheckSql = `
+        SELECT COUNT(*) as count
+        FROM \`candidate_applications\`
+        WHERE \`email\` = ?
+      `;
+
+      connection.query(emailCheckSql, [email], (err, emailCheckResults) => {
+        connectionRelease(connection); // Ensure connection is released
+
+        if (err) {
+          console.error("Error checking email in candidate_applications:", err);
+          return callback(err, null);
+        }
+
+        const emailExists = emailCheckResults[0].count > 0;
+        return callback(null, emailExists);
+      });
     });
   },
 
@@ -59,23 +68,46 @@ const candidateApplication = {
       customer_id,
     ];
 
-    pool.query(sql, values, (err, results) => {
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
-        return callback(err, null);
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
       }
-      callback(null, results);
+
+      connection.query(sql, values, (err, results) => {
+        connectionRelease(connection); // Ensure connection is released
+
+        if (err) {
+          console.error("Database query error:", err);
+          return callback(err, null);
+        }
+        callback(null, results);
+      });
     });
   },
 
   list: (branch_id, callback) => {
     const sql = "SELECT * FROM `candidate_applications` WHERE `branch_id` = ? ORDER BY created_at DESC";
-    pool.query(sql, [branch_id], (err, results) => {
+    
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
-        return callback(err, null);
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
       }
-      callback(null, results);
+
+      connection.query(sql, [branch_id], (err, results) => {
+        connectionRelease(connection); // Ensure connection is released
+
+        if (err) {
+          console.error("Database query error:", err);
+          return callback(err, null);
+        }
+        callback(null, results);
+      });
     });
   },
 
@@ -85,46 +117,78 @@ const candidateApplication = {
       FROM \`candidate_applications\`
       WHERE \`employee_id\` = ?
     `;
-    pool.query(sql, [candidateUniqueEmpId], (err, results) => {
+    
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
-        return callback({ message: "Database query error", error: err }, null);
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
       }
 
-      const count = results[0].count;
-      callback(null, count > 0);
+      connection.query(sql, [candidateUniqueEmpId], (err, results) => {
+        connectionRelease(connection); // Ensure connection is released
+
+        if (err) {
+          console.error("Database query error:", err);
+          return callback({ message: "Database query error", error: err }, null);
+        }
+
+        const count = results[0].count;
+        callback(null, count > 0);
+      });
     });
   },
 
-  checkUniqueEmpIdByCandidateApplicationID: (
-    application_id,
-    candidateUniqueEmpId,
-    callback
-  ) => {
+  checkUniqueEmpIdByCandidateApplicationID: (application_id, candidateUniqueEmpId, callback) => {
     const sql = `
       SELECT COUNT(*) AS count
       FROM \`candidate_applications\`
       WHERE \`employee_id\` = ? AND id = ?
     `;
-    pool.query(sql, [candidateUniqueEmpId, application_id], (err, results) => {
+    
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
-        return callback({ message: "Database query error", error: err }, null);
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
       }
 
-      const count = results[0].count;
-      callback(null, count > 0);
+      connection.query(sql, [candidateUniqueEmpId, application_id], (err, results) => {
+        connectionRelease(connection); // Ensure connection is released
+
+        if (err) {
+          console.error("Database query error:", err);
+          return callback({ message: "Database query error", error: err }, null);
+        }
+
+        const count = results[0].count;
+        callback(null, count > 0);
+      });
     });
   },
 
   getCandidateApplicationById: (id, callback) => {
     const sql = "SELECT * FROM `candidate_applications` WHERE id = ?";
-    pool.query(sql, [id], (err, results) => {
+    
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
-        return callback(err, null);
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
       }
-      callback(null, results[0]);
+
+      connection.query(sql, [id], (err, results) => {
+        connectionRelease(connection); // Ensure connection is released
+
+        if (err) {
+          console.error("Database query error:", err);
+          return callback(err, null);
+        }
+        callback(null, results[0]);
+      });
     });
   },
 
@@ -154,23 +218,46 @@ const candidateApplication = {
       candidate_application_id,
     ];
 
-    pool.query(sql, values, (err, results) => {
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
-        return callback(err, null);
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
       }
-      callback(null, results);
+
+      connection.query(sql, values, (err, results) => {
+        connectionRelease(connection); // Ensure connection is released
+
+        if (err) {
+          console.error("Database query error:", err);
+          return callback(err, null);
+        }
+        callback(null, results);
+      });
     });
   },
 
   delete: (id, callback) => {
     const sql = "DELETE FROM `candidate_applications` WHERE `id` = ?";
-    pool.query(sql, [id], (err, results) => {
+    
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
-        return callback(err, null);
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
       }
-      callback(null, results);
+
+      connection.query(sql, [id], (err, results) => {
+        connectionRelease(connection); // Ensure connection is released
+
+        if (err) {
+          console.error("Database query error:", err);
+          return callback(err, null);
+        }
+        callback(null, results);
+      });
     });
   },
 
@@ -178,15 +265,26 @@ const candidateApplication = {
     const sql =
       "SELECT * FROM `candidate_applications` WHERE `id` = ? AND `branch_id` = ? AND `customer_id` = ?";
 
-    pool.query(sql, [app_id, branch_id, customer_id], (err, results) => {
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
-        return callback(err, null);
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
       }
 
-      // Check if results exist
-      const exists = results.length > 0; // true if exists, false otherwise
-      callback(null, exists);
+      connection.query(sql, [app_id, branch_id, customer_id], (err, results) => {
+        connectionRelease(connection); // Ensure connection is released
+
+        if (err) {
+          console.error("Database query error:", err);
+          return callback(err, null);
+        }
+
+        // Check if results exist
+        const exists = results.length > 0; // true if exists, false otherwise
+        callback(null, exists);
+      });
     });
   },
 };
