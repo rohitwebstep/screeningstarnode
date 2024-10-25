@@ -1,284 +1,426 @@
-const { pool, startConnection, connectionRelease } = require("../../../config/db");
+const {
+  pool,
+  startConnection,
+  connectionRelease,
+} = require("../../../config/db");
 
 const Branch = {
   findByEmailOrMobile: (username, callback) => {
-    const sql = `
-      SELECT \`id\`, \`customer_id\`, \`name\`, \`email\`, \`status\`, \`login_token\`, \`token_expiry\`
-      FROM \`branches\`
-      WHERE \`email\` = ?
-    `;
-
-    pool.query(sql, [username], (err, results) => {
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
-        return callback({ message: "Database query error", error: err }, null);
-      }
-
-      if (results.length === 0) {
         return callback(
-          { message: "No branch found with the provided email" },
+          { message: "Failed to connect to the database", error: err },
           null
         );
       }
 
-      callback(null, results);
+      const sql = `
+        SELECT \`id\`, \`customer_id\`, \`name\`, \`email\`, \`status\`, \`login_token\`, \`token_expiry\`
+        FROM \`branches\`
+        WHERE \`email\` = ?
+      `;
+
+      connection.query(sql, [username], (err, results) => {
+        connectionRelease(connection); // Ensure connection is released
+
+        if (err) {
+          console.error("Database query error:", err);
+          return callback(
+            { message: "Database query error", error: err },
+            null
+          );
+        }
+
+        if (results.length === 0) {
+          return callback(
+            { message: "No branch found with the provided email" },
+            null
+          );
+        }
+
+        callback(null, results);
+      });
     });
   },
 
   findByEmailOrMobileAllInfo: (username, callback) => {
-    const sql = `
-      SELECT *
-      FROM \`branches\`
-      WHERE \`email\` = ?
-    `;
-
-    pool.query(sql, [username], (err, results) => {
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
-        return callback({ message: "Database query error", error: err }, null);
-      }
-
-      if (results.length === 0) {
         return callback(
-          { message: "No branch found with the provided email" },
+          { message: "Failed to connect to the database", error: err },
           null
         );
       }
 
-      callback(null, results);
+      const sql = `
+        SELECT *
+        FROM \`branches\`
+        WHERE \`email\` = ?
+      `;
+
+      connection.query(sql, [username], (err, results) => {
+        connectionRelease(connection); // Ensure connection is released
+
+        if (err) {
+          console.error("Database query error:", err);
+          return callback(
+            { message: "Database query error", error: err },
+            null
+          );
+        }
+
+        if (results.length === 0) {
+          return callback(
+            { message: "No branch found with the provided email" },
+            null
+          );
+        }
+
+        callback(null, results);
+      });
     });
   },
 
   setResetPasswordToken: (id, token, tokenExpiry, callback) => {
-    const sql = `
-      UPDATE \`branches\`
-      SET \`reset_password_token\` = ?, \`password_token_expiry\` = ?
-      WHERE \`id\` = ?
-    `;
-
-    pool.query(sql, [token, tokenExpiry, id], (err, results) => {
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
-        return callback({ message: "Database update error", error: err }, null);
-      }
-
-      if (results.affectedRows === 0) {
         return callback(
-          {
-            message: "Token update failed. Branch not found or no changes made.",
-          },
+          { message: "Failed to connect to the database", error: err },
           null
         );
       }
 
-      callback(null, results);
+      const sql = `
+        UPDATE \`branches\`
+        SET \`reset_password_token\` = ?, \`password_token_expiry\` = ?
+        WHERE \`id\` = ?
+      `;
+
+      connection.query(sql, [token, tokenExpiry, id], (err, results) => {
+        connectionRelease(connection); // Ensure connection is released
+
+        if (err) {
+          console.error("Database query error:", err);
+          return callback(
+            { message: "Database update error", error: err },
+            null
+          );
+        }
+
+        if (results.affectedRows === 0) {
+          return callback(
+            {
+              message:
+                "Token update failed. Branch not found or no changes made.",
+            },
+            null
+          );
+        }
+
+        callback(null, results);
+      });
     });
   },
 
   validatePassword: (email, password, callback) => {
-    const sql = `
-      SELECT \`id\`
-      FROM \`branches\`
-      WHERE \`email\` = ?
-      AND (\`password\` = MD5(?) OR \`password\` = ?)
-    `;
-
-    pool.query(sql, [email, password, password], (err, results) => {
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query failed:", err);
-        return callback({ message: "Internal server error", error: err }, null);
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
       }
 
-      // Return true if a match is found, otherwise return false
-      if (results.length > 0) {
-        return callback(null, true);
-      } else {
-        return callback(null, false);
-      }
+      const sql = `
+        SELECT \`id\`
+        FROM \`branches\`
+        WHERE \`email\` = ?
+        AND (\`password\` = MD5(?) OR \`password\` = ?)
+      `;
+
+      connection.query(sql, [email, password, password], (err, results) => {
+        connectionRelease(connection); // Ensure connection is released
+
+        if (err) {
+          console.error("Database query failed:", err);
+          return callback(
+            { message: "Internal server error", error: err },
+            null
+          );
+        }
+
+        // Return true if a match is found, otherwise return false
+        if (results.length > 0) {
+          return callback(null, true);
+        } else {
+          return callback(null, false);
+        }
+      });
     });
   },
 
   updatePassword: (new_password, branch_id, callback) => {
-    const sql = `UPDATE \`branches\` SET \`password\` = MD5(?) WHERE \`id\` = ?`;
-
-    pool.query(sql, [new_password, branch_id], (err, results) => {
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err.message);
         return callback(
-          {
-            message: "An error occurred while updating the password.",
-            error: err,
-          },
+          { message: "Failed to connect to the database", error: err },
           null
         );
       }
 
-      // Check if the branch_id was found and the update affected any rows
-      if (results.affectedRows === 0) {
-        return callback(
-          {
-            message:
-              "Branch not found or password not updated. Please check the provided details.",
-          },
-          null
-        );
-      }
+      const sql = `UPDATE \`branches\` SET \`password\` = MD5(?) WHERE \`id\` = ?`;
 
-      callback(null, {
-        message: "Password updated successfully.",
-        affectedRows: results.affectedRows,
+      connection.query(sql, [new_password, branch_id], (err, results) => {
+        connectionRelease(connection); // Ensure connection is released
+
+        if (err) {
+          console.error("Database query error:", err.message);
+          return callback(
+            {
+              message: "An error occurred while updating the password.",
+              error: err,
+            },
+            null
+          );
+        }
+
+        // Check if the branch_id was found and the update affected any rows
+        if (results.affectedRows === 0) {
+          return callback(
+            {
+              message:
+                "Branch not found or password not updated. Please check the provided details.",
+            },
+            null
+          );
+        }
+
+        callback(null, {
+          message: "Password updated successfully.",
+          affectedRows: results.affectedRows,
+        });
       });
     });
   },
 
   updateToken: (id, token, tokenExpiry, callback) => {
-    const sql = `
-      UPDATE \`branches\`
-      SET \`login_token\` = ?, \`token_expiry\` = ?
-      WHERE \`id\` = ?
-    `;
-
-    pool.query(sql, [token, tokenExpiry, id], (err, results) => {
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
-        return callback({ message: "Database update error", error: err }, null);
-      }
-
-      if (results.affectedRows === 0) {
         return callback(
-          {
-            message:
-              "Token update failed. Branch not found or no changes made.",
-          },
+          { message: "Failed to connect to the database", error: err },
           null
         );
       }
 
-      callback(null, results);
+      const sql = `
+        UPDATE \`branches\`
+        SET \`login_token\` = ?, \`token_expiry\` = ?
+        WHERE \`id\` = ?
+      `;
+
+      connection.query(sql, [token, tokenExpiry, id], (err, results) => {
+        connectionRelease(connection); // Ensure connection is released
+
+        if (err) {
+          console.error("Database query error:", err);
+          return callback(
+            { message: "Database update error", error: err },
+            null
+          );
+        }
+
+        if (results.affectedRows === 0) {
+          return callback(
+            {
+              message:
+                "Token update failed. Branch not found or no changes made.",
+            },
+            null
+          );
+        }
+
+        callback(null, results);
+      });
     });
   },
 
   validateLogin: (id, callback) => {
-    const sql = `
-      SELECT \`login_token\`, \`token_expiry\`
-      FROM \`branches\`
-      WHERE \`id\` = ?
-    `;
-
-    pool.query(sql, [id], (err, results) => {
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
-        return callback({ message: "Database query error", error: err }, null);
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
       }
 
-      if (results.length === 0) {
-        return callback({ message: "Branch not found" }, null);
-      }
+      const sql = `
+        SELECT \`login_token\`, \`token_expiry\`
+        FROM \`branches\`
+        WHERE \`id\` = ?
+      `;
 
-      callback(null, results);
+      connection.query(sql, [id], (err, results) => {
+        connectionRelease(connection); // Ensure connection is released
+
+        if (err) {
+          console.error("Database query error:", err);
+          return callback(
+            { message: "Database query error", error: err },
+            null
+          );
+        }
+
+        if (results.length === 0) {
+          return callback({ message: "Branch not found" }, null);
+        }
+
+        callback(null, results);
+      });
     });
   },
 
   // Clear login token and token expiry
   logout: (id, callback) => {
-    const sql = `
-        UPDATE \`branches\`
-        SET \`login_token\` = NULL, \`token_expiry\` = NULL
-        WHERE \`id\` = ?
-      `;
-
-    pool.query(sql, [id], (err, results) => {
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
-        return callback({ message: "Database update error", error: err }, null);
-      }
-
-      if (results.affectedRows === 0) {
         return callback(
-          {
-            message: "Token clear failed. Branch not found or no changes made.",
-          },
+          { message: "Failed to connect to the database", error: err },
           null
         );
       }
 
-      callback(null, results);
+      const sql = `
+          UPDATE \`branches\`
+          SET \`login_token\` = NULL, \`token_expiry\` = NULL
+          WHERE \`id\` = ?
+        `;
+
+      connection.query(sql, [id], (err, results) => {
+        connectionRelease(connection); // Ensure connection is released
+
+        if (err) {
+          console.error("Database query error:", err);
+          return callback(
+            { message: "Database update error", error: err },
+            null
+          );
+        }
+
+        if (results.affectedRows === 0) {
+          return callback(
+            {
+              message:
+                "Token clear failed. Branch not found or no changes made.",
+            },
+            null
+          );
+        }
+
+        callback(null, results);
+      });
     });
   },
 
   findById: (id, callback) => {
-    const sql = `
-      SELECT \`id\`, \`customer_id\`, \`name\`, \`email\`, \`status\`, \`login_token\`, \`token_expiry\`
-      FROM \`branches\`
-      WHERE \`id\` = ?
-    `;
-    pool.query(sql, [id], (err, results) => {
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
-        return callback({ message: "Database query error", error: err }, null);
-      }
-      if (results.length === 0) {
-        return callback({ message: "Branch not found" }, null);
-      }
-      callback(null, results[0]); // Return the first result (should be one result if ID is unique)
-    });
-  },
-
-  isBranchActive: (id, callback) => {
-    const sql = `
-      SELECT \`status\`
-      FROM \`branches\`
-      WHERE \`id\` = ?
-    `;
-
-    pool.query(sql, [id], (err, results) => {
-      if (err) {
-        console.error("Database query error:", err);
-        return callback({ message: "Internal server error", error: err }, null);
-      }
-
-      // If no customer is found, return appropriate message
-      if (results.length === 0) {
         return callback(
-          { message: "No branch found with the provided ID" },
+          { message: "Failed to connect to the database", error: err },
           null
         );
       }
 
-      const status = results[0].status;
+      const sql = `
+        SELECT \`id\`, \`customer_id\`, \`name\`, \`email\`, \`status\`, \`login_token\`, \`token_expiry\`
+        FROM \`branches\`
+        WHERE \`id\` = ?
+      `;
 
-      // Check if status is either string "1" or number 1
-      const isActive = status == 1; // using loose equality (==) to handle both types
-      callback(null, isActive);
+      connection.query(sql, [id], (err, results) => {
+        connectionRelease(connection); // Ensure connection is released
+
+        if (err) {
+          console.error("Database query error:", err);
+          return callback(
+            { message: "Database query error", error: err },
+            null
+          );
+        }
+        if (results.length === 0) {
+          return callback({ message: "Branch not found" }, null);
+        }
+        callback(null, results[0]); // Return the first result (should be one result if ID is unique)
+      });
+    });
+  },
+
+  isBranchActive: (id, callback) => {
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
+
+      const sql = `
+        SELECT \`status\`
+        FROM \`branches\`
+        WHERE \`id\` = ?
+      `;
+
+      connection.query(sql, [id], (err, results) => {
+        connectionRelease(connection); // Ensure connection is released
+
+        if (err) {
+          console.error("Database query error:", err);
+          return callback(
+            { message: "Database query error", error: err },
+            null
+          );
+        }
+        if (results.length === 0) {
+          return callback({ message: "Branch not found" }, null);
+        }
+
+        const isActive = results[0].status == 1;
+        callback(null, { isActive });
+      });
     });
   },
 
   isCustomerActive: (customerID, callback) => {
-    const sql = `
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
+
+      const sql = `
       SELECT \`status\`
       FROM \`customers\`
       WHERE \`id\` = ?
     `;
 
-    pool.query(sql, [customerID], (err, results) => {
-      if (err) {
-        console.error("Database query error:", err);
-        return callback({ message: "Internal server error", error: err }, null);
-      }
+      connection.query(sql, [customerID], (err, results) => {
+        connectionRelease(connection); // Ensure connection is released
 
-      // If no customer is found, return appropriate message
-      if (results.length === 0) {
-        return callback(
-          { message: "No customer found with the provided ID" },
-          null
-        );
-      }
+        if (err) {
+          console.error("Database query error:", err);
+          return callback(
+            { message: "Database query error", error: err },
+            null
+          );
+        }
+        if (results.length === 0) {
+          return callback({ message: "Customer not found" }, null);
+        }
 
-      const status = results[0].status;
-
-      // Check if status is either string "1" or number 1
-      const isActive = status == 1; // using loose equality (==) to handle both types
-      callback(null, isActive);
+        const isActive = results[0].status == 1;
+        callback(null, { isActive });
+      });
     });
   },
 };
