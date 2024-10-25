@@ -627,19 +627,23 @@ exports.upload = async (req, res) => {
         client_application_generated_id;
     }
 
-    const missingFields = Object.keys(requiredFields).filter(
-      (key) => !requiredFields[key]
-    );
+      // Check for missing fields
+      const missingFields = Object.keys(requiredFields)
+        .filter(
+          (field) =>
+            !requiredFields[field] ||
+            requiredFields[field] === "" ||
+            requiredFields[field] == "undefined" ||
+            requiredFields[field] == undefined
+        )
+        .map((field) => field.replace(/_/g, " "));
 
-    // If there are missing fields, return an error response
-    if (missingFields.length > 0) {
-      return res.status(400).json({
-        status: false,
-        message: `The following fields are required: ${missingFields.join(
-          ", "
-        )}`,
-      });
-    }
+      if (missingFields.length > 0) {
+        return res.status(400).json({
+          status: false,
+          message: `Missing required fields: ${missingFields.join(", ")}`,
+        });
+      }
 
     const action = JSON.stringify({ client_application: "update" });
     BranchCommon.isBranchAuthorizedForAction(branchId, action, (result) => {

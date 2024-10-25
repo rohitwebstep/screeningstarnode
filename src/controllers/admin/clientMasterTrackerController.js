@@ -141,22 +141,26 @@ exports.listByCustomerId = (req, res) => {
 
       const newToken = result.newToken;
 
-      ClientMasterTrackerModel.listByCustomerID(customer_id, filter_status, (err, result) => {
-        if (err) {
-          console.error("Database error:", err);
-          return res
-            .status(500)
-            .json({ status: false, message: err.message, token: newToken });
-        }
+      ClientMasterTrackerModel.listByCustomerID(
+        customer_id,
+        filter_status,
+        (err, result) => {
+          if (err) {
+            console.error("Database error:", err);
+            return res
+              .status(500)
+              .json({ status: false, message: err.message, token: newToken });
+          }
 
-        res.json({
-          status: true,
-          message: "Branches tracker fetched successfully",
-          customers: result,
-          totalResults: result.length,
-          token: newToken,
-        });
-      });
+          res.json({
+            status: true,
+            message: "Branches tracker fetched successfully",
+            customers: result,
+            totalResults: result.length,
+            token: newToken,
+          });
+        }
+      );
     });
   });
 };
@@ -226,7 +230,8 @@ exports.applicationListByBranch = (req, res) => {
       }
 
       ClientMasterTrackerModel.applicationListByBranch(
-        filter_status, branch_id,
+        filter_status,
+        branch_id,
         status,
         (err, result) => {
           if (err) {
@@ -600,32 +605,35 @@ exports.filterOptionsForBranch = (req, res) => {
 
       const newToken = result.newToken;
 
-      ClientMasterTrackerModel.filterOptionsForBranch(branch_id, (err, filterOptions) => {
-        if (err) {
-          console.error("Database error:", err);
-          return res.status(500).json({
-            status: false,
-            message: "An error occurred while fetching Filter options data.",
-            error: err.message,
+      ClientMasterTrackerModel.filterOptionsForBranch(
+        branch_id,
+        (err, filterOptions) => {
+          if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({
+              status: false,
+              message: "An error occurred while fetching Filter options data.",
+              error: err.message,
+              token: newToken,
+            });
+          }
+
+          if (!filterOptions) {
+            return res.status(404).json({
+              status: false,
+              message: "Filter options Data not found.",
+              token: newToken,
+            });
+          }
+
+          res.status(200).json({
+            status: true,
+            message: "Filter options fetched successfully.",
+            filterOptions,
             token: newToken,
           });
         }
-
-        if (!filterOptions) {
-          return res.status(404).json({
-            status: false,
-            message: "Filter options Data not found.",
-            token: newToken,
-          });
-        }
-
-        res.status(200).json({
-          status: true,
-          message: "Filter options fetched successfully.",
-          filterOptions,
-          token: newToken,
-        });
-      });
+      );
     });
   });
 };
@@ -1678,18 +1686,21 @@ exports.upload = async (req, res) => {
       dbColumn,
     };
 
-    const missingFields = Object.keys(requiredFields).filter(
-      (key) => !requiredFields[key]
-    );
+    // Check for missing fields
+    const missingFields = Object.keys(requiredFields)
+      .filter(
+        (field) =>
+          !requiredFields[field] ||
+          requiredFields[field] === "" ||
+          requiredFields[field] == "undefined" ||
+          requiredFields[field] == undefined
+      )
+      .map((field) => field.replace(/_/g, " "));
 
-    // If there are missing fields, return an error response
     if (missingFields.length > 0) {
-      console.warn("Missing fields:", missingFields);
       return res.status(400).json({
         status: false,
-        message: `The following fields are required: ${missingFields.join(
-          ", "
-        )}`,
+        message: `Missing required fields: ${missingFields.join(", ")}`,
       });
     }
 

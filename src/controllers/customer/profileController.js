@@ -338,7 +338,6 @@ exports.create = (req, res) => {
 
                               const emailPromises = dbBranches.map(
                                 (dbBranch) => {
-
                                   if (dbBranch.is_head == 1) {
                                     // For head branches, fetch customer details
                                     return new Promise((resolve, reject) => {
@@ -370,10 +369,11 @@ exports.create = (req, res) => {
                                           );
 
                                           // Create a recipient list
-                                          const customerRecipientList = customerJsonArr.map(email => ({
-                                            name: customerName,
-                                            email: email
-                                        }));
+                                          const customerRecipientList =
+                                            customerJsonArr.map((email) => ({
+                                              name: customerName,
+                                              email: email,
+                                            }));
 
                                           // Create email for head branch
                                           createMail(
@@ -506,24 +506,28 @@ exports.upload = async (req, res) => {
         upload_category,
       };
 
+      // Check for missing fields
+      const missingFields = Object.keys(requiredFields)
+        .filter(
+          (field) =>
+            !requiredFields[field] ||
+            requiredFields[field] === "" ||
+            requiredFields[field] == "undefined" ||
+            requiredFields[field] == undefined
+        )
+        .map((field) => field.replace(/_/g, " "));
+
+      if (missingFields.length > 0) {
+        return res.status(400).json({
+          status: false,
+          message: `Missing required fields: ${missingFields.join(", ")}`,
+        });
+      }
+      
       // If send_mail is 1, add additional required fields
       if (send_mail == 1) {
         requiredFields.company_name = company_name;
         requiredFields.password = password;
-      }
-
-      const missingFields = Object.keys(requiredFields).filter(
-        (key) => !requiredFields[key]
-      );
-
-      // If there are missing fields, return an error response
-      if (missingFields.length > 0) {
-        return res.status(400).json({
-          status: false,
-          message: `The following fields are required: ${missingFields.join(
-            ", "
-          )}`,
-        });
       }
 
       // Check if the admin is authorized
@@ -656,7 +660,6 @@ exports.upload = async (req, res) => {
 
                       // Iterate through each branch
                       dbBranches.forEach((dbBranch) => {
-
                         // Check if the branch is a head branch
                         if (dbBranch.is_head == 1) {
                           Customer.getCustomerById(
