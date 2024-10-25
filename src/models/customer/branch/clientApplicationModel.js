@@ -533,12 +533,39 @@ const clientApplication = {
                 err
               );
             } else if (jsonQueryResults.length > 0) {
-              jsonResults.push(jsonQueryResults[0].json); // Store the JSON result
+              try {
+                const jsonData = JSON.parse(jsonQueryResults[0].json);
+                const dbTable = jsonData.db_table;
+
+                // Check if dbTable exists and if there is an entry with client_application_id = id
+                const sqlCheckEntry = `SELECT * FROM \`${dbTable}\` WHERE client_application_id = ?`;
+                connection.query(sqlCheckEntry, [id], (err, entryResults) => {
+                  if (err) {
+                    console.error(
+                      "Database query error while checking dbTable:",
+                      err
+                    );
+                  } else if (entryResults.length > 0) {
+                    // Entry found, proceed to delete it
+                    const sqlDeleteEntry = `DELETE FROM \`${dbTable}\` WHERE client_application_id = ?`;
+                    connection.query(sqlDeleteEntry, [id], (err) => {
+                      if (err) {
+                        console.error(
+                          "Database query error during entry deletion:",
+                          err
+                        );
+                      }
+                    });
+                  }
+                });
+
+                // Store the JSON result
+                jsonResults.push(jsonQueryResults[0].json);
+              } catch (parseError) {
+                console.error("Error parsing JSON:", parseError);
+              }
             }
-            const jsonData = JSON.parse(jsonResults);
-            const dbTable = jsonData.db_table;
-            console.log(`dbTable - `,dbTable);
-            return;
+
             // Increment the counter and check if all queries are done
             completedQueries++;
             if (completedQueries === servicesArray.length) {
