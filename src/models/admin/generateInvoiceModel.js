@@ -24,10 +24,8 @@ const generateInvoiceModel = {
       `;
 
       connection.query(customerQuery, [customerId], (err, customerResults) => {
-        // Ensure the connection is released after this query
-        connectionRelease(connection);
-
         if (err) {
+          connectionRelease(connection);
           console.error(
             "Database query error while fetching customer information:",
             err
@@ -37,6 +35,7 @@ const generateInvoiceModel = {
 
         // Check if customer exists
         if (customerResults.length === 0) {
+          connectionRelease(connection);
           return callback(new Error("Customer not found."), null);
         }
 
@@ -52,10 +51,8 @@ const generateInvoiceModel = {
           applicationQuery,
           [customerId],
           (err, applicationResults) => {
-            // Ensure the connection is released after this query
-            connectionRelease(connection);
-
             if (err) {
+              connectionRelease(connection);
               console.error(
                 "Database query error while fetching applications:",
                 err
@@ -123,10 +120,11 @@ const generateInvoiceModel = {
                   customerInfo: customerResults[0], // Select the first customer record
                   applicationsByBranch: branchesWithApplications, // Updated structured data
                 };
-
+                connectionRelease(connection);
                 callback(null, finalResults);
               })
               .catch((err) => {
+                connectionRelease(connection);
                 console.error("Error while fetching branch details:", err);
                 callback(err, null);
               });

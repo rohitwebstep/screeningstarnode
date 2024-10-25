@@ -492,15 +492,77 @@ const clientApplication = {
           null
         );
       }
-      const sql = "DELETE FROM `client_applications` WHERE `id` = ?";
-      connection.query(sql, [id], (err, results) => {
-        connectionRelease(connection); // Ensure the connection is released
 
+      // Step 1: Retrieve services from client_applications where id = id
+      const sqlGetServices =
+        "SELECT services FROM `client_applications` WHERE `id` = ?";
+      connection.query(sqlGetServices, [id], (err, results) => {
         if (err) {
+          connectionRelease(connection); // Ensure the connection is released
           console.error("Database query error:", err);
           return callback(err, null);
         }
-        callback(null, results);
+
+        if (results.length === 0) {
+          connectionRelease(connection); // Ensure the connection is released
+          return callback(
+            { message: "No client application found with the given ID" },
+            null
+          );
+        }
+
+        // Get the services string and split it into an array
+        const services = results[0].services;
+        const servicesArray = services
+          .split(",")
+          .map((service) => parseInt(service.trim())); // Parse to integers
+
+        const jsonResults = []; // Array to hold JSON results
+        let completedQueries = 0; // Counter to track completed queries
+
+        // Step 2: Loop through each service ID and query the report_forms table
+        servicesArray.forEach((serviceId) => {
+          const sqlGetJson =
+            "SELECT json FROM report_forms WHERE service_id = ?";
+          connection.query(sqlGetJson, [serviceId], (err, jsonQueryResults) => {
+            if (err) {
+              console.error(
+                "Database query error for service ID",
+                serviceId,
+                ":",
+                err
+              );
+            } else if (jsonQueryResults.length > 0) {
+              jsonResults.push(jsonQueryResults[0].json); // Store the JSON result
+            }
+            const jsonData = JSON.parse(jsonResults);
+            const dbTable = jsonData.db_table;
+            console.log(`dbTable - `,dbTable);
+            return;
+            // Increment the counter and check if all queries are done
+            completedQueries++;
+            if (completedQueries === servicesArray.length) {
+              // Step 3: Now delete the client_application entry
+              const sqlDelete =
+                "DELETE FROM `client_applications` WHERE `id` = ?";
+              connection.query(sqlDelete, [id], (err, deleteResults) => {
+                connectionRelease(connection); // Ensure the connection is released
+
+                if (err) {
+                  console.error("Database query error during deletion:", err);
+                  return callback(err, null);
+                }
+
+                // Return both the deleted services and the results from json queries
+                callback(null, {
+                  deletedServices: servicesArray,
+                  jsonResults,
+                  deleteResults,
+                });
+              });
+            }
+          });
+        });
       });
     });
   },

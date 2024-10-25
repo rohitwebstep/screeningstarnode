@@ -36,14 +36,14 @@ const common = {
       `;
 
       connection.query(sql, [customer_id], (queryErr, results) => {
-        connectionRelease(connection); // Release connection
-
         if (queryErr) {
+          connectionRelease(connection);
           console.error("Database query error:", queryErr);
           return callback({ status: false, message: "Database error" }, null);
         }
 
         if (results.length === 0) {
+          connectionRelease(connection);
           return callback(
             { status: false, message: "Customer not found" },
             null
@@ -55,6 +55,7 @@ const common = {
         const currentTime = new Date();
 
         if (_token !== currentToken) {
+          connectionRelease(connection);
           return callback(
             { status: false, message: "Invalid token provided" },
             null
@@ -62,6 +63,7 @@ const common = {
         }
 
         if (tokenExpiry > currentTime) {
+          connectionRelease(connection);
           callback(null, { status: true, message: "Token is valid" });
         } else {
           const newToken = generateToken();

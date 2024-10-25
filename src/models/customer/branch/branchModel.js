@@ -83,9 +83,8 @@ const Branch = {
       `;
 
       connection.query(query, [branch_id], (err, results) => {
-        connectionRelease(connection); // Ensure connection is released
-
         if (err) {
+          connectionRelease(connection);
           console.error(
             "Database query error while fetching applications by status:",
             err
@@ -149,10 +148,11 @@ const Branch = {
               },
               {}
             );
-
+            connectionRelease(connection);
             return callback(null, applicationsByStatus);
           })
           .catch((err) => {
+            connectionRelease(connection);
             callback(err, null);
           });
       });

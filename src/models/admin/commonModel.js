@@ -28,9 +28,8 @@ const common = {
       }
 
       connection.query(sql, [admin_id], (queryErr, results) => {
-        connectionRelease(connection); // Release the connection
-
         if (queryErr) {
+          connectionRelease(connection);
           console.error("Database query error:", queryErr);
           return callback({ status: false, message: "Database error" }, null);
         }
@@ -44,6 +43,7 @@ const common = {
         const currentTime = new Date();
 
         if (_token !== currentToken) {
+          connectionRelease(connection);
           return callback(
             { status: false, message: "Invalid token provided" },
             null
@@ -51,6 +51,7 @@ const common = {
         }
 
         if (tokenExpiry > currentTime) {
+          connectionRelease(connection);
           callback(null, { status: true, message: "Token is valid" });
         } else {
           const newToken = generateToken();
@@ -190,9 +191,8 @@ const common = {
       }
 
       connection.query(adminSQL, [admin_id], (err, results) => {
-        connectionRelease(connection); // Release the connection
-
         if (err) {
+          connectionRelease(connection);
           console.error("Database query error:", err);
           return callback(
             { message: "Database query error", error: err },
@@ -201,6 +201,7 @@ const common = {
         }
 
         if (results.length === 0) {
+          connectionRelease(connection);
           return callback(
             { message: "No admin found with the provided ID" },
             null
@@ -212,6 +213,7 @@ const common = {
 
         const permissionsJsonByRoleSQL = `SELECT \`json\` FROM \`permissions\` WHERE \`role\` = ?`;
         pool.query(permissionsJsonByRoleSQL, [role], (err, results) => {
+          connectionRelease(connection);
           if (err) {
             console.error("Database query error:", err);
             return callback(

@@ -20,10 +20,8 @@ const Acknowledgement = {
       }
 
       connection.query(sql, (queryErr, results) => {
-        // Release the connection after the query
-        connectionRelease(connection);
-
         if (queryErr) {
+          connectionRelease(connection);
           console.error("Database query error:", queryErr);
           return callback(queryErr, null);
         }
@@ -34,6 +32,7 @@ const Acknowledgement = {
 
         // Early return if no results
         if (remainingQueries === 0) {
+          connectionRelease(connection);
           return callback(null, { data: [], totalResults: 0 });
         }
 
@@ -48,6 +47,7 @@ const Acknowledgement = {
               console.error("Connection error:", err);
               remainingQueries--;
               if (remainingQueries === 0) {
+                connectionRelease(connection);
                 return callback(null, {
                   data: Array.from(customerMap.values()),
                   totalResults,
@@ -60,8 +60,6 @@ const Acknowledgement = {
               customerSql,
               [customer_id, "1"],
               (customerErr, customerResult) => {
-                connectionRelease(connection); // Release the connection
-
                 if (customerErr || !customerResult.length) {
                   console.error(
                     "Error fetching customer:",
@@ -69,6 +67,7 @@ const Acknowledgement = {
                   );
                   remainingQueries--;
                   if (remainingQueries === 0) {
+                    connectionRelease(connection);
                     return callback(null, {
                       data: Array.from(customerMap.values()),
                       totalResults,
@@ -83,6 +82,7 @@ const Acknowledgement = {
                     console.error("Connection error:", err);
                     remainingQueries--;
                     if (remainingQueries === 0) {
+                      connectionRelease(connection);
                       return callback(null, {
                         data: Array.from(customerMap.values()),
                         totalResults,
@@ -95,8 +95,6 @@ const Acknowledgement = {
                     branchSql,
                     [branch_id, "1"],
                     (branchErr, branchResult) => {
-                      connectionRelease(connection); // Release the connection
-
                       if (branchErr || !branchResult.length) {
                         console.error(
                           "Error fetching branch:",
@@ -104,6 +102,7 @@ const Acknowledgement = {
                         );
                         remainingQueries--;
                         if (remainingQueries === 0) {
+                          connectionRelease(connection);
                           return callback(null, {
                             data: Array.from(customerMap.values()),
                             totalResults,
@@ -135,6 +134,7 @@ const Acknowledgement = {
 
                       remainingQueries--;
                       if (remainingQueries === 0) {
+                        connectionRelease(connection);
                         callback(null, {
                           data: Array.from(customerMap.values()),
                           totalResults,
@@ -169,9 +169,8 @@ const Acknowledgement = {
       }
 
       connection.query(sql, [customer_id], (err, results) => {
-        connectionRelease(connection); // Release the connection
-
         if (err) {
+          connectionRelease(connection);
           console.error("Database query error:", err);
           return callback(err, null);
         }
@@ -181,6 +180,7 @@ const Acknowledgement = {
 
         // Early return if no results
         if (results.length === 0) {
+          connectionRelease(connection);
           return callback(null, { data: [], totalResults: 0 });
         }
 
@@ -205,8 +205,6 @@ const Acknowledgement = {
               customerSql,
               [customer_id, "1"],
               (customerErr, customerResult) => {
-                connectionRelease(connection); // Release the connection
-
                 if (customerErr || !customerResult.length) {
                   console.error(
                     "Error fetching customer:",
@@ -230,8 +228,6 @@ const Acknowledgement = {
                     branchSql,
                     [branch_id, "1"],
                     (branchErr, branchResult) => {
-                      connectionRelease(connection); // Release the connection
-
                       if (branchErr || !branchResult.length) {
                         console.error(
                           "Error fetching branch:",
@@ -298,6 +294,7 @@ const Acknowledgement = {
 
         const checkRemainingQueries = () => {
           if (remainingQueries === 0) {
+            connectionRelease(connection);
             const finalResult = Array.from(customerMap.values());
             callback(null, { data: finalResult, totalResults });
           }

@@ -31,14 +31,14 @@ const common = {
       }
 
       connection.query(sql, [branch_id], (err, results) => {
-        connectionRelease(connection); // Release connection
-
         if (err) {
+          connectionRelease(connection);
           console.error("Database query error:", err);
           return callback({ status: false, message: "Database error" }, null);
         }
 
         if (results.length === 0) {
+          connectionRelease(connection);
           return callback({ status: false, message: "Branch not found" }, null);
         }
 
@@ -47,6 +47,7 @@ const common = {
         const currentTime = new Date();
 
         if (_token !== currentToken) {
+          connectionRelease(connection);
           return callback(
             { status: false, message: "Invalid token provided" },
             null
@@ -54,6 +55,7 @@ const common = {
         }
 
         if (tokenExpiry > currentTime) {
+          connectionRelease(connection);
           callback(null, { status: true, message: "Token is valid" });
         } else {
           const newToken = generateToken();
@@ -286,14 +288,14 @@ const common = {
       }
 
       connection.query(branchSql, [branch_id], (err, branchResults) => {
-        connectionRelease(connection); // Release connection
-
         if (err) {
+          connectionRelease(connection);
           console.error("Database query error:", err);
           return callback({ status: false, message: "Database error" }, null);
         }
 
         if (branchResults.length === 0) {
+          connectionRelease(connection);
           return callback({ status: false, message: "Branch not found" }, null);
         }
 
@@ -356,14 +358,14 @@ const common = {
       }
 
       connection.query(branchSql, [branch_id], (err, branchResults) => {
-        connectionRelease(connection); // Release connection
-
         if (err) {
+          connectionRelease(connection);
           console.error("Database query error:", err);
           return callback({ status: false, message: "Database error" }, null);
         }
 
         if (branchResults.length === 0) {
+          connectionRelease(connection);
           return callback({ status: false, message: "Branch not found" }, null);
         }
 
