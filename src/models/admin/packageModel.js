@@ -6,34 +6,64 @@ const Package = {
       INSERT INTO \`packages\` (\`title\`, \`description\`, \`admin_id\`)
       VALUES (?, ?, ?)
     `;
-    pool.query(sql, [title, description, admin_id], (err, results) => {
+    
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
         return callback(err, null);
       }
-      callback(null, results);
+
+      connection.query(sql, [title, description, admin_id], (queryErr, results) => {
+        connectionRelease(connection); // Release the connection
+
+        if (queryErr) {
+          console.error("Database query error:", queryErr);
+          return callback(queryErr, null);
+        }
+        
+        callback(null, results);
+      });
     });
   },
 
   list: (callback) => {
     const sql = `SELECT * FROM \`packages\``;
-    pool.query(sql, (err, results) => {
+    
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
         return callback(err, null);
       }
-      callback(null, results);
+
+      connection.query(sql, (queryErr, results) => {
+        connectionRelease(connection); // Release the connection
+
+        if (queryErr) {
+          console.error("Database query error:", queryErr);
+          return callback(queryErr, null);
+        }
+        
+        callback(null, results);
+      });
     });
   },
 
   getPackageById: (id, callback) => {
     const sql = `SELECT * FROM \`packages\` WHERE \`id\` = ?`;
-    pool.query(sql, [id], (err, results) => {
+    
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
         return callback(err, null);
       }
-      callback(null, results[0]);
+
+      connection.query(sql, [id], (queryErr, results) => {
+        connectionRelease(connection); // Release the connection
+
+        if (queryErr) {
+          console.error("Database query error:", queryErr);
+          return callback(queryErr, null);
+        }
+        
+        callback(null, results[0]);
+      });
     });
   },
 
@@ -43,26 +73,46 @@ const Package = {
       SET \`title\` = ?, \`description\` = ?
       WHERE \`id\` = ?
     `;
-    pool.query(sql, [title, description, id], (err, results) => {
+    
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
         return callback(err, null);
       }
-      callback(null, results);
+
+      connection.query(sql, [title, description, id], (queryErr, results) => {
+        connectionRelease(connection); // Release the connection
+
+        if (queryErr) {
+          console.error("Database query error:", queryErr);
+          return callback(queryErr, null);
+        }
+        
+        callback(null, results);
+      });
     });
   },
 
   delete: (id, callback) => {
     const sql = `
-        DELETE FROM \`packages\`
-        WHERE \`id\` = ?
-      `;
-    pool.query(sql, [id], (err, results) => {
+      DELETE FROM \`packages\`
+      WHERE \`id\` = ?
+    `;
+    
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
         return callback(err, null);
       }
-      callback(null, results);
+
+      connection.query(sql, [id], (queryErr, results) => {
+        connectionRelease(connection); // Release the connection
+
+        if (queryErr) {
+          console.error("Database query error:", queryErr);
+          return callback(queryErr, null);
+        }
+        
+        callback(null, results);
+      });
     });
   },
 };

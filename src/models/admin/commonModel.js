@@ -15,70 +15,76 @@ const common = {
    * @param {function} callback - Callback function
    */
   isAdminTokenValid: (_token, admin_id, callback) => {
-    if (typeof callback !== "function") {
-      console.error("Callback is not a function");
-      return;
-    }
-
     const sql = `
       SELECT \`login_token\`, \`token_expiry\`
       FROM \`admins\`
       WHERE \`id\` = ?
     `;
 
-    pool.query(sql, [admin_id], (err, results) => {
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
-        return callback({ status: false, message: "Database error" }, null);
+        console.error("Connection error:", err);
+        return callback({ status: false, message: "Connection error" }, null);
       }
 
-      if (results.length === 0) {
-        return callback({ status: false, message: "Admin not found" }, null);
-      }
+      connection.query(sql, [admin_id], (queryErr, results) => {
+        connectionRelease(connection); // Release the connection
 
-      const currentToken = results[0].login_token;
-      const tokenExpiry = new Date(results[0].token_expiry);
-      const currentTime = new Date();
+        if (queryErr) {
+          console.error("Database query error:", queryErr);
+          return callback({ status: false, message: "Database error" }, null);
+        }
 
-      if (_token !== currentToken) {
-        return callback(
-          { status: false, message: "Invalid token provided" },
-          null
-        );
-      }
+        if (results.length === 0) {
+          return callback({ status: false, message: "Admin not found" }, null);
+        }
 
-      if (tokenExpiry > currentTime) {
-        callback(null, { status: true, message: "Token is valid" });
-      } else {
-        const newToken = generateToken();
-        const newTokenExpiry = getTokenExpiry();
+        const currentToken = results[0].login_token;
+        const tokenExpiry = new Date(results[0].token_expiry);
+        const currentTime = new Date();
 
-        const updateSql = `
-          UPDATE \`admins\`
-          SET \`login_token\` = ?, \`token_expiry\` = ?
-          WHERE \`id\` = ?
-        `;
+        if (_token !== currentToken) {
+          return callback(
+            { status: false, message: "Invalid token provided" },
+            null
+          );
+        }
 
-        pool.query(
-          updateSql,
-          [newToken, newTokenExpiry, admin_id],
-          (updateErr) => {
-            if (updateErr) {
-              console.error("Error updating token:", updateErr);
-              return callback(
-                { status: false, message: "Error updating token" },
-                null
-              );
+        if (tokenExpiry > currentTime) {
+          callback(null, { status: true, message: "Token is valid" });
+        } else {
+          const newToken = generateToken();
+          const newTokenExpiry = getTokenExpiry();
+
+          const updateSql = `
+            UPDATE \`admins\`
+            SET \`login_token\` = ?, \`token_expiry\` = ?
+            WHERE \`id\` = ?
+          `;
+
+          connection.query(
+            updateSql,
+            [newToken, newTokenExpiry, admin_id],
+            (updateErr) => {
+              connectionRelease(connection); // Release the connection again
+
+              if (updateErr) {
+                console.error("Error updating token:", updateErr);
+                return callback(
+                  { status: false, message: "Error updating token" },
+                  null
+                );
+              }
+
+              callback(null, {
+                status: true,
+                message: "Token was expired and has been refreshed",
+                newToken,
+              });
             }
-
-            callback(null, {
-              status: true,
-              message: "Token was expired and has been refreshed",
-              newToken,
-            });
-          }
-        );
-      }
+          );
+        }
+      });
     });
   },
 
@@ -91,25 +97,29 @@ const common = {
    * @param {function} callback - Callback function
    */
   adminLoginLog: (admin_id, action, result, error, callback) => {
-    if (typeof callback !== "function") {
-      console.error("Callback is not a function");
-      return;
-    }
-
     const insertSql = `
       INSERT INTO \`admin_login_logs\` (\`admin_id\`, \`action\`, \`result\`, \`error\`, \`created_at\`)
       VALUES (?, ?, ?, ?, NOW())
     `;
 
-    pool.query(insertSql, [admin_id, action, result, error], (err) => {
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database insertion error:", err);
-        return callback({ status: false, message: "Database error" }, null);
+        console.error("Connection error:", err);
+        return callback({ status: false, message: "Connection error" }, null);
       }
 
-      callback(null, {
-        status: true,
-        message: "Admin login log entry added successfully",
+      connection.query(insertSql, [admin_id, action, result, error], (err) => {
+        connectionRelease(connection); // Release the connection
+
+        if (err) {
+          console.error("Database insertion error:", err);
+          return callback({ status: false, message: "Database error" }, null);
+        }
+
+        callback(null, {
+          status: true,
+          message: "Admin login log entry added successfully",
+        });
       });
     });
   },
@@ -133,51 +143,55 @@ const common = {
     error,
     callback
   ) => {
-    if (typeof callback !== "function") {
-      console.error("Callback is not a function");
-      return;
-    }
-
     const insertSql = `
       INSERT INTO \`admin_activity_logs\` (\`admin_id\`, \`module\`, \`action\`, \`result\`, \`update\`, \`error\`, \`created_at\`)
       VALUES (?, ?, ?, ?, ?, ?, NOW())
     `;
-    pool.query(
-      insertSql,
-      [admin_id, module, action, result, update, error],
-      (err) => {
-        if (err) {
-          console.error("Database insertion error:", err);
-          return callback({ status: false, message: "Database error" }, null);
-        }
-        callback(null, {
-          status: true,
-          message: "Admin activity log entry added successfully",
-        });
+
+    startConnection((err, connection) => {
+      if (err) {
+        console.error("Connection error:", err);
+        return callback({ status: false, message: "Connection error" }, null);
       }
-    );
+
+      connection.query(
+        insertSql,
+        [admin_id, module, action, result, update, error],
+        (err) => {
+          connectionRelease(connection); // Release the connection
+
+          if (err) {
+            console.error("Database insertion error:", err);
+            return callback({ status: false, message: "Database error" }, null);
+          }
+
+          callback(null, {
+            status: true,
+            message: "Admin activity log entry added successfully",
+          });
+        }
+      );
+    });
   },
 
+  /**
+   * Checks if the admin is authorized for a specific action.
+   * @param {number} admin_id - Admin ID
+   * @param {string} action - Action performed
+   * @param {function} callback - Callback function
+   */
   isAdminAuthorizedForAction: (admin_id, action, callback) => {
     const adminSQL = `SELECT \`role\` FROM \`admins\` WHERE \`id\` = ?`;
-    pool.query(adminSQL, [admin_id], (err, results) => {
+
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
-        return callback({ message: "Database query error", error: err }, null);
+        console.error("Connection error:", err);
+        return callback({ message: "Connection error", error: err }, null);
       }
 
-      if (results.length === 0) {
-        return callback(
-          { message: "No admin found with the provided email or mobile" },
-          null
-        );
-      }
+      connection.query(adminSQL, [admin_id], (err, results) => {
+        connectionRelease(connection); // Release the connection
 
-      // Console log the role
-      const role = results[0].role;
-
-      const permissionsJsonByRoleSQL = `SELECT \`json\` FROM \`permissions\` WHERE \`role\` = ?`;
-      pool.query(permissionsJsonByRoleSQL, [role], (err, results) => {
         if (err) {
           console.error("Database query error:", err);
           return callback(
@@ -188,45 +202,68 @@ const common = {
 
         if (results.length === 0) {
           return callback(
-            { message: "No admin found with the provided email or mobile" },
+            { message: "No admin found with the provided ID" },
             null
           );
         }
 
-        // Console log the json
-        const permissionsJson = JSON.parse(results[0].json);
-        const permissions =
-          typeof permissionsJson === "string"
-            ? JSON.parse(permissionsJson)
-            : permissionsJson;
+        // Console log the role
+        const role = results[0].role;
 
-        const actionObj =
-          typeof action === "string" ? JSON.parse(action) : action;
+        const permissionsJsonByRoleSQL = `SELECT \`json\` FROM \`permissions\` WHERE \`role\` = ?`;
+        pool.query(permissionsJsonByRoleSQL, [role], (err, results) => {
+          if (err) {
+            console.error("Database query error:", err);
+            return callback(
+              { message: "Database query error", error: err },
+              null
+            );
+          }
 
-        // Extract action type and action name from the action object
-        const [actionType, actionName] = Object.entries(actionObj)[0] || [];
+          if (results.length === 0) {
+            return callback(
+              { message: "No permissions found for the admin role" },
+              null
+            );
+          }
 
-        // Check if action type and action name are valid
-        if (!actionType || !actionName) {
-          console.error("Invalid action format");
-          return callback({ status: false, message: "Access Denied" });
-        }
+          // Console log the json
+          const permissionsJson = JSON.parse(results[0].json);
+          const permissions =
+            typeof permissionsJson === "string"
+              ? JSON.parse(permissionsJson)
+              : permissionsJson;
 
-        // Check if the action type exists in the permissions object
-        if (!permissions[actionType]) {
-          console.error("Action type not found in permissions");
+          const actionObj =
+            typeof action === "string" ? JSON.parse(action) : action;
+
+          // Extract action type and action name from the action object
+          const [actionType, actionName] = Object.entries(actionObj)[0] || [];
+
+          // Check if action type and action name are valid
+          if (!actionType || !actionName) {
+            console.error("Invalid action format");
+            return callback({ status: false, message: "Access Denied" });
+          }
+
+          // Check if the action type exists in the permissions object
+          if (!permissions[actionType]) {
+            console.error("Action type not found in permissions");
+            return callback({
+              status: false,
+              message: "Access Denied",
+            });
+          }
+
+          // Check if the action name is authorized
+          const isAuthorized = permissions[actionType][actionName] === true;
+
           return callback({
-            status: false,
-            message: "Access Denied",
+            status: isAuthorized,
+            message: isAuthorized
+              ? "Authorization Successful"
+              : "Access Denied",
           });
-        }
-
-        // Check if the action name is authorized
-        const isAuthorized = permissions[actionType][actionName] === true;
-
-        return callback({
-          status: isAuthorized,
-          message: isAuthorized ? "Authorization Successful" : "Access Denied",
         });
       });
     });

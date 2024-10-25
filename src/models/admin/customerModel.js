@@ -1,25 +1,38 @@
-const pool = require('../../config/db');
+const pool = require("../../config/db");
 
 const Admin = {
   findByEmailOrMobile: (username, callback) => {
-
     const sql = `
       SELECT \`id\`, \`emp_id\`, \`name\`, \`profile_picture\`, \`email\`, \`mobile\`, \`status\`, \`login_token\`, \`token_expiry\`
       FROM \`admins\`
       WHERE \`email\` = ? OR \`mobile\` = ?
     `;
 
-    pool.query(sql, [username, username], (err, results) => {
+    startConnection((err, connection) => {
       if (err) {
-        console.error('Database query error:', err);
-        return callback({ message: 'Database query error', error: err }, null);
+        return callback(err, null);
       }
 
-      if (results.length === 0) {
-        return callback({ message: 'No admin found with the provided email or mobile' }, null);
-      }
+      connection.query(sql, [username, username], (queryErr, results) => {
+        connectionRelease(connection); // Release the connection
 
-      callback(null, results);
+        if (queryErr) {
+          console.error("Database query error:", queryErr);
+          return callback(
+            { message: "Database query error", error: queryErr },
+            null
+          );
+        }
+
+        if (results.length === 0) {
+          return callback(
+            { message: "No admin found with the provided email or mobile" },
+            null
+          );
+        }
+
+        callback(null, results);
+      });
     });
   },
 
@@ -31,17 +44,35 @@ const Admin = {
       AND \`password\` = MD5(?)
     `;
 
-    pool.query(sql, [username, username, password], (err, results) => {
+    startConnection((err, connection) => {
       if (err) {
-        console.error('Database query error:', err);
-        return callback({ message: 'Database query error', error: err }, null);
+        return callback(err, null);
       }
 
-      if (results.length === 0) {
-        return callback({ message: 'Incorrect password or username' }, null);
-      }
+      connection.query(
+        sql,
+        [username, username, password],
+        (queryErr, results) => {
+          connectionRelease(connection); // Release the connection
 
-      callback(null, results);
+          if (queryErr) {
+            console.error("Database query error:", queryErr);
+            return callback(
+              { message: "Database query error", error: queryErr },
+              null
+            );
+          }
+
+          if (results.length === 0) {
+            return callback(
+              { message: "Incorrect password or username" },
+              null
+            );
+          }
+
+          callback(null, results);
+        }
+      );
     });
   },
 
@@ -52,63 +83,107 @@ const Admin = {
       WHERE \`id\` = ?
     `;
 
-    pool.query(sql, [token, tokenExpiry, id], (err, results) => {
+    startConnection((err, connection) => {
       if (err) {
-        console.error('Database query error:', err);
-        return callback({ message: 'Database update error', error: err }, null);
+        return callback(err, null);
       }
 
-      if (results.affectedRows === 0) {
-        return callback({ message: 'Token update failed. Admin not found or no changes made.' }, null);
-      }
+      connection.query(sql, [token, tokenExpiry, id], (queryErr, results) => {
+        connectionRelease(connection); // Release the connection
 
-      callback(null, results);
+        if (queryErr) {
+          console.error("Database query error:", queryErr);
+          return callback(
+            { message: "Database update error", error: queryErr },
+            null
+          );
+        }
+
+        if (results.affectedRows === 0) {
+          return callback(
+            {
+              message:
+                "Token update failed. Admin not found or no changes made.",
+            },
+            null
+          );
+        }
+
+        callback(null, results);
+      });
     });
   },
 
   validateLogin: (id, callback) => {
-
     const sql = `
       SELECT \`login_token\`
       FROM \`admins\`
       WHERE \`id\` = ?
     `;
 
-    pool.query(sql, [id], (err, results) => {
+    startConnection((err, connection) => {
       if (err) {
-        console.error('Database query error:', err);
-        return callback({ message: 'Database query error', error: err }, null);
+        return callback(err, null);
       }
 
-      if (results.length === 0) {
-        return callback({ message: 'Admin not found' }, null);
-      }
+      connection.query(sql, [id], (queryErr, results) => {
+        connectionRelease(connection); // Release the connection
 
-      callback(null, results);
+        if (queryErr) {
+          console.error("Database query error:", queryErr);
+          return callback(
+            { message: "Database query error", error: queryErr },
+            null
+          );
+        }
+
+        if (results.length === 0) {
+          return callback({ message: "Admin not found" }, null);
+        }
+
+        callback(null, results);
+      });
     });
   },
 
   // Clear login token and token expiry
   logout: (id, callback) => {
     const sql = `
-        UPDATE \`admins\`
-        SET \`login_token\` = NULL, \`token_expiry\` = NULL
-        WHERE \`id\` = ?
-      `;
+      UPDATE \`admins\`
+      SET \`login_token\` = NULL, \`token_expiry\` = NULL
+      WHERE \`id\` = ?
+    `;
 
-    pool.query(sql, [id], (err, results) => {
+    startConnection((err, connection) => {
       if (err) {
-        console.error('Database query error:', err);
-        return callback({ message: 'Database update error', error: err }, null);
+        return callback(err, null);
       }
 
-      if (results.affectedRows === 0) {
-        return callback({ message: 'Token clear failed. Admin not found or no changes made.' }, null);
-      }
+      connection.query(sql, [id], (queryErr, results) => {
+        connectionRelease(connection); // Release the connection
 
-      callback(null, results);
+        if (queryErr) {
+          console.error("Database query error:", queryErr);
+          return callback(
+            { message: "Database update error", error: queryErr },
+            null
+          );
+        }
+
+        if (results.affectedRows === 0) {
+          return callback(
+            {
+              message:
+                "Token clear failed. Admin not found or no changes made.",
+            },
+            null
+          );
+        }
+
+        callback(null, results);
+      });
     });
-  }
+  },
 };
 
 module.exports = Admin;

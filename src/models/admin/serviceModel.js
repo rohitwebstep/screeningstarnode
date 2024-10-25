@@ -7,47 +7,66 @@ const Service = {
       SELECT * FROM \`services\` WHERE \`title\` = ?
     `;
 
-    pool.query(checkServiceSql, [title], (err, serviceResults) => {
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Error checking service:", err);
         return callback(err, null);
       }
 
-      // Step 2: If a service with the same title exists, return an error
-      if (serviceResults.length > 0) {
-        const error = new Error("Service with the same name already exists");
-        console.error(error.message);
-        return callback(error, null);
-      }
-
-      // Step 3: Insert the new service
-      const insertServiceSql = `
-        INSERT INTO \`services\` (\`title\`, \`description\`, \`admin_id\`)
-        VALUES (?, ?, ?)
-      `;
-
-      pool.query(
-        insertServiceSql,
-        [title, description, admin_id],
-        (err, results) => {
-          if (err) {
-            console.error("Database query error:", err);
-            return callback(err, null);
-          }
-          callback(null, results);
+      connection.query(checkServiceSql, [title], (checkErr, serviceResults) => {
+        if (checkErr) {
+          console.error("Error checking service:", checkErr);
+          connectionRelease(connection); // Release connection on error
+          return callback(checkErr, null);
         }
-      );
+
+        // Step 2: If a service with the same title exists, return an error
+        if (serviceResults.length > 0) {
+          const error = new Error("Service with the same name already exists");
+          console.error(error.message);
+          connectionRelease(connection); // Release connection before returning error
+          return callback(error, null);
+        }
+
+        // Step 3: Insert the new service
+        const insertServiceSql = `
+          INSERT INTO \`services\` (\`title\`, \`description\`, \`admin_id\`)
+          VALUES (?, ?, ?)
+        `;
+
+        connection.query(
+          insertServiceSql,
+          [title, description, admin_id],
+          (insertErr, results) => {
+            connectionRelease(connection); // Release the connection
+
+            if (insertErr) {
+              console.error("Database query error:", insertErr);
+              return callback(insertErr, null);
+            }
+            callback(null, results);
+          }
+        );
+      });
     });
   },
 
   list: (callback) => {
     const sql = `SELECT * FROM \`services\``;
-    pool.query(sql, (err, results) => {
+
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
         return callback(err, null);
       }
-      callback(null, results);
+
+      connection.query(sql, (queryErr, results) => {
+        connectionRelease(connection); // Release the connection
+
+        if (queryErr) {
+          console.error("Database query error:", queryErr);
+          return callback(queryErr, null);
+        }
+        callback(null, results);
+      });
     });
   },
 
@@ -59,37 +78,63 @@ const Service = {
       LIMIT 1
     `;
 
-    pool.query(sql, (err, results) => {
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
         return callback(err, null);
       }
 
-      // Check if results are found and return the first entry or null if not found
-      const singleEntry = results.length > 0 ? results[0] : null;
-      callback(null, singleEntry); // Return single entry or null if not found
+      connection.query(sql, (queryErr, results) => {
+        connectionRelease(connection); // Release the connection
+
+        if (queryErr) {
+          console.error("Database query error:", queryErr);
+          return callback(queryErr, null);
+        }
+
+        // Check if results are found and return the first entry or null if not found
+        const singleEntry = results.length > 0 ? results[0] : null;
+        callback(null, singleEntry); // Return single entry or null if not found
+      });
     });
   },
 
   getServiceById: (id, callback) => {
     const sql = `SELECT * FROM \`services\` WHERE \`id\` = ?`;
-    pool.query(sql, [id], (err, results) => {
+
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
         return callback(err, null);
       }
-      callback(null, results[0]);
+
+      connection.query(sql, [id], (queryErr, results) => {
+        connectionRelease(connection); // Release the connection
+
+        if (queryErr) {
+          console.error("Database query error:", queryErr);
+          return callback(queryErr, null);
+        }
+        callback(null, results[0]);
+      });
     });
   },
 
   getServiceRequiredDocumentsByServiceId: (service_id, callback) => {
     const sql = `SELECT * FROM \`service_required_documents\` WHERE \`service_id\` = ?`;
-    pool.query(sql, [service_id], (err, results) => {
+
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
         return callback(err, null);
       }
-      callback(null, results[0]);
+
+      connection.query(sql, [service_id], (queryErr, results) => {
+        connectionRelease(connection); // Release the connection
+
+        if (queryErr) {
+          console.error("Database query error:", queryErr);
+          return callback(queryErr, null);
+        }
+        callback(null, results[0]);
+      });
     });
   },
 
@@ -99,26 +144,44 @@ const Service = {
       SET \`title\` = ?, \`description\` = ?
       WHERE \`id\` = ?
     `;
-    pool.query(sql, [title, description, id], (err, results) => {
+
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
         return callback(err, null);
       }
-      callback(null, results);
+
+      connection.query(sql, [title, description, id], (queryErr, results) => {
+        connectionRelease(connection); // Release the connection
+
+        if (queryErr) {
+          console.error("Database query error:", queryErr);
+          return callback(queryErr, null);
+        }
+        callback(null, results);
+      });
     });
   },
 
   delete: (id, callback) => {
     const sql = `
-        DELETE FROM \`services\`
-        WHERE \`id\` = ?
-      `;
-    pool.query(sql, [id], (err, results) => {
+      DELETE FROM \`services\`
+      WHERE \`id\` = ?
+    `;
+
+    startConnection((err, connection) => {
       if (err) {
-        console.error("Database query error:", err);
         return callback(err, null);
       }
-      callback(null, results);
+
+      connection.query(sql, [id], (queryErr, results) => {
+        connectionRelease(connection); // Release the connection
+
+        if (queryErr) {
+          console.error("Database query error:", queryErr);
+          return callback(queryErr, null);
+        }
+        callback(null, results);
+      });
     });
   },
 };
