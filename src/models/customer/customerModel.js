@@ -8,9 +8,12 @@ const hashPassword = (password) =>
 const Customer = {
   checkUniqueId: (clientUniqueId, callback) => {
     startConnection((err, connection) => {
-      if (err)
-        return callback({ message: "Connection error", error: err }, null);
-
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
       const sql = `
         SELECT COUNT(*) AS count
         FROM \`customers\`
@@ -152,9 +155,12 @@ const Customer = {
 
   documentUpload: (customer_id, db_column, savedImagePaths, callback) => {
     startConnection((err, connection) => {
-      if (err)
-        return callback({ message: "Connection error", error: err }, null);
-
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
       const sqlUpdateCustomer = `
         UPDATE customer_metas 
         SET ${db_column} = ?
@@ -183,9 +189,12 @@ const Customer = {
 
   update: (customerId, customerData, callback) => {
     startConnection((err, connection) => {
-      if (err)
-        return callback({ message: "Connection error", error: err }, null);
-
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
       const sqlUpdateCustomer = `
         UPDATE \`customers\` 
         SET 
@@ -268,12 +277,11 @@ const Customer = {
           null
         );
       }
-
       connection.query(
         sqlCustomerMetas,
         valuesCustomerMetas,
         (err, results) => {
-          connectionRelease(connection); // Always release the connection
+          connectionRelease(connection);
           if (err) {
             console.error("Database insertion error for customer_metas:", err);
             return callback(
@@ -285,7 +293,7 @@ const Customer = {
             );
           }
 
-          callback(null, results); // Pass results to callback
+          callback(null, results);
         }
       );
     });
@@ -330,7 +338,13 @@ const Customer = {
       customerId,
     ];
 
-    startConnection((connection) => {
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
       connection.query(
         sqlUpdateCustomerMetas,
         valuesUpdateCustomerMetas,
@@ -383,7 +397,13 @@ const Customer = {
         customers.status != '0'
     `;
 
-    startConnection((connection) => {
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
       connection.query(sql, (err, results) => {
         connectionRelease(connection);
         if (err) {
@@ -425,7 +445,13 @@ const Customer = {
         customers.status != '1'
     `;
 
-    startConnection((connection) => {
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
       connection.query(sql, (err, results) => {
         connectionRelease(connection);
         if (err) {
@@ -464,7 +490,13 @@ const Customer = {
         customers.id = ?
     `;
 
-    startConnection((connection) => {
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
       connection.query(sql, [customer_id], (err, results) => {
         connectionRelease(connection);
         if (err) {
@@ -478,7 +510,13 @@ const Customer = {
 
   getCustomerById: (id, callback) => {
     const sql = "SELECT * FROM `customers` WHERE `id` = ?";
-    startConnection((connection) => {
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
       connection.query(sql, [id], (err, results) => {
         connectionRelease(connection);
         if (err) {
@@ -492,7 +530,13 @@ const Customer = {
 
   getActiveCustomerById: (id, callback) => {
     const sql = "SELECT * FROM `customers` WHERE `id` = ? AND `status` = ?";
-    startConnection((connection) => {
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
       connection.query(sql, [id, "1"], (err, results) => {
         connectionRelease(connection);
         if (err) {
@@ -506,7 +550,13 @@ const Customer = {
 
   getAllBranchesByCustomerId: (customerId, callback) => {
     const sql = "SELECT * FROM `branches` WHERE `customer_id` = ?";
-    startConnection((connection) => {
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
       connection.query(sql, [customerId], (err, results) => {
         connectionRelease(connection);
         if (err) {
@@ -520,7 +570,13 @@ const Customer = {
 
   getClientUniqueIDByCustomerId: (id, callback) => {
     const sql = "SELECT `client_unique_id` FROM `customers` WHERE `id` = ?";
-    startConnection((connection) => {
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
       connection.query(sql, [id], (err, results) => {
         connectionRelease(connection);
         if (err) {
@@ -540,7 +596,13 @@ const Customer = {
 
   getCustomerMetaById: (id, callback) => {
     const sql = "SELECT * FROM `customer_metas` WHERE `customer_id` = ?";
-    startConnection((connection) => {
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
       connection.query(sql, [id], (err, results) => {
         connectionRelease(connection);
         if (err) {
@@ -558,7 +620,13 @@ const Customer = {
       SET \`status\` = ?
       WHERE \`id\` = ?
     `;
-    startConnection((connection) => {
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
       connection.query(sql, ["1", id], (err, results) => {
         connectionRelease(connection);
         if (err) {
@@ -576,7 +644,13 @@ const Customer = {
       SET \`status\` = ?
       WHERE \`id\` = ?
     `;
-    startConnection((connection) => {
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
       connection.query(sql, ["0", id], (err, results) => {
         connectionRelease(connection);
         if (err) {
@@ -593,7 +667,13 @@ const Customer = {
         DELETE FROM \`customers\`
         WHERE \`id\` = ?
       `;
-    startConnection((connection) => {
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
       connection.query(sql, [id], (err, results) => {
         connectionRelease(connection);
         if (err) {
@@ -611,8 +691,13 @@ const Customer = {
       FROM \`customers\`
       WHERE \`email\` = ? OR \`mobile\` = ?
     `;
-
-    startConnection((connection) => {
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
       connection.query(sql, [username, username], (err, results) => {
         connectionRelease(connection);
         if (err) {
@@ -641,7 +726,13 @@ const Customer = {
       WHERE \`email\` = ? OR \`mobile\` = ?
     `;
 
-    startConnection((connection) => {
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
       connection.query(sql, [username, username], (err, results) => {
         connectionRelease(connection);
         if (err) {
@@ -676,7 +767,13 @@ const Customer = {
       WHERE \`id\` = ?
     `;
 
-    startConnection((connection) => {
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
       connection.query(sql, [token, tokenExpiry, id], (err, results) => {
         connectionRelease(connection);
         if (err) {
@@ -709,7 +806,13 @@ const Customer = {
       WHERE \`id\` = ?
     `;
 
-    startConnection((connection) => {
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
       connection.query(sql, [id], (err, results) => {
         connectionRelease(connection);
         if (err) {
@@ -734,7 +837,13 @@ const Customer = {
       SELECT \`password\` FROM \`branches\` WHERE \`email\` = ?
     `;
 
-    startConnection((connection) => {
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
       connection.query(sql, [email], (err, results) => {
         connectionRelease(connection);
         if (err) {
@@ -759,7 +868,13 @@ const Customer = {
       WHERE \`id\` = ?
     `;
 
-    startConnection((connection) => {
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
       connection.query(sql, [id], (err, results) => {
         connectionRelease(connection);
         if (err) {
