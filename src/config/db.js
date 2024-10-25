@@ -12,29 +12,34 @@ const pool = mysql.createPool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  waitForConnections: true, // Ensures waiting for connections rather than failing immediately
-  connectionLimit: 10, // Maximum number of connections to the database
-  queueLimit: 0, // Unlimited number of queued connection requests
-  connectTimeout: 120000, // Increase to 120 seconds for long-running queries
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+  connectTimeout: 60000, // 60 seconds
 });
 
-// Test connection
-pool.getConnection((err, connection) => {
-  if (err) {
-    // Enhanced logging with error details
-    console.error("Database connection error:", {
-      message: err.message,
-      code: err.code,
-      stack: err.stack,
-    });
-    process.exit(1); // Exit the process if there's a connection error
-  }
-  console.log("Connected to the MySQL database");
-  connection.release(); // Release the connection back to the pool
-});
+// Function to connect with indefinite retry
+function connectWithRetry() {
+  pool.getConnection((err, connection) => {
+    if (err) {
+      // Handle specific errors
+      console.error("Database connection error:", err);
+      console.log("Retrying connection...");
+
+      // Wait for 5 seconds before trying again
+      setTimeout(connectWithRetry, 5000);
+    } else {
+      console.log("Connected to the MySQL database");
+      connection.release();
+    }
+  });
+}
+
+// Start the connection process
+connectWithRetry();
 
 /*
-// Monitor connection events for better diagnostics
+// Monitor pool events for better diagnostics
 pool.on("acquire", (connection) => {
   console.log("Connection %d acquired", connection.threadId);
 });
