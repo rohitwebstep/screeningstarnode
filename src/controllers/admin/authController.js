@@ -244,7 +244,7 @@ exports.validateLogin = (req, res) => {
       console.error("Database error:", err);
       return res
         .status(500)
-        .json({ status: false, message: "Internal server error." });
+        .json({ status: false, message: "Internal server error 1." });
     }
 
     // If no admin found, return a 404 response
@@ -299,7 +299,7 @@ exports.validateLogin = (req, res) => {
         console.error("Error checking token validity:", err);
         return res
           .status(500)
-          .json({ status: false, message: "Internal server error." });
+          .json({ status: false, message: "Internal server error 2." });
       }
 
       if (!tokenResult.status) {
@@ -566,7 +566,7 @@ exports.forgotPassword = (req, res) => {
       console.error("Database error:", err);
       return res
         .status(500)
-        .json({ status: false, message: "Internal server error." });
+        .json({ status: false, message: "Internal server error 3." });
     }
 
     // Return error if no admin found
