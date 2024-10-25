@@ -948,7 +948,7 @@ const Customer = {
 
             Promise.all(addColumnPromises)
               .then(() => {
-                const insertSql = `UPDATE \`${db_table}\` SET \`${db_column}\` = ? WHERE \`client_application_id\ = ?`;
+                const insertSql = `UPDATE \`${db_table}\` SET \`${db_column}\` = ? WHERE \`client_application_id\` = ?`;
                 const promises = savedImagePaths.map((imagePath) => {
                   return new Promise((resolve, reject) => {
                     connection.query(
