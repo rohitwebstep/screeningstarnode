@@ -1,7 +1,7 @@
 require("dotenv").config();
 const mysql = require("mysql2");
 
-// Logging environment variables for debugging
+// Log environment variables for debugging
 console.log("DB_HOST:", process.env.DB_HOST);
 console.log("DB_USER:", process.env.DB_USER);
 console.log("DB_NAME:", process.env.DB_NAME);
@@ -23,8 +23,9 @@ const startConnection = (callback) => {
   pool.getConnection((err, connection) => {
     if (err) {
       console.error("Error getting connection from pool:", err); // Log error for debugging
-      return callback(err, null); // Call callback with error
+      return callback(err, null); // Return error via callback
     }
+    console.log("Connection established"); // Optional: Log successful connection
     callback(null, connection); // Pass the connection to the callback
   });
 };
@@ -33,6 +34,7 @@ const startConnection = (callback) => {
 const connectionRelease = (connection) => {
   if (connection) {
     connection.release(); // Release the connection back to the pool
+    console.log("Connection released"); // Optional: Log connection release
   }
 };
 
