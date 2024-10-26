@@ -29,8 +29,10 @@ const generateInvoiceModel = {
         cm.contact_person_name, 
         cm.escalation_point_contact, 
         cm.single_point_of_contact, 
-        cm.gst_number, 
-        cm.payment_contact_person
+        cm.gst_number,
+        cm.payment_contact_person,
+        cm.state,
+        cm.state_code,
       FROM customers c
       LEFT JOIN customer_metas cm ON cm.customer_id = c.id
       WHERE c.id = ?;
