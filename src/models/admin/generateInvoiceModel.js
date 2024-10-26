@@ -18,10 +18,11 @@ const generateInvoiceModel = {
 
       // Select only necessary customer details
       const customerQuery = `
-        SELECT id, client_unique_id, name, emails, mobile, services
-        FROM customers
-        WHERE id = ?;
-      `;
+      SELECT c.id, c.client_unique_id, c.name, c.emails, c.mobile, c.services, cm.address, cm.contact_person_name, cm.escalation_point_contact, cm.single_point_of_contact, cm.gst_number, cm.payment_contact_person
+      FROM customers c
+      LEFT JOIN customer_metas cm ON cm.customer_id = c.id
+      WHERE c.id = ?;
+    `;
 
       connection.query(customerQuery, [customerId], (err, customerResults) => {
         if (err) {
