@@ -22,7 +22,7 @@ const dav = {
         connectionRelease(connection); // Ensure the connection is released
 
         if (queryErr) {
-          console.error("Database query error:", queryErr);
+          console.error("Database query error: 122", queryErr);
           return callback(queryErr, null);
         }
         callback(null, results[0]);

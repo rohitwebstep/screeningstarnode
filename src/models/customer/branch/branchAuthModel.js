@@ -24,7 +24,7 @@ const Branch = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 74", err);
           return callback(
             { message: "Database query error", error: err },
             null
@@ -62,7 +62,7 @@ const Branch = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 75", err);
           return callback(
             { message: "Database query error", error: err },
             null
@@ -100,7 +100,7 @@ const Branch = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 76", err);
           return callback(
             { message: "Database update error", error: err },
             null
@@ -174,7 +174,7 @@ const Branch = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error:", err.message);
+          console.error("Database query error: 77", err.message);
           return callback(
             {
               message: "An error occurred while updating the password.",
@@ -222,7 +222,7 @@ const Branch = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 78", err);
           return callback(
             { message: "Database update error", error: err },
             null
@@ -263,7 +263,7 @@ const Branch = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 79", err);
           return callback(
             { message: "Database query error", error: err },
             null
@@ -299,7 +299,7 @@ const Branch = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 80", err);
           return callback(
             { message: "Database update error", error: err },
             null
@@ -340,7 +340,7 @@ const Branch = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 81", err);
           return callback(
             { message: "Database query error", error: err },
             null
@@ -373,7 +373,7 @@ const Branch = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 82", err);
           return callback(
             { message: "Database query error", error: err },
             null
@@ -408,7 +408,7 @@ const Branch = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 83", err);
           return callback(
             { message: "Database query error", error: err },
             null

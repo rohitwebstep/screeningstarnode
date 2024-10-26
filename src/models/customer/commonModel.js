@@ -38,7 +38,7 @@ const common = {
       connection.query(sql, [customer_id], (queryErr, results) => {
         if (queryErr) {
           connectionRelease(connection);
-          console.error("Database query error:", queryErr);
+          console.error("Database query error: 52", queryErr);
           return callback({ status: false, message: "Database error" }, null);
         }
 

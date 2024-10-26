@@ -80,7 +80,7 @@ const candidateApplication = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 99", err);
           return callback(err, null);
         }
         callback(null, results);
@@ -103,7 +103,7 @@ const candidateApplication = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 100", err);
           return callback(err, null);
         }
         callback(null, results);
@@ -130,7 +130,7 @@ const candidateApplication = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 101", err);
           return callback({ message: "Database query error", error: err }, null);
         }
 
@@ -159,7 +159,7 @@ const candidateApplication = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 102", err);
           return callback({ message: "Database query error", error: err }, null);
         }
 
@@ -184,7 +184,7 @@ const candidateApplication = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 103", err);
           return callback(err, null);
         }
         callback(null, results[0]);
@@ -230,7 +230,7 @@ const candidateApplication = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 104", err);
           return callback(err, null);
         }
         callback(null, results);
@@ -253,7 +253,7 @@ const candidateApplication = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 105", err);
           return callback(err, null);
         }
         callback(null, results);
@@ -277,7 +277,7 @@ const candidateApplication = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 106", err);
           return callback(err, null);
         }
 

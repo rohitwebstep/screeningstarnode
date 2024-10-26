@@ -18,7 +18,7 @@ const reportCaseStatus = {
       connection.query(sql, [service_id], (queryErr, results) => {
         connectionRelease(connection); // Ensure the connection is released
         if (queryErr) {
-          console.error("Database query error:", queryErr);
+          console.error("Database query error: 123", queryErr);
           return callback(queryErr, null);
         }
         // Assuming `results` is an array, and we want the first result
@@ -92,7 +92,7 @@ const reportCaseStatus = {
             (fetchErr, results) => {
               connectionRelease(connection); // Ensure the connection is released
               if (fetchErr) {
-                console.error("Database query error:", fetchErr);
+                console.error("Database query error: 124", fetchErr);
                 return callback(fetchErr, null);
               }
               // Return the first result or null if not found

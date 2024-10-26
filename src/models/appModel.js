@@ -16,7 +16,7 @@ const AppCommon = {
         connectionRelease(connection); // Ensure the connection is released
 
         if (queryErr) {
-          console.error("Database query error:", queryErr);
+          console.error("Database query error: 1", queryErr);
           return callback(queryErr, null);
         }
 
@@ -47,7 +47,7 @@ const AppCommon = {
         connectionRelease(connection); // Ensure the connection is released
 
         if (queryErr) {
-          console.error("Database query error:", queryErr);
+          console.error("Database query error: 2", queryErr);
           return callback(queryErr, null);
         }
 

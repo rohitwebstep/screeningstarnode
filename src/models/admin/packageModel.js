@@ -16,7 +16,7 @@ const Package = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error:", queryErr);
+          console.error("Database query error: 41", queryErr);
           return callback(queryErr, null);
         }
         
@@ -37,7 +37,7 @@ const Package = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error:", queryErr);
+          console.error("Database query error: 42", queryErr);
           return callback(queryErr, null);
         }
         
@@ -58,7 +58,7 @@ const Package = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error:", queryErr);
+          console.error("Database query error: 43", queryErr);
           return callback(queryErr, null);
         }
         
@@ -83,7 +83,7 @@ const Package = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error:", queryErr);
+          console.error("Database query error: 44", queryErr);
           return callback(queryErr, null);
         }
         
@@ -107,7 +107,7 @@ const Package = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error:", queryErr);
+          console.error("Database query error: 45", queryErr);
           return callback(queryErr, null);
         }
         

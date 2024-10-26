@@ -33,7 +33,7 @@ const common = {
       connection.query(sql, [branch_id], (err, results) => {
         if (err) {
           connectionRelease(connection);
-          console.error("Database query error:", err);
+          console.error("Database query error: 117", err);
           return callback({ status: false, message: "Database error" }, null);
         }
 
@@ -188,7 +188,7 @@ const common = {
         connectionRelease(connection); // Release connection
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 118", err);
           return callback(
             { status: false, message: "Database query error" },
             null
@@ -290,7 +290,7 @@ const common = {
       connection.query(branchSql, [branch_id], (err, branchResults) => {
         if (err) {
           connectionRelease(connection);
-          console.error("Database query error:", err);
+          console.error("Database query error: 119", err);
           return callback({ status: false, message: "Database error" }, null);
         }
 
@@ -360,7 +360,7 @@ const common = {
       connection.query(branchSql, [branch_id], (err, branchResults) => {
         if (err) {
           connectionRelease(connection);
-          console.error("Database query error:", err);
+          console.error("Database query error: 120", err);
           return callback({ status: false, message: "Database error" }, null);
         }
 
@@ -383,7 +383,7 @@ const common = {
           connectionRelease(connection); // Release connection
 
           if (err) {
-            console.error("Database query error:", err);
+            console.error("Database query error: 121", err);
             return callback({ status: false, message: "Database error" }, null);
           }
 

@@ -68,7 +68,7 @@ const Customer = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 36", err);
           return callback(err, null);
         }
         callback(null, results);
@@ -96,7 +96,7 @@ const Customer = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 37", err);
           return callback(err, null);
         }
         callback(null, results);
@@ -119,7 +119,7 @@ const Customer = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 38", err);
           return callback(err, null);
         }
         callback(null, results);
@@ -143,7 +143,7 @@ const Customer = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 39", err);
           return callback(err, null);
         }
         callback(null, results[0] || null); // Return single application or null if not found
@@ -166,7 +166,7 @@ const Customer = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 40", err);
           return callback(err, null);
         }
         callback(null, results[0] || null); // Return single application or null if not found

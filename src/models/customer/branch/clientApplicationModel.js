@@ -187,7 +187,7 @@ const clientApplication = {
           connection.query(sql, values, (err, results) => {
             connectionRelease(connection);
             if (err) {
-              console.error("Database query error:", err);
+              console.error("Database query error: 109", err);
               return callback(err, null);
             }
 
@@ -213,7 +213,7 @@ const clientApplication = {
 
       connection.query(sqlClient, [branch_id], (err, clientResults) => {
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 110", err);
           connectionRelease(connection);
           return callback(err, null);
         }
@@ -280,7 +280,7 @@ const clientApplication = {
         connectionRelease(connection); // Ensure the connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 111", err);
           return callback(
             { message: "Database query error", error: err },
             null
@@ -317,7 +317,7 @@ const clientApplication = {
           connectionRelease(connection); // Ensure the connection is released
 
           if (err) {
-            console.error("Database query error:", err);
+            console.error("Database query error: 112", err);
             return callback(
               { message: "Database query error", error: err },
               null
@@ -344,7 +344,7 @@ const clientApplication = {
         connectionRelease(connection); // Ensure the connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 113", err);
           return callback(err, null);
         }
         callback(null, results[0]);
@@ -448,7 +448,7 @@ const clientApplication = {
         connectionRelease(connection); // Ensure the connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 114", err);
           return callback(err, null);
         }
         callback(null, results);
@@ -476,7 +476,7 @@ const clientApplication = {
         connectionRelease(connection); // Ensure the connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 115", err);
           return callback(err, null);
         }
         callback(null, results);
@@ -499,7 +499,7 @@ const clientApplication = {
       connection.query(sqlGetServices, [id], (err, results) => {
         if (err) {
           connectionRelease(connection); // Ensure the connection is released
-          console.error("Database query error:", err);
+          console.error("Database query error: 116", err);
           return callback(err, null);
         }
 

@@ -22,7 +22,7 @@ const Acknowledgement = {
       connection.query(sql, (queryErr, results) => {
         if (queryErr) {
           connectionRelease(connection);
-          console.error("Database query error:", queryErr);
+          console.error("Database query error: 3", queryErr);
           return callback(queryErr, null);
         }
 
@@ -171,7 +171,7 @@ const Acknowledgement = {
       connection.query(sql, [customer_id], (err, results) => {
         if (err) {
           connectionRelease(connection);
-          console.error("Database query error:", err);
+          console.error("Database query error: 4", err);
           return callback(err, null);
         }
 

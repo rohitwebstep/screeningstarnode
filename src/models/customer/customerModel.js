@@ -23,7 +23,7 @@ const Customer = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 53", err);
           return callback(
             { message: "Database query error", error: err },
             null
@@ -54,7 +54,7 @@ const Customer = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 54", err);
           return callback(
             { message: "Database query error", error: err },
             null
@@ -85,7 +85,7 @@ const Customer = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 55", err);
           return callback(
             { message: "Database query error", error: err },
             null
@@ -116,7 +116,7 @@ const Customer = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 56", err);
           return callback(
             { message: "Database query error", error: err },
             null
@@ -423,7 +423,7 @@ const Customer = {
       connection.query(sql, (err, results) => {
         connectionRelease(connection);
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 57", err);
           return callback(err, null);
         }
         callback(null, results);
@@ -471,7 +471,7 @@ const Customer = {
       connection.query(sql, (err, results) => {
         connectionRelease(connection);
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 58", err);
           return callback(err, null);
         }
         callback(null, results);
@@ -516,7 +516,7 @@ const Customer = {
       connection.query(sql, [customer_id], (err, results) => {
         connectionRelease(connection);
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 59", err);
           return callback(err, null);
         }
         callback(null, results);
@@ -536,7 +536,7 @@ const Customer = {
       connection.query(sql, [id], (err, results) => {
         connectionRelease(connection);
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 60", err);
           return callback(err, null);
         }
         callback(null, results[0]);
@@ -556,7 +556,7 @@ const Customer = {
       connection.query(sql, [id, "1"], (err, results) => {
         connectionRelease(connection);
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 61", err);
           return callback(err, null);
         }
         callback(null, results[0]);
@@ -576,7 +576,7 @@ const Customer = {
       connection.query(sql, [customerId], (err, results) => {
         connectionRelease(connection);
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 62", err);
           return callback(err, null);
         }
         callback(null, results); // Returns all matching entries
@@ -596,7 +596,7 @@ const Customer = {
       connection.query(sql, [id], (err, results) => {
         connectionRelease(connection);
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 63", err);
           return callback(err, null);
         }
 
@@ -622,7 +622,7 @@ const Customer = {
       connection.query(sql, [id], (err, results) => {
         connectionRelease(connection);
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 64", err);
           return callback(err, null);
         }
         callback(null, results[0]);
@@ -646,7 +646,7 @@ const Customer = {
       connection.query(sql, ["1", id], (err, results) => {
         connectionRelease(connection);
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 65", err);
           return callback(err, null);
         }
         callback(null, results);
@@ -670,7 +670,7 @@ const Customer = {
       connection.query(sql, ["0", id], (err, results) => {
         connectionRelease(connection);
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 66", err);
           return callback(err, null);
         }
         callback(null, results);
@@ -693,7 +693,7 @@ const Customer = {
       connection.query(sql, [id], (err, results) => {
         connectionRelease(connection);
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 67", err);
           return callback(err, null);
         }
         callback(null, results);
@@ -717,7 +717,7 @@ const Customer = {
       connection.query(sql, [username, username], (err, results) => {
         connectionRelease(connection);
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 68", err);
           return callback(
             { message: "Database query error", error: err },
             null
@@ -752,7 +752,7 @@ const Customer = {
       connection.query(sql, [username, username], (err, results) => {
         connectionRelease(connection);
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 69", err);
           return callback(
             { message: "Database query error", error: err },
             null
@@ -793,7 +793,7 @@ const Customer = {
       connection.query(sql, [token, tokenExpiry, id], (err, results) => {
         connectionRelease(connection);
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 70", err);
           return callback(
             { message: "Database update error", error: err },
             null
@@ -832,7 +832,7 @@ const Customer = {
       connection.query(sql, [id], (err, results) => {
         connectionRelease(connection);
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 71", err);
           return callback(
             { message: "Database query error", error: err },
             null
@@ -863,7 +863,7 @@ const Customer = {
       connection.query(sql, [email], (err, results) => {
         connectionRelease(connection);
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 72", err);
           return callback(err, null);
         }
 
@@ -894,7 +894,7 @@ const Customer = {
       connection.query(sql, [id], (err, results) => {
         connectionRelease(connection);
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error: 73", err);
           return callback(
             { message: "Database update error", error: err },
             null

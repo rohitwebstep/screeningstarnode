@@ -40,7 +40,7 @@ const Service = {
             connectionRelease(connection); // Release the connection
 
             if (insertErr) {
-              console.error("Database query error:", insertErr);
+              console.error("Database query error: 46", insertErr);
               return callback(insertErr, null);
             }
             callback(null, results);
@@ -62,7 +62,7 @@ const Service = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error:", queryErr);
+          console.error("Database query error: 47", queryErr);
           return callback(queryErr, null);
         }
         callback(null, results);
@@ -87,7 +87,7 @@ const Service = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error:", queryErr);
+          console.error("Database query error: 48", queryErr);
           return callback(queryErr, null);
         }
 
@@ -110,7 +110,7 @@ const Service = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error:", queryErr);
+          console.error("Database query error: 49", queryErr);
           return callback(queryErr, null);
         }
         callback(null, results[0]);
@@ -130,7 +130,7 @@ const Service = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error:", queryErr);
+          console.error("Database query error: 50", queryErr);
           return callback(queryErr, null);
         }
         callback(null, results[0]);
@@ -154,7 +154,7 @@ const Service = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error:", queryErr);
+          console.error(" 51", queryErr);
           return callback(queryErr, null);
         }
         callback(null, results);
@@ -177,7 +177,7 @@ const Service = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error:", queryErr);
+          console.error("Database query error: 51", queryErr);
           return callback(queryErr, null);
         }
         callback(null, results);

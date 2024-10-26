@@ -17,7 +17,7 @@ const Admin = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error:", queryErr);
+          console.error("Database query error: 5", queryErr);
           return callback({ message: "Database query error", error: queryErr }, null);
         }
 
@@ -49,7 +49,7 @@ const Admin = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error:", queryErr);
+          console.error("Database query error: 6", queryErr);
           return callback({ message: "Database query error", error: queryErr }, null);
         }
 
@@ -82,7 +82,7 @@ const Admin = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error:", queryErr);
+          console.error("Database query error: 7", queryErr);
           return callback({ message: "Database query error", error: queryErr }, null);
         }
 
@@ -107,7 +107,7 @@ const Admin = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error:", queryErr.message);
+          console.error("Database query error: 8", queryErr.message);
           return callback(
             {
               message: "An error occurred while updating the password.",
@@ -152,7 +152,7 @@ const Admin = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error:", queryErr);
+          console.error("Database query error: 9", queryErr);
           return callback({ message: "Database update error", error: queryErr }, null);
         }
 
@@ -186,7 +186,7 @@ const Admin = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error:", queryErr);
+          console.error("Database query error: 10", queryErr);
           return callback({ message: "Database update error", error: queryErr }, null);
         }
 
@@ -220,7 +220,7 @@ const Admin = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error:", queryErr);
+          console.error("Database query error: 11", queryErr);
           return callback({ message: "Database query error", error: queryErr }, null);
         }
 
@@ -250,7 +250,7 @@ const Admin = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error:", queryErr);
+          console.error("Database query error: 12", queryErr);
           return callback({ message: "Database update error", error: queryErr }, null);
         }
 
@@ -284,7 +284,7 @@ const Admin = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error:", queryErr);
+          console.error("Database query error: 13", queryErr);
           return callback({ message: "Database query error", error: queryErr }, null);
         }
 

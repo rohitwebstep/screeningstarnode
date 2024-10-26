@@ -18,7 +18,7 @@ const cef = {
       connection.query(sql, [service_id], (queryErr, results) => {
         connectionRelease(connection);
         if (queryErr) {
-          console.error("Database query error:", queryErr);
+          console.error("Database query error: 107", queryErr);
           return callback(queryErr, null);
         }
         callback(null, results);
@@ -119,7 +119,7 @@ const cef = {
       connection.query(sql, [candidate_application_id], (queryErr, results) => {
         connectionRelease(connection);
         if (queryErr) {
-          console.error("Database query error:", queryErr);
+          console.error("Database query error: 108", queryErr);
           return callback(queryErr, null);
         }
         callback(null, results[0]);
