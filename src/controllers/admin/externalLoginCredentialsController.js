@@ -45,7 +45,7 @@ exports.list = (req, res) => {
                     console.error("Database error:", err);
                     return res
                         .status(500)
-                        .json({ status: false, message: err, token: newToken });
+                        .json({ status: false, message: err.message, token: newToken });
                 }
 
                 res.json({

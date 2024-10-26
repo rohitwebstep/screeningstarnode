@@ -78,7 +78,7 @@ exports.reportFormJsonByServiceID = (req, res) => {
               console.error(newFunction(), err);
               return res
                 .status(500)
-                .json({ status: false, message: err, token: newToken });
+                .json({ status: false, message: err.message, token: newToken });
             }
 
             if (!reportFormJson) {

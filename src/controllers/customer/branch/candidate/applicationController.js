@@ -90,7 +90,7 @@ exports.create = (req, res) => {
             console.error("Error checking unique ID:", err);
             return res
               .status(500)
-              .json({ status: false, message: err, token: newToken });
+              .json({ status: false, message: err.message, token: newToken });
           }
 
           if (exists) {
@@ -129,7 +129,7 @@ exports.create = (req, res) => {
                 );
                 return res.status(500).json({
                   status: false,
-                  message: err,
+                  message: err.message,
                   token: newToken,
                 });
               }
@@ -179,7 +179,7 @@ exports.create = (req, res) => {
                           console.error("Database error:", err);
                           return res.status(500).json({
                             status: false,
-                            message: err,
+                            message: err.message,
                             token: newToken,
                           });
                         }
@@ -200,7 +200,7 @@ exports.create = (req, res) => {
                               console.error("Database error:", err);
                               return res.status(500).json({
                                 status: false,
-                                message: err,
+                                message: err.message,
                                 token: newToken,
                               });
                             }
@@ -287,7 +287,7 @@ exports.create = (req, res) => {
                           console.error("Error fetching service data:", err);
                           return res.status(500).json({
                             status: false,
-                            message: err,
+                            message: err.message,
                             token: newToken,
                           });
                         }
@@ -508,7 +508,7 @@ exports.update = (req, res) => {
                 console.error("Error checking unique ID:", err);
                 return res.status(500).json({
                   status: false,
-                  message: err,
+                  message: err.message,
                   token: newToken,
                 });
               }
@@ -551,7 +551,7 @@ exports.update = (req, res) => {
                     );
                     return res.status(500).json({
                       status: false,
-                      message: err,
+                      message: err.message,
                       token: newToken,
                     });
                   }
@@ -619,7 +619,7 @@ exports.delete = (req, res) => {
           console.error("Token validation error:", err);
           return res.status(500).json({
             status: false,
-            message: err,
+            message: err.message,
           });
         }
 

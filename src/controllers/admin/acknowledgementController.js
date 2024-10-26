@@ -77,7 +77,7 @@ exports.list = (req, res) => {
           console.error("Database error:", err);
           return res.status(500).json({
             status: false,
-            message: err,
+            message: err.message,
             token: newToken,
           });
         }
@@ -174,7 +174,7 @@ exports.sendNotification = async (req, res) => {
                     console.error("Database error:", err);
                     return res.status(500).json({
                       status: false,
-                      message: err,
+                      message: err.message,
                       token: newToken,
                     });
                   }

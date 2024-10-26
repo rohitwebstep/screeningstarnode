@@ -122,7 +122,7 @@ exports.isEmailUsed = (req, res) => {
         console.error("Database error:", err);
         return res.status(500).json({
           status: false,
-          message: err,
+          message: err.message,
           token: newToken,
         });
       }
@@ -186,7 +186,7 @@ exports.list = (req, res) => {
           console.error("Database error:", err);
           return res
             .status(500)
-            .json({ status: false, message: err, token: newToken });
+            .json({ status: false, message: err.message, token: newToken });
         }
 
         res.json({
@@ -247,7 +247,7 @@ exports.listByCustomerID = (req, res) => {
           console.error("Database error:", err);
           return res
             .status(500)
-            .json({ status: false, message: err, token: newToken });
+            .json({ status: false, message: err.message, token: newToken });
         }
 
         res.json({
@@ -490,7 +490,7 @@ exports.update = (req, res) => {
           console.error("Token validation error:", err);
           return res.status(500).json({
             status: false,
-            message: err,
+            message: err.message,
           });
         }
 
@@ -623,7 +623,7 @@ exports.active = (req, res) => {
           console.error("Token validation error:", err);
           return res.status(500).json({
             status: false,
-            message: err,
+            message: err.message,
           });
         }
 
@@ -749,7 +749,7 @@ exports.inactive = (req, res) => {
           console.error("Token validation error:", err);
           return res.status(500).json({
             status: false,
-            message: err,
+            message: err.message,
           });
         }
 
@@ -874,7 +874,7 @@ exports.delete = (req, res) => {
           console.error("Token validation error:", err);
           return res.status(500).json({
             status: false,
-            message: err,
+            message: err.message,
           });
         }
 
@@ -997,7 +997,7 @@ exports.getServiceById = (req, res) => {
           console.error("Error fetching service data:", err);
           return res.status(500).json({
             status: false,
-            message: err,
+            message: err.message,
             token: newToken,
           });
         }
@@ -1095,7 +1095,7 @@ exports.annexureDataByServiceId = (req, res) => {
             console.error("Error fetching report form JSON:", err);
             return res
               .status(500)
-              .json({ status: false, message: err, token: newToken });
+              .json({ status: false, message: err.message, token: newToken });
           }
 
           if (!reportFormJson) {

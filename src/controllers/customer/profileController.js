@@ -192,7 +192,7 @@ exports.create = (req, res) => {
               );
               return res
                 .status(500)
-                .json({ status: false, message: err, token: newToken });
+                .json({ status: false, message: err.message, token: newToken });
             }
 
             const customerId = result.insertId;
@@ -255,7 +255,7 @@ exports.create = (req, res) => {
                       console.error("Error creating head branch:", err);
                       return res.status(500).json({
                         status: false,
-                        message: err,
+                        message: err.message,
                         token: newToken,
                       });
                     }
@@ -324,7 +324,7 @@ exports.create = (req, res) => {
 
                                 return res.status(500).json({
                                   status: false,
-                                  message: err,
+                                  message: err.message,
                                   token: newToken,
                                 });
                               }
@@ -615,7 +615,7 @@ exports.upload = async (req, res) => {
                   );
                   return res.status(500).json({
                     status: false,
-                    message: err,
+                    message: err.message,
                     token: newToken,
                   });
                 }
@@ -644,7 +644,7 @@ exports.upload = async (req, res) => {
                         // Return error response
                         return res.status(500).json({
                           status: false,
-                          message: err,
+                          message: err.message,
                           token: newToken, // Assuming newToken is defined in your context
                         });
                       }
@@ -838,7 +838,7 @@ exports.inactiveList = (req, res) => {
           console.error("Database error:", err);
           return res
             .status(500)
-            .json({ status: false, message: err, token: newToken });
+            .json({ status: false, message: err.message, token: newToken });
         }
 
         res.json({
@@ -894,7 +894,7 @@ exports.list = (req, res) => {
           console.error("Database error:", err);
           return res
             .status(500)
-            .json({ status: false, message: err, token: newToken });
+            .json({ status: false, message: err.message, token: newToken });
         }
 
         res.json({
@@ -1310,7 +1310,7 @@ exports.fetchBranchPassword = (req, res) => {
           console.error("Database error:", err);
           return res
             .status(500)
-            .json({ status: false, message: err, token: newToken });
+            .json({ status: false, message: err.message, token: newToken });
         }
 
         if (!result) {
@@ -1585,7 +1585,7 @@ exports.delete = (req, res) => {
           console.error("Token validation error:", err);
           return res.status(500).json({
             status: false,
-            message: err,
+            message: err.message,
           });
         }
 
@@ -1693,7 +1693,7 @@ exports.customerBasicInfoWithBranchAuth = (req, res) => {
         console.error("Database error:", err);
         return res
           .status(500)
-          .json({ status: false, message: err, token: newToken });
+          .json({ status: false, message: err.message, token: newToken });
       }
 
       res.json({
