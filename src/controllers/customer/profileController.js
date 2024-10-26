@@ -103,7 +103,7 @@ exports.create = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err });
+        return res.status(500).json({ status: false, message: err.message });
       }
 
       if (!result.status) {
@@ -546,7 +546,7 @@ exports.upload = async (req, res) => {
             console.error("Error checking token validity:", err);
             return res
               .status(500)
-              .json({ status: false, message: err });
+              .json({ status: false, message: err.message });
           }
 
           if (!result.status) {
@@ -824,7 +824,7 @@ exports.inactiveList = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err });
+        return res.status(500).json({ status: false, message: err.message });
       }
 
       if (!result.status) {
@@ -880,7 +880,7 @@ exports.list = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err });
+        return res.status(500).json({ status: false, message: err.message });
       }
 
       if (!result.status) {
@@ -996,7 +996,7 @@ exports.update = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err });
+        return res.status(500).json({ status: false, message: err.message });
       }
 
       if (!result.status) {
@@ -1296,7 +1296,7 @@ exports.fetchBranchPassword = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err });
+        return res.status(500).json({ status: false, message: err.message });
       }
 
       if (!result.status) {
@@ -1367,7 +1367,7 @@ exports.active = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err });
+        return res.status(500).json({ status: false, message: err.message });
       }
 
       if (!result.status) {
@@ -1475,7 +1475,7 @@ exports.inactive = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err });
+        return res.status(500).json({ status: false, message: err.message });
       }
 
       if (!result.status) {
@@ -1679,7 +1679,7 @@ exports.customerBasicInfoWithBranchAuth = (req, res) => {
   BranchCommon.isBranchTokenValid(branch_token, branch_id, (err, result) => {
     if (err) {
       console.error("Error checking token validity:", err);
-      return res.status(500).json({ status: false, message: err });
+      return res.status(500).json({ status: false, message: err.message });
     }
 
     if (!result.status) {

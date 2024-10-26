@@ -108,7 +108,7 @@ exports.isEmailUsed = (req, res) => {
   AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
     if (err) {
       console.error("Error checking token validity:", err);
-      return res.status(500).json({ status: false, message: err });
+      return res.status(500).json({ status: false, message: err.message });
     }
 
     if (!result.status) {
@@ -172,7 +172,7 @@ exports.list = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err });
+        return res.status(500).json({ status: false, message: err.message });
       }
 
       if (!result.status) {
@@ -230,7 +230,7 @@ exports.listByCustomerID = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err });
+        return res.status(500).json({ status: false, message: err.message });
       }
 
       if (!tokenResult.status) {

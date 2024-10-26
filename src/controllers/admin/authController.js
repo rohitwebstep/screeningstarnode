@@ -41,7 +41,7 @@ exports.login = (req, res) => {
   Admin.findByEmailOrMobile(username, (err, result) => {
     if (err) {
       console.error("Step 5: Database error:", err);
-      return res.status(500).json({ status: false, message: err });
+      return res.status(500).json({ status: false, message: err.message });
     }
 
     // If no admin found, return a 404 response
@@ -62,7 +62,7 @@ exports.login = (req, res) => {
           err
         );
         Common.adminLoginLog(admin.id, "login", "0", err, () => {});
-        return res.status(500).json({ status: false, message: err });
+        return res.status(500).json({ status: false, message: err.message });
       }
 
       // If the password is incorrect, log the attempt and return a 401 response

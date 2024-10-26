@@ -60,7 +60,7 @@ exports.list = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err });
+        return res.status(500).json({ status: false, message: err.message });
       }
 
       if (!tokenResult.status) {
@@ -133,7 +133,7 @@ exports.sendNotification = async (req, res) => {
             console.error("Error checking token validity:", err);
             return res
               .status(500)
-              .json({ status: false, message: err });
+              .json({ status: false, message: err.message });
           }
 
           if (!tokenResult.status) {

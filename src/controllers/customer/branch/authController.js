@@ -39,7 +39,7 @@ exports.login = (req, res) => {
   BranchAuth.findByEmailOrMobile(username, (err, result) => {
     if (err) {
       console.error("Database error:", err);
-      return res.status(500).json({ status: false, message: err });
+      return res.status(500).json({ status: false, message: err.message });
     }
 
     // If no branch found, return a 404 response
@@ -76,7 +76,7 @@ exports.login = (req, res) => {
             console.error("Database error:", err);
             return res
               .status(500)
-              .json({ status: false, message: err });
+              .json({ status: false, message: err.message });
           }
 
           // If branch is not found or is not active, return a 404 response
@@ -100,7 +100,7 @@ exports.login = (req, res) => {
               );
               return res
                 .status(500)
-                .json({ status: false, message: err });
+                .json({ status: false, message: err.message });
             }
 
             // If the password is incorrect, log the attempt and return a 401 response
@@ -252,7 +252,7 @@ exports.updatePassword = (req, res) => {
   Common.isBranchTokenValid(_token, branch_id, (err, result) => {
     if (err) {
       console.error("Error checking token validity:", err);
-      return res.status(500).json({ status: false, message: err });
+      return res.status(500).json({ status: false, message: err.message });
     }
 
     if (!result.status) {
@@ -426,7 +426,7 @@ exports.validateLogin = (req, res) => {
     Common.isBranchTokenValid(_token, branch_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err });
+        return res.status(500).json({ status: false, message: err.message });
       }
 
       if (!result.status) {

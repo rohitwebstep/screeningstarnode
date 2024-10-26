@@ -71,7 +71,7 @@ exports.create = (req, res) => {
     BranchCommon.isBranchTokenValid(_token, branch_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err });
+        return res.status(500).json({ status: false, message: err.message });
       }
 
       if (!result.status) {
@@ -337,7 +337,7 @@ exports.list = (req, res) => {
     BranchCommon.isBranchTokenValid(_token, branch_id, (err, tokenResult) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err });
+        return res.status(500).json({ status: false, message: err.message });
       }
 
       if (!tokenResult.status) {
@@ -423,7 +423,7 @@ exports.update = (req, res) => {
     BranchCommon.isBranchTokenValid(_token, branch_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err });
+        return res.status(500).json({ status: false, message: err.message });
       }
 
       if (!result.status) {
@@ -657,7 +657,7 @@ exports.upload = async (req, res) => {
       BranchCommon.isBranchTokenValid(token, branchId, async (err, result) => {
         if (err) {
           console.error("Error checking token validity:", err);
-          return res.status(500).json({ status: false, message: err });
+          return res.status(500).json({ status: false, message: err.message });
         }
 
         if (!result.status) {

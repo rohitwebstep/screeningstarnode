@@ -20,6 +20,82 @@ const fs = require("fs");
 const path = require("path");
 const { upload, saveImage, saveImages } = require("../../utils/imageSave");
 
+function calculateServiceStats(applications, services) {
+  const serviceStats = {};
+  const servicesToAllocate = []; // Initialize servicesToAllocate
+
+  applications.forEach((application) => {
+    application.applications.forEach((app) => {
+      const serviceIds = app.services.split(",");
+
+      serviceIds.forEach((serviceId) => {
+        const id = parseInt(serviceId, 10);
+
+        // Check if the service ID exists in the customer services
+        const serviceExists = services.some(
+          (service) => service.serviceId === id
+        );
+
+        // Initialize the service stats if it doesn't exist
+        if (!serviceStats[id]) {
+          if (serviceExists) {
+            const service = services.find((s) => s.serviceId === id);
+            serviceStats[id] = {
+              serviceId: id,
+              serviceTitle: service.serviceTitle,
+              price: parseFloat(service.price),
+              count: 0,
+              totalCost: 0,
+            };
+          } else {
+            servicesToAllocate.push(id);
+            return; // Skip further processing for this ID
+          }
+        }
+
+        // Safely increment the count for existing service stats
+        serviceStats[id].count += 1;
+      });
+    });
+  });
+
+  // Calculate total cost for each service
+  for (const id in serviceStats) {
+    serviceStats[id].totalCost =
+      serviceStats[id].count * serviceStats[id].price;
+  }
+
+  return { serviceStats, servicesToAllocate }; // Return servicesToAllocate as well
+}
+
+// Function to calculate overall costs
+function calculateOverallCosts(serviceStats, percentage) {
+  let overallServiceAmount = 0;
+
+  for (const stat of Object.values(serviceStats)) {
+    overallServiceAmount += stat.totalCost;
+  }
+
+  const cgstAmount = (overallServiceAmount * (percentage / 100)).toFixed(2);
+  const sgstAmount = (overallServiceAmount * (percentage / 100)).toFixed(2);
+  const totalTax = (parseFloat(cgstAmount) + parseFloat(sgstAmount)).toFixed(2);
+  const totalAmount = (overallServiceAmount + parseFloat(totalTax)).toFixed(2);
+
+  return {
+    overallServiceAmount: overallServiceAmount.toFixed(2),
+    cgst: {
+      percentage: `${percentage}%`,
+      tax: cgstAmount,
+    },
+    sgst: {
+      percentage: `${percentage}%`,
+      tax: sgstAmount,
+    },
+    totalTax,
+    totalAmount,
+  };
+}
+
 // Controller to list all customers
 exports.generateInvoice = (req, res) => {
   const { customer_id, admin_id, _token } = req.query; // Renamed for clarity
@@ -55,7 +131,7 @@ exports.generateInvoice = (req, res) => {
       AdminCommon.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
         if (err) {
           console.error("Error checking token validity:", err);
-          return res.status(500).json({ status: false, message: err });
+          return res.status(500).json({ status: false, message: err.message });
         }
 
         if (!tokenResult.status) {
@@ -87,10 +163,34 @@ exports.generateInvoice = (req, res) => {
               });
             }
 
+            // Extract services and applications
+            const services = JSON.parse(results.customerInfo.services); // Parse services JSON string
+            const applications = results.applicationsByBranch;
+
+            // Calculate service statistics
+            const { serviceStats, servicesToAllocate } = calculateServiceStats(
+              applications,
+              services
+            );
+
+            // Calculate overall costs with 9% as parameter
+            const overallCosts = calculateOverallCosts(serviceStats, 9);
+
+            // Convert serviceStats to an array for easy access
+            const totalCostsArray = Object.values(serviceStats);
+
+            // Log the results
+            const finalArr = {
+              serviceInfo: totalCostsArray,
+              costInfo: overallCosts,
+            };
+
             // Respond with the fetched customer data and applications
             return res.json({
               status: true,
               message: "Data fetched successfully.",
+              finalArr,
+              servicesToAllocate,
               customer: results.customerInfo, // Customer information
               applications: results.applicationsByBranch, // Client applications organized by branch
               totalApplications: results.applicationsByBranch.reduce(

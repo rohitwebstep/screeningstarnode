@@ -40,7 +40,7 @@ const generateInvoiceModel = {
         }
 
         const applicationQuery = `
-          SELECT id, branch_id, application_id, employee_id, name, sub_client, photo, spoc, location, batch_number, package, services, status
+          SELECT id, branch_id, application_id, employee_id, name, services, status, created_at
           FROM client_applications
           WHERE (status = 'completed' OR status = 'closed') 
           AND customer_id = ? 
