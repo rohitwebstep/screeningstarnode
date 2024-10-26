@@ -68,7 +68,7 @@ function calculateServiceStats(applications, services) {
       serviceStats[id].count * serviceStats[id].price;
   }
 
-  return { serviceStats, servicesToAllocate, allServiceIds }; // Return servicesToAllocate as well
+  return { serviceStats, servicesToAllocate }; // Return servicesToAllocate as well
 }
 
 // Function to calculate overall costs
@@ -207,10 +207,9 @@ exports.generateInvoice = async (req, res) => {
               const applications = results.applicationsByBranch;
 
               // Calculate service statistics
-              const { serviceStats, servicesToAllocate, allServiceIds } =
+              const { serviceStats, servicesToAllocate } =
                 calculateServiceStats(applications, services);
 
-              const serviceNames = await getServiceNames(allServiceIds);
               // Calculate overall costs with 9% as parameter
               const overallCosts = calculateOverallCosts(serviceStats, 9);
 
@@ -222,6 +221,14 @@ exports.generateInvoice = async (req, res) => {
                 serviceInfo: totalCostsArray,
                 costInfo: overallCosts,
               };
+
+              const customerServiceList = JSON.parse(
+                results.customerInfo.services
+              );
+              const customerServiceIds = customerServiceList.map(
+                (service) => service.serviceId
+              );
+              const serviceNames = await getServiceNames(customerServiceIds);
 
               // Respond with the fetched customer data and applications
               return res.json({
