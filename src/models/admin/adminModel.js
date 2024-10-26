@@ -107,7 +107,7 @@ const Admin = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error: 8", queryErr.message);
+          console.error("Database query error: 8", queryerr);
           return callback(
             {
               message: "An error occurred while updating the password.",

@@ -55,7 +55,7 @@ exports.generateInvoice = (req, res) => {
       AdminCommon.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
         if (err) {
           console.error("Error checking token validity:", err);
-          return res.status(500).json({ status: false, message: err.message });
+          return res.status(500).json({ status: false, message: err });
         }
 
         if (!tokenResult.status) {
@@ -71,7 +71,7 @@ exports.generateInvoice = (req, res) => {
             console.error("Database error:", err);
             return res.status(500).json({
               status: false,
-              message: err.message,
+              message: err,
               token: newToken,
             });
           }
@@ -82,7 +82,7 @@ exports.generateInvoice = (req, res) => {
               console.error("Database error:", err);
               return res.status(500).json({
                 status: false,
-                message: err.message,
+                message: err,
                 token: newToken,
               });
             }

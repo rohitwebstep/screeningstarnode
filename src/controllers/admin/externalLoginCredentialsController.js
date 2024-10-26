@@ -31,7 +31,7 @@ exports.list = (req, res) => {
         AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
             if (err) {
                 console.error("Error checking token validity:", err);
-                return res.status(500).json({ status: false, message: err.message });
+                return res.status(500).json({ status: false, message: err });
             }
 
             if (!result.status) {
@@ -45,7 +45,7 @@ exports.list = (req, res) => {
                     console.error("Database error:", err);
                     return res
                         .status(500)
-                        .json({ status: false, message: err.message, token: newToken });
+                        .json({ status: false, message: err, token: newToken });
                 }
 
                 res.json({

@@ -41,7 +41,7 @@ exports.login = (req, res) => {
   Admin.findByEmailOrMobile(username, (err, result) => {
     if (err) {
       console.error("Step 5: Database error:", err);
-      return res.status(500).json({ status: false, message: err.message });
+      return res.status(500).json({ status: false, message: err });
     }
 
     // If no admin found, return a 404 response
@@ -61,8 +61,8 @@ exports.login = (req, res) => {
           "Step 8: Database error during password validation:",
           err
         );
-        Common.adminLoginLog(admin.id, "login", "0", err.message, () => {});
-        return res.status(500).json({ status: false, message: err.message });
+        Common.adminLoginLog(admin.id, "login", "0", err, () => {});
+        return res.status(500).json({ status: false, message: err });
       }
 
       // If the password is incorrect, log the attempt and return a 401 response
@@ -142,12 +142,12 @@ exports.login = (req, res) => {
             admin.id,
             "login",
             "0",
-            "Error updating token: " + err.message,
+            "Error updating token: " + err,
             () => {}
           );
           return res.status(500).json({
             status: false,
-            message: `Error updating token: ${err.message}`,
+            message: `Error updating token: ${err}`,
           });
         }
         Common.adminLoginLog(admin.id, "login", "1", null, () => {});
@@ -212,7 +212,7 @@ exports.logout = (req, res) => {
         console.error("Database error:", err);
         return res.status(500).json({
           status: false,
-          message: `Error logging out: ${err.message}`,
+          message: `Error logging out: ${err}`,
         });
       }
 
@@ -371,7 +371,7 @@ exports.updatePassword = (req, res) => {
   // Validate admin token
   Common.isAdminTokenValid(_token, admin_id, (err, tokenValidationResult) => {
     if (err) {
-      console.error("Token validation error:", err.message);
+      console.error("Token validation error:", err);
       return res.status(500).json({
         status: false,
         message: "Internal server error during token validation.",
@@ -390,14 +390,14 @@ exports.updatePassword = (req, res) => {
     // Update the password
     Admin.updatePassword(new_password, admin_id, (err, result) => {
       if (err) {
-        console.error("Database error during password update:", err.message);
+        console.error("Database error during password update:", err);
         Common.adminActivityLog(
           admin_id,
           "Password",
           "Update",
           "0",
           "Admin attempted to update password",
-          err.message,
+          err,
           () => {}
         );
         return res.status(500).json({
@@ -483,12 +483,12 @@ exports.forgotPasswordRequest = (req, res) => {
               admin.id,
               "forgot-password",
               "0",
-              `Error updating token: ${err.message}`,
+              `Error updating token: ${err}`,
               () => {}
             );
             return res.status(500).json({
               status: false,
-              message: err.message,
+              message: err,
             });
           }
 
@@ -607,14 +607,14 @@ exports.forgotPassword = (req, res) => {
     // Proceed to update the password
     Admin.updatePassword(new_password, admin.id, (err, result) => {
       if (err) {
-        console.error("Database error during password update:", err.message);
+        console.error("Database error during password update:", err);
         Common.adminActivityLog(
           admin.id,
           "Password",
           "Update",
           "0",
           "Failed password update attempt",
-          err.message,
+          err,
           () => {}
         );
         return res.status(500).json({

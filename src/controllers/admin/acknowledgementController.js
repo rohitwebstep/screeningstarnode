@@ -60,7 +60,7 @@ exports.list = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
+        return res.status(500).json({ status: false, message: err });
       }
 
       if (!tokenResult.status) {
@@ -77,7 +77,7 @@ exports.list = (req, res) => {
           console.error("Database error:", err);
           return res.status(500).json({
             status: false,
-            message: err.message,
+            message: err,
             token: newToken,
           });
         }
@@ -133,7 +133,7 @@ exports.sendNotification = async (req, res) => {
             console.error("Error checking token validity:", err);
             return res
               .status(500)
-              .json({ status: false, message: err.message });
+              .json({ status: false, message: err });
           }
 
           if (!tokenResult.status) {
@@ -174,7 +174,7 @@ exports.sendNotification = async (req, res) => {
                     console.error("Database error:", err);
                     return res.status(500).json({
                       status: false,
-                      message: err.message,
+                      message: err,
                       token: newToken,
                     });
                   }

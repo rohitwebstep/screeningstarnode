@@ -78,7 +78,7 @@ exports.reportFormJsonByServiceID = (req, res) => {
               console.error(newFunction(), err);
               return res
                 .status(500)
-                .json({ status: false, message: err.message, token: newToken });
+                .json({ status: false, message: err, token: newToken });
             }
 
             if (!reportFormJson) {
@@ -190,7 +190,7 @@ exports.annexureData = (req, res) => {
               return res.status(500).json({
                 status: false,
                 message: "An error occurred while fetching annexure data.",
-                error: err.message,
+                error: err,
                 token: newToken,
               });
             }

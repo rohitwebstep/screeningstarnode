@@ -108,7 +108,7 @@ exports.isEmailUsed = (req, res) => {
   AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
     if (err) {
       console.error("Error checking token validity:", err);
-      return res.status(500).json({ status: false, message: err.message });
+      return res.status(500).json({ status: false, message: err });
     }
 
     if (!result.status) {
@@ -122,7 +122,7 @@ exports.isEmailUsed = (req, res) => {
         console.error("Database error:", err);
         return res.status(500).json({
           status: false,
-          message: err.message,
+          message: err,
           token: newToken,
         });
       }
@@ -172,7 +172,7 @@ exports.list = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
+        return res.status(500).json({ status: false, message: err });
       }
 
       if (!result.status) {
@@ -186,7 +186,7 @@ exports.list = (req, res) => {
           console.error("Database error:", err);
           return res
             .status(500)
-            .json({ status: false, message: err.message, token: newToken });
+            .json({ status: false, message: err, token: newToken });
         }
 
         res.json({
@@ -230,7 +230,7 @@ exports.listByCustomerID = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
+        return res.status(500).json({ status: false, message: err });
       }
 
       if (!tokenResult.status) {
@@ -247,7 +247,7 @@ exports.listByCustomerID = (req, res) => {
           console.error("Database error:", err);
           return res
             .status(500)
-            .json({ status: false, message: err.message, token: newToken });
+            .json({ status: false, message: err, token: newToken });
         }
 
         res.json({
@@ -330,7 +330,7 @@ exports.filterOptionsForClientApplications = (req, res) => {
                 status: false,
                 message:
                   "An error occurred while fetching Filter options data.",
-                error: err.message,
+                error: err,
                 token: newToken,
               });
             }
@@ -424,7 +424,7 @@ exports.filterOptionsForCandidateApplications = (req, res) => {
                 status: false,
                 message:
                   "An error occurred while fetching Filter options data.",
-                error: err.message,
+                error: err,
                 token: newToken,
               });
             }
@@ -490,7 +490,7 @@ exports.update = (req, res) => {
           console.error("Token validation error:", err);
           return res.status(500).json({
             status: false,
-            message: err.message,
+            message: err,
           });
         }
 
@@ -553,7 +553,7 @@ exports.update = (req, res) => {
                 "Update",
                 "0",
                 JSON.stringify({ id, ...changes }),
-                err.message,
+                err,
                 () => {}
               );
               return res.status(500).json({
@@ -623,7 +623,7 @@ exports.active = (req, res) => {
           console.error("Token validation error:", err);
           return res.status(500).json({
             status: false,
-            message: err.message,
+            message: err,
           });
         }
 
@@ -679,7 +679,7 @@ exports.active = (req, res) => {
                 "status",
                 "0",
                 JSON.stringify({ branch_id, ...changes }),
-                err.message,
+                err,
                 () => {}
               );
               return res.status(500).json({
@@ -749,7 +749,7 @@ exports.inactive = (req, res) => {
           console.error("Token validation error:", err);
           return res.status(500).json({
             status: false,
-            message: err.message,
+            message: err,
           });
         }
 
@@ -805,7 +805,7 @@ exports.inactive = (req, res) => {
                 "status",
                 "0",
                 JSON.stringify({ branch_id, ...changes }),
-                err.message,
+                err,
                 () => {}
               );
               return res.status(500).json({
@@ -874,7 +874,7 @@ exports.delete = (req, res) => {
           console.error("Token validation error:", err);
           return res.status(500).json({
             status: false,
-            message: err.message,
+            message: err,
           });
         }
 
@@ -925,7 +925,7 @@ exports.delete = (req, res) => {
                 "Delete",
                 "0",
                 JSON.stringify({ id }),
-                err.message,
+                err,
                 () => {}
               );
               return res.status(500).json({
@@ -1095,7 +1095,7 @@ exports.annexureDataByServiceId = (req, res) => {
             console.error("Error fetching report form JSON:", err);
             return res
               .status(500)
-              .json({ status: false, message: err.message, token: newToken });
+              .json({ status: false, message: err, token: newToken });
           }
 
           if (!reportFormJson) {
@@ -1120,7 +1120,7 @@ exports.annexureDataByServiceId = (req, res) => {
                 return res.status(500).json({
                   status: false,
                   message: "An error occurred while fetching annexure data.",
-                  error: err.message,
+                  error: err,
                   token: newToken,
                 });
               }

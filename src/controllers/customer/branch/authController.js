@@ -39,7 +39,7 @@ exports.login = (req, res) => {
   BranchAuth.findByEmailOrMobile(username, (err, result) => {
     if (err) {
       console.error("Database error:", err);
-      return res.status(500).json({ status: false, message: err.message });
+      return res.status(500).json({ status: false, message: err });
     }
 
     // If no branch found, return a 404 response
@@ -59,7 +59,7 @@ exports.login = (req, res) => {
           console.error("Database error:", customerErr);
           return res
             .status(500)
-            .json({ status: false, message: customerErr.message });
+            .json({ status: false, message: customererr });
         }
 
         // If customer is not active, return a 404 response
@@ -76,7 +76,7 @@ exports.login = (req, res) => {
             console.error("Database error:", err);
             return res
               .status(500)
-              .json({ status: false, message: err.message });
+              .json({ status: false, message: err });
           }
 
           // If branch is not found or is not active, return a 404 response
@@ -95,12 +95,12 @@ exports.login = (req, res) => {
                 branch.id,
                 "login",
                 "0",
-                err.message,
+                err,
                 () => {}
               );
               return res
                 .status(500)
-                .json({ status: false, message: err.message });
+                .json({ status: false, message: err });
             }
 
             // If the password is incorrect, log the attempt and return a 401 response
@@ -179,12 +179,12 @@ exports.login = (req, res) => {
                   branch.id,
                   "login",
                   "0",
-                  "Error updating token: " + err.message,
+                  "Error updating token: " + err,
                   () => {}
                 );
                 return res.status(500).json({
                   status: false,
-                  message: `Error updating token: ${err.message}`,
+                  message: `Error updating token: ${err}`,
                 });
               }
 
@@ -252,7 +252,7 @@ exports.updatePassword = (req, res) => {
   Common.isBranchTokenValid(_token, branch_id, (err, result) => {
     if (err) {
       console.error("Error checking token validity:", err);
-      return res.status(500).json({ status: false, message: err.message });
+      return res.status(500).json({ status: false, message: err });
     }
 
     if (!result.status) {
@@ -264,7 +264,7 @@ exports.updatePassword = (req, res) => {
     // Check if employee ID is unique
     BranchAuth.updatePassword(new_password, branch_id, (err, result) => {
       if (err) {
-        console.error("Database error during password update:", err.message);
+        console.error("Database error during password update:", err);
         Common.branchActivityLog(
           branch_id,
           "Password",
@@ -334,7 +334,7 @@ exports.logout = (req, res) => {
         console.error("Database error:", err);
         return res.status(500).json({
           status: false,
-          message: `Error logging out: ${err.message}`,
+          message: `Error logging out: ${err}`,
         });
       }
 
@@ -426,7 +426,7 @@ exports.validateLogin = (req, res) => {
     Common.isBranchTokenValid(_token, branch_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
+        return res.status(500).json({ status: false, message: err });
       }
 
       if (!result.status) {
@@ -462,7 +462,7 @@ exports.forgotPasswordRequest = (req, res) => {
       console.error("Database error:", err);
       return res.status(500).json({
         status: false,
-        message: err.message,
+        message: err,
       });
     }
 
@@ -503,7 +503,7 @@ exports.forgotPasswordRequest = (req, res) => {
                 branch.id,
                 "forgot-password",
                 "0",
-                `Error updating token: ${err.message}`,
+                `Error updating token: ${err}`,
                 () => {}
               );
               return res.status(500).json({
@@ -632,14 +632,14 @@ exports.forgotPassword = (req, res) => {
     // Proceed to update the password
     BranchAuth.updatePassword(new_password, branch.id, (err, result) => {
       if (err) {
-        console.error("Database error during password update:", err.message);
+        console.error("Database error during password update:", err);
         Common.branchActivityLog(
           branch.id,
           "Password",
           "Update",
           "0",
           "Failed password update attempt",
-          err.message,
+          err,
           () => {}
         );
         return res.status(500).json({

@@ -50,7 +50,7 @@ exports.list = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
+        return res.status(500).json({ status: false, message: err });
       }
 
       if (!tokenResult.status) {
@@ -67,7 +67,7 @@ exports.list = (req, res) => {
           console.error("Database error:", err);
           return res
             .status(500)
-            .json({ status: false, message: err.message, token: newToken });
+            .json({ status: false, message: err, token: newToken });
         }
 
         // Respond with the fetched customer data
@@ -132,7 +132,7 @@ exports.listByCustomerId = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
+        return res.status(500).json({ status: false, message: err });
       }
 
       if (!result.status) {
@@ -149,7 +149,7 @@ exports.listByCustomerId = (req, res) => {
             console.error("Database error:", err);
             return res
               .status(500)
-              .json({ status: false, message: err.message, token: newToken });
+              .json({ status: false, message: err, token: newToken });
           }
 
           res.json({
@@ -211,7 +211,7 @@ exports.applicationListByBranch = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
+        return res.status(500).json({ status: false, message: err });
       }
 
       if (!result.status) {
@@ -238,7 +238,7 @@ exports.applicationListByBranch = (req, res) => {
             console.error("Database error:", err);
             return res
               .status(500)
-              .json({ status: false, message: err.message, token: newToken });
+              .json({ status: false, message: err, token: newToken });
           }
 
           res.json({
@@ -307,7 +307,7 @@ exports.applicationByID = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
+        return res.status(500).json({ status: false, message: err });
       }
 
       if (!result.status) {
@@ -324,7 +324,7 @@ exports.applicationByID = (req, res) => {
             console.error("Database error:", err);
             return res
               .status(500)
-              .json({ status: false, message: err.message, token: newToken });
+              .json({ status: false, message: err, token: newToken });
           }
 
           if (!application) {
@@ -342,7 +342,7 @@ exports.applicationByID = (req, res) => {
                 console.error("Database error:", err);
                 return res.status(500).json({
                   status: false,
-                  message: err.message,
+                  message: err,
                   token: newToken,
                 });
               }
@@ -475,7 +475,7 @@ exports.annexureData = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
+        return res.status(500).json({ status: false, message: err });
       }
 
       if (!result.status) {
@@ -493,7 +493,7 @@ exports.annexureData = (req, res) => {
             return res.status(500).json({
               status: false,
               message: "An error occurred while fetching annexure data.",
-              error: err.message,
+              error: err,
               token: newToken,
             });
           }
@@ -557,7 +557,7 @@ exports.filterOptions = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
+        return res.status(500).json({ status: false, message: err });
       }
 
       if (!result.status) {
@@ -572,7 +572,7 @@ exports.filterOptions = (req, res) => {
           return res.status(500).json({
             status: false,
             message: "An error occurred while fetching Filter options data.",
-            error: err.message,
+            error: err,
             token: newToken,
           });
         }
@@ -645,7 +645,7 @@ exports.filterOptionsForBranch = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
+        return res.status(500).json({ status: false, message: err });
       }
 
       if (!result.status) {
@@ -662,7 +662,7 @@ exports.filterOptionsForBranch = (req, res) => {
             return res.status(500).json({
               status: false,
               message: "An error occurred while fetching Filter options data.",
-              error: err.message,
+              error: err,
               token: newToken,
             });
           }
@@ -733,7 +733,7 @@ exports.reportFormJsonByServiceID = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
+        return res.status(500).json({ status: false, message: err });
       }
 
       if (!result.status) {
@@ -749,7 +749,7 @@ exports.reportFormJsonByServiceID = (req, res) => {
             console.error(newFunction(), err);
             return res
               .status(500)
-              .json({ status: false, message: err.message, token: newToken });
+              .json({ status: false, message: err, token: newToken });
           }
 
           if (!reportFormJson) {
@@ -857,7 +857,7 @@ exports.generateReport = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, TokenResult) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
+        return res.status(500).json({ status: false, message: err });
       }
 
       if (!TokenResult.status) {
@@ -1135,7 +1135,7 @@ exports.generateReport = (req, res) => {
                                   console.error("Database error:", err);
                                   return res.status(500).json({
                                     status: false,
-                                    message: err.message,
+                                    message: err,
                                     token: newToken,
                                   });
                                 }
@@ -1170,7 +1170,7 @@ exports.generateReport = (req, res) => {
                                           );
                                           return res.status(500).json({
                                             status: false,
-                                            message: err.message,
+                                            message: err,
                                             token: newToken,
                                           });
                                         }
@@ -1542,7 +1542,7 @@ exports.customerBasicInfoWithAdminAuth = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
+        return res.status(500).json({ status: false, message: err });
       }
 
       if (!result.status) {
@@ -1556,7 +1556,7 @@ exports.customerBasicInfoWithAdminAuth = (req, res) => {
           console.error("Database error:", err);
           return res
             .status(500)
-            .json({ status: false, message: err.message, token: newToken });
+            .json({ status: false, message: err, token: newToken });
         }
 
         res.json({
@@ -1629,7 +1629,7 @@ exports.annexureDataByServiceIdofApplication = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
+        return res.status(500).json({ status: false, message: err });
       }
 
       if (!tokenResult.status) {
@@ -1647,7 +1647,7 @@ exports.annexureDataByServiceIdofApplication = (req, res) => {
             console.error("Error fetching report form JSON:", err);
             return res
               .status(500)
-              .json({ status: false, message: err.message, token: newToken });
+              .json({ status: false, message: err, token: newToken });
           }
 
           if (!reportFormJson) {
@@ -1672,7 +1672,7 @@ exports.annexureDataByServiceIdofApplication = (req, res) => {
                 return res.status(500).json({
                   status: false,
                   message: "An error occurred while fetching annexure data.",
-                  error: err.message,
+                  error: err,
                   token: newToken,
                 });
               }
@@ -1775,7 +1775,7 @@ exports.upload = async (req, res) => {
       AdminCommon.isAdminTokenValid(token, adminId, async (err, result) => {
         if (err) {
           console.error("Error checking token validity:", err);
-          return res.status(500).json({ status: false, message: err.message });
+          return res.status(500).json({ status: false, message: err });
         }
 
         if (!result.status) {
@@ -1859,7 +1859,7 @@ exports.upload = async (req, res) => {
                         console.error("Database error:", err);
                         return res.status(500).json({
                           status: false,
-                          message: err.message,
+                          message: err,
                           token: newToken,
                           savedImagePaths,
                         });

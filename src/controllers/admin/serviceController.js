@@ -49,12 +49,12 @@ exports.create = (req, res) => {
             "Create",
             "0",
             null,
-            err.message,
+            err,
             () => {}
           );
           return res
             .status(500)
-            .json({ status: false, message: err.message, token: newToken });
+            .json({ status: false, message: err, token: newToken });
         }
 
         Common.adminActivityLog(
@@ -117,7 +117,7 @@ exports.list = (req, res) => {
           console.error("Database error:", err);
           return res
             .status(500)
-            .json({ status: false, message: err.message, token: newToken });
+            .json({ status: false, message: err, token: newToken });
         }
 
         res.json({
@@ -265,12 +265,12 @@ exports.update = (req, res) => {
               "Update",
               "0",
               JSON.stringify({ id, ...changes }),
-              err.message,
+              err,
               () => {}
             );
             return res
               .status(500)
-              .json({ status: false, message: err.message, token: newToken });
+              .json({ status: false, message: err, token: newToken });
           }
 
           Common.adminActivityLog(
@@ -350,12 +350,12 @@ exports.delete = (req, res) => {
               "Delete",
               "0",
               JSON.stringify({ id, ...currentService }),
-              err.message,
+              err,
               () => {}
             );
             return res
               .status(500)
-              .json({ status: false, message: err.message, token: newToken });
+              .json({ status: false, message: err, token: newToken });
           }
 
           Common.adminActivityLog(

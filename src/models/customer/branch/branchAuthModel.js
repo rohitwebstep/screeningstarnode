@@ -174,7 +174,7 @@ const Branch = {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error: 77", err.message);
+          console.error("Database query error: 77", err);
           return callback(
             {
               message: "An error occurred while updating the password.",

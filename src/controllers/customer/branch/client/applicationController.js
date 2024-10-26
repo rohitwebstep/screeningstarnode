@@ -71,7 +71,7 @@ exports.create = (req, res) => {
     BranchCommon.isBranchTokenValid(_token, branch_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
+        return res.status(500).json({ status: false, message: err });
       }
 
       if (!result.status) {
@@ -86,7 +86,7 @@ exports.create = (req, res) => {
           console.error("Error checking unique ID:", err);
           return res
             .status(500)
-            .json({ status: false, message: err.message, token: newToken });
+            .json({ status: false, message: err, token: newToken });
         }
 
         if (exists) {
@@ -123,7 +123,7 @@ exports.create = (req, res) => {
                 "Create",
                 "0",
                 null,
-                err.message,
+                err,
                 () => {}
               );
               return res.status(500).json({
@@ -182,7 +182,7 @@ exports.create = (req, res) => {
                       console.error("Error checking unique ID:", err);
                       return res.status(500).json({
                         status: false,
-                        message: err.message,
+                        message: err,
                         token: newToken,
                       });
                     }
@@ -203,7 +203,7 @@ exports.create = (req, res) => {
                           console.error("Error checking client name:", err);
                           return res.status(500).json({
                             status: false,
-                            message: err.message,
+                            message: err,
                             token: newToken,
                           });
                         }
@@ -337,7 +337,7 @@ exports.list = (req, res) => {
     BranchCommon.isBranchTokenValid(_token, branch_id, (err, tokenResult) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
+        return res.status(500).json({ status: false, message: err });
       }
 
       if (!tokenResult.status) {
@@ -423,7 +423,7 @@ exports.update = (req, res) => {
     BranchCommon.isBranchTokenValid(_token, branch_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
+        return res.status(500).json({ status: false, message: err });
       }
 
       if (!result.status) {
@@ -513,7 +513,7 @@ exports.update = (req, res) => {
                 console.error("Error checking unique ID:", err);
                 return res.status(500).json({
                   status: false,
-                  message: err.message,
+                  message: err,
                   token: newToken,
                 });
               }
@@ -553,12 +553,12 @@ exports.update = (req, res) => {
                       "Update",
                       "0",
                       JSON.stringify({ client_application_id, ...changes }),
-                      err.message,
+                      err,
                       () => {}
                     );
                     return res.status(500).json({
                       status: false,
-                      message: err.message,
+                      message: err,
                       token: newToken,
                     });
                   }
@@ -657,7 +657,7 @@ exports.upload = async (req, res) => {
       BranchCommon.isBranchTokenValid(token, branchId, async (err, result) => {
         if (err) {
           console.error("Error checking token validity:", err);
-          return res.status(500).json({ status: false, message: err.message });
+          return res.status(500).json({ status: false, message: err });
         }
 
         if (!result.status) {
@@ -765,7 +765,7 @@ exports.upload = async (req, res) => {
                           console.error("Database error:", err);
                           return res.status(500).json({
                             status: false,
-                            message: err.message,
+                            message: err,
                             token: newToken,
                             savedImagePaths,
                           });
@@ -820,7 +820,7 @@ exports.upload = async (req, res) => {
                               console.error("Error checking unique ID:", err);
                               return res.status(500).json({
                                 status: false,
-                                message: err.message,
+                                message: err,
                                 token: newToken,
                                 savedImagePaths,
                               });
@@ -845,7 +845,7 @@ exports.upload = async (req, res) => {
                                   );
                                   return res.status(500).json({
                                     status: false,
-                                    message: err.message,
+                                    message: err,
                                     token: newToken,
                                     savedImagePaths,
                                   });
@@ -1019,7 +1019,7 @@ exports.delete = (req, res) => {
           console.error("Token validation error:", err);
           return res.status(500).json({
             status: false,
-            message: err.message,
+            message: err,
           });
         }
 
@@ -1067,7 +1067,7 @@ exports.delete = (req, res) => {
                 "Delete",
                 "0",
                 JSON.stringify({ id }),
-                err.message,
+                err,
                 () => {}
               );
               return res.status(500).json({

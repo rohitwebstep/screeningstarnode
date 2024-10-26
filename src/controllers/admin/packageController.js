@@ -37,7 +37,7 @@ exports.create = (req, res) => {
         console.error("Token validation error:", err);
         return res.status(500).json({
           status: false,
-          message: err.message,
+          message: err,
         });
       }
 
@@ -60,7 +60,7 @@ exports.create = (req, res) => {
             "Create",
             "0",
             null,
-            err.message,
+            err,
             () => {}
           );
           return res.status(500).json({
@@ -130,7 +130,7 @@ exports.list = (req, res) => {
           console.error("Database error:", err);
           return res
             .status(500)
-            .json({ status: false, message: err.message, token: newToken });
+            .json({ status: false, message: err, token: newToken });
         }
 
         res.json({
@@ -245,7 +245,7 @@ exports.update = (req, res) => {
         console.error("Token validation error:", err);
         return res.status(500).json({
           status: false,
-          message: err.message,
+          message: err,
         });
       }
 
@@ -297,7 +297,7 @@ exports.update = (req, res) => {
               "Update",
               "0",
               JSON.stringify({ id, ...changes }),
-              err.message,
+              err,
               () => {}
             );
             return res.status(500).json({
@@ -364,7 +364,7 @@ exports.delete = (req, res) => {
         console.error("Token validation error:", err);
         return res.status(500).json({
           status: false,
-          message: err.message,
+          message: err,
         });
       }
 
@@ -406,7 +406,7 @@ exports.delete = (req, res) => {
               "Delete",
               "0",
               JSON.stringify({ id }),
-              err.message,
+              err,
               () => {}
             );
             return res.status(500).json({
