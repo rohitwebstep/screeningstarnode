@@ -6,8 +6,13 @@ const AppModel = require("../../../models/appModel");
 // Utility function to generate a random token
 const generateToken = () => crypto.randomBytes(32).toString("hex");
 
-// Utility function to get token expiry time (1 hour from current time)
-const getTokenExpiry = () => new Date(Date.now() + 3600000).toISOString();
+const getCurrentTime = () => new Date();
+
+// Utility function to get token expiry time (15 minutes from the current time)
+const getTokenExpiry = () => {
+  const expiryDurationInMinutes = 15; // Duration for token expiry in minutes
+  return new Date(getCurrentTime().getTime() + expiryDurationInMinutes * 60000);
+};
 
 const {
   forgetPassword,
@@ -143,7 +148,7 @@ exports.login = (req, res) => {
             }
 
             // Get current time and token expiry
-            const currentTime = new Date(); // Current time
+            const currentTime = getCurrentTime();
             const tokenExpiry = new Date(branch.token_expiry); // Convert token_expiry to Date object
 
             // Check if the existing token is still valid

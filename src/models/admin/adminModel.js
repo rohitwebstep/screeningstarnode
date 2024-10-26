@@ -164,6 +164,7 @@ const Admin = {
             null
           );
         }
+        console.log(`UPDATE \`admins\` SET \`login_token\` = '${token}', \`token_expiry\` = '${tokenExpiry}' WHERE \`id\` = '${id}'`);
 
         callback(null, results);
       });

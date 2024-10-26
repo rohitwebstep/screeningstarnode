@@ -6,8 +6,13 @@ const AppModel = require("../../models/appModel");
 // Utility function to generate a random token
 const generateToken = () => crypto.randomBytes(32).toString("hex");
 
-// Utility function to get token expiry time (1 hour from current time)
-const getTokenExpiry = () => new Date(Date.now() + 3600000).toISOString();
+const getCurrentTime = () => new Date();
+
+// Utility function to get token expiry time (15 minutes from the current time)
+const getTokenExpiry = () => {
+  const expiryDurationInMinutes = 15; // Duration for token expiry in minutes
+  return new Date(getCurrentTime().getTime() + expiryDurationInMinutes * 60000);
+};
 
 const { forgetPassword } = require("../../mailer/admin/auth/forgetPassword");
 
@@ -35,7 +40,7 @@ exports.login = (req, res) => {
   // Find admin by email or mobile number
   Admin.findByEmailOrMobile(username, (err, result) => {
     if (err) {
-      console.error("Database error:", err);
+      console.error("Step 5: Database error:", err);
       return res.status(500).json({ status: false, message: err.message });
     }
 
@@ -52,7 +57,10 @@ exports.login = (req, res) => {
     // Validate password
     Admin.validatePassword(username, password, (err, isValid) => {
       if (err) {
-        console.error("Database error:", err);
+        console.error(
+          "Step 8: Database error during password validation:",
+          err
+        );
         Common.adminLoginLog(admin.id, "login", "0", err.message, () => {});
         return res.status(500).json({ status: false, message: err.message });
       }
@@ -71,6 +79,7 @@ exports.login = (req, res) => {
           .json({ status: false, message: "Incorrect password" });
       }
 
+      // Check admin account status
       if (admin.status == 0) {
         Common.adminLoginLog(
           admin.id,
@@ -102,8 +111,8 @@ exports.login = (req, res) => {
       }
 
       // Get current time and token expiry
-      const currentTime = new Date(); // Current time
-      const tokenExpiry = new Date(admin.token_expiry); // Convert token_expiry to Date object
+      const currentTime = getCurrentTime();
+      const tokenExpiry = new Date(admin.token_expiry);
 
       // Check if the existing token is still valid
       if (admin.login_token && tokenExpiry > currentTime) {
@@ -123,12 +132,12 @@ exports.login = (req, res) => {
 
       // Generate new token and expiry time
       const token = generateToken();
-      const newTokenExpiry = getTokenExpiry(); // This will be an ISO string
+      const newTokenExpiry = getTokenExpiry();
 
       // Update the token in the database
       Admin.updateToken(admin.id, token, newTokenExpiry, (err) => {
         if (err) {
-          console.error("Database error:", err);
+          console.error("Step 15: Database error while updating token:", err);
           Common.adminLoginLog(
             admin.id,
             "login",
@@ -141,8 +150,6 @@ exports.login = (req, res) => {
             message: `Error updating token: ${err.message}`,
           });
         }
-
-        // Log successful login and return the response
         Common.adminLoginLog(admin.id, "login", "1", null, () => {});
         const { login_token, token_expiry, ...adminDataWithoutToken } = admin;
 
