@@ -18,7 +18,19 @@ const generateInvoiceModel = {
 
       // Select only necessary customer details
       const customerQuery = `
-      SELECT c.id, c.client_unique_id, c.name, c.emails, c.mobile, c.services, cm.address, cm.contact_person_name, cm.escalation_point_contact, cm.single_point_of_contact, cm.gst_number, cm.payment_contact_person, cm.state, , cm.state_code
+      SELECT 
+        c.id, 
+        c.client_unique_id, 
+        c.name, 
+        c.emails, 
+        c.mobile, 
+        c.services, 
+        cm.address, 
+        cm.contact_person_name, 
+        cm.escalation_point_contact, 
+        cm.single_point_of_contact, 
+        cm.gst_number, 
+        cm.payment_contact_person
       FROM customers c
       LEFT JOIN customer_metas cm ON cm.customer_id = c.id
       WHERE c.id = ?;
@@ -68,7 +80,6 @@ const generateInvoiceModel = {
             // Organize applications by branch
             applicationResults.forEach((application) => {
               const branchId = application.branch_id;
-
               // Initialize the branch entry if it does not exist
               if (!branchApplicationsMap[branchId]) {
                 branchApplicationsMap[branchId] = {
@@ -76,6 +87,9 @@ const generateInvoiceModel = {
                   applications: [],
                 };
               }
+
+              // Initialize statusDetails if not already initialized
+              application.statusDetails = application.statusDetails || [];
 
               // Push the application into the corresponding branch's array
               branchApplicationsMap[branchId].applications.push(application);
@@ -103,9 +117,9 @@ const generateInvoiceModel = {
                       const branch = branchResults[0];
                       branchesWithApplications.push({
                         id: branch.id,
-                        name: branch.name, // Assuming branch has a name field
+                        name: branch.name,
                         applications:
-                          branchApplicationsMap[branchId].applications, // Applications of this branch
+                          branchApplicationsMap[branchId].applications,
                       });
                     }
                     resolve();
@@ -114,20 +128,97 @@ const generateInvoiceModel = {
               });
             });
 
-            // Wait for all branch queries to complete
-            Promise.all(branchPromises)
+            // Process each application's services and fetch status from the appropriate table
+            const applicationServicePromises = applicationResults.map(
+              (application) => {
+                const services = application.services.split(",");
+                const servicePromises = services.map((serviceId) => {
+                  return new Promise((resolve, reject) => {
+                    const reportFormQuery = `
+                      SELECT json
+                      FROM report_forms
+                      WHERE service_id = ?;
+                    `;
+                    connection.query(
+                      reportFormQuery,
+                      [serviceId],
+                      (err, reportFormResults) => {
+                        if (err) {
+                          return reject(err);
+                        }
+
+                        if (reportFormResults.length > 0) {
+                          // Parse JSON to extract db_table
+                          const reportFormJson = JSON.parse(
+                            reportFormResults[0].json
+                          );
+                          const dbTable = reportFormJson.db_table;
+
+                          // Query the db_table for status
+                          const statusQuery = `
+                            SELECT status
+                            FROM ${dbTable}
+                            WHERE client_application_id = ?;
+                          `;
+                          connection.query(
+                            statusQuery,
+                            [application.id],
+                            (err, statusResults) => {
+                              console.warn(
+                                `SELECT status FROM ${dbTable} WHERE client_application_id = ${application.id};`
+                              );
+                              if (err) {
+                                if (err.code === "ER_NO_SUCH_TABLE") {
+                                  console.warn(
+                                    `Table ${dbTable} does not exist. Skipping...`
+                                  );
+                                  return resolve();
+                                }
+                                return reject(err);
+                              }
+                              console.log(`${dbTable} - ${statusResults}`);
+                              // Append status to the application object
+                              application.statusDetails.push({
+                                serviceId,
+                                status:
+                                  statusResults.length > 0
+                                    ? statusResults[0].status
+                                    : null,
+                              });
+
+                              resolve();
+                            }
+                          );
+                        } else {
+                          resolve();
+                        }
+                      }
+                    );
+                  });
+                });
+
+                return Promise.all(servicePromises);
+              }
+            );
+
+            // Wait for all service-related queries to complete
+            Promise.all(applicationServicePromises)
+              .then(() => Promise.all(branchPromises))
               .then(() => {
                 // Compile the final results
                 const finalResults = {
-                  customerInfo: customerResults[0], // Select the first customer record
-                  applicationsByBranch: branchesWithApplications, // Updated structured data
+                  customerInfo: customerResults[0],
+                  applicationsByBranch: branchesWithApplications,
                 };
                 connectionRelease(connection);
                 callback(null, finalResults);
               })
               .catch((err) => {
                 connectionRelease(connection);
-                console.error("Error while fetching branch details:", err);
+                console.error(
+                  "Error while fetching branch or service details:",
+                  err
+                );
                 callback(err, null);
               });
           }
