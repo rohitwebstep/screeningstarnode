@@ -40,11 +40,12 @@ const generateInvoiceModel = {
         }
 
         const applicationQuery = `
-          SELECT id, branch_id, application_id, employee_id, name, services, status, created_at
-          FROM client_applications
-          WHERE (status = 'completed' OR status = 'closed') 
-          AND customer_id = ? 
-          ORDER BY branch_id;
+          SELECT ca.id, ca.branch_id, ca.application_id, ca.employee_id, ca.name, ca.services, ca.status, ca.created_at, cmt.report_date
+          FROM client_applications ca
+          LEFT JOIN cmt_applications cmt ON cmt.client_application_id = ca.id
+          WHERE (ca.status = 'completed' OR ca.status = 'closed') 
+          AND ca.customer_id = ? 
+          ORDER BY ca.branch_id;
         `;
 
         connection.query(
