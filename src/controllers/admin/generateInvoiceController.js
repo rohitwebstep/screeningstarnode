@@ -6,6 +6,7 @@ const Branch = require("../../models/customer/branch/branchModel");
 const AdminCommon = require("../../models/admin/commonModel");
 const BranchCommon = require("../../models/customer/branch/commonModel");
 const AppModel = require("../../models/appModel");
+const Service = require("../../models/admin/serviceModel");
 const {
   finalReportMail,
 } = require("../../mailer/admin/client-master-tracker/finalReportMail");
@@ -22,7 +23,8 @@ const { upload, saveImage, saveImages } = require("../../utils/imageSave");
 
 function calculateServiceStats(applications, services) {
   const serviceStats = {};
-  const servicesToAllocate = []; // Initialize servicesToAllocate
+  const allServiceIds = [];
+  const servicesToAllocate = [];
 
   applications.forEach((application) => {
     application.applications.forEach((app) => {
@@ -30,6 +32,7 @@ function calculateServiceStats(applications, services) {
 
       serviceIds.forEach((serviceId) => {
         const id = parseInt(serviceId, 10);
+        allServiceIds.push(id);
 
         // Check if the service ID exists in the customer services
         const serviceExists = services.some(
@@ -65,7 +68,7 @@ function calculateServiceStats(applications, services) {
       serviceStats[id].count * serviceStats[id].price;
   }
 
-  return { serviceStats, servicesToAllocate }; // Return servicesToAllocate as well
+  return { serviceStats, servicesToAllocate, allServiceIds }; // Return servicesToAllocate as well
 }
 
 // Function to calculate overall costs
@@ -96,8 +99,42 @@ function calculateOverallCosts(serviceStats, percentage) {
   };
 }
 
+async function getServiceNames(serviceIds) {
+  // Helper function to fetch a service by ID
+  const fetchServiceById = (serviceId) => {
+    return new Promise((resolve, reject) => {
+      Service.getServiceById(serviceId, (err, service) => {
+        if (err) return reject(err);
+        resolve(service);
+      });
+    });
+  };
+
+  try {
+    // Fetch all services concurrently using Promise.all
+    const servicePromises = serviceIds.map(async (serviceId) => {
+      const service = await fetchServiceById(serviceId);
+      if (service && service.title) {
+        return {
+          id: service.id,
+          title: service.title,
+          shortCode: service.short_code,
+        };
+      }
+      return null;
+    });
+
+    // Wait for all promises to resolve and filter out any null results
+    const serviceNames = (await Promise.all(servicePromises)).filter(Boolean);
+    return serviceNames;
+  } catch (error) {
+    console.error("Error fetching service data:", error);
+    return [];
+  }
+}
+
 // Controller to list all customers
-exports.generateInvoice = (req, res) => {
+exports.generateInvoice = async (req, res) => {
   const { customer_id, admin_id, _token } = req.query; // Renamed for clarity
 
   // Check for missing required fields
@@ -119,7 +156,7 @@ exports.generateInvoice = (req, res) => {
   AdminCommon.isAdminAuthorizedForAction(
     admin_id,
     actionPayload,
-    (authResult) => {
+    async (authResult) => {
       if (!authResult.status) {
         return res.status(403).json({
           status: false,
@@ -153,54 +190,57 @@ exports.generateInvoice = (req, res) => {
           }
 
           // Fetch customer information and applications
-          generateInvoiceModel.generateInvoice(customer_id, (err, results) => {
-            if (err) {
-              console.error("Database error:", err);
-              return res.status(500).json({
-                status: false,
-                message: err.message,
+          generateInvoiceModel.generateInvoice(
+            customer_id,
+            async (err, results) => {
+              if (err) {
+                console.error("Database error:", err);
+                return res.status(500).json({
+                  status: false,
+                  message: err.message,
+                  token: newToken,
+                });
+              }
+
+              // Extract services and applications
+              const services = JSON.parse(results.customerInfo.services); // Parse services JSON string
+              const applications = results.applicationsByBranch;
+
+              // Calculate service statistics
+              const { serviceStats, servicesToAllocate, allServiceIds } =
+                calculateServiceStats(applications, services);
+
+              const serviceNames = await getServiceNames(allServiceIds);
+              // Calculate overall costs with 9% as parameter
+              const overallCosts = calculateOverallCosts(serviceStats, 9);
+
+              // Convert serviceStats to an array for easy access
+              const totalCostsArray = Object.values(serviceStats);
+
+              // Log the results
+              const finalArr = {
+                serviceInfo: totalCostsArray,
+                costInfo: overallCosts,
+              };
+
+              // Respond with the fetched customer data and applications
+              return res.json({
+                status: true,
+                serviceNames,
+                message: "Data fetched successfully.",
+                finalArr,
+                servicesToAllocate,
+                customer: results.customerInfo, // Customer information
+                applications: results.applicationsByBranch, // Client applications organized by branch
+                totalApplications: results.applicationsByBranch.reduce(
+                  (sum, branch) => sum + branch.applications.length,
+                  0
+                ),
+                companyInfo,
                 token: newToken,
               });
             }
-
-            // Extract services and applications
-            const services = JSON.parse(results.customerInfo.services); // Parse services JSON string
-            const applications = results.applicationsByBranch;
-
-            // Calculate service statistics
-            const { serviceStats, servicesToAllocate } = calculateServiceStats(
-              applications,
-              services
-            );
-
-            // Calculate overall costs with 9% as parameter
-            const overallCosts = calculateOverallCosts(serviceStats, 9);
-
-            // Convert serviceStats to an array for easy access
-            const totalCostsArray = Object.values(serviceStats);
-
-            // Log the results
-            const finalArr = {
-              serviceInfo: totalCostsArray,
-              costInfo: overallCosts,
-            };
-
-            // Respond with the fetched customer data and applications
-            return res.json({
-              status: true,
-              message: "Data fetched successfully.",
-              finalArr,
-              servicesToAllocate,
-              customer: results.customerInfo, // Customer information
-              applications: results.applicationsByBranch, // Client applications organized by branch
-              totalApplications: results.applicationsByBranch.reduce(
-                (sum, branch) => sum + branch.applications.length,
-                0
-              ),
-              companyInfo,
-              token: newToken,
-            });
-          });
+          );
         });
       });
     }
