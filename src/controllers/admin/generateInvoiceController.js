@@ -87,11 +87,11 @@ function calculateOverallCosts(serviceStats, percentage) {
   return {
     overallServiceAmount: overallServiceAmount.toFixed(2),
     cgst: {
-      percentage: `${percentage}%`,
+      percentage: percentage,
       tax: cgstAmount,
     },
     sgst: {
-      percentage: `${percentage}%`,
+      percentage: percentage,
       tax: sgstAmount,
     },
     totalTax,
