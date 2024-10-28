@@ -1359,24 +1359,30 @@ exports.generateReport = (req, res) => {
                                                 annexure[modifiedDbTable] ??
                                                 null;
 
-                                              if (
-                                                subJson &&
-                                                "color_status" in subJson
-                                              ) {
-                                                const colorStatusValue =
-                                                  subJson.color_status &&
-                                                  typeof subJson.color_status ===
-                                                    "string"
-                                                    ? subJson.color_status.toLowerCase()
-                                                    : null; // Or set a default value if needed
+                                              if (subJson) {
+                                                for (let prop in subJson) {
+                                                  if (
+                                                    prop.startsWith(
+                                                      "color_status_"
+                                                    )
+                                                  ) {
+                                                    const colorStatusValue =
+                                                      typeof subJson[prop] ===
+                                                      "string"
+                                                        ? subJson[
+                                                            prop
+                                                          ].toLowerCase()
+                                                        : null;
 
-                                                if (
-                                                  !completeStatusArr.includes(
-                                                    colorStatusValue
-                                                  )
-                                                ) {
-                                                  allMatch = false;
-                                                  break;
+                                                    if (
+                                                      !completeStatusArr.includes(
+                                                        colorStatusValue
+                                                      )
+                                                    ) {
+                                                      allMatch = false;
+                                                      break;
+                                                    }
+                                                  }
                                                 }
                                               } else {
                                                 allMatch = false;
