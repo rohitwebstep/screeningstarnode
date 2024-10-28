@@ -156,38 +156,80 @@ const generateInvoiceModel = {
                           );
                           const dbTable = reportFormJson.db_table;
 
-                          // Query the db_table for status
-                          const statusQuery = `
-                            SELECT status
-                            FROM ${dbTable}
-                            WHERE client_application_id = ?;
+                          // Query to find the column that starts with "additional_fee"
+                          const additionalFeeColumnQuery = `
+                            SELECT COLUMN_NAME 
+                            FROM INFORMATION_SCHEMA.COLUMNS 
+                            WHERE TABLE_NAME = '${dbTable}' AND COLUMN_NAME LIKE 'additional_fee%';
                           `;
+
                           connection.query(
-                            statusQuery,
-                            [application.id],
-                            (err, statusResults) => {
-                              console.warn(
-                                `SELECT status FROM ${dbTable} WHERE client_application_id = ${application.id};`
-                              );
+                            additionalFeeColumnQuery,
+                            (err, columnResults) => {
                               if (err) {
-                                if (err.code === "ER_NO_SUCH_TABLE") {
-                                  console.warn(
-                                    `Table ${dbTable} does not exist. Skipping...`
-                                  );
-                                  return resolve();
-                                }
+                                console.error(
+                                  `Error fetching additional_fee column: ${err.message}`
+                                );
                                 return reject(err);
                               }
-                              // Append status to the application object
-                              application.statusDetails.push({
-                                serviceId,
-                                status:
-                                  statusResults.length > 0
-                                    ? statusResults[0].status
-                                    : null,
-                              });
 
-                              resolve();
+                              // Identify the additional_fee column
+                              const additionalFeeColumn =
+                                columnResults.length > 0
+                                  ? columnResults[0].COLUMN_NAME
+                                  : null;
+
+                              // Construct the query with a fixed "status" column and dynamic "additional_fee" column
+                              const statusQuery = `
+                              SELECT status${
+                                additionalFeeColumn
+                                  ? `, ${additionalFeeColumn}`
+                                  : ""
+                              }
+                              FROM ${dbTable}
+                              WHERE client_application_id = ?;
+                            `;
+
+                              connection.query(
+                                statusQuery,
+                                [application.id],
+                                (err, statusResults) => {
+                                  console.warn(
+                                    `SELECT status${
+                                      additionalFeeColumn
+                                        ? `, ${additionalFeeColumn}`
+                                        : ""
+                                    } FROM ${dbTable} WHERE client_application_id = ${
+                                      application.id
+                                    };`
+                                  );
+                                  if (err) {
+                                    if (err.code === "ER_NO_SUCH_TABLE") {
+                                      console.warn(
+                                        `Table ${dbTable} does not exist. Skipping...`
+                                      );
+                                      return resolve();
+                                    }
+                                    return reject(err);
+                                  }
+
+                                  // Append the status and additional_fee to the application object
+                                  application.statusDetails.push({
+                                    serviceId,
+                                    status:
+                                      statusResults.length > 0
+                                        ? statusResults[0].status
+                                        : null,
+                                    additionalFee:
+                                      additionalFeeColumn &&
+                                      statusResults.length > 0
+                                        ? statusResults[0][additionalFeeColumn]
+                                        : null,
+                                  });
+
+                                  resolve();
+                                }
+                              );
                             }
                           );
                         } else {
