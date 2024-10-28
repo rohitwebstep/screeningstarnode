@@ -476,6 +476,7 @@ exports.create = (req, res) => {
 };
 
 exports.upload = async (req, res) => {
+  console.log("Starting upload process...");
   // Use multer to handle the upload
   upload(req, res, async (err) => {
     if (err) {
@@ -505,6 +506,7 @@ exports.upload = async (req, res) => {
         customer_id,
         upload_category,
       };
+      console.log("Request body received:", req.body);
 
       // Check for missing fields
       const missingFields = Object.keys(requiredFields)
@@ -523,23 +525,27 @@ exports.upload = async (req, res) => {
           message: `Missing required fields: ${missingFields.join(", ")}`,
         });
       }
-      
+
       // If send_mail is 1, add additional required fields
       if (send_mail == 1) {
+        console.log("send_mail is enabled; adding additional fields.");
         requiredFields.company_name = company_name;
         requiredFields.password = password;
       }
 
+      console.log("Checking admin authorization...");
       // Check if the admin is authorized
       const action = JSON.stringify({ customer: "create" });
       AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
         if (!result.status) {
+          console.warn("Admin not authorized:", result.message);
           return res.status(403).json({
             status: false,
             message: result.message,
           });
         }
 
+        console.log("Admin authorized. Verifying token...");
         // Verify admin token
         AdminCommon.isAdminTokenValid(_token, admin_id, async (err, result) => {
           if (err) {
@@ -550,6 +556,7 @@ exports.upload = async (req, res) => {
           }
 
           if (!result.status) {
+            console.warn("Invalid admin token:", result.message);
             return res
               .status(401)
               .json({ status: false, message: result.message });
@@ -560,6 +567,7 @@ exports.upload = async (req, res) => {
           // Define the target directory for uploads
           let targetDir;
           let db_column;
+          console.log("Determining upload category...");
           switch (upload_category) {
             case "custom_logo":
               targetDir = `uploads/customer/${customer_code}/logo`;
@@ -578,6 +586,7 @@ exports.upload = async (req, res) => {
           }
 
           try {
+            console.log("Creating target directory:", targetDir);
             // Create the target directory for uploads
             await fs.promises.mkdir(targetDir, { recursive: true });
 
@@ -585,18 +594,20 @@ exports.upload = async (req, res) => {
 
             // Check for multiple files under the "images" field
             if (req.files.images) {
+              console.log("Processing multiple images...");
               savedImagePaths = await saveImages(req.files.images, targetDir);
             }
 
             // Check for a single file under the "image" field
             if (req.files.image && req.files.image.length > 0) {
+              console.log("Processing single image...");
               const savedImagePath = await saveImage(
                 req.files.image[0],
                 targetDir
               );
               savedImagePaths.push(savedImagePath);
             }
-
+            console.log("Saving document upload details...");
             Customer.documentUpload(
               customer_id,
               db_column,
@@ -621,6 +632,9 @@ exports.upload = async (req, res) => {
                 }
 
                 if (send_mail == 1) {
+                  console.log(
+                    "Fetching branches for email notification (1)..."
+                  );
                   Customer.getAllBranchesByCustomerId(
                     customer_id,
                     (err, dbBranches) => {
@@ -649,6 +663,9 @@ exports.upload = async (req, res) => {
                         });
                       }
 
+                      console.log(
+                        "Processing email notifications for branches..."
+                      );
                       // Create an array to hold all promises
                       const emailPromises = [];
 
@@ -766,6 +783,7 @@ exports.upload = async (req, res) => {
                     }
                   );
                 } else {
+                  console.log("Upload process completed successfully.");
                   return res.json({
                     status: true,
                     message:
