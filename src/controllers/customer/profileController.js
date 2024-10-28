@@ -675,10 +675,13 @@ exports.upload = async (req, res) => {
                         name: dbBranch.name,
                       }));
 
+                      console.log("Formatted branches:", formattedBranches);
                       // Iterate through each branch
                       dbBranches.forEach((dbBranch) => {
+                        console.log("Processing branch:", dbBranch);
                         // Check if the branch is a head branch
                         if (dbBranch.is_head == 1) {
+                          console.log("Branch is head:", dbBranch.name);
                           Customer.getCustomerById(
                             customer_id,
                             (err, currentCustomer) => {
@@ -696,23 +699,36 @@ exports.upload = async (req, res) => {
                               }
 
                               if (!currentCustomer) {
+                                console.log(
+                                  "Customer not found for ID:",
+                                  customer_id
+                                );
                                 return res.status(404).json({
                                   status: false,
                                   message: "Customer not found.",
                                   token: newToken,
                                 });
                               }
-
+                              console.log(
+                                "Retrieved customer:",
+                                currentCustomer
+                              );
                               const customerName = currentCustomer.name;
                               const customerJsonArr = JSON.parse(
                                 currentCustomer.emails
                               );
-
+                              console.log(
+                                "Customer email array:",
+                                customerJsonArr
+                              );
                               // Create a recipient list
                               const customerRecipientList = customerJsonArr
                                 .map((email) => `"${customerName}" <${email}>`)
                                 .join(", ");
-
+                              console.log(
+                                "Customer recipient list:",
+                                customerRecipientList
+                              );
                               // Send email with all formatted branches
                               const emailPromise = createMail(
                                 "customer",
@@ -733,9 +749,14 @@ exports.upload = async (req, res) => {
                               });
 
                               emailPromises.push(emailPromise);
+                              console.log(
+                                "Added email promise for head branch:",
+                                dbBranch.name
+                              );
                             }
                           );
                         } else {
+                          console.log("Branch is not head:", dbBranch.name);
                           // Send email with the single formatted branch
                           const emailPromise = createMail(
                             "customer",
@@ -753,6 +774,10 @@ exports.upload = async (req, res) => {
                           });
 
                           emailPromises.push(emailPromise);
+                          console.log(
+                            "Added email promise for non-head branch:",
+                            dbBranch.name
+                          );
                         }
                       });
 
