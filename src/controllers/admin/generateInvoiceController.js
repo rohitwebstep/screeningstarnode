@@ -135,12 +135,39 @@ async function getServiceNames(serviceIds) {
 
 // Controller to list all customers
 exports.generateInvoice = async (req, res) => {
-  const { customer_id, admin_id, _token } = req.query; // Renamed for clarity
+  const { customer_id, month, year, admin_id, _token } = req.query; // Renamed for clarity
 
   // Check for missing required fields
   const missingFields = [];
-  if (!admin_id) missingFields.push("Admin ID");
-  if (!_token) missingFields.push("Token");
+  if (
+    !customer_id ||
+    customer_id === "" ||
+    customer_id === undefined ||
+    customer_id === "undefined"
+  ) {
+    missingFields.push("Customer ID");
+  }
+
+  if (!month || month === "" || month === undefined || month === "undefined") {
+    missingFields.push("Invoice Month");
+  }
+
+  if (!year || year === "" || year === undefined || year === "undefined") {
+    missingFields.push("Invoice Year");
+  }
+
+  if (!year || year === "" || year === undefined || year === "undefined") {
+    missingFields.push("Invoice Year");
+  }
+
+  if (
+    !_token ||
+    _token === "" ||
+    _token === undefined ||
+    _token === "undefined"
+  ) {
+    missingFields.push("Token");
+  }
 
   // Return error response for any missing fields
   if (missingFields.length > 0) {
@@ -192,6 +219,8 @@ exports.generateInvoice = async (req, res) => {
           // Fetch customer information and applications
           generateInvoiceModel.generateInvoice(
             customer_id,
+            month,
+            year,
             async (err, results) => {
               if (err) {
                 console.error("Database error:", err);

@@ -6,7 +6,7 @@ const hashPassword = (password) =>
   crypto.createHash("md5").update(password).digest("hex");
 
 const generateInvoiceModel = {
-  generateInvoice: (customerId, callback) => {
+  generateInvoice: (customerId, month, year, callback) => {
     // Start connection to the database
     startConnection((err, connection) => {
       if (err) {
@@ -32,7 +32,8 @@ const generateInvoiceModel = {
         cm.gst_number,
         cm.payment_contact_person,
         cm.state,
-        cm.state_code
+        cm.state_code,
+        cmt.final_report_date
       FROM customers c
       LEFT JOIN customer_metas cm ON cm.customer_id = c.id
       WHERE c.id = ?;
@@ -55,17 +56,31 @@ const generateInvoiceModel = {
         }
 
         const applicationQuery = `
-          SELECT ca.id, ca.branch_id, ca.application_id, ca.employee_id, ca.name, ca.services, ca.status, ca.created_at, cmt.report_date
-          FROM client_applications ca
-          LEFT JOIN cmt_applications cmt ON cmt.client_application_id = ca.id
-          WHERE (ca.status = 'completed' OR ca.status = 'closed') 
-          AND ca.customer_id = ? 
+          SELECT
+            ca.id,
+            ca.branch_id,
+            ca.application_id,
+            ca.employee_id,
+            ca.name,
+            ca.services,
+            ca.status,
+            ca.created_at,
+            cmt.report_date
+          FROM 
+            client_applications ca
+          LEFT JOIN 
+            cmt_applications cmt ON cmt.client_application_id = ca.id
+          WHERE 
+            (ca.status = 'completed' OR ca.status = 'closed') 
+            AND ca.customer_id = ?
+            AND MONTH(cmt.report_date) = ?
+            AND YEAR(cmt.report_date) = ? 
           ORDER BY ca.branch_id;
         `;
 
         connection.query(
           applicationQuery,
-          [customerId],
+          [customerId, month, year],
           (err, applicationResults) => {
             if (err) {
               connectionRelease(connection);
