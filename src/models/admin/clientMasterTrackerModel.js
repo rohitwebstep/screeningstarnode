@@ -874,7 +874,6 @@ const Customer = {
         }
 
         if (tableResults[0].count === 0) {
-          console.log(`Table does not exist, creating table: ${db_table}`);
           const createTableSql = `
             CREATE TABLE \`${db_table}\` (
               \`id\` bigint(20) NOT NULL AUTO_INCREMENT,

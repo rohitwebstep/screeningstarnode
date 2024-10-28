@@ -178,7 +178,6 @@ const generateInvoiceModel = {
                                 }
                                 return reject(err);
                               }
-                              console.log(`${dbTable} - ${statusResults}`);
                               // Append status to the application object
                               application.statusDetails.push({
                                 serviceId,

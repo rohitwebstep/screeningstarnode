@@ -181,17 +181,12 @@ const clientApplication = {
             customer_id,
           ];
 
-          console.log("SQL Query:", sql);
-          console.log("Query Values:", values);
-
           connection.query(sql, values, (err, results) => {
             connectionRelease(connection);
             if (err) {
               console.error("Database query error: 109", err);
               return callback(err, null);
             }
-
-            console.log("Database query successful. Results:", results);
             callback(null, { results, new_application_id });
           });
         });
