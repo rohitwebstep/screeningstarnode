@@ -86,8 +86,7 @@ const Customer = {
                     BranchesCTE b
                 INNER JOIN 
                     client_applications ca ON b.branch_id = ca.branch_id
-                WHERE 
-                    ca.status != 'closed'
+                /* WHERE ca.status != 'closed' */
                 GROUP BY 
                     b.customer_id
             ) AS application_counts ON customers.id = application_counts.customer_id
@@ -146,8 +145,7 @@ const Customer = {
                   BranchesCTE b
               INNER JOIN 
                   client_applications ca ON b.branch_id = ca.branch_id
-              WHERE 
-                  ca.status != 'closed'
+              /* WHERE ca.status != 'closed' */
               GROUP BY 
                   b.customer_id
           ) AS application_counts ON customers.id = application_counts.customer_id
@@ -184,7 +182,7 @@ const Customer = {
                MAX(ca.created_at) AS latest_application_date
         FROM client_applications ca
         INNER JOIN branches b ON ca.branch_id = b.id
-        WHERE b.customer_id = ? AND ca.status != 'closed'`;
+        WHERE b.customer_id = ?`;
 
       // Array to hold query parameters
       const queryParams = [customer_id];
@@ -218,7 +216,7 @@ const Customer = {
       }
 
       // Base SQL query with mandatory condition for closed status
-      let sql = `SELECT * FROM \`client_applications\` WHERE \`branch_id\` = ? AND \`status\` != 'closed'`;
+      let sql = `SELECT * FROM \`client_applications\` WHERE \`branch_id\` = ?`;
       const params = [branch_id]; // Start with branch_id
 
       // Check if filter_status is provided
