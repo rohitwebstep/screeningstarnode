@@ -15,6 +15,39 @@ const generatePassword = (companyName) => {
   return `${firstName}@123`;
 };
 
+const areEmailsUsed = (emails) => {
+  return new Promise((resolve, reject) => {
+    // Validate inputs
+    if (!emails || !Array.isArray(emails) || emails.length === 0) {
+      return reject(new Error("Missing required field: Emails"));
+    }
+
+    // Check each email
+    const emailCheckPromises = emails.map((email) => {
+      return new Promise((resolve, reject) => {
+        Branch.isEmailUsed(email, (err, isUsed) => {
+          if (err) {
+            return reject(err);
+          }
+          resolve(isUsed);
+        });
+      });
+    });
+
+    // Wait for all email checks to complete
+    Promise.all(emailCheckPromises)
+      .then((results) => {
+        // Check if any email is used
+        const isAnyEmailUsed = results.some((isUsed) => isUsed);
+        resolve(!isAnyEmailUsed); // true if all emails are unused
+      })
+      .catch((err) => {
+        console.error("Error checking email usage:", err);
+        reject(new Error("Error checking email usage: " + err.message));
+      });
+  });
+};
+
 exports.create = (req, res) => {
   const {
     admin_id,
@@ -110,33 +143,22 @@ exports.create = (req, res) => {
         return res.status(401).json({ status: false, message: result.message });
       }
 
-      const newToken = result.newToken;
-      const password = generatePassword(company_name);
+      areEmailsUsed(emails)
+        .then((isAllUnused) => {
+          if (!isAllUnused) {
+            return res.status(400).json({
+              status: false,
+              message: "One or more emails are already in use.",
+              token: result.newToken,
+            });
+          }
+          const newToken = result.newToken;
+          const password = generatePassword(company_name);
 
-      // Check if client_unique_id already exists
-      Customer.checkUniqueId(client_code, (err, exists) => {
-        if (err) {
-          console.error("Error checking unique ID:", err);
-          return res.status(500).json({
-            status: false,
-            message: "Internal server error",
-            token: newToken,
-          });
-        }
-
-        if (exists) {
-          return res.status(400).json({
-            status: false,
-            message: `Client Unique ID '${client_code}' already exists.`,
-            token: newToken,
-          });
-        }
-
-        // Check if username is required and exists
-        if (additional_login && additional_login.toLowerCase() === "yes") {
-          Customer.checkUsername(username, (err, exists) => {
+          // Check if client_unique_id already exists
+          Customer.checkUniqueId(client_code, (err, exists) => {
             if (err) {
-              console.error("Error checking username:", err);
+              console.error("Error checking unique ID:", err);
               return res.status(500).json({
                 status: false,
                 message: "Internal server error",
@@ -147,330 +169,370 @@ exports.create = (req, res) => {
             if (exists) {
               return res.status(400).json({
                 status: false,
-                message: `Username '${username}' already exists.`,
+                message: `Client Unique ID '${client_code}' already exists.`,
                 token: newToken,
               });
             }
 
-            // Create new customer record
-            createCustomerRecord();
-          });
-        } else {
-          // Create new customer record
-          createCustomerRecord();
-        }
-      });
-
-      function createCustomerRecord() {
-        Customer.create(
-          {
-            admin_id,
-            client_unique_id: client_code,
-            name: company_name,
-            address,
-            profile_picture: null,
-            emails_json: JSON.stringify(emails),
-            mobile_number,
-            services: JSON.stringify(clientData),
-            additional_login: additional_login_int,
-            username:
-              additional_login && additional_login.toLowerCase() === "yes"
-                ? username
-                : null,
-          },
-          (err, result) => {
-            if (err) {
-              console.error("Database error while creating customer:", err);
-              AdminCommon.adminActivityLog(
-                admin_id,
-                "Customer",
-                "Create",
-                "0",
-                null,
-                err,
-                () => {}
-              );
-              return res
-                .status(500)
-                .json({ status: false, message: err.message, token: newToken });
-            }
-
-            const customerId = result.insertId;
-
-            Customer.createCustomerMeta(
-              {
-                customer_id: customerId,
-                address,
-                contact_person_name: contact_person,
-                escalation_point_contact: name_of_escalation,
-                single_point_of_contact: client_spoc,
-                gst_number: gstin,
-                tat_days: tat,
-                agreement_date: date_agreement,
-                agreement_duration: agreement_period,
-                custom_template,
-                custom_address:
-                  custom_template && custom_template.toLowerCase() === "yes"
-                    ? custom_address
-                    : null,
-                state,
-                state_code,
-                payment_contact_person: null,
-                client_standard,
-              },
-              (err, metaResult) => {
+            // Check if username is required and exists
+            if (additional_login && additional_login.toLowerCase() === "yes") {
+              Customer.checkUsername(username, (err, exists) => {
                 if (err) {
-                  console.error(
-                    "Database error while creating customer meta:",
-                    err
-                  );
+                  console.error("Error checking username:", err);
+                  return res.status(500).json({
+                    status: false,
+                    message: "Internal server error",
+                    token: newToken,
+                  });
+                }
+
+                if (exists) {
+                  return res.status(400).json({
+                    status: false,
+                    message: `Username '${username}' already exists.`,
+                    token: newToken,
+                  });
+                }
+
+                // Create new customer record
+                createCustomerRecord();
+              });
+            } else {
+              // Create new customer record
+              createCustomerRecord();
+            }
+          });
+
+          function createCustomerRecord() {
+            Customer.create(
+              {
+                admin_id,
+                client_unique_id: client_code,
+                name: company_name,
+                address,
+                profile_picture: null,
+                emails_json: JSON.stringify(emails),
+                mobile_number,
+                services: JSON.stringify(clientData),
+                additional_login: additional_login_int,
+                username:
+                  additional_login && additional_login.toLowerCase() === "yes"
+                    ? username
+                    : null,
+              },
+              (err, result) => {
+                if (err) {
+                  console.error("Database error while creating customer:", err);
                   AdminCommon.adminActivityLog(
                     admin_id,
-                    "Customer Meta",
+                    "Customer",
                     "Create",
                     "0",
-                    `{id: ${customerId}}`,
+                    null,
                     err,
                     () => {}
                   );
                   return res.status(500).json({
                     status: false,
-                    message: err.error,
+                    message: err.message,
                     token: newToken,
                   });
                 }
-                const headBranchEmail = emails[0];
-                // Create the first branch (head branch)
-                Branch.create(
+
+                const customerId = result.insertId;
+
+                Customer.createCustomerMeta(
                   {
                     customer_id: customerId,
-                    name: company_name,
-                    email: headBranchEmail,
-                    head: 1,
-                    password,
-                    mobile_number,
+                    address,
+                    contact_person_name: contact_person,
+                    escalation_point_contact: name_of_escalation,
+                    single_point_of_contact: client_spoc,
+                    gst_number: gstin,
+                    tat_days: tat,
+                    agreement_date: date_agreement,
+                    agreement_duration: agreement_period,
+                    custom_template,
+                    custom_address:
+                      custom_template && custom_template.toLowerCase() === "yes"
+                        ? custom_address
+                        : null,
+                    state,
+                    state_code,
+                    payment_contact_person: null,
+                    client_standard,
                   },
-                  (err, headBranchResult) => {
+                  (err, metaResult) => {
                     if (err) {
-                      console.error("Error creating head branch:", err);
+                      console.error(
+                        "Database error while creating customer meta:",
+                        err
+                      );
+                      AdminCommon.adminActivityLog(
+                        admin_id,
+                        "Customer Meta",
+                        "Create",
+                        "0",
+                        `{id: ${customerId}}`,
+                        err,
+                        () => {}
+                      );
                       return res.status(500).json({
                         status: false,
-                        message: err.message,
+                        message: err.error,
                         token: newToken,
                       });
                     }
-
-                    const headBranchId = headBranchResult.insertId;
-
-                    // Create remaining branches with head_branch_id as foreign key
-                    const branchCreationPromises = branches.map((branch) => {
-                      return new Promise((resolve, reject) => {
-                        Branch.create(
-                          {
-                            customer_id: customerId,
-                            name: branch.branch_name,
-                            email: branch.branch_email,
-                            head: 0,
-                            head_id: headBranchId,
-                            password,
-                          },
-                          (err, branchResult) => {
-                            if (err) {
-                              console.error(
-                                "Error creating branch:",
-                                branch.branch_name,
-                                err
-                              );
-                              return reject(err);
-                            }
-                            resolve(branchResult);
-                          }
-                        );
-                      });
-                    });
-
-                    Promise.all(branchCreationPromises)
-                      .then((branchResults) => {
-                        AdminCommon.adminActivityLog(
-                          admin_id,
-                          "Customer",
-                          "Create",
-                          "1",
-                          `{id: ${customerId}}`,
-                          null,
-                          () => {}
-                        );
-
-                        if (send_mail == 1) {
-                          Customer.getAllBranchesByCustomerId(
-                            customerId,
-                            (err, dbBranches) => {
-                              if (err) {
-                                console.error(
-                                  "Database error while fetching branches:",
-                                  err
-                                );
-
-                                // Log the error using your admin activity log function
-                                AdminCommon.adminActivityLog(
-                                  admin_id,
-                                  "Branch",
-                                  "Fetch",
-                                  "0",
-                                  null,
-                                  err,
-                                  () => {}
-                                );
-
-                                return res.status(500).json({
-                                  status: false,
-                                  message: err.message,
-                                  token: newToken,
-                                });
-                              }
-
-                              const formattedBranches = dbBranches.map(
-                                (dbBranch) => ({
-                                  email: dbBranch.email,
-                                  name: dbBranch.name,
-                                })
-                              );
-
-                              const emailPromises = dbBranches.map(
-                                (dbBranch) => {
-                                  if (dbBranch.is_head == 1) {
-                                    // For head branches, fetch customer details
-                                    return new Promise((resolve, reject) => {
-                                      Customer.getCustomerById(
-                                        customerId,
-                                        (err, currentCustomer) => {
-                                          if (err) {
-                                            console.error(
-                                              "Database error during customer retrieval:",
-                                              err
-                                            );
-                                            return reject(
-                                              new Error(
-                                                "Failed to retrieve Customer. Please try again."
-                                              )
-                                            );
-                                          }
-
-                                          if (!currentCustomer) {
-                                            return reject(
-                                              new Error("Customer not found.")
-                                            );
-                                          }
-
-                                          const customerName =
-                                            currentCustomer.name;
-                                          const customerJsonArr = JSON.parse(
-                                            currentCustomer.emails
-                                          );
-
-                                          // Create a recipient list
-                                          const customerRecipientList =
-                                            customerJsonArr.map((email) => ({
-                                              name: customerName,
-                                              email: email,
-                                            }));
-
-                                          // Create email for head branch
-                                          createMail(
-                                            "customer",
-                                            "create",
-                                            company_name,
-                                            formattedBranches,
-                                            password,
-                                            dbBranch.is_head,
-                                            customerRecipientList
-                                          )
-                                            .then(resolve)
-                                            .catch(reject);
-                                        }
-                                      );
-                                    });
-                                  } else {
-                                    // For non-head branches
-                                    return createMail(
-                                      "customer",
-                                      "create",
-                                      company_name,
-                                      [
-                                        {
-                                          email: dbBranch.email,
-                                          name: dbBranch.name,
-                                        },
-                                      ],
-                                      password,
-                                      dbBranch.is_head,
-                                      []
-                                    ).catch((emailError) => {
-                                      console.error(
-                                        "Error sending email:",
-                                        emailError
-                                      );
-                                      return Promise.resolve(
-                                        "Email sending failed for this branch."
-                                      );
-                                    });
-                                  }
-                                }
-                              );
-
-                              // Wait for all email promises to resolve
-                              Promise.all(emailPromises)
-                                .then(() => {
-                                  return res.json({
-                                    status: true,
-                                    message:
-                                      "Customer and branches created successfully.",
-                                    branches: formattedBranches,
-                                    data: { customerId },
-                                    password,
-                                    token: newToken,
-                                  });
-                                })
-                                .catch((error) => {
-                                  console.error(
-                                    "An error occurred during processing:",
-                                    error
-                                  );
-                                  return res.status(500).json({
-                                    status: false,
-                                    message:
-                                      "An error occurred while processing requests.",
-                                    token: newToken,
-                                  });
-                                });
-                            }
-                          );
-                        } else {
-                          return res.json({
-                            status: true,
-                            message:
-                              "Customer and branches created successfully.",
+                    const headBranchEmail = emails[0];
+                    // Create the first branch (head branch)
+                    Branch.create(
+                      {
+                        customer_id: customerId,
+                        name: company_name,
+                        email: headBranchEmail,
+                        head: 1,
+                        password,
+                        mobile_number,
+                      },
+                      (err, headBranchResult) => {
+                        if (err) {
+                          console.error("Error creating head branch:", err);
+                          return res.status(500).json({
+                            status: false,
+                            message: err.message,
                             token: newToken,
-                            data: { customerId },
-                            password,
                           });
                         }
-                      })
-                      .catch((error) => {
-                        console.error("Error creating branches:", error);
-                        return res.status(500).json({
-                          status: false,
-                          message: "Error creating some branches.",
-                          token: newToken,
-                        });
-                      });
+
+                        const headBranchId = headBranchResult.insertId;
+
+                        // Create remaining branches with head_branch_id as foreign key
+                        const branchCreationPromises = branches.map(
+                          (branch) => {
+                            return new Promise((resolve, reject) => {
+                              Branch.create(
+                                {
+                                  customer_id: customerId,
+                                  name: branch.branch_name,
+                                  email: branch.branch_email,
+                                  head: 0,
+                                  head_id: headBranchId,
+                                  password,
+                                },
+                                (err, branchResult) => {
+                                  if (err) {
+                                    console.error(
+                                      "Error creating branch:",
+                                      branch.branch_name,
+                                      err
+                                    );
+                                    return reject(err);
+                                  }
+                                  resolve(branchResult);
+                                }
+                              );
+                            });
+                          }
+                        );
+
+                        Promise.all(branchCreationPromises)
+                          .then((branchResults) => {
+                            AdminCommon.adminActivityLog(
+                              admin_id,
+                              "Customer",
+                              "Create",
+                              "1",
+                              `{id: ${customerId}}`,
+                              null,
+                              () => {}
+                            );
+
+                            if (send_mail == 1) {
+                              Customer.getAllBranchesByCustomerId(
+                                customerId,
+                                (err, dbBranches) => {
+                                  if (err) {
+                                    console.error(
+                                      "Database error while fetching branches:",
+                                      err
+                                    );
+
+                                    // Log the error using your admin activity log function
+                                    AdminCommon.adminActivityLog(
+                                      admin_id,
+                                      "Branch",
+                                      "Fetch",
+                                      "0",
+                                      null,
+                                      err,
+                                      () => {}
+                                    );
+
+                                    return res.status(500).json({
+                                      status: false,
+                                      message: err.message,
+                                      token: newToken,
+                                    });
+                                  }
+
+                                  const formattedBranches = dbBranches.map(
+                                    (dbBranch) => ({
+                                      email: dbBranch.email,
+                                      name: dbBranch.name,
+                                    })
+                                  );
+
+                                  const emailPromises = dbBranches.map(
+                                    (dbBranch) => {
+                                      if (dbBranch.is_head == 1) {
+                                        // For head branches, fetch customer details
+                                        return new Promise(
+                                          (resolve, reject) => {
+                                            Customer.getCustomerById(
+                                              customerId,
+                                              (err, currentCustomer) => {
+                                                if (err) {
+                                                  console.error(
+                                                    "Database error during customer retrieval:",
+                                                    err
+                                                  );
+                                                  return reject(
+                                                    new Error(
+                                                      "Failed to retrieve Customer. Please try again."
+                                                    )
+                                                  );
+                                                }
+
+                                                if (!currentCustomer) {
+                                                  return reject(
+                                                    new Error(
+                                                      "Customer not found."
+                                                    )
+                                                  );
+                                                }
+
+                                                const customerName =
+                                                  currentCustomer.name;
+                                                const customerJsonArr =
+                                                  JSON.parse(
+                                                    currentCustomer.emails
+                                                  );
+
+                                                // Create a recipient list
+                                                const customerRecipientList =
+                                                  customerJsonArr.map(
+                                                    (email) => ({
+                                                      name: customerName,
+                                                      email: email,
+                                                    })
+                                                  );
+
+                                                // Create email for head branch
+                                                createMail(
+                                                  "customer",
+                                                  "create",
+                                                  company_name,
+                                                  formattedBranches,
+                                                  password,
+                                                  dbBranch.is_head,
+                                                  customerRecipientList
+                                                )
+                                                  .then(resolve)
+                                                  .catch(reject);
+                                              }
+                                            );
+                                          }
+                                        );
+                                      } else {
+                                        // For non-head branches
+                                        return createMail(
+                                          "customer",
+                                          "create",
+                                          company_name,
+                                          [
+                                            {
+                                              email: dbBranch.email,
+                                              name: dbBranch.name,
+                                            },
+                                          ],
+                                          password,
+                                          dbBranch.is_head,
+                                          []
+                                        ).catch((emailError) => {
+                                          console.error(
+                                            "Error sending email:",
+                                            emailError
+                                          );
+                                          return Promise.resolve(
+                                            "Email sending failed for this branch."
+                                          );
+                                        });
+                                      }
+                                    }
+                                  );
+
+                                  // Wait for all email promises to resolve
+                                  Promise.all(emailPromises)
+                                    .then(() => {
+                                      return res.json({
+                                        status: true,
+                                        message:
+                                          "Customer and branches created successfully.",
+                                        branches: formattedBranches,
+                                        data: { customerId },
+                                        password,
+                                        token: newToken,
+                                      });
+                                    })
+                                    .catch((error) => {
+                                      console.error(
+                                        "An error occurred during processing:",
+                                        error
+                                      );
+                                      return res.status(500).json({
+                                        status: false,
+                                        message:
+                                          "An error occurred while processing requests.",
+                                        token: newToken,
+                                      });
+                                    });
+                                }
+                              );
+                            } else {
+                              return res.json({
+                                status: true,
+                                message:
+                                  "Customer and branches created successfully.",
+                                token: newToken,
+                                data: { customerId },
+                                password,
+                              });
+                            }
+                          })
+                          .catch((error) => {
+                            console.error("Error creating branches:", error);
+                            return res.status(500).json({
+                              status: false,
+                              message: "Error creating some branches.",
+                              token: newToken,
+                            });
+                          });
+                      }
+                    );
                   }
                 );
               }
             );
           }
-        );
-      }
+        })
+        .catch((err) => {
+          console.error("Error in email check:", err);
+          return res.status(500).json({
+            status: false,
+            message: "Internal server error during email check.",
+            token: result.newToken,
+          });
+        });
     });
   });
 };
