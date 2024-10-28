@@ -1363,7 +1363,7 @@ exports.generateReport = (req, res) => {
                                                 for (let prop in subJson) {
                                                   if (
                                                     prop.startsWith(
-                                                      "color_status_"
+                                                      "color_status"
                                                     )
                                                   ) {
                                                     const colorStatusValue =
