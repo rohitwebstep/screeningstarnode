@@ -32,8 +32,7 @@ const generateInvoiceModel = {
         cm.gst_number,
         cm.payment_contact_person,
         cm.state,
-        cm.state_code,
-        cmt.final_report_date
+        cm.state_code
       FROM customers c
       LEFT JOIN customer_metas cm ON cm.customer_id = c.id
       WHERE c.id = ?;
