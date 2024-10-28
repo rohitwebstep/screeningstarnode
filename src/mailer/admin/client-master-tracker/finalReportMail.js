@@ -14,16 +14,13 @@ const checkFileExists = async (url) => {
 // Function to create attachments from URLs
 const createAttachments = async (attachments_url) => {
   const urls =
-    attachments_url && typeof attachments_url === "string"
-      ? attachments_url.split(",")
-      : [""]; // Default to an empty array if attachments_url is not a valid string
+    typeof attachments_url === "string" ? attachments_url.split(",") : []; // Default to an empty array if attachments_url is not valid
 
   const attachments = [];
 
   for (const url of urls) {
     const trimmedUrl = url.trim(); // Remove any extra whitespace
     if (trimmedUrl) {
-      // Check for non-empty URL
       const exists = await checkFileExists(trimmedUrl);
       if (exists) {
         const filename = trimmedUrl.split("/").pop(); // Extract the filename from the URL
@@ -54,16 +51,19 @@ async function finalReportMail(
   toArr,
   ccArr
 ) {
-  const connection = await new Promise((resolve, reject) => {
-    startConnection((err, conn) => {
-      if (err) {
-        return reject(err);
-      }
-      resolve(conn);
-    });
-  });
+  let connection;
 
   try {
+    // Establish database connection
+    connection = await new Promise((resolve, reject) => {
+      startConnection((err, conn) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(conn);
+      });
+    });
+
     // Fetch email template
     const [emailRows] = await connection
       .promise()
@@ -102,8 +102,7 @@ async function finalReportMail(
     }
 
     // Replace placeholders in the email template
-    let template = email.template;
-    template = template
+    let template = email.template
       .replace(/{{company_name}}/g, company_name)
       .replace(/{{gender_title}}/g, gender_title)
       .replace(/{{client_name}}/g, client_name)
@@ -117,11 +116,12 @@ async function finalReportMail(
           if (Array.isArray(entry.email)) {
             emails = entry.email;
           } else if (typeof entry.email === "string") {
-            let cleanedEmail = entry.email
+            const cleanedEmail = entry.email
               .trim()
               .replace(/\\"/g, '"')
               .replace(/^"|"$/g, "");
 
+            // Parse JSON if it's an array-like string
             if (cleanedEmail.startsWith("[") && cleanedEmail.endsWith("]")) {
               emails = JSON.parse(cleanedEmail);
             } else {
@@ -140,7 +140,7 @@ async function finalReportMail(
       })
       .filter((cc) => cc !== "") // Remove any empty CCs from failed parses
       .join(", ");
-      
+
     // Validate recipient email(s)
     if (!toArr || toArr.length === 0) {
       throw new Error("No recipient email provided");
@@ -150,7 +150,7 @@ async function finalReportMail(
     const toList = toArr
       .map((email) => `"${email.name}" <${email.email}>`)
       .join(", ");
-      
+
     // Send email
     const mailOptions = {
       from: smtp.username,
@@ -164,9 +164,11 @@ async function finalReportMail(
     const info = await transporter.sendMail(mailOptions);
     console.log("Email sent:", info.response);
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error("Error sending email:", error.message);
   } finally {
-    connectionRelease(connection); // Ensure the connection is released
+    if (connection) {
+      connectionRelease(connection); // Ensure the connection is released
+    }
   }
 }
 

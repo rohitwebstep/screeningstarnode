@@ -1,7 +1,7 @@
 const nodemailer = require("nodemailer");
 const { startConnection, connectionRelease } = require("../../../../config/db"); // Import the existing MySQL connection
 
-// Function to send email
+// Function to send password reset email
 async function forgetPassword(module, action, branch_name, reset_link, toArr) {
   const connection = await new Promise((resolve, reject) => {
     startConnection((err, conn) => {
@@ -51,20 +51,30 @@ async function forgetPassword(module, action, branch_name, reset_link, toArr) {
     });
 
     // Replace placeholders in the email template
-    let template = email.template;
-    template = template
+    let template = email.template
       .replace(/{{branch_name}}/g, branch_name)
       .replace(/{{reset_link}}/g, reset_link);
 
     // Validate recipient email(s)
-    if (!toArr || toArr.length === 0) {
+    if (!Array.isArray(toArr) || toArr.length === 0) {
       throw new Error("No recipient email provided");
     }
 
     // Prepare recipient list
     const toList = toArr
-      .map((email) => `"${email.name}" <${email.email}>`)
+      .map((recipient) => {
+        if (recipient && recipient.name && recipient.email) {
+          return `"${recipient.name}" <${recipient.email.trim()}>`;
+        }
+        console.warn("Invalid recipient object:", recipient);
+        return null;
+      })
+      .filter(Boolean)
       .join(", ");
+
+    if (!toList) {
+      throw new Error("Failed to prepare recipient list due to invalid recipient data");
+    }
 
     // Send email
     const info = await transporter.sendMail({
@@ -74,9 +84,9 @@ async function forgetPassword(module, action, branch_name, reset_link, toArr) {
       html: template,
     });
 
-    console.log("Email sent:", info.response);
+    console.log("Password reset email sent successfully:", info.response);
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error("Error sending password reset email:", error);
   } finally {
     connectionRelease(connection); // Ensure the connection is released
   }

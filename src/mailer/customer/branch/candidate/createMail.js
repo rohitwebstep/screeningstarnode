@@ -9,18 +9,14 @@ const generateTable = (services) => {
             </tr>`;
   }
 
-  let rows = "";
-
-  services.forEach((service, index) => {
-    // Split the service into title and description
-    const [title, description] = service.split(":");
-
-    rows += `<tr>
-                <td>${index + 1}</td> <!-- Serial number -->
-                <td>${title}</td> <!-- Title -->
-                <td>${description.trim()}</td> <!-- Description -->
-              </tr>`;
-  });
+  let rows = services.map((service, index) => {
+    const [title, description] = service.split(":"); // Split the service into title and description
+    return `<tr>
+              <td>${index + 1}</td> <!-- Serial number -->
+              <td>${title}</td> <!-- Title -->
+              <td>${description.trim()}</td> <!-- Description -->
+            </tr>`;
+  }).join("");
 
   return rows;
 };
@@ -87,8 +83,7 @@ async function createMail(
     const table_rows = generateTable(services);
 
     // Replace placeholders in the email template
-    let template = email.template;
-    template = template
+    let template = email.template
       .replace(/{{candidate_name}}/g, name)
       .replace(/{{table_rows}}/g, table_rows)
       .replace(/{{form_href}}/g, href);
@@ -118,10 +113,9 @@ async function createMail(
           return ""; // Skip this entry if parsing fails
         }
 
-        // Ensure it's a valid non-empty string
         return emails
           .filter((email) => email) // Filter out invalid emails
-          .map((email) => `"${entry.name}" <${email.trim()}>`) // Trim to remove whitespace
+          .map((email) => `"${entry.name}" <${email.trim()}>`) // Ensure valid and trimmed emails
           .join(", ");
       })
       .filter((cc) => cc !== "") // Remove any empty CCs from failed parses
@@ -134,8 +128,19 @@ async function createMail(
 
     // Prepare recipient list
     const toList = toArr
-      .map((email) => `"${email.name}" <${email.email}>`)
+      .map((recipient) => {
+        if (recipient && recipient.name && recipient.email) {
+          return `"${recipient.name}" <${recipient.email.trim()}>`;
+        }
+        console.warn("Invalid recipient object:", recipient);
+        return null;
+      })
+      .filter(Boolean)
       .join(", ");
+
+    if (!toList) {
+      throw new Error("Failed to prepare recipient list due to invalid recipient data");
+    }
 
     // Send email
     const info = await transporter.sendMail({
@@ -146,7 +151,7 @@ async function createMail(
       html: template,
     });
 
-    console.log("Email sent:", info.response);
+    console.log("Email sent successfully:", info.response);
   } catch (error) {
     console.error("Error sending email:", error);
   } finally {

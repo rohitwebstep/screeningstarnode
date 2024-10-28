@@ -10,20 +10,22 @@ async function davMail(
   href,
   toArr
 ) {
-  const connection = await new Promise((resolve, reject) => {
-    startConnection((err, conn) => {
-      if (err) {
-        console.error("Failed to connect to the database:", err);
-        return reject({
-          message: "Failed to connect to the database",
-          error: err,
-        });
-      }
-      resolve(conn);
-    });
-  });
-
+  let connection;
   try {
+    // Establish database connection
+    connection = await new Promise((resolve, reject) => {
+      startConnection((err, conn) => {
+        if (err) {
+          console.error("Failed to connect to the database:", err);
+          return reject({
+            message: "Failed to connect to the database",
+            error: err,
+          });
+        }
+        resolve(conn);
+      });
+    });
+
     // Fetch email template
     const [emailRows] = await connection
       .promise()
@@ -64,15 +66,13 @@ async function davMail(
       .replace(/{{company_name}}/g, company_name)
       .replace(/{{url}}/g, href);
 
-    // Validate recipient email(s)
+    // Validate and prepare recipient email list
     if (!Array.isArray(toArr) || toArr.length === 0) {
       throw new Error("No recipient email provided");
     }
 
-    // Prepare recipient list
     const toList = toArr
       .map((item) => {
-        // Ensure email is a valid non-empty string
         if (!item.email) {
           throw new Error(`No valid email provided for ${item.name}`);
         }
@@ -80,7 +80,6 @@ async function davMail(
       })
       .join(", ");
 
-    // Debugging: Log the email lists
     console.log("Recipient List:", toList);
 
     // Send email
@@ -95,7 +94,9 @@ async function davMail(
   } catch (error) {
     console.error("Error sending email:", error);
   } finally {
-    connectionRelease(connection); // Ensure the connection is released
+    if (connection) {
+      connectionRelease(connection); // Ensure the connection is released
+    }
   }
 }
 

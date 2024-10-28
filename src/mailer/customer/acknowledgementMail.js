@@ -54,8 +54,19 @@ async function acknowledgementMail(
   toArr,
   ccArr
 ) {
-  const connection = await startConnection(); // Start the connection
+  let connection;
+
   try {
+    // Use a promise to handle the callback-based startConnection function
+    connection = await new Promise((resolve, reject) => {
+      startConnection((err, conn) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(conn);
+      });
+    });
+
     // Fetch email template
     const [emailRows] = await connection
       .promise()
@@ -151,7 +162,9 @@ async function acknowledgementMail(
   } catch (error) {
     console.error("Error sending email:", error.message);
   } finally {
-    connectionRelease(connection); // Ensure the connection is released
+    if (connection) {
+      connectionRelease(connection); // Ensure the connection is released
+    }
   }
 }
 

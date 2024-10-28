@@ -5,10 +5,10 @@ const { startConnection, connectionRelease } = require("../../../config/db");
 const checkFileExists = async (url) => {
   try {
     const response = await fetch(url, { method: "HEAD" });
-    return response.ok; // Returns true if the status is in the range 200-299
+    return response.ok;
   } catch (error) {
     console.error(`Error checking file existence for ${url}:`, error);
-    return false; // Return false if there was an error (e.g., network issue)
+    return false;
   }
 };
 
@@ -16,26 +16,22 @@ const checkFileExists = async (url) => {
 const createAttachments = async (attachments_url) => {
   const urls =
     attachments_url && typeof attachments_url === "string"
-      ? attachments_url.split(",").map((url) => url.trim()) // Split and trim URLs
-      : []; // Default to an empty array if attachments_url is not a valid string
+      ? attachments_url.split(",").map((url) => url.trim())
+      : [];
 
   const attachments = [];
 
   for (const url of urls) {
     if (url) {
-      // Check for non-empty URL
       const exists = await checkFileExists(url);
       if (exists) {
-        const filename = url.split("/").pop(); // Extract the filename from the URL
-        attachments.push({
-          filename: filename,
-          path: url,
-        });
+        const filename = url.split("/").pop();
+        attachments.push({ filename, path: url });
       } else {
-        console.warn(`File does not exist: ${url}`); // Log warning for missing file
+        console.warn(`File does not exist: ${url}`);
       }
     } else {
-      console.warn(`Empty or invalid URL: ${url}`); // Log warning for invalid URL
+      console.warn(`Empty or invalid URL: ${url}`);
     }
   }
 
@@ -93,7 +89,7 @@ async function qcReportCheckMail(
     const transporter = nodemailer.createTransport({
       host: smtp.host,
       port: smtp.port,
-      secure: smtp.secure, // true for 465, false for other ports
+      secure: smtp.secure,
       auth: {
         user: smtp.username,
         pass: smtp.password,
@@ -127,13 +123,12 @@ async function qcReportCheckMail(
           console.error("Error parsing email JSON:", entry.email, e);
           return ""; // Skip this entry if parsing fails
         }
-        // Ensure it's a valid non-empty string
         return emails
-          .filter((email) => email) // Filter out invalid emails
-          .map((email) => `"${entry.name}" <${email.trim()}>`) // Trim to remove whitespace
+          .filter((email) => email)
+          .map((email) => `"${entry.name}" <${email.trim()}>`)
           .join(", ");
       })
-      .filter((cc) => cc !== "") // Remove any empty CCs from failed parses
+      .filter((cc) => cc !== "")
       .join(", ");
 
     // Validate recipient email(s)
@@ -143,20 +138,20 @@ async function qcReportCheckMail(
 
     // Prepare recipient list
     const toList = toArr
-      .map((email) => `"${email.name}" <${email.email.trim()}>`) // Trim to remove whitespace
+      .map((email) => `"${email.name}" <${email.email.trim()}>`)
       .join(", ");
 
-    // Main function to create attachments
+    // Create attachments
     const attachments = await createAttachments(attachments_url);
 
     // Send email
     const mailOptions = {
       from: smtp.username,
       to: toList,
-      cc: ccList, // Ensure the CC list is properly formatted
+      cc: ccList,
       subject: email.title,
       html: template,
-      ...(attachments.length > 0 && { attachments }), // Only include attachments if present
+      ...(attachments.length > 0 && { attachments }),
     };
 
     const info = await transporter.sendMail(mailOptions);
@@ -164,7 +159,7 @@ async function qcReportCheckMail(
   } catch (error) {
     console.error("Error sending email:", error);
   } finally {
-    connectionRelease(connection); // Ensure the connection is released
+    connectionRelease(connection);
   }
 }
 

@@ -1,22 +1,25 @@
 const nodemailer = require("nodemailer");
 const { startConnection, connectionRelease } = require("../../../config/db"); // Import the existing MySQL connection
 
-// Function to send email
+// Function to send email for password reset
 async function forgetPassword(module, action, admin_name, reset_link, toArr) {
-  const connection = await new Promise((resolve, reject) => {
-    startConnection((err, conn) => {
-      if (err) {
-        console.error("Failed to connect to the database:", err);
-        return reject({
-          message: "Failed to connect to the database",
-          error: err,
-        });
-      }
-      resolve(conn);
-    });
-  });
+  let connection;
 
   try {
+    // Establish database connection
+    connection = await new Promise((resolve, reject) => {
+      startConnection((err, conn) => {
+        if (err) {
+          console.error("Failed to connect to the database:", err);
+          return reject({
+            message: "Failed to connect to the database",
+            error: err,
+          });
+        }
+        resolve(conn);
+      });
+    });
+
     // Fetch email template
     const [emailRows] = await connection
       .promise()
@@ -51,19 +54,23 @@ async function forgetPassword(module, action, admin_name, reset_link, toArr) {
     });
 
     // Replace placeholders in the email template
-    let template = email.template;
-    template = template
+    let template = email.template
       .replace(/{{admin_name}}/g, admin_name)
       .replace(/{{reset_link}}/g, reset_link);
 
     // Validate recipient email(s)
-    if (!toArr || toArr.length === 0) {
+    if (!Array.isArray(toArr) || toArr.length === 0) {
       throw new Error("No recipient email provided");
     }
 
     // Prepare recipient list
     const toList = toArr
-      .map((email) => `"${email.name}" <${email.email}>`)
+      .map((recipient) => {
+        if (!recipient.email) {
+          throw new Error(`Invalid email provided for ${recipient.name}`);
+        }
+        return `"${recipient.name}" <${recipient.email}>`;
+      })
       .join(", ");
 
     // Send email
@@ -76,9 +83,11 @@ async function forgetPassword(module, action, admin_name, reset_link, toArr) {
 
     console.log("Email sent:", info.response);
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error("Error sending email:", error.message);
   } finally {
-    connectionRelease(connection); // Ensure the connection is released
+    if (connection) {
+      connectionRelease(connection); // Ensure the connection is released
+    }
   }
 }
 
