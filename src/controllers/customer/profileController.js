@@ -29,7 +29,7 @@ const areEmailsUsed = (emails) => {
           if (err) {
             return reject(err);
           }
-          resolve(isUsed);
+          resolve({ email, isUsed });
         });
       });
     });
@@ -37,9 +37,33 @@ const areEmailsUsed = (emails) => {
     // Wait for all email checks to complete
     Promise.all(emailCheckPromises)
       .then((results) => {
-        // Check if any email is used
-        const isAnyEmailUsed = results.some((isUsed) => isUsed);
-        resolve(!isAnyEmailUsed); // true if all emails are unused
+        // Filter out emails that are in use
+        const usedEmails = results
+          .filter((result) => result.isUsed)
+          .map((result) => result.email);
+
+        // Determine if any emails are used
+        const areAnyUsed = usedEmails.length > 0;
+
+        // Create the response message if any emails are used
+        let message = "";
+        if (areAnyUsed) {
+          const emailCount = usedEmails.length;
+
+          if (emailCount === 1) {
+            message = `${usedEmails[0]} is already used.`;
+          } else if (emailCount === 2) {
+            message = `${usedEmails[0]} and ${usedEmails[1]} are already used.`;
+          } else {
+            const lastEmail = usedEmails.pop(); // Remove the last email for formatting
+            message = `${usedEmails.join(
+              ", "
+            )} and ${lastEmail} are already used.`;
+          }
+        }
+
+        // Resolve with a boolean and the message
+        resolve({ areAnyUsed, message });
       })
       .catch((err) => {
         console.error("Error checking email usage:", err);
@@ -143,12 +167,15 @@ exports.create = (req, res) => {
         return res.status(401).json({ status: false, message: result.message });
       }
 
-      areEmailsUsed(emails)
-        .then((isAllUnused) => {
-          if (!isAllUnused) {
+      const allEmails = emails.concat(
+        branches.map((branch) => branch.branch_email)
+      );
+      areEmailsUsed(allEmails)
+        .then(({ areAnyUsed, message }) => {
+          if (areAnyUsed) {
             return res.status(400).json({
               status: false,
-              message: "One or more emails are already in use.",
+              message: message, // Return the formatted message in the response
               token: result.newToken,
             });
           }
@@ -526,11 +553,10 @@ exports.create = (req, res) => {
           }
         })
         .catch((err) => {
-          console.error("Error in email check:", err);
+          console.error(err);
           return res.status(500).json({
             status: false,
-            message: "Internal server error during email check.",
-            token: result.newToken,
+            message: "An error occurred while checking email usage.",
           });
         });
     });
