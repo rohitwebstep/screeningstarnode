@@ -34,7 +34,15 @@ async function createMail(
   let connection;
 
   try {
-    connection = await startConnection(); // Start the connection
+    // Use a promise to handle the callback-based startConnection function
+    connection = await new Promise((resolve, reject) => {
+      startConnection((err, conn) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(conn);
+      });
+    });
 
     // Fetch email template
     const [emailRows] = await connection
