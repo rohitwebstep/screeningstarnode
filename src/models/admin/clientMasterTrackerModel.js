@@ -1073,9 +1073,11 @@ const Customer = {
                   for (const [dbTable, fileInputNames] of Object.entries(
                     dbTableFileInputs
                   )) {
-                    const selectQuery = `SELECT ${fileInputNames.join(
-                      ", "
-                    )} FROM ${dbTable} WHERE client_application_id = ?`;
+                    const selectQuery = `SELECT ${
+                      fileInputNames && fileInputNames.length > 0
+                        ? fileInputNames.join(", ")
+                        : "*"
+                    } FROM ${dbTable} WHERE client_application_id = ?`;
 
                     connection.query(
                       selectQuery,
