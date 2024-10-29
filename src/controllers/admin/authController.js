@@ -446,6 +446,7 @@ exports.forgotPasswordRequest = (req, res) => {
       return res.status(500).json({
         status: false,
         message:
+          err.message ||
           "An error occurred while processing your request. Please try again.",
       });
     }

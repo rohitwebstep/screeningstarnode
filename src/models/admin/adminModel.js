@@ -18,7 +18,10 @@ const Admin = {
 
         if (queryErr) {
           console.error("Database query error: 5", queryErr);
-          return callback({ message: "Database query error", error: queryErr }, null);
+          return callback(
+            { message: "Database query error", error: queryErr },
+            null
+          );
         }
 
         if (results.length === 0) {
@@ -50,7 +53,10 @@ const Admin = {
 
         if (queryErr) {
           console.error("Database query error: 6", queryErr);
-          return callback({ message: "Database query error", error: queryErr }, null);
+          return callback(
+            { message: "Database query error", error: queryErr },
+            null
+          );
         }
 
         if (results.length === 0) {
@@ -78,20 +84,30 @@ const Admin = {
         return callback(err, null);
       }
 
-      connection.query(sql, [username, username, password], (queryErr, results) => {
-        connectionRelease(connection); // Release the connection
+      connection.query(
+        sql,
+        [username, username, password],
+        (queryErr, results) => {
+          connectionRelease(connection); // Release the connection
 
-        if (queryErr) {
-          console.error("Database query error: 7", queryErr);
-          return callback({ message: "Database query error", error: queryErr }, null);
+          if (queryErr) {
+            console.error("Database query error: 7", queryErr);
+            return callback(
+              { message: "Database query error", error: queryErr },
+              null
+            );
+          }
+
+          if (results.length === 0) {
+            return callback(
+              { message: "Incorrect password or username" },
+              null
+            );
+          }
+
+          callback(null, results);
         }
-
-        if (results.length === 0) {
-          return callback({ message: "Incorrect password or username" }, null);
-        }
-
-        callback(null, results);
-      });
+      );
     });
   },
 
@@ -153,13 +169,17 @@ const Admin = {
 
         if (queryErr) {
           console.error("Database query error: 9", queryErr);
-          return callback({ message: "Database update error", error: queryErr }, null);
+          return callback(
+            { message: "Database update error", error: queryErr },
+            null
+          );
         }
 
         if (results.affectedRows === 0) {
           return callback(
             {
-              message: "Token update failed. Admin not found or no changes made.",
+              message:
+                "Token update failed. Admin not found or no changes made.",
             },
             null
           );
@@ -186,13 +206,17 @@ const Admin = {
 
         if (queryErr) {
           console.error("Database query error: 10", queryErr);
-          return callback({ message: "Database update error", error: queryErr }, null);
+          return callback(
+            { message: "Database update error", error: queryErr },
+            null
+          );
         }
 
         if (results.affectedRows === 0) {
           return callback(
             {
-              message: "Token update failed. Admin not found or no changes made.",
+              message:
+                "Token update failed. Admin not found or no changes made.",
             },
             null
           );
@@ -220,7 +244,10 @@ const Admin = {
 
         if (queryErr) {
           console.error("Database query error: 11", queryErr);
-          return callback({ message: "Database query error", error: queryErr }, null);
+          return callback(
+            { message: "Database query error", error: queryErr },
+            null
+          );
         }
 
         if (results.length === 0) {
@@ -250,13 +277,17 @@ const Admin = {
 
         if (queryErr) {
           console.error("Database query error: 12", queryErr);
-          return callback({ message: "Database update error", error: queryErr }, null);
+          return callback(
+            { message: "Database update error", error: queryErr },
+            null
+          );
         }
 
         if (results.affectedRows === 0) {
           return callback(
             {
-              message: "Token clear failed. Admin not found or no changes made.",
+              message:
+                "Token clear failed. Admin not found or no changes made.",
             },
             null
           );
@@ -273,7 +304,7 @@ const Admin = {
       FROM \`admins\`
       WHERE \`id\` = ?
     `;
-    
+
     startConnection((err, connection) => {
       if (err) {
         return callback(err, null);
@@ -284,7 +315,10 @@ const Admin = {
 
         if (queryErr) {
           console.error("Database query error: 13", queryErr);
-          return callback({ message: "Database query error", error: queryErr }, null);
+          return callback(
+            { message: "Database query error", error: queryErr },
+            null
+          );
         }
 
         if (results.length === 0) {
