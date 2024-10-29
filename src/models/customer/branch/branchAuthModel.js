@@ -168,7 +168,7 @@ const Branch = {
         );
       }
 
-      const sql = `UPDATE \`branches\` SET \`password\` = MD5(?) WHERE \`id\` = ?`;
+      const sql = `UPDATE \`branches\` SET \`password\` = MD5(?), \`reset_password_token\` = null, \`login_token\` = null, \`token_expiry\` = null, \`password_token_expiry\` = null WHERE \`id\` = ?`;
 
       connection.query(sql, [new_password, branch_id], (err, results) => {
         connectionRelease(connection); // Ensure connection is released

@@ -112,7 +112,7 @@ const Admin = {
   },
 
   updatePassword: (new_password, admin_id, callback) => {
-    const sql = `UPDATE \`admins\` SET \`password\` = MD5(?), \`reset_password_token\` = null, \`password_token_expiry\` = null WHERE \`id\` = ?`;
+    const sql = `UPDATE \`admins\` SET \`password\` = MD5(?), \`reset_password_token\` = null, \`login_token\` = null, \`token_expiry\` = null, \`password_token_expiry\` = null WHERE \`id\` = ?`;
 
     startConnection((err, connection) => {
       if (err) {
