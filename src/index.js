@@ -22,7 +22,7 @@ const port = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
-app.use('/uploads', express.static('uploads'));
+app.use("/uploads", express.static("uploads"));
 
 // Define routes
 app.use("/admin", adminRoutes);
@@ -34,13 +34,13 @@ app.use("/customer", customerRoutes);
 app.use("/branch", branchRoutes);
 app.use("/package", packageRoutes);
 app.use("/service", serviceRoutes);
-app.use("/holidays", holidayRoutes);
+app.use("/holiday", holidayRoutes);
 app.use("/test", testRoutes);
 
 // Error handling middleware (optional)
 app.use((err, req, res, next) => {
   console.error(err.stack); // Log error stack for debugging
-  res.status(500).send('Something broke!'); // Send a generic error message
+  res.status(500).send("Something broke!"); // Send a generic error message
 });
 
 // Start the server
