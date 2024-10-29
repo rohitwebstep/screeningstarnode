@@ -13,6 +13,7 @@ const customerRoutes = require("./routes/customer/indexRoutes");
 const branchRoutes = require("./routes/customer/branch/indexRoutes");
 const packageRoutes = require("./routes/admin/packageRoutes");
 const serviceRoutes = require("./routes/admin/serviceRoutes");
+const holidayRoutes = require("./routes/admin/holidayRoutes");
 const testRoutes = require("./routes/testRoutes");
 
 const app = express();
@@ -33,6 +34,7 @@ app.use("/customer", customerRoutes);
 app.use("/branch", branchRoutes);
 app.use("/package", packageRoutes);
 app.use("/service", serviceRoutes);
+app.use("/holidays", holidayRoutes);
 app.use("/test", testRoutes);
 
 // Error handling middleware (optional)
