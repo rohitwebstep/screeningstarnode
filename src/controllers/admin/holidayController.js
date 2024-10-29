@@ -40,7 +40,7 @@ exports.create = (req, res) => {
 
       const newToken = result.newToken;
 
-      Holiday.create(title, date, admin_id, (err, result) => {
+      Holiday.create(title, date, (err, result) => {
         if (err) {
           console.error("Database error:", err);
           Common.adminActivityLog(

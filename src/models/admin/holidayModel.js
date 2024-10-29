@@ -1,7 +1,7 @@
 const { pool, startConnection, connectionRelease } = require("../../config/db");
 
 const Holiday = {
-  create: (title, date, admin_id, callback) => {
+  create: (title, date, callback) => {
     // Step 1: Check if a holiday with the same title already exists
     const checkHolidaySql = `
       SELECT * FROM \`holidays\` WHERE \`title\` = ?
@@ -29,13 +29,13 @@ const Holiday = {
 
         // Step 3: Insert the new holiday
         const insertHolidaySql = `
-          INSERT INTO \`holidays\` (\`title\`, \`date\`, \`admin_id\`)
-          VALUES (?, ?, ?)
+          INSERT INTO \`holidays\` (\`title\`, \`date\`)
+          VALUES (?, ?)
         `;
 
         connection.query(
           insertHolidaySql,
-          [title, date, admin_id],
+          [title, date],
           (insertErr, results) => {
             connectionRelease(connection); // Release the connection
 
