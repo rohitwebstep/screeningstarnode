@@ -15,6 +15,7 @@ const packageRoutes = require("./routes/admin/packageRoutes");
 const serviceRoutes = require("./routes/admin/serviceRoutes");
 const holidayRoutes = require("./routes/admin/holidayRoutes");
 const testRoutes = require("./routes/testRoutes");
+const tatDelayRoutes = require("./routes/admin/tatDelayRoutes");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -35,6 +36,7 @@ app.use("/branch", branchRoutes);
 app.use("/package", packageRoutes);
 app.use("/service", serviceRoutes);
 app.use("/holiday", holidayRoutes);
+app.use("/tat-delay", tatDelayRoutes);
 app.use("/test", testRoutes);
 
 // Error handling middleware (optional)
