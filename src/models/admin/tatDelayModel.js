@@ -50,8 +50,9 @@ const tatDelay = {
 
           // Execute the holidays query
           connection.query(holidaysQuery, (holQueryError, holidayResults) => {
-            if (holQueryError)
+            if (holQueryError) {
               return handleQueryError(holQueryError, connection, callback);
+            }
 
             // Prepare holiday dates for calculations
             const holidayDates = holidayResults.map((holiday) =>
@@ -141,16 +142,18 @@ const tatDelay = {
                       weekendsSet
                     );
 
-                    // Add application information within the branch under the customer
-                    accumulator[customer_id].branches[
-                      branch_id
-                    ].applications.push({
-                      client_application_id,
-                      application_id,
-                      application_name,
-                      application_created_at,
-                      days_out_of_tat: daysOutOfTat, // Include days out of TAT
-                    });
+                    // Only add application information if days out of TAT is greater than 0
+                    if (daysOutOfTat > 0) {
+                      accumulator[customer_id].branches[
+                        branch_id
+                      ].applications.push({
+                        client_application_id,
+                        application_id,
+                        application_name,
+                        application_created_at,
+                        days_out_of_tat: daysOutOfTat, // Include days out of TAT
+                      });
+                    }
 
                     return accumulator;
                   },
@@ -160,10 +163,14 @@ const tatDelay = {
                 // Convert the application hierarchy object to an array with nested branches and applications
                 const applicationHierarchyArray = Object.values(
                   applicationHierarchy
-                ).map((customer) => ({
-                  ...customer,
-                  branches: Object.values(customer.branches),
-                }));
+                )
+                  .map((customer) => ({
+                    ...customer,
+                    branches: Object.values(customer.branches).filter(
+                      (branch) => branch.applications.length > 0 // Only include branches with applications
+                    ),
+                  }))
+                  .filter((customer) => customer.branches.length > 0); // Only include customers with branches
 
                 // Map holiday results into a structured array
                 const holidaysArray = holidayResults.map((holiday) => ({
