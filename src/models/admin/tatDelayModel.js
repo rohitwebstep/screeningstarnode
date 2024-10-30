@@ -3,8 +3,6 @@ const moment = require("moment"); // Ensure you have moment.js installed
 
 const tatDelay = {
   list: (callback) => {
-    console.log("Starting TAT Delay list retrieval...");
-
     // SQL query to retrieve applications, customers, branches, and tat_days
     const applicationsQuery = `
       SELECT 
@@ -50,7 +48,6 @@ const tatDelay = {
             return handleQueryError(appQueryError, connection, callback);
           }
 
-          console.log("Applications retrieved:", applicationResults.length);
           // Execute the holidays query
           connection.query(holidaysQuery, (holQueryError, holidayResults) => {
             if (holQueryError)
@@ -60,8 +57,6 @@ const tatDelay = {
             const holidayDates = holidayResults.map((holiday) =>
               moment(holiday.holiday_date).startOf("day")
             );
-
-            console.log("Holiday dates prepared:", holidayDates);
 
             // Execute the weekends query
             connection.query(
@@ -76,7 +71,6 @@ const tatDelay = {
                   );
                   return callback(weekendQueryError, null);
                 }
-                console.log("Weekends retrieved:", weekendResults);
 
                 const weekends = weekendResults[0]?.weekends
                   ? JSON.parse(weekendResults[0].weekends)
@@ -105,10 +99,6 @@ const tatDelay = {
                       application_created_at,
                     } = row;
 
-                    console.log(
-                      `Processing application for customer: ${customer_name}`
-                    );
-
                     // Initialize customer entry if it doesn't exist
                     if (!accumulator[customer_id]) {
                       accumulator[customer_id] = {
@@ -120,7 +110,6 @@ const tatDelay = {
                         tat_days: parseInt(tat_days, 10), // Parse TAT days as an integer
                         branches: {},
                       };
-                      console.log(`New customer entry created: ${customer_id}`);
                     }
 
                     // Initialize branch entry if it doesn't exist
@@ -132,7 +121,6 @@ const tatDelay = {
                         branch_mobile,
                         applications: [],
                       };
-                      console.log(`New branch entry created: ${branch_id}`);
                     }
 
                     // Calculate days out of TAT
@@ -151,10 +139,6 @@ const tatDelay = {
                       moment(),
                       holidayDates,
                       weekendsSet
-                    );
-
-                    console.log(
-                      `Days out of TAT for application ${application_id}: ${daysOutOfTat}`
                     );
 
                     // Add application information within the branch under the customer
@@ -181,8 +165,6 @@ const tatDelay = {
                   branches: Object.values(customer.branches),
                 }));
 
-                console.log("Application hierarchy constructed.");
-
                 // Map holiday results into a structured array
                 const holidaysArray = holidayResults.map((holiday) => ({
                   id: holiday.holiday_id,
@@ -190,7 +172,6 @@ const tatDelay = {
                   date: holiday.holiday_date,
                 }));
 
-                console.log("Holidays array constructed.");
                 // Callback with both the application hierarchy and holidays array
                 callback(null, {
                   applicationHierarchy: applicationHierarchyArray,
