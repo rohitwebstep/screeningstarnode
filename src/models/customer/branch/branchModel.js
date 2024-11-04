@@ -63,7 +63,8 @@ const Branch = {
             \`application_id\`, 
             \`employee_id\`, 
             \`name\`, 
-            \`status\`
+            \`status\`,
+            \`created_at\`
         FROM 
             \`client_applications\`
         WHERE 
