@@ -136,6 +136,7 @@ const Branch = {
                     grouped[row.status].applications.push({
                       client_application_id: row.application_id,
                       application_name: row.name,
+                      created_at: row.created_at,
                       cmtApplications: row.cmtApplications, // Add cmt applications array
                     });
 
