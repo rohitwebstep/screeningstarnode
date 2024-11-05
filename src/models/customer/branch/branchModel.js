@@ -46,17 +46,18 @@ const Branch = {
       // Optimized query to fetch client applications by status
       const query = `
         SELECT 
-            ca.id, 
-            ca.application_id, 
+            ca.id AS client_application_id, 
+            ca.application_id,
             ca.employee_id, 
-            ca.name, 
-            ca.status, 
-            ca.created_at, 
-            cmt.application_id AS cmt_application_id, cmt.other_fields
+            ca.name,
+            ca.status,
+            ca.created_at,
+            cmt.id AS cmt_id,
+            cmt.*
         FROM 
             client_applications ca
         LEFT JOIN 
-            cmt_applications cmt ON ca.application_id = cmt.client_application_id
+            cmt_applications cmt ON ca.id = cmt.client_application_id
         WHERE 
             ca.branch_id = ?
         ORDER BY 
@@ -71,6 +72,7 @@ const Branch = {
           return callback(err, null);
         }
 
+        // Group applications by their status and add CMT data
         const applicationsByStatus = results.reduce((grouped, app) => {
           if (!grouped[app.status]) {
             grouped[app.status] = {
@@ -80,11 +82,11 @@ const Branch = {
           }
 
           grouped[app.status].applications.push({
-            client_application_id: app.application_id,
+            client_application_id: app.client_application_id,
             application_name: app.name,
             created_at: app.created_at,
-            cmtApplicationId: app.cmt_application_id,
-            cmtOtherFields: app.other_fields,  // Adjust depending on actual fields needed
+            cmtApplicationId: app.cmt_id,
+            cmtOtherFields: app.other_fields,  // Adjust based on actual field names from cmt
           });
 
           grouped[app.status].applicationCount += 1;
@@ -92,6 +94,7 @@ const Branch = {
           return grouped;
         }, {});
 
+        // Release connection and return results
         connectionRelease(connection);
         return callback(null, applicationsByStatus);
       });

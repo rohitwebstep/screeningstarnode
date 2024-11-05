@@ -42,7 +42,7 @@ exports.index = (req, res) => {
         console.error("Error checking token validity:", tokenErr);
         return res.status(500).json({
           status: false,
-          message: "Server error while verifying token.",
+          message: tokenErr,
         });
       }
 
@@ -307,7 +307,7 @@ exports.filterOptionsForClientApplications = (req, res) => {
           console.error("Error checking token validity:", tokenErr);
           return res.status(500).json({
             status: false,
-            message: "Server error while verifying token.",
+            message: tokenErr,
           });
         }
 
@@ -401,7 +401,7 @@ exports.filterOptionsForCandidateApplications = (req, res) => {
           console.error("Error checking token validity:", tokenErr);
           return res.status(500).json({
             status: false,
-            message: "Server error while verifying token.",
+            message: tokenErr,
           });
         }
 
@@ -976,7 +976,7 @@ exports.getServiceById = (req, res) => {
         console.error("Error checking token validity:", tokenErr);
         return res.status(500).json({
           status: false,
-          message: "Server error while verifying token.",
+          message: tokenErr,
         });
       }
 
@@ -1072,7 +1072,7 @@ exports.annexureDataByServiceId = (req, res) => {
         console.error("Error checking token validity:", tokenErr);
         return res.status(500).json({
           status: false,
-          message: "Server error while verifying token.",
+          message: tokenErr,
         });
       }
 

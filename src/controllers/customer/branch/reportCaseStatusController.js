@@ -58,7 +58,7 @@ exports.reportFormJsonByServiceID = (req, res) => {
           console.error("Error checking token validity:", tokenErr);
           return res.status(500).json({
             status: false,
-            message: "Server error while verifying token.",
+            message: tokenErr,
           });
         }
 
@@ -168,7 +168,7 @@ exports.annexureData = (req, res) => {
           console.error("Error checking token validity:", tokenErr);
           return res.status(500).json({
             status: false,
-            message: "Server error while verifying token.",
+            message: tokenErr,
           });
         }
 
