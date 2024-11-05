@@ -61,7 +61,7 @@ exports.login = (req, res) => {
           "Step 8: Database error during password validation:",
           err
         );
-        Common.adminLoginLog(admin.id, "login", "0", err, () => {});
+        Common.adminLoginLog(admin.id, "login", "0", err.message, () => {});
         return res.status(500).json({ status: false, message: err.message });
       }
 
@@ -484,7 +484,7 @@ exports.forgotPasswordRequest = (req, res) => {
               admin.id,
               "forgot-password",
               "0",
-              `Error updating token: ${err}`,
+              `Error updating token: ${err.message}`,
               () => {}
             );
             return res.status(500).json({
