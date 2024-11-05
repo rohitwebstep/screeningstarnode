@@ -96,7 +96,7 @@ exports.login = (req, res) => {
                 "login",
                 "0",
                 err,
-                () => {}
+                () => { }
               );
               return res
                 .status(500)
@@ -110,7 +110,7 @@ exports.login = (req, res) => {
                 "login",
                 "0",
                 "Incorrect password",
-                () => {}
+                () => { }
               );
               return res
                 .status(401)
@@ -123,7 +123,7 @@ exports.login = (req, res) => {
                 "login",
                 "0",
                 "Branch account is not yet verified.",
-                () => {}
+                () => { }
               );
               return res.status(400).json({
                 status: false,
@@ -138,7 +138,7 @@ exports.login = (req, res) => {
                 "login",
                 "0",
                 "Branch account has been suspended.",
-                () => {}
+                () => { }
               );
               return res.status(400).json({
                 status: false,
@@ -158,7 +158,7 @@ exports.login = (req, res) => {
                 "login",
                 "0",
                 "Another branch is currently logged in.",
-                () => {}
+                () => { }
               );
               return res.status(400).json({
                 status: false,
@@ -180,7 +180,7 @@ exports.login = (req, res) => {
                   "login",
                   "0",
                   "Error updating token: " + err,
-                  () => {}
+                  () => { }
                 );
                 return res.status(500).json({
                   status: false,
@@ -189,7 +189,7 @@ exports.login = (req, res) => {
               }
 
               // Log successful login and return the response
-              Common.branchLoginLog(branch.id, "login", "1", null, () => {});
+              Common.branchLoginLog(branch.id, "login", "1", null, () => { });
               const { login_token, token_expiry, ...branchDataWithoutToken } =
                 branch;
 
@@ -272,7 +272,7 @@ exports.updatePassword = (req, res) => {
           "o",
           "Branch attempted to update password",
           null,
-          () => {}
+          () => { }
         );
         return res.status(500).json({
           status: false,
@@ -288,7 +288,7 @@ exports.updatePassword = (req, res) => {
         "1",
         "Branch successfully updated password",
         null,
-        () => {}
+        () => { }
       );
 
       return res.status(200).json({
@@ -398,7 +398,7 @@ exports.validateLogin = (req, res) => {
         "login",
         "0",
         "Branch account is not yet verified.",
-        () => {}
+        () => { }
       );
       return res.status(400).json({
         status: false,
@@ -413,7 +413,7 @@ exports.validateLogin = (req, res) => {
         "login",
         "0",
         "branch account has been suspended.",
-        () => {}
+        () => { }
       );
       return res.status(400).json({
         status: false,
@@ -439,7 +439,7 @@ exports.validateLogin = (req, res) => {
       return res.status(200).json({
         status: true,
         message: "Login verified successful",
-        newToken,
+        token: newToken,
       });
     });
   });
@@ -504,7 +504,7 @@ exports.forgotPasswordRequest = (req, res) => {
                 "forgot-password",
                 "0",
                 `Error updating token: ${err}`,
-                () => {}
+                () => { }
               );
               return res.status(500).json({
                 status: false,
@@ -514,9 +514,8 @@ exports.forgotPasswordRequest = (req, res) => {
             }
 
             // Send password reset email
-            const resetLink = `${
-              appInfo.host || "https://www.goldquestglobal.com"
-            }/branch/reset-password?email=${branch.email}&token=${token}`;
+            const resetLink = `${appInfo.host || "https://www.goldquestglobal.com"
+              }/branch/reset-password?email=${branch.email}&token=${token}`;
             const toArr = [{ name: branch.name, email: branch.email }];
 
             forgetPassword(
@@ -532,7 +531,7 @@ exports.forgotPasswordRequest = (req, res) => {
                   "forgot-password",
                   "1",
                   null,
-                  () => {}
+                  () => { }
                 );
                 return res.status(200).json({
                   status: true,
@@ -549,7 +548,7 @@ exports.forgotPasswordRequest = (req, res) => {
                   "forgot-password",
                   "0",
                   `Failed to send email: ${emailError.message}`,
-                  () => {}
+                  () => { }
                 );
                 return res.status(500).json({
                   status: false,
@@ -640,7 +639,7 @@ exports.forgotPassword = (req, res) => {
           "0",
           "Failed password update attempt",
           err,
-          () => {}
+          () => { }
         );
         return res.status(500).json({
           status: false,
@@ -656,7 +655,7 @@ exports.forgotPassword = (req, res) => {
         "1",
         "Branch password updated successfully",
         null,
-        () => {}
+        () => { }
       );
 
       return res.status(200).json({

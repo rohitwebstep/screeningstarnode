@@ -13,7 +13,7 @@ const generatePassword = (companyName) => {
 exports.index = (req, res) => {
   const { branch_id, _token } = req.query;
 
-  // Step 1: Validate required fields
+  // Validate required fields
   const missingFields = [];
   if (!branch_id) missingFields.push("Branch ID");
   if (!_token) missingFields.push("Token");
@@ -27,64 +27,61 @@ exports.index = (req, res) => {
 
   const action = JSON.stringify({ index: "view" });
 
-  // Step 2: Check if the branch is authorized for the action
+  // Step 1: Check if the branch is authorized for the action
   BranchCommon.isBranchAuthorizedForAction(branch_id, action, (authResult) => {
     if (!authResult.status) {
       return res.status(403).json({
         status: false,
-        message: authResult.message, // Return the authorization error message
+        message: authResult.message,
       });
     }
 
-    // Step 3: Verify the branch token
-    BranchCommon.isBranchTokenValid(
-      _token,
-      branch_id,
-      (tokenErr, tokenResult) => {
-        if (tokenErr) {
-          console.error("Error checking token validity:", tokenErr);
-          return res.status(500).json({
-            status: false,
-            message: "Server error while verifying token.",
-          });
-        }
-
-        if (!tokenResult.status) {
-          return res.status(401).json({
-            status: false,
-            message: tokenResult.message, // Return the token validation message
-          });
-        }
-
-        const newToken = tokenResult.newToken;
-
-        Branch.index(branch_id, (dbErr, clientApplications) => {
-          if (dbErr) {
-            console.error("Database error:", dbErr);
-            return res.status(500).json({
-              status: false,
-              message: "An error occurred while fetching client applications.",
-              token: newToken,
-            });
-          }
-
-          // Calculate total application count
-          const totalApplicationCount = clientApplications
-            ? Object.values(clientApplications).reduce((total, statusGroup) => {
-                return total + statusGroup.applicationCount;
-              }, 0)
-            : 0;
-
-          res.status(200).json({
-            status: true,
-            message: "Client applications fetched successfully.",
-            clientApplications,
-            totalApplicationCount,
-            token: newToken,
-          });
+    // Step 2: Verify the branch token
+    BranchCommon.isBranchTokenValid(_token, branch_id, (tokenErr, tokenResult) => {
+      if (tokenErr) {
+        console.error("Error checking token validity:", tokenErr);
+        return res.status(500).json({
+          status: false,
+          message: "Server error while verifying token.",
         });
       }
-    );
+
+      if (!tokenResult.status) {
+        return res.status(401).json({
+          status: false,
+          message: tokenResult.message,
+        });
+      }
+
+      const newToken = tokenResult.newToken;
+
+      // Step 3: Fetch client applications from database
+      Branch.index(branch_id, (dbErr, clientApplications) => {
+        if (dbErr) {
+          console.error("Database error:", dbErr);
+          return res.status(500).json({
+            status: false,
+            message: "An error occurred while fetching client applications.",
+            token: newToken,
+          });
+        }
+
+        // Calculate total application count
+        const totalApplicationCount = clientApplications
+          ? Object.values(clientApplications).reduce((total, statusGroup) => {
+            return total + statusGroup.applicationCount;
+          }, 0)
+          : 0;
+
+        return res.status(200).json({
+          status: true,
+          message: "Client applications fetched successfully.",
+          clientApplications,
+          totalApplicationCount,
+          token: newToken,
+        });
+      });
+    });
   });
 };
 
@@ -554,7 +551,7 @@ exports.update = (req, res) => {
                 "0",
                 JSON.stringify({ id, ...changes }),
                 err,
-                () => {}
+                () => { }
               );
               return res.status(500).json({
                 status: false,
@@ -570,7 +567,7 @@ exports.update = (req, res) => {
               "1",
               JSON.stringify({ id, ...changes }),
               null,
-              () => {}
+              () => { }
             );
 
             res.status(200).json({
@@ -680,7 +677,7 @@ exports.active = (req, res) => {
                 "0",
                 JSON.stringify({ branch_id, ...changes }),
                 err,
-                () => {}
+                () => { }
               );
               return res.status(500).json({
                 status: false,
@@ -696,7 +693,7 @@ exports.active = (req, res) => {
               "1",
               JSON.stringify({ branch_id, ...changes }),
               null,
-              () => {}
+              () => { }
             );
 
             res.status(200).json({
@@ -806,7 +803,7 @@ exports.inactive = (req, res) => {
                 "0",
                 JSON.stringify({ branch_id, ...changes }),
                 err,
-                () => {}
+                () => { }
               );
               return res.status(500).json({
                 status: false,
@@ -822,7 +819,7 @@ exports.inactive = (req, res) => {
               "1",
               JSON.stringify({ branch_id, ...changes }),
               null,
-              () => {}
+              () => { }
             );
 
             res.status(200).json({
@@ -926,7 +923,7 @@ exports.delete = (req, res) => {
                 "0",
                 JSON.stringify({ id }),
                 err,
-                () => {}
+                () => { }
               );
               return res.status(500).json({
                 status: false,
@@ -942,7 +939,7 @@ exports.delete = (req, res) => {
               "1",
               JSON.stringify({ id }),
               null,
-              () => {}
+              () => { }
             );
 
             res.status(200).json({

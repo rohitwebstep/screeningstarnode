@@ -42,119 +42,58 @@ const Branch = {
           null
         );
       }
-      // First, get distinct status values from the database
-      const statusQuery = `
-      SELECT DISTINCT \`status\`
-      FROM \`client_applications\`
-    `;
 
-      connection.query(statusQuery, (err, statusResults) => {
+      // Optimized query to fetch client applications by status
+      const query = `
+        SELECT 
+            ca.id, 
+            ca.application_id, 
+            ca.employee_id, 
+            ca.name, 
+            ca.status, 
+            ca.created_at, 
+            cmt.application_id AS cmt_application_id, cmt.other_fields
+        FROM 
+            client_applications ca
+        LEFT JOIN 
+            cmt_applications cmt ON ca.application_id = cmt.client_application_id
+        WHERE 
+            ca.branch_id = ?
+        ORDER BY 
+            ca.created_at DESC
+      `;
+
+      // Fetch client applications with related CMT data
+      connection.query(query, [branch_id], (err, results) => {
         if (err) {
           connectionRelease(connection);
-          console.error("Error fetching distinct status values:", err);
+          console.error("Error fetching client applications:", err);
           return callback(err, null);
         }
 
-        // Extract status values from results
-        const statusList = statusResults.map((row) => row.status);
-        const query = `
-        SELECT 
-            \`id\`, 
-            \`application_id\`, 
-            \`employee_id\`, 
-            \`name\`, 
-            \`status\`,
-            \`created_at\`
-        FROM 
-            \`client_applications\`
-        WHERE 
-            \`status\` IN (${statusList.map(() => "?").join(", ")})
-            AND \`branch_id\` = ?
-        ORDER BY 
-            FIELD(\`status\`, ${statusList.map(() => "?").join(", ")}),
-            \`created_at\` DESC;
-      `;
-
-        // Pass the statusList and branch_id as query parameters
-        connection.query(
-          query,
-          [...statusList, branch_id, ...statusList],
-          (err, results) => {
-            if (err) {
-              connectionRelease(connection);
-              console.error(
-                "Database query error while fetching applications by status:",
-                err
-              );
-              return callback(err, null);
-            }
-
-            const cmtPromises = results.map((app) => {
-              return new Promise((resolve, reject) => {
-                const sqlCmt =
-                  "SELECT * FROM cmt_applications WHERE client_application_id = ?";
-                connection.query(
-                  sqlCmt,
-                  [app.application_id],
-                  (err, cmtResults) => {
-                    if (err) {
-                      console.error(
-                        "Database query error for cmt_applications:",
-                        err
-                      );
-                      return reject(err);
-                    }
-
-                    const cmtData = cmtResults.map((cmtApp) => {
-                      return Object.fromEntries(
-                        Object.entries(cmtApp).map(([key, value]) => [
-                          `cmt_${key}`,
-                          value,
-                        ])
-                      );
-                    });
-
-                    app.cmtApplications = cmtData.length > 0 ? cmtData : []; // Use empty array if no cmt records
-
-                    resolve(app); // Resolve with the updated application object
-                  }
-                );
-              });
-            });
-
-            Promise.all(cmtPromises)
-              .then((updatedResults) => {
-                const applicationsByStatus = updatedResults.reduce(
-                  (grouped, row) => {
-                    if (!grouped[row.status]) {
-                      grouped[row.status] = {
-                        applicationCount: 0,
-                        applications: [],
-                      };
-                    }
-
-                    grouped[row.status].applications.push({
-                      client_application_id: row.application_id,
-                      application_name: row.name,
-                      created_at: row.created_at,
-                      cmtApplications: row.cmtApplications, // Add cmt applications array
-                    });
-
-                    grouped[row.status].applicationCount += 1;
-
-                    return grouped;
-                  },
-                  {}
-                );
-                connectionRelease(connection);
-                return callback(null, applicationsByStatus);
-              })
-              .catch((err) => {
-                connectionRelease(connection);
-                callback(err, null);
-              });
+        const applicationsByStatus = results.reduce((grouped, app) => {
+          if (!grouped[app.status]) {
+            grouped[app.status] = {
+              applicationCount: 0,
+              applications: [],
+            };
           }
-        );
+
+          grouped[app.status].applications.push({
+            client_application_id: app.application_id,
+            application_name: app.name,
+            created_at: app.created_at,
+            cmtApplicationId: app.cmt_application_id,
+            cmtOtherFields: app.other_fields,  // Adjust depending on actual fields needed
+          });
+
+          grouped[app.status].applicationCount += 1;
+
+          return grouped;
+        }, {});
+
+        connectionRelease(connection);
+        return callback(null, applicationsByStatus);
       });
     });
   },
