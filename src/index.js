@@ -16,6 +16,7 @@ const serviceRoutes = require("./routes/admin/serviceRoutes");
 const holidayRoutes = require("./routes/admin/holidayRoutes");
 const testRoutes = require("./routes/testRoutes");
 const tatDelayRoutes = require("./routes/admin/tatDelayRoutes");
+const weeklyReportRoutes = require("./routes/admin/weeklyReportRoutes");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -29,6 +30,7 @@ app.use("/uploads", express.static("uploads"));
 app.use("/admin", adminRoutes);
 app.use("/client-master-tracker", clientMasterTrackerRoutes);
 app.use("/generate-invoice", generateInvoiceRoutes);
+app.use("/weekly-reports", weeklyReportRoutes);
 app.use("/acknowledgement", acknowledgementRoutes);
 app.use("/external-login-credentials", externalLoginCredentials);
 app.use("/customer", customerRoutes);
