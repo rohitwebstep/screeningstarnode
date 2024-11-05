@@ -84,6 +84,7 @@ const Branch = {
           grouped[app.status].applications.push({
             client_application_id: app.client_application_id,
             application_name: app.name,
+            application_id: app.application_id,
             created_at: app.created_at,
             cmtApplicationId: app.cmt_id,
             cmtOtherFields: app.other_fields,  // Adjust based on actual field names from cmt
