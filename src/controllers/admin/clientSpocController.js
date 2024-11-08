@@ -223,7 +223,7 @@ exports.getClientSpocById = (req, res) => {
 };
 
 // Controller to name a billing escalation
-exports.getClientSpocById = (req, res) => {
+exports.update = (req, res) => {
   const { id, name, designation, phone, email, admin_id, _token } = req.body;
 
   let missingFields = [];
