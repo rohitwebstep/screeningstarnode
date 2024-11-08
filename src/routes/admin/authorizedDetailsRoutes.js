@@ -7,7 +7,7 @@ router.post("/create", authorizedDetailsController.create);
 router.get("/list", authorizedDetailsController.list);
 router.get(
   "/authorized-detail-info",
-  authorizedDetailsController.getBillingSpocById
+  authorizedDetailsController.getAuthorizedDetailById
 );
 router.put("/update", authorizedDetailsController.update);
 router.delete("/delete", authorizedDetailsController.delete);

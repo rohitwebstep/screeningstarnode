@@ -5,7 +5,7 @@ const billingEscalationsController = require("../../controllers/admin/billingEsc
 // Authentication routes
 router.post("/create", billingEscalationsController.create);
 router.get("/list", billingEscalationsController.list);
-router.get("/spoc-info", billingEscalationsController.getBillingSpocById);
+router.get("/spoc-info", billingEscalationsController.getBillingEscalationById);
 router.put("/update", billingEscalationsController.update);
 router.delete("/delete", billingEscalationsController.delete);
 
