@@ -3,15 +3,15 @@ const Common = require("../../models/admin/commonModel");
 
 // Controller to create a new billing escalation
 exports.create = (req, res) => {
-  const { title, designation, phone, email, admin_id, _token } = req.body;
+  const { name, designation, phone, email, admin_id, _token } = req.body;
 
   let missingFields = [];
-  if (!title || title === "") missingFields.push("Title");
-  if (!designation || designation === "") missingFields.push("Description");
+  if (!name || name === "") missingFields.push("Name");
+  if (!designation || designation === "") missingFields.push("Designation");
   if (!admin_id || admin_id === "") missingFields.push("Admin ID");
   if (!_token || _token === "") missingFields.push("Token");
-  if (!phone || phone === "") missingFields.push("Admin ID");
-  if (!email || email === "") missingFields.push("Token");
+  if (!phone || phone === "") missingFields.push("Phone");
+  if (!email || email === "") missingFields.push("Email");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -58,7 +58,7 @@ exports.create = (req, res) => {
         const newToken = result.newToken;
 
         AuthorizedDetail.create(
-          title,
+          name,
           designation,
           phone,
           email,
@@ -224,11 +224,11 @@ exports.getAuthorizedDetailById = (req, res) => {
 
 // Controller to update a billing escalation
 exports.update = (req, res) => {
-  const { id, title, designation, phone, email, admin_id, _token } = req.body;
+  const { id, name, designation, phone, email, admin_id, _token } = req.body;
 
   let missingFields = [];
   if (!id || id === "") missingFields.push("Billing escalation ID");
-  if (!title || title === "") missingFields.push("Title");
+  if (!name || name === "") missingFields.push("Name");
   if (!designation || designation === "") missingFields.push("Description");
   if (!admin_id || admin_id === "") missingFields.push("Admin ID");
   if (!_token || _token === "") missingFields.push("Token");
@@ -275,10 +275,10 @@ exports.update = (req, res) => {
           }
 
           const changes = {};
-          if (currentAuthorizedDetail.title !== title) {
-            changes.title = {
-              old: currentAuthorizedDetail.title,
-              new: title,
+          if (currentAuthorizedDetail.name !== name) {
+            changes.name = {
+              old: currentAuthorizedDetail.name,
+              new: name,
             };
           }
           if (currentAuthorizedDetail.designation !== designation) {
@@ -290,7 +290,7 @@ exports.update = (req, res) => {
 
           AuthorizedDetail.update(
             id,
-            title,
+            name,
             designation,
             phone,
             email,

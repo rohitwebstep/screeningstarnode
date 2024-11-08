@@ -36,7 +36,7 @@ app.use("/client-master-tracker", clientMasterTrackerRoutes);
 app.use("/billing-spoc", billingSpocRoutes);
 app.use("/billing-escalation", billingEscalationsRoutes);
 app.use("/authorized-detail", authorizedDetailsRoutes);
-app.use("/escalation_manager", escalationManagersRoutes);
+app.use("/escalation-manager", escalationManagersRoutes);
 app.use("/generate-invoice", generateInvoiceRoutes);
 app.use("/weekly-reports", weeklyReportRoutes);
 app.use("/acknowledgement", acknowledgementRoutes);

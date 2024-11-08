@@ -3,15 +3,15 @@ const Common = require("../../models/admin/commonModel");
 
 // Controller to create a new billing spoc
 exports.create = (req, res) => {
-  const { title, designation, phone, email, admin_id, _token } = req.body;
+  const { name, designation, phone, email, admin_id, _token } = req.body;
 
   let missingFields = [];
-  if (!title || title === "") missingFields.push("Title");
-  if (!designation || designation === "") missingFields.push("Description");
+  if (!name || name === "") missingFields.push("Name");
+  if (!designation || designation === "") missingFields.push("Sesignation");
   if (!admin_id || admin_id === "") missingFields.push("Admin ID");
   if (!_token || _token === "") missingFields.push("Token");
-  if (!phone || phone === "") missingFields.push("Admin ID");
-  if (!email || email === "") missingFields.push("Token");
+  if (!phone || phone === "") missingFields.push("Phone");
+  if (!email || email === "") missingFields.push("Email");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -58,7 +58,7 @@ exports.create = (req, res) => {
         const newToken = result.newToken;
 
         BillingSpoc.create(
-          title,
+          name,
           designation,
           phone,
           email,
@@ -221,11 +221,11 @@ exports.getBillingSpocById = (req, res) => {
 
 // Controller to update a billing spoc
 exports.update = (req, res) => {
-  const { id, title, designation, phone, email, admin_id, _token } = req.body;
+  const { id, name, designation, phone, email, admin_id, _token } = req.body;
 
   let missingFields = [];
   if (!id || id === "") missingFields.push("Billing SPOC ID");
-  if (!title || title === "") missingFields.push("Title");
+  if (!name || name === "") missingFields.push("Name");
   if (!designation || designation === "") missingFields.push("Description");
   if (!admin_id || admin_id === "") missingFields.push("Admin ID");
   if (!_token || _token === "") missingFields.push("Token");
@@ -270,10 +270,10 @@ exports.update = (req, res) => {
         }
 
         const changes = {};
-        if (currentBillingSpoc.title !== title) {
-          changes.title = {
-            old: currentBillingSpoc.title,
-            new: title,
+        if (currentBillingSpoc.name !== name) {
+          changes.name = {
+            old: currentBillingSpoc.name,
+            new: name,
           };
         }
         if (currentBillingSpoc.designation !== designation) {
@@ -285,7 +285,7 @@ exports.update = (req, res) => {
 
         BillingSpoc.update(
           id,
-          title,
+          name,
           designation,
           phone,
           email,
