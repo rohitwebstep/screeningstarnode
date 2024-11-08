@@ -1,10 +1,10 @@
 const { pool, startConnection, connectionRelease } = require("../../config/db");
 
-const AuthorizedDetail = {
+const EscalationManager = {
   create: (title, designation, phone, email, admin_id, callback) => {
-    // Step 1: Check if a billing escalation with the same title already exists
-    const checkAuthorizedDetailSql = `
-      SELECT * FROM \`authorized_details\` WHERE \`title\` = ?
+    // Step 1: Check if a escalation manager with the same title already exists
+    const checkEscalationManagerSql = `
+      SELECT * FROM \`escalation_managers\` WHERE \`title\` = ?
     `;
 
     startConnection((err, connection) => {
@@ -13,17 +13,17 @@ const AuthorizedDetail = {
       }
 
       connection.query(
-        checkAuthorizedDetailSql,
+        checkEscalationManagerSql,
         [title],
-        (checkErr, authorizedDetailResults) => {
+        (checkErr, escalationManagerResults) => {
           if (checkErr) {
-            console.error("Error checking billing escalation:", checkErr);
+            console.error("Error checking escalation manager:", checkErr);
             connectionRelease(connection); // Release connection on error
             return callback(checkErr, null);
           }
 
-          // Step 2: If a billing escalation with the same title exists, return an error
-          if (authorizedDetailResults.length > 0) {
+          // Step 2: If a escalation manager with the same title exists, return an error
+          if (escalationManagerResults.length > 0) {
             const error = new Error(
               "Billing SPOC with the same name already exists"
             );
@@ -32,14 +32,14 @@ const AuthorizedDetail = {
             return callback(error, null);
           }
 
-          // Step 3: Insert the new billing escalation
-          const insertAuthorizedDetailSql = `
-          INSERT INTO \`authorized_details\` (\`title\`, \`designation\`, \`phone\`, \`email\`, \`admin_id\`)
+          // Step 3: Insert the new escalation manager
+          const insertEscalationManagerSql = `
+          INSERT INTO \`escalation_managers\` (\`title\`, \`designation\`, \`phone\`, \`email\`, \`admin_id\`)
           VALUES (?, ?, ?, ?, ?)
         `;
 
           connection.query(
-            insertAuthorizedDetailSql,
+            insertEscalationManagerSql,
             [title, designation, phone, email, admin_id],
             (insertErr, results) => {
               connectionRelease(connection); // Release the connection
@@ -57,7 +57,7 @@ const AuthorizedDetail = {
   },
 
   checkEmailExists: (email, callback) => {
-    const sql = `SELECT 1 FROM \`authorized_details\` WHERE email = ? LIMIT 1`;
+    const sql = `SELECT 1 FROM \`escalation_managers\` WHERE email = ? LIMIT 1`;
 
     startConnection((err, connection) => {
       if (err) {
@@ -80,7 +80,7 @@ const AuthorizedDetail = {
   },
 
   list: (callback) => {
-    const sql = `SELECT * FROM \`authorized_details\``;
+    const sql = `SELECT * FROM \`escalation_managers\``;
 
     startConnection((err, connection) => {
       if (err) {
@@ -99,8 +99,8 @@ const AuthorizedDetail = {
     });
   },
 
-  getAuthorizedDetailById: (id, callback) => {
-    const sql = `SELECT * FROM \`authorized_details\` WHERE \`id\` = ?`;
+  getEscalationManagerById: (id, callback) => {
+    const sql = `SELECT * FROM \`escalation_managers\` WHERE \`id\` = ?`;
 
     startConnection((err, connection) => {
       if (err) {
@@ -121,7 +121,7 @@ const AuthorizedDetail = {
 
   update: (id, title, designation, phone, email, callback) => {
     const sql = `
-      UPDATE \`authorized_details\`
+      UPDATE \`escalation_managers\`
       SET \`title\` = ?, \`designation\` = ?, \`phone\` = ?, \`email\` = ?
       WHERE \`id\` = ?
     `;
@@ -131,21 +131,25 @@ const AuthorizedDetail = {
         return callback(err, null);
       }
 
-      connection.query(sql, [title, designation, phone, email, id], (queryErr, results) => {
-        connectionRelease(connection); // Release the connection
+      connection.query(
+        sql,
+        [title, designation, phone, email, id],
+        (queryErr, results) => {
+          connectionRelease(connection); // Release the connection
 
-        if (queryErr) {
-          console.error(" 51", queryErr);
-          return callback(queryErr, null);
+          if (queryErr) {
+            console.error(" 51", queryErr);
+            return callback(queryErr, null);
+          }
+          callback(null, results);
         }
-        callback(null, results);
-      });
+      );
     });
   },
 
   delete: (id, callback) => {
     const sql = `
-      DELETE FROM \`authorized_details\`
+      DELETE FROM \`escalation_managers\`
       WHERE \`id\` = ?
     `;
 
@@ -167,4 +171,4 @@ const AuthorizedDetail = {
   },
 };
 
-module.exports = AuthorizedDetail;
+module.exports = EscalationManager;

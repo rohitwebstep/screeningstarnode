@@ -9,6 +9,7 @@ const clientMasterTrackerRoutes = require("./routes/admin/clientMasterTrackerRou
 const billingSpocRoutes = require("./routes/admin/billingSpocRoutes");
 const billingEscalationsRoutes = require("./routes/admin/billingEscalationsRoutes");
 const authorizedDetailsRoutes = require("./routes/admin/authorizedDetailsRoutes");
+const escalationManagersRoutes = require("./routes/admin/escalationManagerRoutes");
 const generateInvoiceRoutes = require("./routes/admin/generateInvoiceRoutes");
 const acknowledgementRoutes = require("./routes/admin/acknowledgementRoutes");
 const externalLoginCredentials = require("./routes/admin/externalLoginCredentialsRoutes");
@@ -35,6 +36,7 @@ app.use("/client-master-tracker", clientMasterTrackerRoutes);
 app.use("/billing-spoc", billingSpocRoutes);
 app.use("/billing-escalation", billingEscalationsRoutes);
 app.use("/authorized-detail", authorizedDetailsRoutes);
+app.use("/escalation_manager", escalationManagersRoutes);
 app.use("/generate-invoice", generateInvoiceRoutes);
 app.use("/weekly-reports", weeklyReportRoutes);
 app.use("/acknowledgement", acknowledgementRoutes);

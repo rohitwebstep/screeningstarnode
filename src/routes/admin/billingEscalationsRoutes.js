@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const billingEscalationsController = require("../../controllers/admin/billingEscalationsController");
+const billingEscalationsController = require("../../controllers/admin/billingEscalationController");
 
 // Authentication routes
 router.post("/create", billingEscalationsController.create);

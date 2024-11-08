@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const authorizedDetailsController = require("../../controllers/admin/authorizedDetailsController");
+const authorizedDetailsController = require("../../controllers/admin/authorizedDetailController");
 
 // Authentication routes
 router.post("/create", authorizedDetailsController.create);
