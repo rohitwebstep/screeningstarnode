@@ -19,6 +19,40 @@ const fs = require("fs");
 const path = require("path");
 const { upload, saveImage, saveImages } = require("../../utils/imageSave");
 
+// Function to flatten JSON and separate annexure
+function flattenJsonWithAnnexure(jsonObj) {
+  let result = {};
+  let annexureResult = {};
+
+  function recursiveFlatten(obj, isAnnexure = false) {
+    for (let key in obj) {
+      if (
+        typeof obj[key] === "object" &&
+        obj[key] !== null &&
+        !Array.isArray(obj[key])
+      ) {
+        if (key === "annexure") {
+          isAnnexure = true;
+          annexureResult = {};
+        }
+        recursiveFlatten(obj[key], isAnnexure);
+        if (isAnnexure && key !== "annexure") {
+          if (typeof obj[key] === "object" && obj[key] !== null) {
+            annexureResult[key] = obj[key];
+          }
+        }
+      } else {
+        if (!isAnnexure) {
+          result[key] = obj[key];
+        }
+      }
+    }
+  }
+
+  recursiveFlatten(jsonObj);
+  return { mainJson: result, annexureRawJson: annexureResult };
+}
+
 // Controller to list all customers
 exports.list = (req, res) => {
   const { admin_id, _token, filter_status } = req.query;
@@ -776,7 +810,7 @@ exports.reportFormJsonByServiceID = (req, res) => {
   });
 };
 
-exports.generateReport = (req, res) => {
+exports.generateReport = async (req, res) => {
   const {
     admin_id,
     _token,
@@ -788,7 +822,6 @@ exports.generateReport = (req, res) => {
     send_mail,
   } = req.body;
 
-  // Define required fields
   const requiredFields = {
     admin_id,
     _token,
@@ -797,709 +830,172 @@ exports.generateReport = (req, res) => {
     application_id,
     updated_json,
   };
+  const missingFields = Object.keys(requiredFields).filter(
+    (field) => !requiredFields[field]
+  );
 
-  // Check for missing fields
-  const missingFields = Object.keys(requiredFields)
-    .filter((field) => !requiredFields[field] || requiredFields[field] === "")
-    .map((field) => field.replace(/_/g, " "));
-
-  if (missingFields.length > 0) {
-    return res.status(400).json({
-      status: false,
-      message: `Missing required fields: ${missingFields.join(", ")}`,
-    });
-  }
-
-  // Function to flatten JSON and separate annexure
-  function flattenJsonWithAnnexure(jsonObj) {
-    let result = {};
-    let annexureResult = {};
-
-    function recursiveFlatten(obj, isAnnexure = false) {
-      for (let key in obj) {
-        if (
-          typeof obj[key] === "object" &&
-          obj[key] !== null &&
-          !Array.isArray(obj[key])
-        ) {
-          if (key === "annexure") {
-            isAnnexure = true;
-            annexureResult = {};
-          }
-          recursiveFlatten(obj[key], isAnnexure);
-          if (isAnnexure && key !== "annexure") {
-            if (typeof obj[key] === "object" && obj[key] !== null) {
-              annexureResult[key] = obj[key];
-            }
-          }
-        } else {
-          if (!isAnnexure) {
-            result[key] = obj[key];
-          }
-        }
-      }
-    }
-
-    recursiveFlatten(jsonObj);
-    return { mainJson: result, annexureRawJson: annexureResult };
-  }
-
-  const action = JSON.stringify({ cmt_application: "generate_report" });
-
-  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (AuthResult) => {
-    if (!AuthResult.status) {
-      return res.status(403).json({
+  if (missingFields.length) {
+    return res
+      .status(400)
+      .json({
         status: false,
-        message: AuthResult.message,
+        message: `Missing required fields: ${missingFields.join(", ")}`,
+      });
+  }
+
+  // Helper functions
+  const logActivity = (status, message, logData, error = null) =>
+    AdminCommon.adminActivityLog(
+      admin_id,
+      "admin/client-master-tracker",
+      status,
+      message,
+      JSON.stringify(logData),
+      error,
+      () => {}
+    );
+
+  const handleAnnexurePromises = async (applicationId, annexureData) => {
+    return Promise.allSettled(
+      Object.keys(annexureData).map(async (key) => {
+        const modifiedDbTable = key.replace(/-/g, "_");
+        const subJson = annexureData[modifiedDbTable];
+        // Simplified annexure handling (try/catch for each entry)
+        try {
+          const currentCMTAnnexure =
+            await ClientMasterTrackerModel.getCMTAnnexureByApplicationId(
+              applicationId,
+              modifiedDbTable
+            );
+          const logStatus = currentCMTAnnexure ? "update" : "create";
+          await ClientMasterTrackerModel.createOrUpdateAnnexure(
+            applicationId,
+            branch_id,
+            customer_id,
+            modifiedDbTable,
+            subJson
+          );
+          logActivity(logStatus, "1", {
+            application_id: applicationId,
+            annexureData,
+          });
+        } catch (err) {
+          console.error("Annexure handling error:", err);
+          logActivity(
+            "createOrUpdateAnnexureError",
+            "0",
+            { application_id: applicationId, annexureData },
+            err
+          );
+        }
+      })
+    );
+  };
+
+  try {
+    const action = JSON.stringify({ cmt_application: "generate_report" });
+    const AuthResult = await AdminCommon.isAdminAuthorizedForAction(
+      admin_id,
+      action
+    );
+    if (!AuthResult.status)
+      return res
+        .status(403)
+        .json({ status: false, message: AuthResult.message });
+
+    const TokenResult = await AdminCommon.isAdminTokenValid(_token, admin_id);
+    if (!TokenResult.status)
+      return res
+        .status(401)
+        .json({ status: false, message: TokenResult.message });
+
+    const newToken = TokenResult.newToken;
+    const currentBranch = await Branch.getBranchById(branch_id);
+    if (
+      !currentBranch ||
+      parseInt(currentBranch.customer_id) !== parseInt(customer_id)
+    ) {
+      return res
+        .status(404)
+        .json({
+          status: false,
+          message: "Branch not found or customer mismatch.",
+          token: newToken,
+        });
+    }
+
+    const currentCustomer = await Customer.getCustomerById(customer_id);
+    if (!currentCustomer)
+      return res
+        .status(404)
+        .json({
+          status: false,
+          message: "Customer not found.",
+          token: newToken,
+        });
+
+    const currentCMTApplication =
+      await ClientMasterTrackerModel.getCMTApplicationById(application_id);
+    const { mainJson, annexureRawJson } = flattenJsonWithAnnexure(updated_json);
+
+    const changes = {};
+    let logStatus = "create";
+    if (currentCMTApplication) {
+      logStatus = "update";
+      Object.keys(mainJson).forEach((key) => {
+        if (currentCMTApplication[key] !== mainJson[key]) {
+          changes[key] = {
+            old: currentCMTApplication[key],
+            new: mainJson[key],
+          };
+        }
       });
     }
 
-    AdminCommon.isAdminTokenValid(_token, admin_id, (err, TokenResult) => {
-      if (err) {
-        console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
-      }
+    await ClientMasterTrackerModel.generateReport(
+      mainJson,
+      application_id,
+      branch_id,
+      customer_id
+    );
+    logActivity(logStatus, "1", { application_id, changes });
 
-      if (!TokenResult.status) {
-        return res
-          .status(401)
-          .json({ status: false, message: TokenResult.message });
-      }
+    if (annexure) await handleAnnexurePromises(application_id, annexure);
 
-      const newToken = TokenResult.newToken;
-      Branch.getBranchById(branch_id, (err, currentBranch) => {
-        if (err) {
-          console.error("Database error during branch retrieval:", err);
-          return res.status(500).json({
-            status: false,
-            message: "Failed to retrieve Branch. Please try again.",
-            token: newToken,
-          });
-        }
+    const emailData =
+      await BranchCommon.getBranchandCustomerEmailsForNotification(branch_id);
+    const toArr = [
+      { name: emailData.branch.name, email: emailData.branch.email },
+    ];
+    const ccArr = emailData.customer.emails
+      .split(",")
+      .map((email) => ({ name: emailData.customer.name, email: email.trim() }));
 
-        if (!currentBranch) {
-          return res.status(404).json({
-            status: false,
-            message: "Branch not found.",
-            token: newToken,
-          });
-        }
+    const application = await ClientMasterTrackerModel.applicationByID(
+      application_id,
+      branch_id
+    );
+    const attachments =
+      await ClientMasterTrackerModel.getAttachmentsByClientAppID(
+        application_id
+      );
 
-        if (parseInt(currentBranch.customer_id) !== parseInt(customer_id)) {
-          return res.status(404).json({
-            status: false,
-            message: "Branch not found with customer match.",
-            branch: currentBranch,
-            token: newToken,
-          });
-        }
-
-        Customer.getCustomerById(customer_id, (err, currentCustomer) => {
-          if (err) {
-            console.error("Database error during customer retrieval:", err);
-            return res.status(500).json({
-              status: false,
-              message: "Failed to retrieve Customer. Please try again.",
-              token: newToken,
-            });
-          }
-
-          if (!currentCustomer) {
-            return res.status(404).json({
-              status: false,
-              message: "Customer not found.",
-              token: newToken,
-            });
-          }
-
-          ClientMasterTrackerModel.getCMTApplicationById(
-            application_id,
-            (err, currentCMTApplication) => {
-              if (err) {
-                console.error(
-                  "Database error during CMT Application retrieval:",
-                  err
-                );
-                return res.status(500).json({
-                  status: false,
-                  message:
-                    "Failed to retrieve CMT Application. Please try again.",
-                  token: newToken,
-                });
-              }
-
-              // Flatten the updated_json object and separate annexure
-              let { mainJson, annexureRawJson } =
-                flattenJsonWithAnnexure(updated_json);
-
-              // Declare changes outside the conditional block
-              const changes = {};
-              let logStatus = "create";
-              if (
-                currentCMTApplication &&
-                Object.keys(currentCMTApplication).length > 0
-              ) {
-                logStatus = "update";
-                const compareAndAddChanges = (key, newValue) => {
-                  if (currentCMTApplication[key] !== newValue) {
-                    changes[key] = {
-                      old: currentCMTApplication[key],
-                      new: newValue,
-                    };
-                  }
-                };
-
-                // Compare and log changes
-                Object.keys(mainJson).forEach((key) =>
-                  compareAndAddChanges(key, mainJson[key])
-                );
-              }
-
-              ClientMasterTrackerModel.generateReport(
-                mainJson,
-                application_id,
-                branch_id,
-                customer_id,
-                (err, cmtResult) => {
-                  if (err) {
-                    console.error(
-                      "Database error during CMT application update:",
-                      err
-                    );
-
-                    const logData =
-                      currentCMTApplication &&
-                      Object.keys(currentCMTApplication).length > 0
-                        ? JSON.stringify({ application_id, ...changes }) // changes is defined here
-                        : JSON.stringify(mainJson);
-
-                    AdminCommon.adminActivityLog(
-                      admin_id,
-                      "admin/client-master-tracker",
-                      logStatus,
-                      "0",
-                      logData,
-                      err,
-                      () => {}
-                    );
-
-                    return res.status(500).json({
-                      status: false,
-                      message: err.message,
-                      token: newToken,
-                    });
-                  }
-
-                  const logDataSuccess =
-                    currentCMTApplication &&
-                    Object.keys(currentCMTApplication).length > 0
-                      ? JSON.stringify({ application_id, ...changes }) // changes is defined here
-                      : JSON.stringify(mainJson);
-
-                  AdminCommon.adminActivityLog(
-                    admin_id,
-                    "admin/client-master-tracker",
-                    logStatus,
-                    "1",
-                    logDataSuccess,
-                    err,
-                    () => {}
-                  );
-
-                  if (typeof annexure === "object" && annexure !== null) {
-                    const annexurePromises = [];
-
-                    for (let key in annexure) {
-                      const db_table = key ?? null;
-                      const modifiedDbTable = db_table.replace(/-/g, "_");
-                      const subJson = annexure[modifiedDbTable] ?? null;
-
-                      const annexurePromise = new Promise((resolve, reject) => {
-                        ClientMasterTrackerModel.getCMTAnnexureByApplicationId(
-                          application_id,
-                          modifiedDbTable,
-                          (err, currentCMTAnnexure) => {
-                            if (err) {
-                              console.error(
-                                "Database error during CMT Annexure retrieval:",
-                                err
-                              );
-                              return reject(err); // Reject the promise on error
-                            }
-
-                            let annexureLogStatus =
-                              currentCMTAnnexure &&
-                              Object.keys(currentCMTAnnexure).length > 0
-                                ? "update"
-                                : "create";
-
-                            if (logStatus == "update") {
-                              cmt_id = currentCMTApplication.id;
-                            } else if (logStatus == "create") {
-                              cmt_id = cmtResult.insertId;
-                            }
-
-                            ClientMasterTrackerModel.createOrUpdateAnnexure(
-                              cmt_id,
-                              application_id,
-                              branch_id,
-                              customer_id,
-                              modifiedDbTable,
-                              subJson,
-                              (err, annexureResult) => {
-                                if (err) {
-                                  console.error(
-                                    "Database error during CMT annexure create or update:",
-                                    err
-                                  );
-
-                                  const annexureLogData =
-                                    currentCMTAnnexure &&
-                                    Object.keys(currentCMTAnnexure).length > 0
-                                      ? JSON.stringify({
-                                          application_id,
-                                          ...changes,
-                                        })
-                                      : JSON.stringify(mainJson);
-
-                                  AdminCommon.adminActivityLog(
-                                    admin_id,
-                                    "admin/client-master-tracker",
-                                    annexureLogStatus,
-                                    "0",
-                                    annexureLogData,
-                                    err,
-                                    () => {}
-                                  );
-
-                                  return reject(err); // Reject the promise on error
-                                }
-
-                                AdminCommon.adminActivityLog(
-                                  admin_id,
-                                  "admin/client-master-tracker",
-                                  annexureLogStatus,
-                                  "1",
-                                  logDataSuccess,
-                                  err,
-                                  () => {}
-                                );
-
-                                resolve(); // Resolve the promise when successful
-                              }
-                            );
-                          }
-                        );
-                      });
-
-                      annexurePromises.push(annexurePromise); // Add the promise to the array
-                    }
-
-                    // Wait for all annexure operations to complete
-                    Promise.all(annexurePromises)
-                      .then(() => {
-                        BranchCommon.getBranchandCustomerEmailsForNotification(
-                          branch_id,
-                          (emailError, emailData) => {
-                            if (emailError) {
-                              console.error(
-                                "Error fetching emails:",
-                                emailError
-                              );
-                              return res.status(500).json({
-                                status: false,
-                                message: "Failed to retrieve email addresses.",
-                                token: newToken,
-                              });
-                            }
-
-                            const { branch, customer } = emailData;
-                            const company_name = customer.name;
-
-                            // Prepare recipient and CC lists
-                            const toArr = [
-                              { name: branch.name, email: branch.email },
-                            ];
-                            const ccArr = customer.emails
-                              .split(",")
-                              .map((email) => ({
-                                name: customer.name,
-                                email: email.trim(),
-                              }));
-
-                            ClientMasterTrackerModel.applicationByID(
-                              application_id,
-                              branch_id,
-                              (err, application) => {
-                                if (err) {
-                                  console.error("Database error:", err);
-                                  return res.status(500).json({
-                                    status: false,
-                                    message: err.message,
-                                    token: newToken,
-                                  });
-                                }
-
-                                if (!application) {
-                                  return res.status(404).json({
-                                    status: false,
-                                    message: "Application not found",
-                                    token: newToken,
-                                  });
-                                }
-
-                                ClientMasterTrackerModel.getAttachmentsByClientAppID(
-                                  application_id,
-                                  (err, attachments) => {
-                                    if (err) {
-                                      console.error("Database error:", err);
-                                      return res.status(500).json({
-                                        status: false,
-                                        message: "Database error occurred",
-                                      });
-                                    }
-
-                                    ClientApplication.updateStatus(
-                                      mainJson.overall_status,
-                                      application_id,
-                                      (err, result) => {
-                                        if (err) {
-                                          console.error(
-                                            "Database error during client application status update:",
-                                            err
-                                          );
-                                          return res.status(500).json({
-                                            status: false,
-                                            message: err.message,
-                                            token: newToken,
-                                          });
-                                        }
-
-                                        if (
-                                          mainJson.overall_status &&
-                                          mainJson.is_verify
-                                        ) {
-                                          const status =
-                                            mainJson.overall_status.toLowerCase();
-                                          const verified =
-                                            mainJson.is_verify.toLowerCase();
-
-                                          const gender =
-                                            mainJson.gender?.toLowerCase();
-                                          const marital_status =
-                                            mainJson.marital_status?.toLowerCase();
-
-                                          let gender_title = "Mr.";
-
-                                          if (gender === "male") {
-                                            gender_title = "Mr.";
-                                          } else if (gender === "female") {
-                                            gender_title =
-                                              marital_status === "married"
-                                                ? "Mrs."
-                                                : "Ms.";
-                                          }
-
-                                          if (
-                                            status === "completed" ||
-                                            status === "complete"
-                                          ) {
-                                            if (verified === "yes") {
-                                              if (send_mail == 0) {
-                                                return res.status(200).json({
-                                                  status: true,
-                                                  message: `CMT Application ${
-                                                    currentCMTApplication &&
-                                                    Object.keys(
-                                                      currentCMTApplication
-                                                    ).length > 0
-                                                      ? "updated"
-                                                      : "created"
-                                                  } successfully`,
-                                                  email_status: 1,
-                                                  token: newToken,
-                                                });
-                                              }
-                                              // Send email notification
-                                              finalReportMail(
-                                                "cmt",
-                                                "final",
-                                                company_name,
-                                                gender_title,
-                                                application.name,
-                                                application.application_id,
-                                                attachments,
-                                                toArr,
-                                                ccArr
-                                              )
-                                                .then(() => {
-                                                  return res.status(200).json({
-                                                    status: true,
-                                                    message: `CMT Application ${
-                                                      currentCMTApplication &&
-                                                      Object.keys(
-                                                        currentCMTApplication
-                                                      ).length > 0
-                                                        ? "updated"
-                                                        : "created"
-                                                    } successfully and mail sent.`,
-                                                    token: newToken,
-                                                  });
-                                                })
-                                                .catch((emailError) => {
-                                                  console.error(
-                                                    "Error sending email:",
-                                                    emailError
-                                                  );
-
-                                                  return res.status(200).json({
-                                                    status: true,
-                                                    message: `CMT Application ${
-                                                      currentCMTApplication &&
-                                                      Object.keys(
-                                                        currentCMTApplication
-                                                      ).length > 0
-                                                        ? "updated"
-                                                        : "created"
-                                                    } successfully but failed to send mail.`,
-                                                    token: newToken,
-                                                  });
-                                                });
-                                            } else if (verified === "no") {
-                                              if (send_mail == 0) {
-                                                return res.status(200).json({
-                                                  status: true,
-                                                  message: `CMT Application ${
-                                                    currentCMTApplication &&
-                                                    Object.keys(
-                                                      currentCMTApplication
-                                                    ).length > 0
-                                                      ? "updated"
-                                                      : "created"
-                                                  } successfully`,
-                                                  email_status: 2,
-                                                  token: newToken,
-                                                });
-                                              }
-                                              qcReportCheckMail(
-                                                "cmt",
-                                                "qc",
-                                                gender_title,
-                                                application.name,
-                                                application.application_id,
-                                                attachments,
-                                                toArr,
-                                                ccArr
-                                              )
-                                                .then(() => {
-                                                  return res.status(200).json({
-                                                    status: true,
-                                                    message: `CMT Application ${
-                                                      currentCMTApplication &&
-                                                      Object.keys(
-                                                        currentCMTApplication
-                                                      ).length > 0
-                                                        ? "updated"
-                                                        : "created"
-                                                    } successfully and mail sent.`,
-                                                    token: newToken,
-                                                  });
-                                                })
-                                                .catch((emailError) => {
-                                                  console.error(
-                                                    "Error sending email:",
-                                                    emailError
-                                                  );
-
-                                                  return res.status(200).json({
-                                                    status: true,
-                                                    message: `CMT Application ${
-                                                      currentCMTApplication &&
-                                                      Object.keys(
-                                                        currentCMTApplication
-                                                      ).length > 0
-                                                        ? "updated"
-                                                        : "created"
-                                                    } successfully but failed to send mail.`,
-                                                    token: newToken,
-                                                  });
-                                                });
-                                            } else {
-                                              return res.status(200).json({
-                                                status: true,
-                                                message: `CMT Application ${
-                                                  currentCMTApplication &&
-                                                  Object.keys(
-                                                    currentCMTApplication
-                                                  ).length > 0
-                                                    ? "updated"
-                                                    : "created"
-                                                } successfully.`,
-                                                token: newToken,
-                                              });
-                                            }
-                                          } else {
-                                            const completeStatusArr = [
-                                              "completed",
-                                              "completed_green",
-                                              "completed_red",
-                                              "completed_yellow",
-                                              "completed_pink",
-                                              "completed_orange",
-                                            ];
-
-                                            let allMatch = true;
-
-                                            // Loop through the annexure object
-                                            for (let key in annexure) {
-                                              const db_table = key ?? null;
-                                              const modifiedDbTable =
-                                                db_table.replace(/-/g, "_");
-                                              const subJson =
-                                                annexure[modifiedDbTable] ??
-                                                null;
-
-                                              if (subJson) {
-                                                for (let prop in subJson) {
-                                                  if (
-                                                    prop.startsWith(
-                                                      "color_status"
-                                                    )
-                                                  ) {
-                                                    const colorStatusValue =
-                                                      typeof subJson[prop] ===
-                                                      "string"
-                                                        ? subJson[
-                                                            prop
-                                                          ].toLowerCase()
-                                                        : null;
-
-                                                    if (
-                                                      !completeStatusArr.includes(
-                                                        colorStatusValue
-                                                      )
-                                                    ) {
-                                                      allMatch = false;
-                                                      break;
-                                                    }
-                                                  }
-                                                }
-                                              } else {
-                                                allMatch = false;
-                                                break;
-                                              }
-                                            }
-
-                                            // Log the overall result
-                                            if (allMatch) {
-                                              if (send_mail == 0) {
-                                                return res.status(200).json({
-                                                  status: true,
-                                                  message: `CMT Application ${
-                                                    currentCMTApplication &&
-                                                    Object.keys(
-                                                      currentCMTApplication
-                                                    ).length > 0
-                                                      ? "updated"
-                                                      : "created"
-                                                  } successfully`,
-                                                  email_status: 2,
-                                                  token: newToken,
-                                                });
-                                              }
-                                              readyForReport(
-                                                "cmt",
-                                                "ready",
-                                                application.application_id,
-                                                toArr,
-                                                ccArr
-                                              )
-                                                .then(() => {
-                                                  return res.status(200).json({
-                                                    status: true,
-                                                    message: `CMT Application ${
-                                                      currentCMTApplication &&
-                                                      Object.keys(
-                                                        currentCMTApplication
-                                                      ).length > 0
-                                                        ? "updated"
-                                                        : "created"
-                                                    } successfully and mail sent.`,
-                                                    token: newToken,
-                                                  });
-                                                })
-                                                .catch((emailError) => {
-                                                  console.error(
-                                                    "Error sending email:",
-                                                    emailError
-                                                  );
-
-                                                  return res.status(200).json({
-                                                    status: true,
-                                                    message: `CMT Application ${
-                                                      currentCMTApplication &&
-                                                      Object.keys(
-                                                        currentCMTApplication
-                                                      ).length > 0
-                                                        ? "updated"
-                                                        : "created"
-                                                    } successfully but failed to send mail.`,
-                                                    token: newToken,
-                                                  });
-                                                });
-                                            } else {
-                                              return res.status(200).json({
-                                                status: true,
-                                                message: `CMT Application ${
-                                                  currentCMTApplication &&
-                                                  Object.keys(
-                                                    currentCMTApplication
-                                                  ).length > 0
-                                                    ? "updated"
-                                                    : "created"
-                                                } successfully.`,
-                                                token: newToken,
-                                              });
-                                            }
-                                          }
-                                        }
-                                      }
-                                    );
-                                  }
-                                );
-                              }
-                            );
-                          }
-                        );
-                      })
-                      .catch((error) => {
-                        return res.status(500).json({
-                          status: false,
-                          message: error,
-                          token: newToken,
-                        });
-                      });
-                  } else {
-                    // If there are no annexures, send the response directly
-                    return res.status(200).json({
-                      status: true,
-                      message: `CMT Application ${
-                        currentCMTApplication &&
-                        Object.keys(currentCMTApplication).length > 0
-                          ? "updated"
-                          : "created"
-                      } successfully.`,
-                      token: newToken,
-                    });
-                  }
-                }
-              );
-            }
-          );
-        });
+    const responseMessage = `CMT Application ${
+      currentCMTApplication ? "updated" : "created"
+    } successfully`;
+    return res
+      .status(200)
+      .json({ status: true, message: responseMessage, token: newToken });
+  } catch (error) {
+    console.error("Error in generateReport:", error);
+    return res
+      .status(500)
+      .json({
+        status: false,
+        message: "An error occurred while generating the report.",
+        error: error.message,
       });
-    });
-  });
+  }
 };
 
 exports.customerBasicInfoWithAdminAuth = (req, res) => {
