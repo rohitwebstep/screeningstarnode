@@ -20,7 +20,7 @@ exports.create = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ authorized_detail: "create" });
+  const action = JSON.stringify({ billing_escalation: "create" });
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       // Check the status returned by the authorization function
@@ -93,7 +93,7 @@ exports.create = (req, res) => {
             res.json({
               status: true,
               message: "Billing escalation created successfully",
-              authorized_detail: result,
+              billing_escalation: result,
               token: newToken,
             });
           }
@@ -117,7 +117,7 @@ exports.list = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-  const action = JSON.stringify({ authorized_detail: "view" });
+  const action = JSON.stringify({ billing_escalation: "view" });
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
@@ -148,7 +148,7 @@ exports.list = (req, res) => {
         res.json({
           status: true,
           message: "Billing SPOCs fetched successfully",
-          authorized_details: result,
+          billing_escalations: result,
           totalResults: result.length,
           token: newToken,
         });
@@ -170,7 +170,7 @@ exports.getBillingEscalationById = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-  const action = JSON.stringify({ authorized_detail: "view" });
+  const action = JSON.stringify({ billing_escalation: "view" });
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
@@ -213,7 +213,7 @@ exports.getBillingEscalationById = (req, res) => {
           res.json({
             status: true,
             message: "Billing escalation retrieved successfully",
-            authorized_detail: currentBillingEscalation,
+            billing_escalation: currentBillingEscalation,
             token: newToken,
           });
         }
@@ -241,7 +241,7 @@ exports.update = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-  const action = JSON.stringify({ authorized_detail: "update" });
+  const action = JSON.stringify({ billing_escalation: "update" });
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       // Check the status returned by the authorization function
@@ -326,7 +326,7 @@ exports.update = (req, res) => {
               res.json({
                 status: true,
                 message: "Billing escalation updated successfully",
-                authorized_detail: result,
+                billing_escalation: result,
                 token: newToken,
               });
             }
@@ -352,7 +352,7 @@ exports.delete = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-  const action = JSON.stringify({ authorized_detail: "delete" });
+  const action = JSON.stringify({ billing_escalation: "delete" });
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       // Check the status returned by the authorization function

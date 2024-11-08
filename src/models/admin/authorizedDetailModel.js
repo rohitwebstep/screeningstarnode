@@ -1,10 +1,10 @@
 const { pool, startConnection, connectionRelease } = require("../../config/db");
 
 const AuthorizedDetail = {
-  create: (title, designation, phone, email, admin_id, callback) => {
-    // Step 1: Check if a billing escalation with the same title already exists
+  create: (name, designation, phone, email, admin_id, callback) => {
+    // Step 1: Check if a billing escalation with the same name already exists
     const checkAuthorizedDetailSql = `
-      SELECT * FROM \`authorized_details\` WHERE \`title\` = ?
+      SELECT * FROM \`authorized_details\` WHERE \`name\` = ?
     `;
 
     startConnection((err, connection) => {
@@ -14,7 +14,7 @@ const AuthorizedDetail = {
 
       connection.query(
         checkAuthorizedDetailSql,
-        [title],
+        [name],
         (checkErr, authorizedDetailResults) => {
           if (checkErr) {
             console.error("Error checking billing escalation:", checkErr);
@@ -22,7 +22,7 @@ const AuthorizedDetail = {
             return callback(checkErr, null);
           }
 
-          // Step 2: If a billing escalation with the same title exists, return an error
+          // Step 2: If a billing escalation with the same name exists, return an error
           if (authorizedDetailResults.length > 0) {
             const error = new Error(
               "Billing SPOC with the same name already exists"
@@ -34,13 +34,13 @@ const AuthorizedDetail = {
 
           // Step 3: Insert the new billing escalation
           const insertAuthorizedDetailSql = `
-          INSERT INTO \`authorized_details\` (\`title\`, \`designation\`, \`phone\`, \`email\`, \`admin_id\`)
+          INSERT INTO \`authorized_details\` (\`name\`, \`designation\`, \`phone\`, \`email\`, \`admin_id\`)
           VALUES (?, ?, ?, ?, ?)
         `;
 
           connection.query(
             insertAuthorizedDetailSql,
-            [title, designation, phone, email, admin_id],
+            [name, designation, phone, email, admin_id],
             (insertErr, results) => {
               connectionRelease(connection); // Release the connection
 
@@ -119,10 +119,10 @@ const AuthorizedDetail = {
     });
   },
 
-  update: (id, title, designation, phone, email, callback) => {
+  update: (id, name, designation, phone, email, callback) => {
     const sql = `
       UPDATE \`authorized_details\`
-      SET \`title\` = ?, \`designation\` = ?, \`phone\` = ?, \`email\` = ?
+      SET \`name\` = ?, \`designation\` = ?, \`phone\` = ?, \`email\` = ?
       WHERE \`id\` = ?
     `;
 
@@ -131,7 +131,7 @@ const AuthorizedDetail = {
         return callback(err, null);
       }
 
-      connection.query(sql, [title, designation, phone, email, id], (queryErr, results) => {
+      connection.query(sql, [name, designation, phone, email, id], (queryErr, results) => {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {

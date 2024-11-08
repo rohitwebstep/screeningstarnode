@@ -1,10 +1,10 @@
 const { pool, startConnection, connectionRelease } = require("../../config/db");
 
 const EscalationManager = {
-  create: (title, designation, phone, email, admin_id, callback) => {
-    // Step 1: Check if a escalation manager with the same title already exists
+  create: (name, designation, phone, email, admin_id, callback) => {
+    // Step 1: Check if a escalation manager with the same name already exists
     const checkEscalationManagerSql = `
-      SELECT * FROM \`escalation_managers\` WHERE \`title\` = ?
+      SELECT * FROM \`escalation_managers\` WHERE \`name\` = ?
     `;
 
     startConnection((err, connection) => {
@@ -14,7 +14,7 @@ const EscalationManager = {
 
       connection.query(
         checkEscalationManagerSql,
-        [title],
+        [name],
         (checkErr, escalationManagerResults) => {
           if (checkErr) {
             console.error("Error checking escalation manager:", checkErr);
@@ -22,7 +22,7 @@ const EscalationManager = {
             return callback(checkErr, null);
           }
 
-          // Step 2: If a escalation manager with the same title exists, return an error
+          // Step 2: If a escalation manager with the same name exists, return an error
           if (escalationManagerResults.length > 0) {
             const error = new Error(
               "Billing SPOC with the same name already exists"
@@ -34,13 +34,13 @@ const EscalationManager = {
 
           // Step 3: Insert the new escalation manager
           const insertEscalationManagerSql = `
-          INSERT INTO \`escalation_managers\` (\`title\`, \`designation\`, \`phone\`, \`email\`, \`admin_id\`)
+          INSERT INTO \`escalation_managers\` (\`name\`, \`designation\`, \`phone\`, \`email\`, \`admin_id\`)
           VALUES (?, ?, ?, ?, ?)
         `;
 
           connection.query(
             insertEscalationManagerSql,
-            [title, designation, phone, email, admin_id],
+            [name, designation, phone, email, admin_id],
             (insertErr, results) => {
               connectionRelease(connection); // Release the connection
 
@@ -119,10 +119,10 @@ const EscalationManager = {
     });
   },
 
-  update: (id, title, designation, phone, email, callback) => {
+  update: (id, name, designation, phone, email, callback) => {
     const sql = `
       UPDATE \`escalation_managers\`
-      SET \`title\` = ?, \`designation\` = ?, \`phone\` = ?, \`email\` = ?
+      SET \`name\` = ?, \`designation\` = ?, \`phone\` = ?, \`email\` = ?
       WHERE \`id\` = ?
     `;
 
@@ -133,7 +133,7 @@ const EscalationManager = {
 
       connection.query(
         sql,
-        [title, designation, phone, email, id],
+        [name, designation, phone, email, id],
         (queryErr, results) => {
           connectionRelease(connection); // Release the connection
 

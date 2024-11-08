@@ -1,10 +1,10 @@
 const { pool, startConnection, connectionRelease } = require("../../config/db");
 
 const BillingEscalation = {
-  create: (title, designation, phone, email, admin_id, callback) => {
-    // Step 1: Check if a billing escalation with the same title already exists
+  create: (name, designation, phone, email, admin_id, callback) => {
+    // Step 1: Check if a billing escalation with the same name already exists
     const checkBillingEscalationSql = `
-      SELECT * FROM \`billing_escalations\` WHERE \`title\` = ?
+      SELECT * FROM \`billing_escalations\` WHERE \`name\` = ?
     `;
 
     startConnection((err, connection) => {
@@ -14,7 +14,7 @@ const BillingEscalation = {
 
       connection.query(
         checkBillingEscalationSql,
-        [title],
+        [name],
         (checkErr, billingEscalationResults) => {
           if (checkErr) {
             console.error("Error checking billing escalation:", checkErr);
@@ -22,7 +22,7 @@ const BillingEscalation = {
             return callback(checkErr, null);
           }
 
-          // Step 2: If a billing escalation with the same title exists, return an error
+          // Step 2: If a billing escalation with the same name exists, return an error
           if (billingEscalationResults.length > 0) {
             const error = new Error(
               "Billing SPOC with the same name already exists"
@@ -34,13 +34,13 @@ const BillingEscalation = {
 
           // Step 3: Insert the new billing escalation
           const insertBillingEscalationSql = `
-          INSERT INTO \`billing_escalations\` (\`title\`, \`designation\`, \`phone\`, \`email\`, \`admin_id\`)
+          INSERT INTO \`billing_escalations\` (\`name\`, \`designation\`, \`phone\`, \`email\`, \`admin_id\`)
           VALUES (?, ?, ?, ?, ?)
         `;
 
           connection.query(
             insertBillingEscalationSql,
-            [title, designation, phone, email, admin_id],
+            [name, designation, phone, email, admin_id],
             (insertErr, results) => {
               connectionRelease(connection); // Release the connection
 
@@ -119,10 +119,10 @@ const BillingEscalation = {
     });
   },
 
-  update: (id, title, designation, phone, email, callback) => {
+  update: (id, name, designation, phone, email, callback) => {
     const sql = `
       UPDATE \`billing_escalations\`
-      SET \`title\` = ?, \`designation\` = ?, \`phone\` = ?, \`email\` = ?
+      SET \`name\` = ?, \`designation\` = ?, \`phone\` = ?, \`email\` = ?
       WHERE \`id\` = ?
     `;
 
@@ -131,7 +131,7 @@ const BillingEscalation = {
         return callback(err, null);
       }
 
-      connection.query(sql, [title, designation, phone, email, id], (queryErr, results) => {
+      connection.query(sql, [name, designation, phone, email, id], (queryErr, results) => {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
