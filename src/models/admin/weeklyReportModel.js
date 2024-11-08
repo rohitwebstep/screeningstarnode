@@ -3,7 +3,7 @@ const { pool, startConnection, connectionRelease } = require("../../config/db");
 const WeeklyReport = {
   list: (startOfWeek, endOfWeek, callback) => {
     const sql = `
-      SELECT * FROM \`weekly_reports\`
+      SELECT * FROM \`client_applications\`
       WHERE \`created_at\` BETWEEN ? AND ?
     `;
 
