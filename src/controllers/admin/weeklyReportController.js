@@ -4,6 +4,7 @@ const Common = require("../../models/admin/commonModel");
 exports.index = (req, res) => {
   const { admin_id, _token } = req.query;
 
+  // Check for missing fields
   let missingFields = [];
   if (!admin_id || admin_id === "") missingFields.push("Admin ID");
   if (!_token || _token === "") missingFields.push("Token");
@@ -20,7 +21,7 @@ exports.index = (req, res) => {
     if (!result.status) {
       return res.status(403).json({
         status: false,
-        message: result.message, // Return the message from the authorization function
+        message: result.message,
       });
     }
 
@@ -36,34 +37,34 @@ exports.index = (req, res) => {
 
       const newToken = result.newToken;
 
-      // Get the current date
+      // Get the current date details
       const currentDate = new Date();
-      console.log("Current Date:", currentDate.toISOString().split('T')[0]); // Format: YYYY-MM-DD
-
-      // Get the current day of the week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
       const currentDay = currentDate.getDay();
-      console.log("Current Day:", currentDay); // Log the current day
 
-      // Calculate the first day (Sunday) and last day (Saturday) of the current week
+      // Calculate first and last days of the current week
       const firstDayOfWeek = new Date(currentDate);
-      firstDayOfWeek.setDate(currentDate.getDate() - currentDay); // Set to Sunday
-
+      firstDayOfWeek.setDate(currentDate.getDate() - currentDay);
       const lastDayOfWeek = new Date(currentDate);
-      lastDayOfWeek.setDate(currentDate.getDate() + (6 - currentDay)); // Set to Saturday
+      lastDayOfWeek.setDate(currentDate.getDate() + (6 - currentDay));
 
-      console.log("First Day of Current Week:", firstDayOfWeek.toISOString().split('T')[0]); // Format: YYYY-MM-DD
-      console.log("Last Day of Current Week:", lastDayOfWeek.toISOString().split('T')[0]); // Format: YYYY-MM-DD
+      // Format dates for SQL query
+      const startOfWeek = firstDayOfWeek.toISOString().split("T")[0];
+      const endOfWeek = lastDayOfWeek.toISOString().split("T")[0];
 
-      WeeklyReport.list((err, result) => {
+      // Retrieve weekly reports within the current week
+      WeeklyReport.list(startOfWeek, endOfWeek, (err, result) => {
         if (err) {
           console.error("Database error:", err);
-          return res.status(500).json({ status: false, message: err.message, token: newToken });
+          return res
+            .status(500)
+            .json({ status: false, message: err.message, token: newToken });
         }
 
         res.json({
           status: true,
           message: "Weekly reports sent successfully",
           token: newToken,
+          data: result,
         });
       });
     });
