@@ -330,7 +330,7 @@ exports.delete = (req, res) => {
 
       const newToken = result.newToken;
 
-      ServiceGroup.getServiceById(id, (err, currentServiceGroup) => {
+      ServiceGroup.getServiceGroupById(id, (err, currentServiceGroup) => {
         if (err) {
           console.error("Error fetching service data:", err);
           return res.status(500).json({
