@@ -103,7 +103,7 @@ exports.create = (req, res) => {
   });
 };
 
-// Controller to list all Billing Escalations
+// Controller to list all Billing SPOCs
 exports.list = (req, res) => {
   const { admin_id, _token } = req.query;
 
@@ -147,7 +147,7 @@ exports.list = (req, res) => {
 
         res.json({
           status: true,
-          message: "Billing Escalations fetched successfully",
+          message: "Billing SPOCs fetched successfully",
           billing_escalations: result,
           totalResults: result.length,
           token: newToken,
@@ -222,14 +222,18 @@ exports.getBillingEscalationById = (req, res) => {
   });
 };
 
-exports.delete = (req, res) => {
-  const { id, admin_id, _token } = req.query;
+// Controller to update a billing escalation
+exports.update = (req, res) => {
+  const { id, name, designation, phone, email, admin_id, _token } = req.body;
 
-  // Validate required fields
-  const missingFields = [];
+  let missingFields = [];
   if (!id || id === "") missingFields.push("Billing escalation ID");
+  if (!name || name === "") missingFields.push("Name");
+  if (!designation || designation === "") missingFields.push("Description");
   if (!admin_id || admin_id === "") missingFields.push("Admin ID");
   if (!_token || _token === "") missingFields.push("Token");
+  if (!phone || phone === "") missingFields.push("Phone");
+  if (!email || email === "") missingFields.push("Email");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -237,10 +241,7 @@ exports.delete = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-
-  const action = JSON.stringify({ billing_escalation: "delete" });
-
-  // Check admin authorization
+  const action = JSON.stringify({ billing_escalation: "update" });
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       // Check the status returned by the authorization function
@@ -249,92 +250,87 @@ exports.delete = (req, res) => {
         message: result.message, // Return the message from the authorization function
       });
     }
-
-    // Validate admin token
-    Common.isAdminTokenValid(_token, admin_id, (err, tokenValidationResult) => {
+    Common.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
-        console.error("Token validation error:", err);
-        return res.status(500).json({
-          status: false,
-          message: err.message,
-        });
+        console.error("Error checking token validity:", err);
+        return res.status(500).json(err);
       }
 
-      if (!tokenValidationResult.status) {
-        return res.status(401).json({
-          status: false,
-          message: tokenValidationResult.message,
-        });
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
       }
 
-      const newToken = tokenValidationResult.newToken;
+      const newToken = result.newToken;
 
-      // Fetch the current package
       BillingEscalation.getBillingEscalationById(
         id,
-        (err, currentBillingEscalationSpoc) => {
+        (err, currentBillingEscalation) => {
           if (err) {
-            console.error(
-              "Database error during Billing Escalation retrieval:",
-              err
-            );
+            console.error("Error fetching billing escalation data:", err);
             return res.status(500).json({
               status: false,
-              message:
-                "Failed to retrieve Billing Escalation. Please try again.",
+              message: err.message,
               token: newToken,
             });
           }
 
-          if (!currentBillingEscalationSpoc) {
-            return res.status(404).json({
-              status: false,
-              message: "Billing Escalation not found.",
-              token: newToken,
-            });
+          const changes = {};
+          if (currentBillingEscalation.name !== name) {
+            changes.name = {
+              old: currentBillingEscalation.name,
+              new: name,
+            };
+          }
+          if (currentBillingEscalation.designation !== designation) {
+            changes.designation = {
+              old: currentBillingEscalation.designation,
+              new: designation,
+            };
           }
 
-          // Delete the package
-          BillingSpoc.delete(id, (err, result) => {
-            if (err) {
-              console.error(
-                "Database error during Billing Escalation deletion:",
-                err
-              );
+          BillingEscalation.update(
+            id,
+            name,
+            designation,
+            phone,
+            email,
+            (err, result) => {
+              if (err) {
+                console.error("Database error:", err);
+                Common.adminActivityLog(
+                  admin_id,
+                  "Billing escalation",
+                  "Update",
+                  "0",
+                  JSON.stringify({ id, ...changes }),
+                  err,
+                  () => {}
+                );
+                return res.status(500).json({
+                  status: false,
+                  message: err.message,
+                  token: newToken,
+                });
+              }
+
               Common.adminActivityLog(
                 admin_id,
-                "Billing Escalation",
-                "Delete",
-                "0",
-                JSON.stringify({ id }),
-                err,
+                "Billing escalation",
+                "Update",
+                "1",
+                JSON.stringify({ id, ...changes }),
+                null,
                 () => {}
               );
-              return res.status(500).json({
-                status: false,
-                message:
-                  "Failed to delete Billing Escalation. Please try again.",
+
+              res.json({
+                status: true,
+                message: "Billing escalation updated successfully",
+                billing_escalation: result,
                 token: newToken,
               });
             }
-
-            Common.adminActivityLog(
-              admin_id,
-              "Billing Escalation",
-              "Delete",
-              "1",
-              JSON.stringify({ id }),
-              null,
-              () => {}
-            );
-
-            res.status(200).json({
-              status: true,
-              message: "Billing Escalation deleted successfully.",
-              result,
-              token: newToken,
-            });
-          });
+          );
         }
       );
     });
