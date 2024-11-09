@@ -1,7 +1,7 @@
 const ClientSpoc = require("../../models/admin/clientSpocModel");
 const Common = require("../../models/admin/commonModel");
 
-// Controller to create a new billing escalation
+// Controller to create a new Client SPOC
 exports.create = (req, res) => {
   const { name, designation, phone, email, admin_id, _token } = req.body;
 
@@ -51,7 +51,7 @@ exports.create = (req, res) => {
         if (emailExists) {
           return res.status(401).json({
             status: false,
-            message: "Email already used for another billing escalation",
+            message: "Email already used for another Client SPOC",
           });
         }
 
@@ -68,7 +68,7 @@ exports.create = (req, res) => {
               console.error("Database error:", err);
               Common.adminActivityLog(
                 admin_id,
-                "Billing escalation",
+                "Client SPOC",
                 "Create",
                 "0",
                 null,
@@ -82,7 +82,7 @@ exports.create = (req, res) => {
 
             Common.adminActivityLog(
               admin_id,
-              "Billing escalation",
+              "Client SPOC",
               "Create",
               "1",
               `{id: ${result.insertId}}`,
@@ -92,7 +92,7 @@ exports.create = (req, res) => {
 
             res.json({
               status: true,
-              message: "Billing escalation created successfully",
+              message: "Client SPOC created successfully",
               client_spocs: result,
               token: newToken,
             });
@@ -160,7 +160,7 @@ exports.list = (req, res) => {
 exports.getClientSpocById = (req, res) => {
   const { id, admin_id, _token } = req.query;
   let missingFields = [];
-  if (!id || id === "") missingFields.push("Billing escalation ID");
+  if (!id || id === "") missingFields.push("Client SPOC ID");
   if (!admin_id || admin_id === "") missingFields.push("Admin ID");
   if (!_token || _token === "") missingFields.push("Token");
 
@@ -190,44 +190,41 @@ exports.getClientSpocById = (req, res) => {
 
       const newToken = result.newToken;
 
-      ClientSpoc.getClientSpocById(
-        id,
-        (err, currentClientSpoc) => {
-          if (err) {
-            console.error("Error fetching billing escalation data:", err);
-            return res.status(500).json({
-              status: false,
-              message: err.message,
-              token: newToken,
-            });
-          }
-
-          if (!currentClientSpoc) {
-            return res.status(404).json({
-              status: false,
-              message: "Billing escalation not found",
-              token: newToken,
-            });
-          }
-
-          res.json({
-            status: true,
-            message: "Billing escalation retrieved successfully",
-            client_spocs: currentClientSpoc,
+      ClientSpoc.getClientSpocById(id, (err, currentClientSpoc) => {
+        if (err) {
+          console.error("Error fetching Client SPOC data:", err);
+          return res.status(500).json({
+            status: false,
+            message: err.message,
             token: newToken,
           });
         }
-      );
+
+        if (!currentClientSpoc) {
+          return res.status(404).json({
+            status: false,
+            message: "Client SPOC not found",
+            token: newToken,
+          });
+        }
+
+        res.json({
+          status: true,
+          message: "Client SPOC retrieved successfully",
+          client_spocs: currentClientSpoc,
+          token: newToken,
+        });
+      });
     });
   });
 };
 
-// Controller to name a billing escalation
+// Controller to name a Client SPOC
 exports.update = (req, res) => {
   const { id, name, designation, phone, email, admin_id, _token } = req.body;
 
   let missingFields = [];
-  if (!id || id === "") missingFields.push("Billing escalation ID");
+  if (!id || id === "") missingFields.push("Client SPOC ID");
   if (!name || name === "") missingFields.push("Name");
   if (!designation || designation === "") missingFields.push("Description");
   if (!admin_id || admin_id === "") missingFields.push("Admin ID");
@@ -262,11 +259,42 @@ exports.update = (req, res) => {
 
       const newToken = result.newToken;
 
-      ClientSpoc.getClientSpocById(
-        id,
-        (err, currentClientSpoc) => {
+      ClientSpoc.getClientSpocById(id, (err, currentClientSpoc) => {
+        if (err) {
+          console.error("Error fetching Client SPOC data:", err);
+          return res.status(500).json({
+            status: false,
+            message: err.message,
+            token: newToken,
+          });
+        }
+
+        const changes = {};
+        if (currentClientSpoc.name !== name) {
+          changes.name = {
+            old: currentClientSpoc.name,
+            new: name,
+          };
+        }
+        if (currentClientSpoc.designation !== designation) {
+          changes.designation = {
+            old: currentClientSpoc.designation,
+            new: designation,
+          };
+        }
+
+        ClientSpoc.name(id, name, designation, phone, email, (err, result) => {
           if (err) {
-            console.error("Error fetching billing escalation data:", err);
+            console.error("Database error:", err);
+            Common.adminActivityLog(
+              admin_id,
+              "Client SPOC",
+              "Update",
+              "0",
+              JSON.stringify({ id, ...changes }),
+              err,
+              () => {}
+            );
             return res.status(500).json({
               status: false,
               message: err.message,
@@ -274,75 +302,34 @@ exports.update = (req, res) => {
             });
           }
 
-          const changes = {};
-          if (currentClientSpoc.name !== name) {
-            changes.name = {
-              old: currentClientSpoc.name,
-              new: name,
-            };
-          }
-          if (currentClientSpoc.designation !== designation) {
-            changes.designation = {
-              old: currentClientSpoc.designation,
-              new: designation,
-            };
-          }
-
-          ClientSpoc.name(
-            id,
-            name,
-            designation,
-            phone,
-            email,
-            (err, result) => {
-              if (err) {
-                console.error("Database error:", err);
-                Common.adminActivityLog(
-                  admin_id,
-                  "Billing escalation",
-                  "Update",
-                  "0",
-                  JSON.stringify({ id, ...changes }),
-                  err,
-                  () => {}
-                );
-                return res.status(500).json({
-                  status: false,
-                  message: err.message,
-                  token: newToken,
-                });
-              }
-
-              Common.adminActivityLog(
-                admin_id,
-                "Billing escalation",
-                "Update",
-                "1",
-                JSON.stringify({ id, ...changes }),
-                null,
-                () => {}
-              );
-
-              res.json({
-                status: true,
-                message: "Billing escalation named successfully",
-                client_spocs: result,
-                token: newToken,
-              });
-            }
+          Common.adminActivityLog(
+            admin_id,
+            "Client SPOC",
+            "Update",
+            "1",
+            JSON.stringify({ id, ...changes }),
+            null,
+            () => {}
           );
-        }
-      );
+
+          res.json({
+            status: true,
+            message: "Client SPOC named successfully",
+            client_spocs: result,
+            token: newToken,
+          });
+        });
+      });
     });
   });
 };
 
-// Controller to delete a billing escalation
+// Controller to delete a Client SPOC
 exports.delete = (req, res) => {
   const { id, admin_id, _token } = req.query;
 
   let missingFields = [];
-  if (!id || id === "") missingFields.push("Billing escalation ID");
+  if (!id || id === "") missingFields.push("Client SPOC ID");
   if (!admin_id || admin_id === "") missingFields.push("Admin ID");
   if (!_token || _token === "") missingFields.push("Token");
 
@@ -373,53 +360,50 @@ exports.delete = (req, res) => {
 
       const newToken = result.newToken;
 
-      ClientSpoc.getClientSpocById(
-        id,
-        (err, currentClientSpoc) => {
-          if (err) {
-            console.error("Error fetching billing escalation data:", err);
-            return res.status(500).json({
-              status: false,
-              message: err.message,
-              token: newToken,
-            });
-          }
-
-          ClientSpoc.delete(id, (err, result) => {
-            if (err) {
-              console.error("Database error:", err);
-              Common.adminActivityLog(
-                admin_id,
-                "Billing escalation",
-                "Delete",
-                "0",
-                JSON.stringify({ id, ...currentClientSpoc }),
-                err,
-                () => {}
-              );
-              return res
-                .status(500)
-                .json({ status: false, message: err.message, token: newToken });
-            }
-
-            Common.adminActivityLog(
-              admin_id,
-              "Billing escalation",
-              "Delete",
-              "1",
-              JSON.stringify(currentClientSpoc),
-              null,
-              () => {}
-            );
-
-            res.json({
-              status: true,
-              message: "Billing escalation deleted successfully",
-              token: newToken,
-            });
+      ClientSpoc.getClientSpocById(id, (err, currentClientSpoc) => {
+        if (err) {
+          console.error("Error fetching Client SPOC data:", err);
+          return res.status(500).json({
+            status: false,
+            message: err.message,
+            token: newToken,
           });
         }
-      );
+
+        ClientSpoc.delete(id, (err, result) => {
+          if (err) {
+            console.error("Database error:", err);
+            Common.adminActivityLog(
+              admin_id,
+              "Client SPOC",
+              "Delete",
+              "0",
+              JSON.stringify({ id, ...currentClientSpoc }),
+              err,
+              () => {}
+            );
+            return res
+              .status(500)
+              .json({ status: false, message: err.message, token: newToken });
+          }
+
+          Common.adminActivityLog(
+            admin_id,
+            "Client SPOC",
+            "Delete",
+            "1",
+            JSON.stringify(currentClientSpoc),
+            null,
+            () => {}
+          );
+
+          res.json({
+            status: true,
+            message: "Client SPOC deleted successfully",
+            token: newToken,
+          });
+        });
+      });
     });
   });
 };

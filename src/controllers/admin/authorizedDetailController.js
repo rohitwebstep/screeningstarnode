@@ -1,7 +1,7 @@
 const AuthorizedDetail = require("../../models/admin/authorizedDetailModel");
 const Common = require("../../models/admin/commonModel");
 
-// Controller to create a new billing escalation
+// Controller to create a new Authorized Detail
 exports.create = (req, res) => {
   const { name, designation, phone, email, admin_id, _token } = req.body;
 
@@ -51,7 +51,7 @@ exports.create = (req, res) => {
         if (emailExists) {
           return res.status(401).json({
             status: false,
-            message: "Email already used for another billing escalation",
+            message: "Email already used for another Authorized Detail",
           });
         }
 
@@ -68,7 +68,7 @@ exports.create = (req, res) => {
               console.error("Database error:", err);
               Common.adminActivityLog(
                 admin_id,
-                "Billing escalation",
+                "Authorized Detail",
                 "Create",
                 "0",
                 null,
@@ -82,7 +82,7 @@ exports.create = (req, res) => {
 
             Common.adminActivityLog(
               admin_id,
-              "Billing escalation",
+              "Authorized Detail",
               "Create",
               "1",
               `{id: ${result.insertId}}`,
@@ -92,7 +92,7 @@ exports.create = (req, res) => {
 
             res.json({
               status: true,
-              message: "Billing escalation created successfully",
+              message: "Authorized Detail created successfully",
               authorized_detail: result,
               token: newToken,
             });
@@ -160,7 +160,7 @@ exports.list = (req, res) => {
 exports.getAuthorizedDetailById = (req, res) => {
   const { id, admin_id, _token } = req.query;
   let missingFields = [];
-  if (!id || id === "") missingFields.push("Billing escalation ID");
+  if (!id || id === "") missingFields.push("Authorized Detail ID");
   if (!admin_id || admin_id === "") missingFields.push("Admin ID");
   if (!_token || _token === "") missingFields.push("Token");
 
@@ -194,7 +194,7 @@ exports.getAuthorizedDetailById = (req, res) => {
         id,
         (err, currentAuthorizedDetail) => {
           if (err) {
-            console.error("Error fetching billing escalation data:", err);
+            console.error("Error fetching Authorized Detail data:", err);
             return res.status(500).json({
               status: false,
               message: err.message,
@@ -205,14 +205,14 @@ exports.getAuthorizedDetailById = (req, res) => {
           if (!currentAuthorizedDetail) {
             return res.status(404).json({
               status: false,
-              message: "Billing escalation not found",
+              message: "Authorized Detail not found",
               token: newToken,
             });
           }
 
           res.json({
             status: true,
-            message: "Billing escalation retrieved successfully",
+            message: "Authorized Detail retrieved successfully",
             authorized_detail: currentAuthorizedDetail,
             token: newToken,
           });
@@ -222,12 +222,12 @@ exports.getAuthorizedDetailById = (req, res) => {
   });
 };
 
-// Controller to update a billing escalation
+// Controller to update a Authorized Detail
 exports.update = (req, res) => {
   const { id, name, designation, phone, email, admin_id, _token } = req.body;
 
   let missingFields = [];
-  if (!id || id === "") missingFields.push("Billing escalation ID");
+  if (!id || id === "") missingFields.push("Authorized Detail ID");
   if (!name || name === "") missingFields.push("Name");
   if (!designation || designation === "") missingFields.push("Description");
   if (!admin_id || admin_id === "") missingFields.push("Admin ID");
@@ -266,7 +266,7 @@ exports.update = (req, res) => {
         id,
         (err, currentAuthorizedDetail) => {
           if (err) {
-            console.error("Error fetching billing escalation data:", err);
+            console.error("Error fetching Authorized Detail data:", err);
             return res.status(500).json({
               status: false,
               message: err.message,
@@ -299,7 +299,7 @@ exports.update = (req, res) => {
                 console.error("Database error:", err);
                 Common.adminActivityLog(
                   admin_id,
-                  "Billing escalation",
+                  "Authorized Detail",
                   "Update",
                   "0",
                   JSON.stringify({ id, ...changes }),
@@ -315,7 +315,7 @@ exports.update = (req, res) => {
 
               Common.adminActivityLog(
                 admin_id,
-                "Billing escalation",
+                "Authorized Detail",
                 "Update",
                 "1",
                 JSON.stringify({ id, ...changes }),
@@ -325,7 +325,7 @@ exports.update = (req, res) => {
 
               res.json({
                 status: true,
-                message: "Billing escalation updated successfully",
+                message: "Authorized Detail updated successfully",
                 authorized_detail: result,
                 token: newToken,
               });
@@ -337,12 +337,12 @@ exports.update = (req, res) => {
   });
 };
 
-// Controller to delete a billing escalation
+// Controller to delete a Authorized Detail
 exports.delete = (req, res) => {
   const { id, admin_id, _token } = req.query;
 
   let missingFields = [];
-  if (!id || id === "") missingFields.push("Billing escalation ID");
+  if (!id || id === "") missingFields.push("Authorized Detail ID");
   if (!admin_id || admin_id === "") missingFields.push("Admin ID");
   if (!_token || _token === "") missingFields.push("Token");
 
@@ -377,7 +377,7 @@ exports.delete = (req, res) => {
         id,
         (err, currentAuthorizedDetail) => {
           if (err) {
-            console.error("Error fetching billing escalation data:", err);
+            console.error("Error fetching Authorized Detail data:", err);
             return res.status(500).json({
               status: false,
               message: err.message,
@@ -390,7 +390,7 @@ exports.delete = (req, res) => {
               console.error("Database error:", err);
               Common.adminActivityLog(
                 admin_id,
-                "Billing escalation",
+                "Authorized Detail",
                 "Delete",
                 "0",
                 JSON.stringify({ id, ...currentAuthorizedDetail }),
@@ -404,7 +404,7 @@ exports.delete = (req, res) => {
 
             Common.adminActivityLog(
               admin_id,
-              "Billing escalation",
+              "Authorized Detail",
               "Delete",
               "1",
               JSON.stringify(currentAuthorizedDetail),
@@ -414,7 +414,7 @@ exports.delete = (req, res) => {
 
             res.json({
               status: true,
-              message: "Billing escalation deleted successfully",
+              message: "Authorized Detail deleted successfully",
               token: newToken,
             });
           });
