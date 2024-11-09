@@ -1,7 +1,18 @@
 const { pool, startConnection, connectionRelease } = require("../../config/db");
 
 const ClientSpoc = {
-  create: (name, designation, phone, email, admin_id, callback) => {
+  create: (
+    name,
+    designation,
+    phone,
+    email,
+    email1,
+    email2,
+    email3,
+    email4,
+    admin_id,
+    callback
+  ) => {
     // Step 1: Check if a escalation manager with the same name already exists
     const checkClientSpocSql = `
       SELECT * FROM \`client_spocs\` WHERE \`name\` = ?
@@ -34,13 +45,23 @@ const ClientSpoc = {
 
           // Step 3: Insert the new escalation manager
           const insertClientSpocSql = `
-          INSERT INTO \`client_spocs\` (\`name\`, \`designation\`, \`phone\`, \`email\`, \`admin_id\`)
-          VALUES (?, ?, ?, ?, ?)
+          INSERT INTO \`client_spocs\` (\`name\`, \`designation\`, \`phone\`, \`email\`, \`email1\`, \`email2\`, \`email3\`, \`email4\`, \`admin_id\`)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
           connection.query(
             insertClientSpocSql,
-            [name, designation, phone, email, admin_id],
+            [
+              name,
+              designation,
+              phone,
+              email,
+              email1,
+              email2,
+              email3,
+              email4,
+              admin_id,
+            ],
             (insertErr, results) => {
               connectionRelease(connection); // Release the connection
 
@@ -119,10 +140,21 @@ const ClientSpoc = {
     });
   },
 
-  update: (id, name, designation, phone, email, callback) => {
+  update: (
+    id,
+    name,
+    designation,
+    phone,
+    email,
+    email1,
+    email2,
+    email3,
+    email4,
+    callback
+  ) => {
     const sql = `
       UPDATE \`client_spocs\`
-      SET \`name\` = ?, \`designation\` = ?, \`phone\` = ?, \`email\` = ?
+      SET \`name\` = ?, \`designation\` = ?, \`phone\` = ?, \`email\` = ?, \`email1\` = ?, \`email2\` = ?, \`email3\` = ?, \`email4\` = ?
       WHERE \`id\` = ?
     `;
 
@@ -133,7 +165,7 @@ const ClientSpoc = {
 
       connection.query(
         sql,
-        [name, designation, phone, email, id],
+        [name, designation, phone, email, email1, email2, email3, email4, id],
         (queryErr, results) => {
           connectionRelease(connection); // Release the connection
 

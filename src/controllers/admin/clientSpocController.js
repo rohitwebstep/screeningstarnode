@@ -3,7 +3,18 @@ const Common = require("../../models/admin/commonModel");
 
 // Controller to create a new Client SPOC
 exports.create = (req, res) => {
-  const { name, designation, phone, email, admin_id, _token } = req.body;
+  const {
+    name,
+    designation,
+    phone,
+    email,
+    email1,
+    email2,
+    email3,
+    email4,
+    admin_id,
+    _token,
+  } = req.body;
 
   let missingFields = [];
   if (!name || name === "") missingFields.push("Name");
@@ -62,6 +73,10 @@ exports.create = (req, res) => {
           designation,
           phone,
           email,
+          email1,
+          email2,
+          email3,
+          email4,
           admin_id,
           (err, result) => {
             if (err) {
@@ -221,7 +236,19 @@ exports.getClientSpocById = (req, res) => {
 
 // Controller to name a Client SPOC
 exports.update = (req, res) => {
-  const { id, name, designation, phone, email, admin_id, _token } = req.body;
+  const {
+    id,
+    name,
+    designation,
+    phone,
+    email,
+    email1,
+    email2,
+    email3,
+    email4,
+    admin_id,
+    _token,
+  } = req.body;
 
   let missingFields = [];
   if (!id || id === "") missingFields.push("Client SPOC ID");
@@ -283,42 +310,53 @@ exports.update = (req, res) => {
           };
         }
 
-        ClientSpoc.update(id, name, designation, phone, email, (err, result) => {
-          if (err) {
-            console.error("Database error:", err);
+        ClientSpoc.update(
+          id,
+          name,
+          designation,
+          phone,
+          email,
+          email1,
+          email2,
+          email3,
+          email4,
+          (err, result) => {
+            if (err) {
+              console.error("Database error:", err);
+              Common.adminActivityLog(
+                admin_id,
+                "Client SPOC",
+                "Update",
+                "0",
+                JSON.stringify({ id, ...changes }),
+                err,
+                () => {}
+              );
+              return res.status(500).json({
+                status: false,
+                message: err.message,
+                token: newToken,
+              });
+            }
+
             Common.adminActivityLog(
               admin_id,
               "Client SPOC",
               "Update",
-              "0",
+              "1",
               JSON.stringify({ id, ...changes }),
-              err,
+              null,
               () => {}
             );
-            return res.status(500).json({
-              status: false,
-              message: err.message,
+
+            res.json({
+              status: true,
+              message: "Client SPOC named successfully",
+              client_spocs: result,
               token: newToken,
             });
           }
-
-          Common.adminActivityLog(
-            admin_id,
-            "Client SPOC",
-            "Update",
-            "1",
-            JSON.stringify({ id, ...changes }),
-            null,
-            () => {}
-          );
-
-          res.json({
-            status: true,
-            message: "Client SPOC named successfully",
-            client_spocs: result,
-            token: newToken,
-          });
-        });
+        );
       });
     });
   });
