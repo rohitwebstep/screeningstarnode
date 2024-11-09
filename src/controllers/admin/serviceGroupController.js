@@ -8,7 +8,7 @@ exports.create = (req, res) => {
   let missingFields = [];
   if (!title || title === "") missingFields.push("Title");
   if (!symbol || symbol === "") missingFields.push("Group Symbol");
-  if (!admin_id || description === "") missingFields.push("Admin ID");
+  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
   if (!_token || _token === "") missingFields.push("Token");
 
   if (missingFields.length > 0) {
