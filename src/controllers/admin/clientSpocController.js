@@ -283,7 +283,7 @@ exports.update = (req, res) => {
           };
         }
 
-        ClientSpoc.name(id, name, designation, phone, email, (err, result) => {
+        ClientSpoc.update(id, name, designation, phone, email, (err, result) => {
           if (err) {
             console.error("Database error:", err);
             Common.adminActivityLog(

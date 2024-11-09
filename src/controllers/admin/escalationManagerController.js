@@ -288,7 +288,7 @@ exports.update = (req, res) => {
             };
           }
 
-          EscalationManager.name(
+          EscalationManager.update(
             id,
             name,
             designation,
