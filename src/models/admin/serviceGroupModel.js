@@ -1,10 +1,10 @@
 const { pool, startConnection, connectionRelease } = require("../../config/db");
 
 const ServiceGroup = {
-  create: (title, group_symbol, admin_id, callback) => {
+  create: (title, symbol, admin_id, callback) => {
     // Step 1: Check if a service Group with the same title already exists
     const checkServiceGroupSql = `
-      SELECT * FROM \`service_groups\` WHERE \`title\` = ? OR \`group_symbol\` = ?
+      SELECT * FROM \`service_groups\` WHERE \`title\` = ? OR \`symbol\` = ?
     `;
 
     startConnection((err, connection) => {
@@ -14,7 +14,7 @@ const ServiceGroup = {
 
       connection.query(
         checkServiceGroupSql,
-        [title, group_symbol],
+        [title, symbol],
         (checkErr, serviceResults) => {
           if (checkErr) {
             console.error("Error checking service Group:", checkErr);
@@ -34,13 +34,13 @@ const ServiceGroup = {
 
           // Step 3: Insert the new service Group
           const insertServiceGroupSql = `
-          INSERT INTO \`service_groups\` (\`title\`, \`group_symbol\`, \`admin_id\`)
+          INSERT INTO \`service_groups\` (\`title\`, \`symbol\`, \`admin_id\`)
           VALUES (?, ?, ?)
         `;
 
           connection.query(
             insertServiceGroupSql,
-            [title, group_symbol, admin_id],
+            [title, symbol, admin_id],
             (insertErr, results) => {
               connectionRelease(connection); // Release the connection
 
@@ -96,10 +96,10 @@ const ServiceGroup = {
     });
   },
 
-  update: (id, title, group_symbol, callback) => {
+  update: (id, title, symbol, callback) => {
     const sql = `
       UPDATE \`service_groups\`
-      SET \`title\` = ?, \`group_symbol\` = ?
+      SET \`title\` = ?, \`symbol\` = ?
       WHERE \`id\` = ?
     `;
 
@@ -110,7 +110,7 @@ const ServiceGroup = {
 
       connection.query(
         sql,
-        [title, title, group_symbol, id],
+        [title, title, symbol, id],
         (queryErr, results) => {
           connectionRelease(connection); // Release the connection
 

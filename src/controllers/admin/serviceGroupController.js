@@ -3,11 +3,11 @@ const Common = require("../../models/admin/commonModel");
 
 // Controller to create a new service
 exports.create = (req, res) => {
-  const { title, group_symbol, admin_id, _token } = req.body;
+  const { title, symbol, admin_id, _token } = req.body;
 
   let missingFields = [];
   if (!title || title === "") missingFields.push("Title");
-  if (!group_symbol || group_symbol === "") missingFields.push("Group Symbol");
+  if (!symbol || symbol === "") missingFields.push("Group Symbol");
   if (!admin_id || description === "") missingFields.push("Admin ID");
   if (!_token || _token === "") missingFields.push("Token");
 
@@ -40,7 +40,7 @@ exports.create = (req, res) => {
 
       const newToken = result.newToken;
 
-      ServiceGroup.create(title, group_symbol, admin_id, (err, result) => {
+      ServiceGroup.create(title, symbol, admin_id, (err, result) => {
         if (err) {
           console.error("Database error:", err);
           Common.adminActivityLog(
@@ -196,12 +196,12 @@ exports.getServiceGroupById = (req, res) => {
 
 // Controller to update a service
 exports.update = (req, res) => {
-  const { id, title, group_symbol, admin_id, _token } = req.body;
+  const { id, title, symbol, admin_id, _token } = req.body;
 
   let missingFields = [];
   if (!id || id === "") missingFields.push("Service ID");
   if (!title || title === "") missingFields.push("Title");
-  if (!group_symbol || group_symbol === "") missingFields.push("Group Symbol");
+  if (!symbol || symbol === "") missingFields.push("Group Symbol");
   if (!admin_id || admin_id === "") missingFields.push("Admin ID");
   if (!_token || _token === "") missingFields.push("Token");
 
@@ -249,14 +249,14 @@ exports.update = (req, res) => {
             new: title,
           };
         }
-        if (currentServiceGroup.group_symbol !== group_symbol) {
-          changes.group_symbol = {
-            old: currentServiceGroup.group_symbol,
-            new: group_symbol,
+        if (currentServiceGroup.symbol !== symbol) {
+          changes.symbol = {
+            old: currentServiceGroup.symbol,
+            new: symbol,
           };
         }
 
-        ServiceGroup.update(id, title, group_symbol, (err, result) => {
+        ServiceGroup.update(id, title, symbol, (err, result) => {
           if (err) {
             console.error("Database error:", err);
             Common.adminActivityLog(
