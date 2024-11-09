@@ -4,6 +4,7 @@ const clientSpocController = require("../../controllers/admin/clientSpocControll
 
 // Authentication routes
 router.post("/create", clientSpocController.create);
+router.post("/check-email-exists", clientSpocController.checkEmailExists);
 router.get("/list", clientSpocController.list);
 router.get(
   "/client-spoc-info",
