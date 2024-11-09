@@ -4,6 +4,7 @@ const profileController = require("../../controllers/customer/profileController"
 
 // Profile routes
 router.post("/create", profileController.create);
+router.get("/services-packages", profileController.servicesPackagesData);
 router.post("/upload", profileController.upload);
 router.get("/list", profileController.list);
 router.get("/inactive-list", profileController.inactiveList);
