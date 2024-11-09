@@ -16,13 +16,14 @@ exports.create = (req, res) => {
     _token,
   } = req.body;
 
-  let missingFields = [];
-  if (!name || name === "") missingFields.push("Name");
-  if (!designation || designation === "") missingFields.push("designation");
-  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
-  if (!_token || _token === "") missingFields.push("Token");
-  if (!phone || phone === "") missingFields.push("Phone");
-  if (!email || email === "") missingFields.push("Email");
+  // Validate required fields
+  const missingFields = [];
+  if (!name) missingFields.push("Name");
+  if (!designation) missingFields.push("Designation");
+  if (!admin_id) missingFields.push("Admin ID");
+  if (!_token) missingFields.push("Token");
+  if (!phone) missingFields.push("Phone");
+  if (!email) missingFields.push("Email");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -32,42 +33,87 @@ exports.create = (req, res) => {
   }
 
   const action = JSON.stringify({ client_spoc: "create" });
-  Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
-    if (!result.status) {
-      // Check the status returned by the authorization function
+
+  // Check admin authorization
+  Common.isAdminAuthorizedForAction(admin_id, action, (authResult) => {
+    if (!authResult.status) {
       return res.status(403).json({
         status: false,
-        message: result.message, // Return the message from the authorization function
+        message: authResult.message,
       });
     }
 
-    Common.isAdminTokenValid(_token, admin_id, (err, result) => {
+    // Validate admin token
+    Common.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
       if (err) {
-        console.error("Error checking token validity:", err);
-        return res.status(500).json(err);
+        console.error("Token validation error:", err);
+        return res
+          .status(500)
+          .json({ status: false, message: "Internal server error" });
       }
 
-      if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message });
+      if (!tokenResult.status) {
+        return res
+          .status(401)
+          .json({ status: false, message: tokenResult.message });
       }
 
-      ClientSpoc.checkEmailExists(email, (err, emailExists) => {
+      const newToken = tokenResult.newToken;
+
+      // List of emails to check
+      const emailsToCheck = [email, email1, email2, email3, email4].filter(
+        Boolean
+      );
+
+      // Function to check each email using checkEmailExists
+      const checkEmails = (emails, callback) => {
+        const usedEmails = [];
+        let checkedCount = 0;
+
+        emails.forEach((email) => {
+          ClientSpoc.checkEmailExists(email, (err, emailExists) => {
+            checkedCount++;
+            if (err) {
+              console.error(
+                `Error checking email existence for ${email}:`,
+                err
+              );
+              return callback(err);
+            }
+
+            if (emailExists) {
+              usedEmails.push(email);
+            }
+
+            // When all emails are checked
+            if (checkedCount === emails.length) {
+              callback(null, usedEmails);
+            }
+          });
+        });
+      };
+
+      // Check all emails
+      checkEmails(emailsToCheck, (err, usedEmails) => {
         if (err) {
-          console.error("Error checking email existence:", err);
-          return res
-            .status(500)
-            .json({ status: false, message: "Internal server error" });
-        }
-
-        if (emailExists) {
-          return res.status(401).json({
+          return res.status(500).json({
             status: false,
-            message: "Email already used for another Client SPOC",
+            message: "Internal server error",
+            token: newToken,
           });
         }
 
-        const newToken = result.newToken;
+        if (usedEmails.length > 0) {
+          return res.status(409).json({
+            status: false,
+            message: `The following emails are already in use: ${usedEmails.join(
+              ", "
+            )}`,
+            token: newToken,
+          });
+        }
 
+        // Proceed with creating Client SPOC if all emails are available
         ClientSpoc.create(
           name,
           designation,
@@ -90,9 +136,11 @@ exports.create = (req, res) => {
                 err,
                 () => {}
               );
-              return res
-                .status(500)
-                .json({ status: false, message: err.message, token: newToken });
+              return res.status(500).json({
+                status: false,
+                message: err.message,
+                token: newToken,
+              });
             }
 
             Common.adminActivityLog(
@@ -440,6 +488,79 @@ exports.delete = (req, res) => {
             message: "Client SPOC deleted successfully",
             token: newToken,
           });
+        });
+      });
+    });
+  });
+};
+
+exports.checkEmailExists = (req, res) => {
+  const { email, admin_id, _token } = req.body;
+
+  // Validate required fields
+  const missingFields = [];
+  if (!email) missingFields.push("Email");
+  if (!admin_id) missingFields.push("Admin ID");
+  if (!_token) missingFields.push("Token");
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  const action = JSON.stringify({ client_spoc: "create" });
+
+  // Check admin authorization
+  Common.isAdminAuthorizedForAction(admin_id, action, (authResult) => {
+    if (!authResult.status) {
+      return res.status(403).json({
+        status: false,
+        message: authResult.message,
+      });
+    }
+
+    // Validate admin token
+    Common.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
+      if (err) {
+        console.error("Token validation error:", err);
+        return res
+          .status(500)
+          .json({ status: false, message: "Internal server error" });
+      }
+
+      if (!tokenResult.status) {
+        return res
+          .status(401)
+          .json({ status: false, message: tokenResult.message });
+      }
+
+      const newToken = tokenResult.newToken;
+
+      // Check if the email already exists
+      ClientSpoc.checkEmailExists(email, (err, emailExists) => {
+        if (err) {
+          console.error("Database error:", err);
+          return res.status(500).json({
+            status: false,
+            message: "Internal server error",
+            token: newToken,
+          });
+        }
+
+        if (emailExists) {
+          return res.status(409).json({
+            status: false,
+            message: "Email is already in use for another Client SPOC",
+            token: newToken,
+          });
+        }
+
+        return res.status(200).json({
+          status: true,
+          message: "Email is available for use",
+          token: newToken,
         });
       });
     });
