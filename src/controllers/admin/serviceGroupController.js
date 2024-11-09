@@ -1,0 +1,380 @@
+const ServiceGroup = require("../../models/admin/serviceGroupModel");
+const Common = require("../../models/admin/commonModel");
+
+// Controller to create a new service
+exports.create = (req, res) => {
+  const { title, group_symbol, admin_id, _token } = req.body;
+
+  let missingFields = [];
+  if (!title || title === "") missingFields.push("Title");
+  if (!group_symbol || group_symbol === "") missingFields.push("Group Symbol");
+  if (!admin_id || description === "") missingFields.push("Admin ID");
+  if (!_token || _token === "") missingFields.push("Token");
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  const action = JSON.stringify({ service_group: "create" });
+  Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
+    if (!result.status) {
+      // Check the status returned by the authorization function
+      return res.status(403).json({
+        status: false,
+        message: result.message, // Return the message from the authorization function
+      });
+    }
+
+    Common.isAdminTokenValid(_token, admin_id, (err, result) => {
+      if (err) {
+        console.error("Error checking token validity:", err);
+        return res.status(500).json(err);
+      }
+
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
+      }
+
+      const newToken = result.newToken;
+
+      ServiceGroup.create(title, group_symbol, admin_id, (err, result) => {
+        if (err) {
+          console.error("Database error:", err);
+          Common.adminActivityLog(
+            admin_id,
+            "Service Group",
+            "Create",
+            "0",
+            null,
+            err,
+            () => {}
+          );
+          return res
+            .status(500)
+            .json({ status: false, message: err.message, token: newToken });
+        }
+
+        Common.adminActivityLog(
+          admin_id,
+          "Service Group",
+          "Create",
+          "1",
+          `{id: ${result.insertId}}`,
+          null,
+          () => {}
+        );
+
+        res.json({
+          status: true,
+          message: "Service created successfully",
+          service: result,
+          token: newToken,
+        });
+      });
+    });
+  });
+};
+
+// Controller to list all services
+exports.list = (req, res) => {
+  const { admin_id, _token } = req.query;
+
+  let missingFields = [];
+  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
+  if (!_token || _token === "") missingFields.push("Token");
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+  const action = JSON.stringify({ service_group: "view" });
+  Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
+    if (!result.status) {
+      return res.status(403).json({
+        status: false,
+        message: result.message, // Return the message from the authorization function
+      });
+    }
+    Common.isAdminTokenValid(_token, admin_id, (err, result) => {
+      if (err) {
+        console.error("Error checking token validity:", err);
+        return res.status(500).json(err);
+      }
+
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
+      }
+
+      const newToken = result.newToken;
+
+      ServiceGroup.list((err, result) => {
+        if (err) {
+          console.error("Database error:", err);
+          return res
+            .status(500)
+            .json({ status: false, message: err.message, token: newToken });
+        }
+
+        res.json({
+          status: true,
+          message: "Services fetched successfully",
+          services: result,
+          totalResults: result.length,
+          token: newToken,
+        });
+      });
+    });
+  });
+};
+
+exports.getServiceGroupById = (req, res) => {
+  const { id, admin_id, _token } = req.query;
+  let missingFields = [];
+  if (!id || id === "") missingFields.push("Service ID");
+  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
+  if (!_token || _token === "") missingFields.push("Token");
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+  const action = JSON.stringify({ service_group: "view" });
+  Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
+    if (!result.status) {
+      return res.status(403).json({
+        status: false,
+        message: result.message, // Return the message from the authorization function
+      });
+    }
+    Common.isAdminTokenValid(_token, admin_id, (err, result) => {
+      if (err) {
+        console.error("Error checking token validity:", err);
+        return res.status(500).json(err);
+      }
+
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
+      }
+
+      const newToken = result.newToken;
+
+      ServiceGroup.getServiceGroupById(id, (err, currentServiceGroup) => {
+        if (err) {
+          console.error("Error fetching service data:", err);
+          return res.status(500).json({
+            status: false,
+            message: err.message,
+            token: newToken,
+          });
+        }
+
+        if (!currentServiceGroup) {
+          return res.status(404).json({
+            status: false,
+            message: "Service Group not found",
+            token: newToken,
+          });
+        }
+
+        res.json({
+          status: true,
+          message: "Service Group retrieved successfully",
+          service: currentServiceGroup,
+          token: newToken,
+        });
+      });
+    });
+  });
+};
+
+// Controller to update a service
+exports.update = (req, res) => {
+  const { id, title, group_symbol, admin_id, _token } = req.body;
+
+  let missingFields = [];
+  if (!id || id === "") missingFields.push("Service ID");
+  if (!title || title === "") missingFields.push("Title");
+  if (!group_symbol || group_symbol === "") missingFields.push("Group Symbol");
+  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
+  if (!_token || _token === "") missingFields.push("Token");
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+  const action = JSON.stringify({ service_group: "update" });
+  Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
+    if (!result.status) {
+      // Check the status returned by the authorization function
+      return res.status(403).json({
+        status: false,
+        message: result.message, // Return the message from the authorization function
+      });
+    }
+    Common.isAdminTokenValid(_token, admin_id, (err, result) => {
+      if (err) {
+        console.error("Error checking token validity:", err);
+        return res.status(500).json(err);
+      }
+
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
+      }
+
+      const newToken = result.newToken;
+
+      ServiceGroup.getServiceGroupById(id, (err, currentServiceGroup) => {
+        if (err) {
+          console.error("Error fetching service data:", err);
+          return res.status(500).json({
+            status: false,
+            message: err.message,
+            token: newToken,
+          });
+        }
+
+        const changes = {};
+        if (currentServiceGroup.title !== title) {
+          changes.title = {
+            old: currentServiceGroup.title,
+            new: title,
+          };
+        }
+        if (currentServiceGroup.group_symbol !== group_symbol) {
+          changes.group_symbol = {
+            old: currentServiceGroup.group_symbol,
+            new: group_symbol,
+          };
+        }
+
+        ServiceGroup.update(id, title, group_symbol, (err, result) => {
+          if (err) {
+            console.error("Database error:", err);
+            Common.adminActivityLog(
+              admin_id,
+              "Service Group",
+              "Update",
+              "0",
+              JSON.stringify({ id, ...changes }),
+              err,
+              () => {}
+            );
+            return res
+              .status(500)
+              .json({ status: false, message: err.message, token: newToken });
+          }
+
+          Common.adminActivityLog(
+            admin_id,
+            "Service Group",
+            "Update",
+            "1",
+            JSON.stringify({ id, ...changes }),
+            null,
+            () => {}
+          );
+
+          res.json({
+            status: true,
+            message: "Service updated successfully",
+            service: result,
+            token: newToken,
+          });
+        });
+      });
+    });
+  });
+};
+
+// Controller to delete a service
+exports.delete = (req, res) => {
+  const { id, admin_id, _token } = req.query;
+
+  let missingFields = [];
+  if (!id || id === "") missingFields.push("Service ID");
+  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
+  if (!_token || _token === "") missingFields.push("Token");
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+  const action = JSON.stringify({ service_group: "delete" });
+  Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
+    if (!result.status) {
+      // Check the status returned by the authorization function
+      return res.status(403).json({
+        status: false,
+        message: result.message, // Return the message from the authorization function
+      });
+    }
+    Common.isAdminTokenValid(_token, admin_id, (err, result) => {
+      if (err) {
+        console.error("Error checking token validity:", err);
+        return res.status(500).json(err);
+      }
+
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
+      }
+
+      const newToken = result.newToken;
+
+      ServiceGroup.getServiceById(id, (err, currentServiceGroup) => {
+        if (err) {
+          console.error("Error fetching service data:", err);
+          return res.status(500).json({
+            status: false,
+            message: err.message,
+            token: newToken,
+          });
+        }
+
+        ServiceGroup.delete(id, (err, result) => {
+          if (err) {
+            console.error("Database error:", err);
+            Common.adminActivityLog(
+              admin_id,
+              "Service Group",
+              "Delete",
+              "0",
+              JSON.stringify({ id, ...currentServiceGroup }),
+              err,
+              () => {}
+            );
+            return res
+              .status(500)
+              .json({ status: false, message: err.message, token: newToken });
+          }
+
+          Common.adminActivityLog(
+            admin_id,
+            "Service Group",
+            "Delete",
+            "1",
+            JSON.stringify(currentServiceGroup),
+            null,
+            () => {}
+          );
+
+          res.json({
+            status: true,
+            message: "Service deleted successfully",
+            token: newToken,
+          });
+        });
+      });
+    });
+  });
+};
