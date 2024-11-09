@@ -4,8 +4,7 @@ const Service = {
   create: (
     title,
     description,
-    group,
-    service_code,
+    group_id,
     short_code,
     sac_code,
     admin_id,
@@ -38,21 +37,13 @@ const Service = {
 
         // Step 3: Insert the new service
         const insertServiceSql = `
-          INSERT INTO \`services\` (\`title\`, \`description\`, \`group\`, \`service_code\`,  \`short_code\`,  \`sac_code\`, \`admin_id\`)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
+          INSERT INTO \`services\` (\`title\`, \`description\`, \`group_id\`, \`short_code\`,  \`sac_code\`, \`admin_id\`)
+          VALUES (?, ?, ?, ?, ?, ?)
         `;
 
         connection.query(
           insertServiceSql,
-          [
-            title,
-            description,
-            group,
-            service_code,
-            short_code,
-            sac_code,
-            admin_id,
-          ],
+          [title, description, group_id, short_code, sac_code, admin_id],
           (insertErr, results) => {
             connectionRelease(connection); // Release the connection
 
@@ -159,15 +150,14 @@ const Service = {
     id,
     title,
     description,
-    group,
-    service_code,
+    group_id,
     short_code,
     sac_code,
     callback
   ) => {
     const sql = `
       UPDATE \`services\`
-      SET \`title\` = ?, \`description\` = ?, \`group\` = ?, \`service_code\` = ?, \`short_code\` = ?, \`sac_code\` = ?
+      SET \`title\` = ?, \`description\` = ?, \`group_id\` = ?, \`short_code\` = ?, \`sac_code\` = ?
       WHERE \`id\` = ?
     `;
 
@@ -178,7 +168,7 @@ const Service = {
 
       connection.query(
         sql,
-        [title, description, group, service_code, short_code, sac_code, id],
+        [title, description, group, short_code, sac_code, id],
         (queryErr, results) => {
           connectionRelease(connection); // Release the connection
 
