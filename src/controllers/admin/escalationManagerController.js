@@ -241,7 +241,7 @@ exports.update = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-  const action = JSON.stringify({ escalation_manager: "name" });
+  const action = JSON.stringify({ escalation_manager: "update" });
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       // Check the status returned by the authorization function

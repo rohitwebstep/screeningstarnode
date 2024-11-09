@@ -238,7 +238,7 @@ exports.update = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-  const action = JSON.stringify({ client_spocs: "name" });
+  const action = JSON.stringify({ client_spocs: "update" });
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       // Check the status returned by the authorization function
