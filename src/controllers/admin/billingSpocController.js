@@ -220,17 +220,14 @@ exports.getBillingSpocById = (req, res) => {
 };
 
 // Controller to update a billing spoc
-exports.update = (req, res) => {
-  const { id, name, designation, phone, email, admin_id, _token } = req.body;
+exports.delete = (req, res) => {
+  const { id, admin_id, _token } = req.query;
 
-  let missingFields = [];
+  // Validate required fields
+  const missingFields = [];
   if (!id || id === "") missingFields.push("Billing SPOC ID");
-  if (!name || name === "") missingFields.push("Name");
-  if (!designation || designation === "") missingFields.push("Description");
   if (!admin_id || admin_id === "") missingFields.push("Admin ID");
   if (!_token || _token === "") missingFields.push("Token");
-  if (!phone || phone === "") missingFields.push("Phone");
-  if (!email || email === "") missingFields.push("Email");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -238,7 +235,10 @@ exports.update = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-  const action = JSON.stringify({ billing_spoc: "update" });
+
+  const action = JSON.stringify({ billing_spoc: "delete" });
+
+  // Check admin authorization
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       // Check the status returned by the authorization function
@@ -247,83 +247,82 @@ exports.update = (req, res) => {
         message: result.message, // Return the message from the authorization function
       });
     }
-    Common.isAdminTokenValid(_token, admin_id, (err, result) => {
+
+    // Validate admin token
+    Common.isAdminTokenValid(_token, admin_id, (err, tokenValidationResult) => {
       if (err) {
-        console.error("Error checking token validity:", err);
-        return res.status(500).json(err);
+        console.error("Token validation error:", err);
+        return res.status(500).json({
+          status: false,
+          message: err.message,
+        });
       }
 
-      if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message });
+      if (!tokenValidationResult.status) {
+        return res.status(401).json({
+          status: false,
+          message: tokenValidationResult.message,
+        });
       }
 
-      const newToken = result.newToken;
+      const newToken = tokenValidationResult.newToken;
 
+      // Fetch the current package
       BillingSpoc.getBillingSpocById(id, (err, currentBillingSpoc) => {
         if (err) {
-          console.error("Error fetching billing spoc data:", err);
+          console.error("Database error during billing spoc retrieval:", err);
           return res.status(500).json({
             status: false,
-            message: err.message,
+            message: "Failed to retrieve billing spoc. Please try again.",
             token: newToken,
           });
         }
 
-        const changes = {};
-        if (currentBillingSpoc.name !== name) {
-          changes.name = {
-            old: currentBillingSpoc.name,
-            new: name,
-          };
-        }
-        if (currentBillingSpoc.designation !== designation) {
-          changes.designation = {
-            old: currentBillingSpoc.designation,
-            new: designation,
-          };
+        if (!currentBillingSpoc) {
+          return res.status(404).json({
+            status: false,
+            message: "Billing SPOC not found.",
+            token: newToken,
+          });
         }
 
-        BillingSpoc.update(
-          id,
-          name,
-          designation,
-          phone,
-          email,
-          (err, result) => {
-            if (err) {
-              console.error("Database error:", err);
-              Common.adminActivityLog(
-                admin_id,
-                "Billing SPOC",
-                "Update",
-                "0",
-                JSON.stringify({ id, ...changes }),
-                err,
-                () => {}
-              );
-              return res
-                .status(500)
-                .json({ status: false, message: err.message, token: newToken });
-            }
-
+        // Delete the package
+        BillingSpoc.delete(id, (err, result) => {
+          if (err) {
+            console.error("Database error during billing spoc deletion:", err);
             Common.adminActivityLog(
               admin_id,
               "Billing SPOC",
-              "Update",
-              "1",
-              JSON.stringify({ id, ...changes }),
-              null,
+              "Delete",
+              "0",
+              JSON.stringify({ id }),
+              err,
               () => {}
             );
-
-            res.json({
-              status: true,
-              message: "Billing SPOC updated successfully",
-              billing_spoc: result,
+            return res.status(500).json({
+              status: false,
+              message: "Failed to delete Billing SPOC. Please try again.",
               token: newToken,
             });
           }
-        );
+
+          Common.adminActivityLog(
+            admin_id,
+            "Billing SPOC",
+            "Delete",
+            "1",
+            JSON.stringify({ id }),
+            null,
+            () => {}
+          );
+
+          res.status(200).json({
+            status: true,
+            message: "Billing SPOC deleted successfully.",
+            result,
+            token: newToken,
+          });
+        });
       });
     });
   });
