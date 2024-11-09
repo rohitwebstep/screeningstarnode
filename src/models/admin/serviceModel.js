@@ -1,7 +1,16 @@
 const { pool, startConnection, connectionRelease } = require("../../config/db");
 
 const Service = {
-  create: (title, description, group, service_code, admin_id, callback) => {
+  create: (
+    title,
+    description,
+    group,
+    service_code,
+    short_code,
+    sac_code,
+    admin_id,
+    callback
+  ) => {
     // Step 1: Check if a service with the same title already exists
     const checkServiceSql = `
       SELECT * FROM \`services\` WHERE \`title\` = ?
@@ -29,13 +38,21 @@ const Service = {
 
         // Step 3: Insert the new service
         const insertServiceSql = `
-          INSERT INTO \`services\` (\`title\`, \`description\`, \`group\`, \`service_code\`, \`admin_id\`)
-          VALUES (?, ?, ? ?, ?)
+          INSERT INTO \`services\` (\`title\`, \`description\`, \`group\`, \`service_code\`,  \`short_code\`,  \`sac_code\`, \`admin_id\`)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
         `;
 
         connection.query(
           insertServiceSql,
-          [title, description, group, service_code, admin_id],
+          [
+            title,
+            description,
+            group,
+            service_code,
+            short_code,
+            sac_code,
+            admin_id,
+          ],
           (insertErr, results) => {
             connectionRelease(connection); // Release the connection
 
@@ -138,10 +155,19 @@ const Service = {
     });
   },
 
-  update: (id, title, description, group, service_code, callback) => {
+  update: (
+    id,
+    title,
+    description,
+    group,
+    service_code,
+    short_code,
+    sac_code,
+    callback
+  ) => {
     const sql = `
       UPDATE \`services\`
-      SET \`title\` = ?, \`description\` = ?, \`group\` = ?, \`service_code\` = ?
+      SET \`title\` = ?, \`description\` = ?, \`group\` = ?, \`service_code\` = ?, \`short_code\` = ?, \`sac_code\` = ?
       WHERE \`id\` = ?
     `;
 
@@ -152,7 +178,7 @@ const Service = {
 
       connection.query(
         sql,
-        [title, description, group, service_code, id],
+        [title, description, group, service_code, short_code, sac_code, id],
         (queryErr, results) => {
           connectionRelease(connection); // Release the connection
 

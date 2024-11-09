@@ -3,14 +3,24 @@ const Common = require("../../models/admin/commonModel");
 
 // Controller to create a new service
 exports.create = (req, res) => {
-  const { title, description, group, service_code, admin_id, _token } =
-    req.body;
+  const {
+    title,
+    description,
+    group,
+    service_code,
+    short_code,
+    sac_code,
+    admin_id,
+    _token,
+  } = req.body;
 
   let missingFields = [];
   if (!title || title === "") missingFields.push("Title");
   if (!description || description === "") missingFields.push("Description");
   if (!group || group === "") missingFields.push("Group");
   if (!service_code || service_code === "") missingFields.push("Service Code");
+  if (!short_code || short_code === "") missingFields.push("Short Code");
+  if (!sac_code || sac_code === "") missingFields.push("SAC Code");
   if (!admin_id || description === "") missingFields.push("Admin ID");
   if (!_token || _token === "") missingFields.push("Token");
 
@@ -48,6 +58,8 @@ exports.create = (req, res) => {
         description,
         group,
         service_code,
+        short_code,
+        sac_code,
         admin_id,
         (err, result) => {
           if (err) {
@@ -206,8 +218,17 @@ exports.getServiceById = (req, res) => {
 
 // Controller to update a service
 exports.update = (req, res) => {
-  const { id, title, description, group, service_code, admin_id, _token } =
-    req.body;
+  const {
+    id,
+    title,
+    description,
+    group,
+    service_code,
+    short_code,
+    sac_code,
+    admin_id,
+    _token,
+  } = req.body;
 
   let missingFields = [];
   if (!id || id === "") missingFields.push("Service ID");
@@ -215,6 +236,8 @@ exports.update = (req, res) => {
   if (!description || description === "") missingFields.push("Description");
   if (!group || group === "") missingFields.push("Group");
   if (!service_code || service_code === "") missingFields.push("Service Code");
+  if (!short_code || short_code === "") missingFields.push("Short Code");
+  if (!sac_code || sac_code === "") missingFields.push("SAC Code");
   if (!admin_id || admin_id === "") missingFields.push("Admin ID");
   if (!_token || _token === "") missingFields.push("Token");
 
@@ -275,6 +298,8 @@ exports.update = (req, res) => {
           description,
           group,
           service_code,
+          short_code,
+          sac_code,
           (err, result) => {
             if (err) {
               console.error("Database error:", err);
