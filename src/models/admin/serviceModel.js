@@ -59,7 +59,13 @@ const Service = {
   },
 
   list: (callback) => {
-    const sql = `SELECT * FROM \`services\``;
+    const sql = `
+      SELECT 
+        s.*, 
+        sg.title AS group_name 
+      FROM \`services\` s
+      JOIN \`service_groups\` sg ON s.group_id = sg.id
+    `;
 
     startConnection((err, connection) => {
       if (err) {
@@ -73,6 +79,7 @@ const Service = {
           console.error("Database query error: 47", queryErr);
           return callback(queryErr, null);
         }
+
         callback(null, results);
       });
     });
