@@ -110,7 +110,7 @@ const ServiceGroup = {
 
       connection.query(
         sql,
-        [title, title, symbol, id],
+        [title, symbol, id],
         (queryErr, results) => {
           connectionRelease(connection); // Release the connection
 

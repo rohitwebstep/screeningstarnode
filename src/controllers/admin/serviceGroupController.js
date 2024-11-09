@@ -286,7 +286,6 @@ exports.update = (req, res) => {
           res.json({
             status: true,
             message: "Service updated successfully",
-            service: result,
             token: newToken,
           });
         });
