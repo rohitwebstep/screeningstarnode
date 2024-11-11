@@ -175,7 +175,7 @@ const Service = {
 
       connection.query(
         sql,
-        [title, description, group, short_code, sac_code, id],
+        [title, description, group_id, short_code, sac_code, id],
         (queryErr, results) => {
           connectionRelease(connection); // Release the connection
 
