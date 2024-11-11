@@ -714,9 +714,9 @@ exports.upload = async (req, res) => {
           let targetDir;
           let db_column;
           switch (upload_category) {
-            case "custom_logo":
+            case "logo":
               targetDir = `uploads/customer/${customer_code}/logo`;
-              db_column = `custom_logo`;
+              db_column = `logo`;
               break;
             case "agr_upload":
               targetDir = `uploads/customer/${customer_code}/agreement`;
