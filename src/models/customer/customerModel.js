@@ -177,13 +177,8 @@ const Customer = {
         const groupMap = new Map();
 
         results.forEach((row) => {
-          const {
-            group_id,
-            symbol,
-            group_title,
-            service_id,
-            service_title,
-          } = row;
+          const { group_id, symbol, group_title, service_id, service_title } =
+            row;
 
           // Retrieve the group from the map, or initialize a new entry
           let group = groupMap.get(group_id);
@@ -343,20 +338,23 @@ const Customer = {
     const sqlCustomerMetas = `
       INSERT INTO \`customer_metas\` (
         \`customer_id\`, \`address\`,
-        \`contact_person_name\`, \`escalation_point_contact\`,
-        \`single_point_of_contact\`, \`gst_number\`, \`tat_days\`, 
+        \`client_spoc_id\`, \`escalation_manager_id\`,
+        \`billing_spoc_id\`, \`billing_escalation_id\`,
+        \`gst_number\`, \`tat_days\`, 
         \`agreement_date\`, \`agreement_duration\`, \`custom_template\`,
         \`custom_address\`, \`state\`, \`state_code\`, 
-        \`payment_contact_person\`, \`client_standard\`
+        \`client_standard\`
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const valuesCustomerMetas = [
       metaData.customer_id,
       metaData.address,
-      metaData.contact_person_name,
-      metaData.escalation_point_contact,
-      metaData.single_point_of_contact,
+      metaData.client_spoc_id,
+      metaData.escalation_manager_id,
+      metaData.billing_spoc_id,
+      metaData.billing_escalation_id,
+      authorized_detail_id,
       metaData.gst_number,
       metaData.tat_days,
       metaData.agreement_date,
@@ -365,7 +363,6 @@ const Customer = {
       metaData.custom_address || null,
       metaData.state,
       metaData.state_code,
-      metaData.payment_contact_person,
       metaData.client_standard,
     ];
 
@@ -403,9 +400,11 @@ const Customer = {
       UPDATE \`customer_metas\` 
       SET 
         \`address\` = ?, 
-        \`contact_person_name\` = ?, 
-        \`escalation_point_contact\` = ?, 
-        \`single_point_of_contact\` = ?, 
+        \`client_spoc_id\` = ?,
+        \`escalation_manager_id\` = ?,
+        \`billing_spoc_id\` = ?,
+        \`billing_escalation_id\` = ?,
+        \`authorized_detail_id\` = ?,
         \`gst_number\` = ?, 
         \`tat_days\` = ?, 
         \`agreement_date\` = ?, 
@@ -414,16 +413,17 @@ const Customer = {
         \`custom_address\` = ?, 
         \`state\` = ?, 
         \`state_code\` = ?, 
-        \`payment_contact_person\` = ?,
         \`client_standard\` = ?
       WHERE \`customer_id\` = ?
     `;
 
     const valuesUpdateCustomerMetas = [
       metaData.address,
-      metaData.contact_person_name,
-      metaData.escalation_point_contact,
-      metaData.single_point_of_contact,
+      client_spoc_id,
+      escalation_manager_id,
+      billing_spoc_id,
+      billing_escalation_id,
+      authorized_detail_id,
       metaData.gst_number,
       metaData.tat_days,
       metaData.agreement_date,
@@ -432,7 +432,6 @@ const Customer = {
       metaData.custom_address || null,
       metaData.state,
       metaData.state_code,
-      metaData.payment_contact_person,
       metaData.client_standard,
       customerId,
     ];
@@ -573,11 +572,7 @@ const Customer = {
         customers.services, 
         customers.id, 
         customer_metas.address,
-        customer_metas.contact_person_name,
-        customer_metas.escalation_point_contact,
-        customer_metas.single_point_of_contact,
         customer_metas.gst_number,
-        customer_metas.payment_contact_person,
         customer_metas.id AS meta_id
       FROM 
         customers
