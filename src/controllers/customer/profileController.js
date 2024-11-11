@@ -151,7 +151,7 @@ exports.create = (req, res) => {
     username,
     branches,
     state_code,
-    services,
+    scopeOfServices,
     client_spoc_id,
     escalation_manager_id,
     billing_spoc_id,
@@ -179,7 +179,7 @@ exports.create = (req, res) => {
     address,
     branches,
     state_code,
-    services,
+    scopeOfServices,
     client_spoc_id,
     escalation_manager_id,
     billing_spoc_id,
@@ -1070,7 +1070,7 @@ exports.update = (req, res) => {
     address,
     username,
     state_code,
-    services,
+    scopeOfServices,
     client_spoc_id,
     escalation_manager_id,
     billing_spoc_id,
@@ -1097,7 +1097,7 @@ exports.update = (req, res) => {
     emails,
     address,
     state_code,
-    services,
+    scopeOfServices,
     client_spoc_id,
     escalation_manager_id,
     billing_spoc_id,
@@ -1130,7 +1130,6 @@ exports.update = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-  const scopeOfServices = services;
 
   const action = JSON.stringify({ customer: "update" });
 
