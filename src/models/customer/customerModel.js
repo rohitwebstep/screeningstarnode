@@ -570,6 +570,7 @@ const Customer = {
         customers.emails, 
         customers.mobile, 
         customers.services, 
+        customer_metas.client_spoc_id,
         customers.id, 
         customer_metas.address,
         customer_metas.gst_number,

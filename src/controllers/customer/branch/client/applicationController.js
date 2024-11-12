@@ -22,10 +22,8 @@ exports.create = (req, res) => {
     customer_id,
     name,
     employee_id,
-    spoc,
+    spoc_id,
     location,
-    batch_number,
-    sub_client,
     services,
     package,
     send_mail,
@@ -38,10 +36,8 @@ exports.create = (req, res) => {
     customer_id,
     name,
     employee_id,
-    spoc,
+    spoc_id,
     location,
-    batch_number,
-    sub_client,
   };
 
   // Check for missing fields
@@ -102,10 +98,8 @@ exports.create = (req, res) => {
           {
             name,
             employee_id,
-            spoc,
+            spoc_id,
             location,
-            batch_number,
-            sub_client,
             branch_id,
             services,
             package,
@@ -378,10 +372,8 @@ exports.update = (req, res) => {
     client_application_id,
     name,
     employee_id,
-    spoc,
+    spoc_id,
     location,
-    batch_number,
-    sub_client,
     services,
     package,
   } = req.body;
@@ -393,10 +385,8 @@ exports.update = (req, res) => {
     client_application_id,
     name,
     employee_id,
-    spoc,
+    spoc_id,
     location,
-    batch_number,
-    sub_client,
   };
 
   // Check for missing fields
@@ -466,28 +456,16 @@ exports.update = (req, res) => {
               new: employee_id,
             };
           }
-          if (currentClientApplication.spoc !== spoc) {
-            changes.spoc = {
-              old: currentClientApplication.spoc,
-              new: spoc,
+          if (currentClientApplication.spoc_id !== spoc_id) {
+            changes.spoc_id = {
+              old: currentClientApplication.spoc_id,
+              new: spoc_id,
             };
           }
           if (currentClientApplication.location !== location) {
             changes.location = {
               old: currentClientApplication.location,
               new: location,
-            };
-          }
-          if (currentClientApplication.batch_number !== batch_number) {
-            changes.batch_number = {
-              old: currentClientApplication.batch_number,
-              new: batch_number,
-            };
-          }
-          if (currentClientApplication.sub_client !== sub_client) {
-            changes.sub_client = {
-              old: currentClientApplication.sub_client,
-              new: sub_client,
             };
           }
           if (
@@ -533,10 +511,8 @@ exports.update = (req, res) => {
                 {
                   name,
                   employee_id,
-                  spoc,
+                  spoc_id,
                   location,
-                  batch_number,
-                  sub_client,
                   services,
                   package,
                 },
