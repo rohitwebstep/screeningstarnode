@@ -146,7 +146,7 @@ exports.isEmailUsed = (req, res) => {
   });
 };
 
-exports.list = (req, res) => {
+exports.getClientSpocById = (req, res) => {
   const { client_spoc_id, admin_id, _token } = req.query;
 
   let missingFields = [];

@@ -16,13 +16,20 @@ router.post("/forgot-password", authController.forgotPassword);
 router.get("/", profileController.index);
 router.post("/verify-branch-login", authController.validateLogin);
 router.get("/list", profileController.list);
-router.get("/client-applications-filter-options", profileController.filterOptionsForClientApplications);
-router.get("/candidate-applications-filter-options", profileController.filterOptionsForCandidateApplications);
+router.get(
+  "/client-applications-filter-options",
+  profileController.filterOptionsForClientApplications
+);
+router.get(
+  "/candidate-applications-filter-options",
+  profileController.filterOptionsForCandidateApplications
+);
 router.get("/is-email-used", profileController.isEmailUsed);
 router.get(
   "/customer-info",
   customerController.customerBasicInfoWithBranchAuth
 );
+router.get("/client-spoc-info", profileController.getClientSpocById);
 router.get("/list-by-customer", profileController.listByCustomerID);
 router.put("/update", profileController.update);
 router.put("/update-password", authController.updatePassword);
@@ -30,7 +37,7 @@ router.get("/active", profileController.active);
 router.get("/inactive", profileController.inactive);
 
 router.get("/service-info", profileController.getServiceById);
-router.get("/annexure-by-service",profileController.annexureDataByServiceId);
+router.get("/annexure-by-service", profileController.annexureDataByServiceId);
 
 router.delete("/delete", profileController.delete);
 
