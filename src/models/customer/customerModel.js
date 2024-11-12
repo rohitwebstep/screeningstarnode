@@ -292,7 +292,6 @@ const Customer = {
       const sqlUpdateCustomer = `
         UPDATE \`customers\` 
         SET 
-          \`client_unique_id\` = ?, 
           \`name\` = ?, 
           \`additional_login\` = ?, 
           \`username\` = ?, 
@@ -305,7 +304,6 @@ const Customer = {
       `;
 
       const valuesUpdateCustomer = [
-        customerData.client_unique_id,
         customerData.name,
         customerData.additional_login,
         customerData.username,

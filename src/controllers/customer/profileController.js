@@ -1063,27 +1063,27 @@ exports.update = (req, res) => {
     admin_id,
     _token,
     customer_id,
-    tat,
+    name,
     state,
-    gstin,
+    mobile,
     emails,
     address,
     username,
+    tat_days,
+    services,
     state_code,
-    scopeOfServices,
-    client_spoc_id,
-    escalation_manager_id,
-    billing_spoc_id,
-    billing_escalation_id,
-    authorized_detail_id,
+    gst_number,
     client_code,
-    company_name,
-    mobile_number,
-    date_agreement,
+    agreement_date,
+    client_spoc_id,
     client_standard,
-    additional_login,
-    agreement_period,
     custom_template,
+    billing_spoc_id,
+    additional_login,
+    agreement_duration,
+    authorized_detail_id,
+    escalation_manager_id,
+    billing_escalation_id,
   } = req.body;
 
   // Define required fields
@@ -1091,26 +1091,26 @@ exports.update = (req, res) => {
     admin_id,
     _token,
     customer_id,
-    tat,
+    name,
     state,
-    gstin,
+    mobile,
     emails,
     address,
+    services,
+    tat_days,
     state_code,
-    scopeOfServices,
-    client_spoc_id,
-    escalation_manager_id,
-    billing_spoc_id,
-    billing_escalation_id,
-    authorized_detail_id,
+    gst_number,
     client_code,
-    company_name,
-    mobile_number,
-    date_agreement,
+    client_spoc_id,
+    agreement_date,
+    billing_spoc_id,
+    custom_template,
     client_standard,
     additional_login,
-    agreement_period,
-    custom_template,
+    agreement_duration,
+    authorized_detail_id,
+    escalation_manager_id,
+    billing_escalation_id,
   };
 
   let additional_login_int = 0;
@@ -1181,15 +1181,14 @@ exports.update = (req, res) => {
           }
         };
 
-        compareAndAddChanges("name", company_name);
+        compareAndAddChanges("name", name);
         compareAndAddChanges("emails_json", JSON.stringify(emails));
-        compareAndAddChanges("client_unique_id", client_code);
         compareAndAddChanges("additional_login", additional_login_int);
         if (additional_login && additional_login.toLowerCase() === "yes") {
           compareAndAddChanges("username", username);
         }
-        compareAndAddChanges("mobile", mobile_number);
-        compareAndAddChanges("services", JSON.stringify(scopeOfServices));
+        compareAndAddChanges("mobile", mobile);
+        compareAndAddChanges("services", JSON.stringify(services));
 
         Customer.getCustomerMetaById(
           customer_id,
@@ -1222,11 +1221,11 @@ exports.update = (req, res) => {
                 "authorized_detail_id",
                 authorized_detail_id
               );
-              compareAndAddChanges("gst_number", gstin);
-              compareAndAddChanges("tat_days", tat);
-              compareAndAddChanges("agreement_date", date_agreement);
+              compareAndAddChanges("gst_number", gst_number);
+              compareAndAddChanges("tat_days", tat_days);
+              compareAndAddChanges("agreement_date", agreement_date);
               compareAndAddChanges("client_standard", client_standard);
-              compareAndAddChanges("agreement_duration", agreement_period);
+              compareAndAddChanges("agreement_duration", agreement_duration);
               compareAndAddChanges("custom_template", custom_template);
               compareAndAddChanges("state", state);
               compareAndAddChanges("state_code", state_code);
@@ -1301,13 +1300,12 @@ exports.update = (req, res) => {
                 customer_id,
                 {
                   admin_id,
-                  client_unique_id: client_code,
-                  name: company_name,
+                  name,
                   address,
                   profile_picture: currentCustomer.profile_picture,
                   emails_json: emails,
-                  mobile: mobile_number,
-                  services: JSON.stringify(scopeOfServices),
+                  mobile,
+                  services: JSON.stringify(services),
                   additional_login: additional_login_int,
                   username:
                     additional_login && additional_login.toLowerCase() === "yes"
@@ -1343,10 +1341,10 @@ exports.update = (req, res) => {
                         billing_spoc_id,
                         billing_escalation_id,
                         authorized_detail_id,
-                        gst_number: gstin,
-                        tat_days: tat,
-                        agreement_date: date_agreement,
-                        agreement_duration: agreement_period,
+                        gst_number,
+                        tat_days,
+                        agreement_date,
+                        agreement_duration,
                         custom_template:
                           custom_template &&
                           custom_template.toLowerCase() === "yes"
@@ -1374,7 +1372,7 @@ exports.update = (req, res) => {
                           const headBranchEmail = JSON.parse(emails)[0];
                           Branch.updateHeadBranchEmail(
                             customer_id,
-                            company_name,
+                            name,
                             headBranchEmail,
                             (err, headBranchResult) => {
                               if (err) {
