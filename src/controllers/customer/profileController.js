@@ -1305,7 +1305,10 @@ exports.update = (req, res) => {
                   profile_picture: currentCustomer.profile_picture,
                   emails_json: emails,
                   mobile,
-                  services: JSON.parse(services),
+                  services:
+                    typeof services === "string"
+                      ? JSON.parse(services)
+                      : services,
                   additional_login: additional_login_int,
                   username:
                     additional_login && additional_login.toLowerCase() === "yes"
