@@ -1073,7 +1073,7 @@ exports.update = (req, res) => {
     services,
     state_code,
     gst_number,
-    client_code,
+    client_unique_id,
     agreement_date,
     client_spoc_id,
     client_standard,
@@ -1100,7 +1100,7 @@ exports.update = (req, res) => {
     tat_days,
     state_code,
     gst_number,
-    client_code,
+    client_unique_id,
     client_spoc_id,
     agreement_date,
     billing_spoc_id,
@@ -1231,10 +1231,10 @@ exports.update = (req, res) => {
               compareAndAddChanges("state_code", state_code);
             }
 
-            if (client_code !== currentCustomer.client_code) {
+            if (client_unique_id !== currentCustomer.client_unique_id) {
               Customer.checkUniqueIdForUpdate(
                 customer_id,
-                client_code,
+                client_unique_id,
                 (err, exists) => {
                   if (err) {
                     console.error("Error checking unique ID:", err);
@@ -1248,7 +1248,7 @@ exports.update = (req, res) => {
                   if (exists) {
                     return res.status(400).json({
                       status: false,
-                      message: `Client Unique ID '${client_code}' already exists.`,
+                      message: `Client Unique ID '${client_unique_id}' already exists.`,
                       token: newToken,
                     });
                   }
