@@ -162,7 +162,7 @@ exports.getClientSpocById = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ branch: "view" });
+  const action = JSON.stringify({ customer_info: "view" });
   // Step 1: Check if the branch is authorized for the action
   BranchCommon.isBranchAuthorizedForAction(branch_id, action, (authResult) => {
     if (!authResult.status) {
