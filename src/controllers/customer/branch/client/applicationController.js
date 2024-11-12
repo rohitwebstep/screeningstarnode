@@ -22,7 +22,7 @@ exports.create = (req, res) => {
     customer_id,
     name,
     employee_id,
-    spoc_id,
+    client_spoc_id,
     location,
     services,
     package,
@@ -36,7 +36,7 @@ exports.create = (req, res) => {
     customer_id,
     name,
     employee_id,
-    spoc_id,
+    client_spoc_id,
     location,
   };
 
@@ -98,7 +98,7 @@ exports.create = (req, res) => {
           {
             name,
             employee_id,
-            spoc_id,
+            client_spoc_id,
             location,
             branch_id,
             services,
@@ -372,7 +372,7 @@ exports.update = (req, res) => {
     client_application_id,
     name,
     employee_id,
-    spoc_id,
+    client_spoc_id,
     location,
     services,
     package,
@@ -385,7 +385,7 @@ exports.update = (req, res) => {
     client_application_id,
     name,
     employee_id,
-    spoc_id,
+    client_spoc_id,
     location,
   };
 
@@ -456,10 +456,10 @@ exports.update = (req, res) => {
               new: employee_id,
             };
           }
-          if (currentClientApplication.spoc_id !== spoc_id) {
-            changes.spoc_id = {
-              old: currentClientApplication.spoc_id,
-              new: spoc_id,
+          if (currentClientApplication.client_spoc_id !== client_spoc_id) {
+            changes.client_spoc_id = {
+              old: currentClientApplication.client_spoc_id,
+              new: client_spoc_id,
             };
           }
           if (currentClientApplication.location !== location) {
@@ -511,7 +511,7 @@ exports.update = (req, res) => {
                 {
                   name,
                   employee_id,
-                  spoc_id,
+                  client_spoc_id,
                   location,
                   services,
                   package,
@@ -603,23 +603,23 @@ exports.upload = async (req, res) => {
         client_application_generated_id;
     }
 
-      // Check for missing fields
-      const missingFields = Object.keys(requiredFields)
-        .filter(
-          (field) =>
-            !requiredFields[field] ||
-            requiredFields[field] === "" ||
-            requiredFields[field] == "undefined" ||
-            requiredFields[field] == undefined
-        )
-        .map((field) => field.replace(/_/g, " "));
+    // Check for missing fields
+    const missingFields = Object.keys(requiredFields)
+      .filter(
+        (field) =>
+          !requiredFields[field] ||
+          requiredFields[field] === "" ||
+          requiredFields[field] == "undefined" ||
+          requiredFields[field] == undefined
+      )
+      .map((field) => field.replace(/_/g, " "));
 
-      if (missingFields.length > 0) {
-        return res.status(400).json({
-          status: false,
-          message: `Missing required fields: ${missingFields.join(", ")}`,
-        });
-      }
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        status: false,
+        message: `Missing required fields: ${missingFields.join(", ")}`,
+      });
+    }
 
     const action = JSON.stringify({ client_application: "update" });
     BranchCommon.isBranchAuthorizedForAction(branchId, action, (result) => {
@@ -692,8 +692,7 @@ exports.upload = async (req, res) => {
               // If an error occurred, return the error details in the response
               return res.status(500).json({
                 status: false,
-                message:
-                  result || "An error occurred while saving the image.", // Use detailed error message if available
+                message: result || "An error occurred while saving the image.", // Use detailed error message if available
                 token: newToken,
                 savedImagePaths,
                 // details: result.details,

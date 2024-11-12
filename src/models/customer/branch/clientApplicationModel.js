@@ -115,7 +115,7 @@ const clientApplication = {
     const {
       name,
       employee_id,
-      spoc_id,
+      client_spoc_id,
       location,
       branch_id,
       services,
@@ -154,7 +154,7 @@ const clientApplication = {
             \`application_id\`,
             \`name\`,
             \`employee_id\`,
-            \`spoc_id\`,
+            \`client_spoc_id\`,
             \`location\`,
             \`branch_id\`,
             \`services\`,
@@ -167,7 +167,7 @@ const clientApplication = {
             new_application_id,
             name,
             employee_id,
-            spoc_id,
+            client_spoc_id,
             location,
             branch_id,
             serviceIds,
@@ -395,14 +395,14 @@ const clientApplication = {
           null
         );
       }
-      const { name, employee_id, spoc_id, location, services, package } = data;
+      const { name, employee_id, client_spoc_id, location, services, package } = data;
 
       const sql = `
       UPDATE \`client_applications\`
       SET
         \`name\` = ?,
         \`employee_id\` = ?,
-        \`spoc_id\` = ?,
+        \`client_spoc_id\` = ?,
         \`location\` = ?,
         \`services\` = ?,
         \`package\` = ?
@@ -413,7 +413,7 @@ const clientApplication = {
       const values = [
         name,
         employee_id,
-        spoc_id,
+        client_spoc_id,
         location,
         services,
         package,
