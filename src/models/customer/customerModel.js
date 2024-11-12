@@ -421,7 +421,7 @@ const Customer = {
       metaData.escalation_manager_id,
       metaData.billing_spoc_id,
       metaData.billing_escalation_id,
-      authorized_detail_id,
+      metaData.authorized_detail_id,
       metaData.gst_number,
       metaData.tat_days,
       metaData.agreement_date,
