@@ -310,7 +310,7 @@ const Customer = {
         customerData.profile_picture,
         customerData.emails_json,
         customerData.mobile,
-        customerData.services,
+        JSON.stringify(customerData.services),
         customerData.admin_id,
         customerId,
       ];
