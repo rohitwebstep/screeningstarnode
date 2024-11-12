@@ -1188,7 +1188,7 @@ exports.update = (req, res) => {
           compareAndAddChanges("username", username);
         }
         compareAndAddChanges("mobile", mobile);
-        compareAndAddChanges("services", JSON.stringify(services));
+        compareAndAddChanges("services", services);
 
         Customer.getCustomerMetaById(
           customer_id,
@@ -1305,7 +1305,7 @@ exports.update = (req, res) => {
                   profile_picture: currentCustomer.profile_picture,
                   emails_json: emails,
                   mobile,
-                  services: JSON.stringify(services),
+                  services: JSON.parse(services),
                   additional_login: additional_login_int,
                   username:
                     additional_login && additional_login.toLowerCase() === "yes"
