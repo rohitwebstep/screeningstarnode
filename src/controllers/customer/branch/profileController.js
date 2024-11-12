@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const Branch = require("../../../models/customer/branch/branchModel");
+const ClientSpoc = require("../../../models/admin/clientSpocModel");
 const BranchCommon = require("../../../models/customer/branch/commonModel");
 const AdminCommon = require("../../../models/admin/commonModel");
 const Service = require("../../../models/admin/serviceModel");
@@ -37,51 +38,55 @@ exports.index = (req, res) => {
     }
 
     // Step 2: Verify the branch token
-    BranchCommon.isBranchTokenValid(_token, branch_id, (tokenErr, tokenResult) => {
-      if (tokenErr) {
-        console.error("Error checking token validity:", tokenErr);
-        return res.status(500).json({
-          status: false,
-          message: tokenErr,
-        });
-      }
-
-      if (!tokenResult.status) {
-        return res.status(401).json({
-          status: false,
-          message: tokenResult.message,
-        });
-      }
-
-      const newToken = tokenResult.newToken;
-
-      // Step 3: Fetch client applications from database
-      Branch.index(branch_id, (dbErr, clientApplications) => {
-        if (dbErr) {
-          console.error("Database error:", dbErr);
+    BranchCommon.isBranchTokenValid(
+      _token,
+      branch_id,
+      (tokenErr, tokenResult) => {
+        if (tokenErr) {
+          console.error("Error checking token validity:", tokenErr);
           return res.status(500).json({
             status: false,
-            message: "An error occurred while fetching client applications.",
-            token: newToken,
+            message: tokenErr,
           });
         }
 
-        // Calculate total application count
-        const totalApplicationCount = clientApplications
-          ? Object.values(clientApplications).reduce((total, statusGroup) => {
-            return total + statusGroup.applicationCount;
-          }, 0)
-          : 0;
+        if (!tokenResult.status) {
+          return res.status(401).json({
+            status: false,
+            message: tokenResult.message,
+          });
+        }
 
-        return res.status(200).json({
-          status: true,
-          message: "Client applications fetched successfully.",
-          clientApplications,
-          totalApplicationCount,
-          token: newToken,
+        const newToken = tokenResult.newToken;
+
+        // Step 3: Fetch client applications from database
+        Branch.index(branch_id, (dbErr, clientApplications) => {
+          if (dbErr) {
+            console.error("Database error:", dbErr);
+            return res.status(500).json({
+              status: false,
+              message: "An error occurred while fetching client applications.",
+              token: newToken,
+            });
+          }
+
+          // Calculate total application count
+          const totalApplicationCount = clientApplications
+            ? Object.values(clientApplications).reduce((total, statusGroup) => {
+                return total + statusGroup.applicationCount;
+              }, 0)
+            : 0;
+
+          return res.status(200).json({
+            status: true,
+            message: "Client applications fetched successfully.",
+            clientApplications,
+            totalApplicationCount,
+            token: newToken,
+          });
         });
-      });
-    });
+      }
+    );
   });
 };
 
@@ -137,6 +142,73 @@ exports.isEmailUsed = (req, res) => {
           token: newToken,
         });
       }
+    });
+  });
+};
+
+exports.list = (req, res) => {
+  const { client_spoc_id, admin_id, _token } = req.query;
+
+  let missingFields = [];
+  if (!client_spoc_id || client_spoc_id === "")
+    missingFields.push("Client SPOC ID");
+  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
+  if (!_token || _token === "") missingFields.push("Token");
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  const action = JSON.stringify({ branch: "view" });
+  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
+    if (!result.status) {
+      return res.status(403).json({
+        status: false,
+        message: result.message, // Return the message from the authorization function
+      });
+    }
+
+    // Verify admin token
+    AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
+      if (err) {
+        console.error("Error checking token validity:", err);
+        return res.status(500).json({ status: false, message: err.message });
+      }
+
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
+      }
+
+      const newToken = result.newToken;
+
+      ClientSpoc.getClientSpocById(client_spoc_id, (err, currentClientSpoc) => {
+        if (err) {
+          console.error("Error fetching Client SPOC data:", err);
+          return res.status(500).json({
+            status: false,
+            message: err.message,
+            token: newToken,
+          });
+        }
+
+        if (!currentClientSpoc) {
+          return res.status(404).json({
+            status: false,
+            message: "Client SPOC not found",
+            token: newToken,
+          });
+        }
+
+        res.json({
+          status: true,
+          message: "Client SPOC retrieved successfully",
+          client_spoc: currentClientSpoc,
+          token: newToken,
+        });
+      });
     });
   });
 };
@@ -551,7 +623,7 @@ exports.update = (req, res) => {
                 "0",
                 JSON.stringify({ id, ...changes }),
                 err,
-                () => { }
+                () => {}
               );
               return res.status(500).json({
                 status: false,
@@ -567,7 +639,7 @@ exports.update = (req, res) => {
               "1",
               JSON.stringify({ id, ...changes }),
               null,
-              () => { }
+              () => {}
             );
 
             res.status(200).json({
@@ -677,7 +749,7 @@ exports.active = (req, res) => {
                 "0",
                 JSON.stringify({ branch_id, ...changes }),
                 err,
-                () => { }
+                () => {}
               );
               return res.status(500).json({
                 status: false,
@@ -693,7 +765,7 @@ exports.active = (req, res) => {
               "1",
               JSON.stringify({ branch_id, ...changes }),
               null,
-              () => { }
+              () => {}
             );
 
             res.status(200).json({
@@ -803,7 +875,7 @@ exports.inactive = (req, res) => {
                 "0",
                 JSON.stringify({ branch_id, ...changes }),
                 err,
-                () => { }
+                () => {}
               );
               return res.status(500).json({
                 status: false,
@@ -819,7 +891,7 @@ exports.inactive = (req, res) => {
               "1",
               JSON.stringify({ branch_id, ...changes }),
               null,
-              () => { }
+              () => {}
             );
 
             res.status(200).json({
@@ -923,7 +995,7 @@ exports.delete = (req, res) => {
                 "0",
                 JSON.stringify({ id }),
                 err,
-                () => { }
+                () => {}
               );
               return res.status(500).json({
                 status: false,
@@ -939,7 +1011,7 @@ exports.delete = (req, res) => {
               "1",
               JSON.stringify({ id }),
               null,
-              () => { }
+              () => {}
             );
 
             res.status(200).json({
