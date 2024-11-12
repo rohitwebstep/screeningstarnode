@@ -147,7 +147,7 @@ exports.isEmailUsed = (req, res) => {
 };
 
 exports.getClientSpocById = (req, res) => {
-  const { client_spoc_id, admin_id, _token } = req.query;
+  const { client_spoc_id, branch_id, _token } = req.query;
 
   let missingFields = [];
   if (!client_spoc_id || client_spoc_id === "")
@@ -163,53 +163,67 @@ exports.getClientSpocById = (req, res) => {
   }
 
   const action = JSON.stringify({ branch: "view" });
-  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
-    if (!result.status) {
+  // Step 1: Check if the branch is authorized for the action
+  BranchCommon.isBranchAuthorizedForAction(branch_id, action, (authResult) => {
+    if (!authResult.status) {
       return res.status(403).json({
         status: false,
-        message: result.message, // Return the message from the authorization function
+        message: authResult.message,
       });
     }
 
-    // Verify admin token
-    AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
-      if (err) {
-        console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
-      }
-
-      if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message });
-      }
-
-      const newToken = result.newToken;
-
-      ClientSpoc.getClientSpocById(client_spoc_id, (err, currentClientSpoc) => {
-        if (err) {
-          console.error("Error fetching Client SPOC data:", err);
+    // Step 2: Verify the branch token
+    BranchCommon.isBranchTokenValid(
+      _token,
+      branch_id,
+      (tokenErr, tokenResult) => {
+        if (tokenErr) {
+          console.error("Error checking token validity:", tokenErr);
           return res.status(500).json({
             status: false,
-            message: err.message,
-            token: newToken,
+            message: tokenErr,
           });
         }
 
-        if (!currentClientSpoc) {
-          return res.status(404).json({
+        if (!tokenResult.status) {
+          return res.status(401).json({
             status: false,
-            message: "Client SPOC not found",
-            token: newToken,
+            message: tokenResult.message,
           });
         }
 
-        res.json({
-          status: true,
-          message: "Client SPOC retrieved successfully",
-          client_spoc: currentClientSpoc,
-          token: newToken,
-        });
-      });
-    });
+        const newToken = tokenResult.newToken;
+
+        ClientSpoc.getClientSpocById(
+          client_spoc_id,
+          (err, currentClientSpoc) => {
+            if (err) {
+              console.error("Error fetching Client SPOC data:", err);
+              return res.status(500).json({
+                status: false,
+                message: err.message,
+                token: newToken,
+              });
+            }
+
+            if (!currentClientSpoc) {
+              return res.status(404).json({
+                status: false,
+                message: "Client SPOC not found",
+                token: newToken,
+              });
+            }
+
+            res.json({
+              status: true,
+              message: "Client SPOC retrieved successfully",
+              client_spoc: currentClientSpoc,
+              token: newToken,
+            });
+          }
+        );
+      }
+    );
   });
 };
 
