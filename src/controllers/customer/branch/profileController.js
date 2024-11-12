@@ -152,7 +152,7 @@ exports.getClientSpocById = (req, res) => {
   let missingFields = [];
   if (!client_spoc_id || client_spoc_id === "")
     missingFields.push("Client SPOC ID");
-  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
+  if (!branch_id || branch_id === "") missingFields.push("Admin ID");
   if (!_token || _token === "") missingFields.push("Token");
 
   if (missingFields.length > 0) {
