@@ -1303,7 +1303,7 @@ exports.update = (req, res) => {
                   name,
                   address,
                   profile_picture: currentCustomer.profile_picture,
-                  emails_json: emails,
+                  emails_json: JSON.stringify(emails),
                   mobile,
                   services:
                     typeof services === "string"
