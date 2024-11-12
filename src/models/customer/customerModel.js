@@ -417,10 +417,10 @@ const Customer = {
 
     const valuesUpdateCustomerMetas = [
       metaData.address,
-      client_spoc_id,
-      escalation_manager_id,
-      billing_spoc_id,
-      billing_escalation_id,
+      metaData.client_spoc_id,
+      metaData.escalation_manager_id,
+      metaData.billing_spoc_id,
+      metaData.billing_escalation_id,
       authorized_detail_id,
       metaData.gst_number,
       metaData.tat_days,
