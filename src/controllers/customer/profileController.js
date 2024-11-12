@@ -1369,7 +1369,7 @@ exports.update = (req, res) => {
                         }
 
                         if (metaResult) {
-                          const headBranchEmail = JSON.parse(emails)[0];
+                          const headBranchEmail = emails[0];
                           Branch.updateHeadBranchEmail(
                             customer_id,
                             name,
