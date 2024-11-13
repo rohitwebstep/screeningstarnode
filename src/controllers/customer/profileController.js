@@ -154,6 +154,7 @@ exports.create = (req, res) => {
     client_code,
     company_name,
     mobile_number,
+    custom_address,
     date_agreement,
     client_spoc_id,
     client_standard,
@@ -199,6 +200,10 @@ exports.create = (req, res) => {
   if (additional_login && additional_login.toLowerCase() === "yes") {
     additional_login_int = 1;
     requiredFields.username = username;
+  }
+
+  if (custom_template && custom_template.toLowerCase() === "yes") {
+    requiredFields.custom_address = custom_address;
   }
 
   // Check for missing fields
@@ -348,6 +353,10 @@ exports.create = (req, res) => {
                     agreement_date: date_agreement,
                     agreement_duration: agreement_period,
                     custom_template,
+                    custom_address:
+                      custom_template && custom_template.toLowerCase() === "yes"
+                        ? custom_address
+                        : null,
                     state,
                     state_code,
                     client_standard,
@@ -1073,13 +1082,14 @@ exports.update = (req, res) => {
     services,
     state_code,
     gst_number,
-    client_unique_id,
+    custom_address,
     agreement_date,
     client_spoc_id,
     client_standard,
     custom_template,
     billing_spoc_id,
     additional_login,
+    client_unique_id,
     agreement_duration,
     authorized_detail_id,
     escalation_manager_id,
@@ -1117,6 +1127,10 @@ exports.update = (req, res) => {
   if (additional_login && additional_login.toLowerCase() === "yes") {
     additional_login_int = 1;
     requiredFields.username = username;
+  }
+
+  if (custom_template && custom_template.toLowerCase() === "yes") {
+    requiredFields.custom_address = custom_address;
   }
 
   // Check for missing fields
@@ -1353,6 +1367,11 @@ exports.update = (req, res) => {
                           custom_template.toLowerCase() === "yes"
                             ? 1
                             : 0,
+                        custom_address:
+                          custom_template &&
+                          custom_template.toLowerCase() === "yes"
+                            ? custom_address
+                            : null,
                         state,
                         state_code,
                         client_standard,
