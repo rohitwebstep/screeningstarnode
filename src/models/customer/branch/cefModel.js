@@ -106,7 +106,12 @@ const cef = {
     });
   },
 
-  getCEFApplicationById: (candidate_application_id, callback) => {
+  getCEFApplicationById: (
+    candidate_application_id,
+    branch_id,
+    customer_id,
+    callback
+  ) => {
     startConnection((err, connection) => {
       if (err) {
         return callback(
@@ -115,15 +120,19 @@ const cef = {
         );
       }
       const sql =
-        "SELECT * FROM `cef_applications` WHERE `candidate_application_id` = ?";
-      connection.query(sql, [candidate_application_id], (queryErr, results) => {
-        connectionRelease(connection);
-        if (queryErr) {
-          console.error("Database query error: 108", queryErr);
-          return callback(queryErr, null);
+        "SELECT * FROM `cef_applications` WHERE `candidate_application_id` = ? AND `branch_id` = ? AND `customer_id` = ?";
+      connection.query(
+        sql,
+        [candidate_application_id, branch_id, customer_id],
+        (queryErr, results) => {
+          connectionRelease(connection);
+          if (queryErr) {
+            console.error("Database query error: 108", queryErr);
+            return callback(queryErr, null);
+          }
+          callback(null, results[0]);
         }
-        callback(null, results[0]);
-      });
+      );
     });
   },
 

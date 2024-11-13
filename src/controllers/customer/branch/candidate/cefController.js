@@ -49,6 +49,24 @@ exports.isApplicationExist = (req, res) => {
     missingFields.push("Application ID");
   }
 
+  if (
+    !branch_id ||
+    branch_id === "" ||
+    branch_id === undefined ||
+    branch_id === "undefined"
+  ) {
+    missingFields.push("Branch ID");
+  }
+
+  if (
+    !customer_id ||
+    customer_id === "" ||
+    customer_id === undefined ||
+    customer_id === "undefined"
+  ) {
+    missingFields.push("Customer ID");
+  }
+
   if (missingFields.length > 0) {
     return res.status(400).json({
       status: false,
@@ -72,6 +90,8 @@ exports.isApplicationExist = (req, res) => {
       if (exists) {
         CEF.getCEFApplicationById(
           candidate_application_id,
+          branch_id,
+          customer_id,
           (err, currentCEFApplication) => {
             if (err) {
               console.error(
