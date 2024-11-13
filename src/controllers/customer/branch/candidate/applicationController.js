@@ -255,8 +255,8 @@ exports.create = (req, res) => {
                             result.insertId,
                             bgv_href,
                             serviceNames,
-                            toArr,
-                            ccArr
+                            toArr || [],
+                            ccArr || []
                           )
                             .then(() => {
                               return res.status(201).json({
@@ -268,8 +268,8 @@ exports.create = (req, res) => {
                                   package,
                                 },
                                 token: newToken,
-                                toArr,
-                                ccArr,
+                                toArr: toArr || [],
+                                ccArr: ccArr || [],
                               });
                             })
                             .catch((emailError) => {
