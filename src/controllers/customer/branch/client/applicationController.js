@@ -240,8 +240,6 @@ exports.create = (req, res) => {
                                   message:
                                     "Client application created successfully and email sent.",
                                   token: newToken,
-                                  toArr,
-                                  ccArr,
                                 });
                               })
                               .catch((emailError) => {
