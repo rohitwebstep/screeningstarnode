@@ -55,7 +55,7 @@ exports.create = (req, res) => {
         error: err,
       });
     }
-    
+
     if (emailUsed) {
       return res.status(409).json({
         status: false,
@@ -108,8 +108,8 @@ exports.create = (req, res) => {
               employee_id,
               mobile_number,
               email,
-              services,
-              package,
+              services: services || "",
+              package: package || "",
               customer_id,
             },
             (err, result) => {
@@ -166,15 +166,19 @@ exports.create = (req, res) => {
                   }));
 
                   const serviceIds = services
-                    .split(",")
-                    .map((id) => parseInt(id.trim(), 10));
+                    ? services
+                        .split(",")
+                        .map((id) => parseInt(id.trim(), 10))
+                        .filter(Number.isInteger)
+                    : [];
+
                   const serviceNames = [];
 
                   // Function to fetch service names recursively
                   const fetchServiceNames = (index = 0) => {
                     if (index >= serviceIds.length) {
                       // Once all service names are fetched, get app info
-                      AppModel.appInfo('frontend', (err, appInfo) => {
+                      AppModel.appInfo("frontend", (err, appInfo) => {
                         if (err) {
                           console.error("Database error:", err);
                           return res.status(500).json({
@@ -185,7 +189,8 @@ exports.create = (req, res) => {
                         }
 
                         if (appInfo) {
-                          const appHost = appInfo.host || 'www.goldquestglobal.com';
+                          const appHost =
+                            appInfo.host || "www.goldquestglobal.com";
                           const base64_app_id = btoa(result.insertId);
                           const base64_branch_id = btoa(branch_id);
                           const base64_customer_id = btoa(customer_id);
@@ -530,8 +535,8 @@ exports.update = (req, res) => {
                   employee_id,
                   mobile_number,
                   email,
-                  services,
-                  package,
+                  services: services || "",
+                  package: package || "",
                 },
                 candidate_application_id,
                 (err, result) => {
