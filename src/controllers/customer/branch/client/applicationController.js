@@ -102,7 +102,7 @@ exports.create = (req, res) => {
             location,
             branch_id,
             services,
-            package,
+            packages: package,
             customer_id,
           },
           (err, result) => {

@@ -119,18 +119,28 @@ const clientApplication = {
       location,
       branch_id,
       services,
-      package,
+      packages,
       customer_id,
     } = data;
 
     const serviceIds =
-      Array.isArray(services) && services.length > 0
+      typeof services === "string" && services.trim() !== ""
+        ? services
+            .split(",")
+            .map((id) => id.trim())
+            .join(",")
+        : Array.isArray(services) && services.length > 0
         ? services.map((id) => id.trim()).join(",")
         : "";
 
     const packageIds =
-      Array.isArray(package) && package.length > 0
-        ? package.map((id) => id.trim()).join(",")
+      typeof packages === "string" && packages.trim() !== ""
+        ? packages
+            .split(",")
+            .map((id) => id.trim())
+            .join(",")
+        : Array.isArray(packages) && packages.length > 0
+        ? packages.map((id) => id.trim()).join(",")
         : "";
 
     // Generate a new application ID
@@ -395,7 +405,8 @@ const clientApplication = {
           null
         );
       }
-      const { name, employee_id, client_spoc_id, location, services, package } = data;
+      const { name, employee_id, client_spoc_id, location, services, package } =
+        data;
 
       const sql = `
       UPDATE \`client_applications\`
