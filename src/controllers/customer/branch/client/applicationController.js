@@ -1,4 +1,4 @@
-const Client = require("../../../../models/customer/branch/clientApplicationModel");
+const ClientApplication = require("../../../../models/customer/branch/clientApplicationModel");
 const BranchCommon = require("../../../../models/customer/branch/commonModel");
 const Branch = require("../../../../models/customer/branch/branchModel");
 const Service = require("../../../../models/admin/serviceModel");
@@ -77,7 +77,7 @@ exports.create = (req, res) => {
       const newToken = result.newToken;
 
       // Check if employee ID is unique
-      Client.checkUniqueEmpId(employee_id, (err, exists) => {
+      ClientApplication.checkUniqueEmpId(employee_id, (err, exists) => {
         if (err) {
           console.error("Error checking unique ID:", err);
           return res
@@ -94,7 +94,7 @@ exports.create = (req, res) => {
         }
 
         // Create client application
-        Client.create(
+        ClientApplication.create(
           {
             name,
             employee_id,
@@ -342,7 +342,7 @@ exports.list = (req, res) => {
 
       const newToken = tokenResult.newToken;
 
-      Client.list(branch_id, (err, clientResults) => {
+      ClientApplication.list(branch_id, (err, clientResults) => {
         if (err) {
           console.error("Database error:", err);
           return res.status(500).json({
@@ -423,7 +423,7 @@ exports.update = (req, res) => {
       const newToken = result.newToken;
 
       // Fetch the current clientApplication
-      Client.getClientApplicationById(
+      ClientApplication.getClientApplicationById(
         client_application_id,
         (err, currentClientApplication) => {
           if (err) {
@@ -433,7 +433,7 @@ exports.update = (req, res) => {
             );
             return res.status(500).json({
               status: false,
-              message: "Failed to retrieve Client. Please try again.",
+              message: "Failed to retrieve ClientApplication. Please try again.",
               token: newToken,
             });
           }
@@ -483,7 +483,7 @@ exports.update = (req, res) => {
               new: package,
             };
           }
-          Client.checkUniqueEmpIdByClientApplicationID(
+          ClientApplication.checkUniqueEmpIdByClientApplicationID(
             employee_id,
             client_application_id,
             (err, exists) => {
@@ -507,7 +507,7 @@ exports.update = (req, res) => {
                 });
               }
 
-              Client.update(
+              ClientApplication.update(
                 {
                   name,
                   employee_id,
@@ -683,7 +683,7 @@ exports.upload = async (req, res) => {
           savedImagePaths.push(savedImagePath);
         }
 
-        Client.upload(
+        ClientApplication.upload(
           clientAppId,
           dbColumn,
           savedImagePaths,
@@ -705,7 +705,7 @@ exports.upload = async (req, res) => {
             if (result && result.affectedRows > 0) {
               // Return success response if there are affected rows
               if (send_mail == 1) {
-                Client.getClientApplicationById(
+                ClientApplication.getClientApplicationById(
                   clientAppId,
                   (err, currentClientApplication) => {
                     if (err) {
@@ -715,7 +715,7 @@ exports.upload = async (req, res) => {
                       );
                       return res.status(500).json({
                         status: false,
-                        message: "Failed to retrieve Client. Please try again.",
+                        message: "Failed to retrieve ClientApplication. Please try again.",
                         token: newToken,
                         savedImagePaths,
                       });
@@ -1008,7 +1008,7 @@ exports.delete = (req, res) => {
         const newToken = tokenValidationResult.newToken;
 
         // Fetch the current clientApplication
-        Client.getClientApplicationById(id, (err, currentClientApplication) => {
+        ClientApplication.getClientApplicationById(id, (err, currentClientApplication) => {
           if (err) {
             console.error(
               "Database error during clientApplication retrieval:",
@@ -1016,7 +1016,7 @@ exports.delete = (req, res) => {
             );
             return res.status(500).json({
               status: false,
-              message: "Failed to retrieve Client. Please try again.",
+              message: "Failed to retrieve ClientApplication. Please try again.",
               token: newToken,
             });
           }
@@ -1030,7 +1030,7 @@ exports.delete = (req, res) => {
           }
 
           // Delete the clientApplication
-          Client.delete(id, (err, result) => {
+          ClientApplication.delete(id, (err, result) => {
             if (err) {
               console.error(
                 "Database error during clientApplication deletion:",
@@ -1047,7 +1047,7 @@ exports.delete = (req, res) => {
               );
               return res.status(500).json({
                 status: false,
-                message: "Failed to delete Client. Please try again.",
+                message: "Failed to delete ClientApplication. Please try again.",
                 token: newToken,
               });
             }

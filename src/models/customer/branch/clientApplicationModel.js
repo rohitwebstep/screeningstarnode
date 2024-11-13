@@ -207,8 +207,20 @@ const clientApplication = {
           null
         );
       }
-      const sqlClient =
-        "SELECT * FROM client_applications WHERE branch_id = ? ORDER BY created_at DESC";
+      const sqlClient = `
+      SELECT 
+        ca.*, 
+        cs.name AS client_spoc_name
+      FROM 
+        \`client_applications\` ca
+      LEFT JOIN 
+        \`client_spocs\` cs 
+      ON 
+        ca.client_spoc_id = cs.id
+      WHERE 
+        ca.branch_id = ?
+      ORDER BY 
+        ca.created_at DESC`;
 
       connection.query(sqlClient, [branch_id], (err, clientResults) => {
         if (err) {
