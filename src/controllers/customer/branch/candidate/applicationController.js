@@ -159,11 +159,19 @@ exports.create = (req, res) => {
                   const { branch, customer } = emailData;
 
                   // Prepare recipient and CC lists
-                  const toArr = [{ name: branch.name, email: branch.email }];
+
+                  const toArr = [{ name, email }];
+
+                  /*
+                  const toArr = [
+                    { name: branch.name, email: branch.email },
+                    { name, email },
+                  ];
                   const ccArr = JSON.parse(customer.emails).map((email) => ({
                     name: customer.name,
                     email: email.trim(),
                   }));
+                  */
 
                   const serviceIds = services
                     ? services
