@@ -60,6 +60,7 @@ const Customer = {
             SELECT 
                 customers.client_unique_id,
                 customers.name,
+                customer_metas.tat_days,
                 customer_metas.single_point_of_contact,
                 customers.id AS main_id,
                 COALESCE(branch_counts.branch_count, 0) AS branch_count,
@@ -119,6 +120,7 @@ const Customer = {
           SELECT 
               customers.client_unique_id,
               customers.name,
+              customer_metas.tat_days,
               customer_metas.single_point_of_contact,
               customers.id AS main_id,
               COALESCE(branch_counts.branch_count, 0) AS branch_count,
