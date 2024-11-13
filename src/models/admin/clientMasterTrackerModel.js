@@ -217,23 +217,35 @@ const Customer = {
         return callback(err, null);
       }
 
-      // Base SQL query with mandatory condition for closed status
-      let sql = `SELECT * FROM \`client_applications\` WHERE \`branch_id\` = ?`;
+      // Base SQL query with JOIN to fetch client_spoc_name
+      let sql = `
+        SELECT 
+          ca.*, 
+          cs.name AS client_spoc_name
+        FROM 
+          \`client_applications\` ca
+        LEFT JOIN 
+          \`client_spocs\` cs 
+        ON 
+          ca.client_spoc_id = cs.id
+        WHERE 
+          ca.\`branch_id\` = ?`;
+
       const params = [branch_id]; // Start with branch_id
 
       // Check if filter_status is provided
-      if (filter_status && filter_status !== null && filter_status !== "") {
-        sql += ` AND \`status\` = ?`; // Add filter for filter_status
+      if (filter_status && filter_status.trim() !== "") {
+        sql += ` AND ca.\`status\` = ?`; // Add filter for filter_status
         params.push(filter_status);
       }
 
       // Check if status is provided and add the corresponding condition
       if (typeof status === "string" && status.trim() !== "") {
-        sql += ` AND \`status\` = ?`; // Add filter for status
+        sql += ` AND ca.\`status\` = ?`; // Add filter for status
         params.push(status);
       }
 
-      sql += ` ORDER BY \`created_at\` DESC;`;
+      sql += ` ORDER BY ca.\`created_at\` DESC;`;
 
       // Execute the query using the connection
       connection.query(sql, params, (err, results) => {
