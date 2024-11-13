@@ -202,7 +202,7 @@ exports.create = (req, res) => {
                           const base64_app_id = btoa(result.insertId);
                           const base64_branch_id = btoa(branch_id);
                           const base64_customer_id = btoa(customer_id);
-                          const base64_link_with_ids = `YXBwX2lk=${base64_app_id}&YnJhbmNoX2lk=${base64_branch_id}&Y3VzdG9tZXJfaWQ==${base64_customer_id};`;
+                          const base64_link_with_ids = `YXBwX2lk=${base64_app_id}&YnJhbmNoX2lk=${base64_branch_id}&Y3VzdG9tZXJfaWQ==${base64_customer_id}`;
 
                           const dav_href = `${appHost}/digital-form?${base64_link_with_ids}`;
                           const bgv_href = `${appHost}/background-form?${base64_link_with_ids}`;
