@@ -405,8 +405,14 @@ const clientApplication = {
           null
         );
       }
-      const { name, employee_id, client_spoc_id, location, services, package } =
-        data;
+      const {
+        name,
+        employee_id,
+        client_spoc_id,
+        location,
+        services,
+        packages,
+      } = data;
 
       const sql = `
       UPDATE \`client_applications\`
@@ -421,13 +427,33 @@ const clientApplication = {
         \`id\` = ?
     `;
 
+      const serviceIds =
+        typeof services === "string" && services.trim() !== ""
+          ? services
+              .split(",")
+              .map((id) => id.trim())
+              .join(",")
+          : Array.isArray(services) && services.length > 0
+          ? services.map((id) => id.trim()).join(",")
+          : "";
+
+      const packageIds =
+        typeof packages === "string" && packages.trim() !== ""
+          ? packages
+              .split(",")
+              .map((id) => id.trim())
+              .join(",")
+          : Array.isArray(packages) && packages.length > 0
+          ? packages.map((id) => id.trim()).join(",")
+          : "";
+
       const values = [
         name,
         employee_id,
         client_spoc_id,
         location,
-        services,
-        package,
+        serviceIds,
+        packageIds,
         client_application_id,
       ];
 

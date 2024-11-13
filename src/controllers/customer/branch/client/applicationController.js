@@ -514,7 +514,7 @@ exports.update = (req, res) => {
                   client_spoc_id,
                   location,
                   services,
-                  package,
+                  packages: package,
                 },
                 client_application_id,
                 (err, result) => {
