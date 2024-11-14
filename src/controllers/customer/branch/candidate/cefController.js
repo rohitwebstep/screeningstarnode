@@ -78,7 +78,7 @@ exports.isApplicationExist = (req, res) => {
     candidate_application_id,
     branch_id,
     customer_id,
-    (err, exists) => {
+    (err, currentApplication) => {
       if (err) {
         console.error("Database error:", err);
         return res.status(500).json({
@@ -87,7 +87,7 @@ exports.isApplicationExist = (req, res) => {
         });
       }
 
-      if (exists) {
+      if (currentApplication) {
         CEF.getCEFApplicationById(
           candidate_application_id,
           branch_id,
@@ -117,6 +117,7 @@ exports.isApplicationExist = (req, res) => {
 
             return res.status(200).json({
               status: true,
+              data: currentApplication,
               message: "Application exists.",
             });
           }
