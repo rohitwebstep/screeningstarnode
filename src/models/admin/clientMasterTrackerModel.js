@@ -975,7 +975,7 @@ const Customer = {
                         details: queryErr,
                       });
                     }
-                    callback(null, results);
+                    callback(true, results);
                   }
                 );
               })
