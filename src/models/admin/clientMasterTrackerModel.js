@@ -946,7 +946,7 @@ const Customer = {
 
             const addColumnPromises = missingColumns.map((column) => {
               return new Promise((resolve, reject) => {
-                const alterTableSql = `ALTER TABLE \`${db_table}\` ADD COLUMN \`${column}\` VARCHAR(255)`;
+                const alterTableSql = `ALTER TABLE \`${db_table}\` ADD COLUMN \`${column}\` LONGTEXT`;
                 connection.query(alterTableSql, (alterErr) => {
                   if (alterErr) {
                     reject(alterErr);
