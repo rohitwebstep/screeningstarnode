@@ -47,7 +47,7 @@ exports.create = (req, res) => {
     });
   }
 
-  Candidate.isEmailUsedBefore(email, (err, emailUsed) => {
+  Candidate.isEmailUsedBefore(email, branch_id, (err, emailUsed) => {
     if (err) {
       return res.status(500).json({
         status: false,

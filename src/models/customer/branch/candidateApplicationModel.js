@@ -6,7 +6,7 @@ const {
 
 const candidateApplication = {
   // Method to check if an email has been used before
-  isEmailUsedBefore: (email, callback) => {
+  isEmailUsedBefore: (email, branch_id, callback) => {
     startConnection((err, connection) => {
       if (err) {
         return callback(
@@ -18,20 +18,27 @@ const candidateApplication = {
       const emailCheckSql = `
         SELECT COUNT(*) as count
         FROM \`candidate_applications\`
-        WHERE \`email\` = ?
+        WHERE \`email\` = ? AND \`branch_id\` = ?
       `;
 
-      connection.query(emailCheckSql, [email], (err, emailCheckResults) => {
-        connectionRelease(connection); // Ensure connection is released
+      connection.query(
+        emailCheckSql,
+        [email, branch_id],
+        (err, emailCheckResults) => {
+          connectionRelease(connection); // Ensure connection is released
 
-        if (err) {
-          console.error("Error checking email in candidate_applications:", err);
-          return callback(err, null);
+          if (err) {
+            console.error(
+              "Error checking email in candidate_applications:",
+              err
+            );
+            return callback(err, null);
+          }
+
+          const emailExists = emailCheckResults[0].count > 0;
+          return callback(null, emailExists);
         }
-
-        const emailExists = emailCheckResults[0].count > 0;
-        return callback(null, emailExists);
-      });
+      );
     });
   },
 
