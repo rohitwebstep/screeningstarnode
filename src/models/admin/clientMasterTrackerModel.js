@@ -217,12 +217,13 @@ const Customer = {
         return callback(err, null);
       }
 
-      // SQL query using * to select all fields from both tables
+      // Base SQL query with JOINs to fetch client_spoc_name and cmt_applications data if it exists
       let sql = `
         SELECT 
           ca.*, 
-          cs.name AS client_spoc_name, 
-          cmt.* 
+          ca.id AS main_id, 
+          cs.name AS client_spoc_name,
+          cmt.*
         FROM 
           \`client_applications\` ca
         LEFT JOIN 
@@ -259,17 +260,7 @@ const Customer = {
           console.error("Database query error: 18", err);
           return callback(err, null);
         }
-
-        // Restructure results to group under applicationData and cmtData
-        const formattedResults = results.map((row) => ({
-          applicationData: {
-            ...row,
-            client_spoc_name: row.client_spoc_name,
-          },
-          cmtData: row,
-        }));
-
-        callback(null, formattedResults);
+        callback(null, results);
       });
     });
   },
