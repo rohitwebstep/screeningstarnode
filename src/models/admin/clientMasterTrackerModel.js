@@ -217,17 +217,22 @@ const Customer = {
         return callback(err, null);
       }
 
-      // Base SQL query with JOIN to fetch client_spoc_name
+      // SQL query with JOINs to fetch all columns from both client_applications and cmt_applications
       let sql = `
         SELECT 
-          ca.*, 
-          cs.name AS client_spoc_name
+          ca.* AS 'applicationData.*',
+          cs.name AS 'applicationData.client_spoc_name',
+          cmt.* AS 'cmtData.*'
         FROM 
           \`client_applications\` ca
         LEFT JOIN 
           \`client_spocs\` cs 
         ON 
           ca.client_spoc_id = cs.id
+        LEFT JOIN 
+          \`cmt_applications\` cmt 
+        ON 
+          ca.id = cmt.client_application_id
         WHERE 
           ca.\`branch_id\` = ?`;
 

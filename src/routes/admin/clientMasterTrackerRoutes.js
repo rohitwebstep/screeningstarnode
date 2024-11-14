@@ -15,7 +15,10 @@ router.get(
 );
 router.get("/application-by-id", clientMasterTrackerController.applicationByID);
 router.get("/filter-options", clientMasterTrackerController.filterOptions);
-router.get("/branch-filter-options", clientMasterTrackerController.filterOptionsForBranch);
+router.get(
+  "/branch-filter-options",
+  clientMasterTrackerController.filterOptionsForBranch
+);
 router.get("/annexure-data", clientMasterTrackerController.annexureData);
 router.put("/generate-report", clientMasterTrackerController.generateReport);
 router.get(
