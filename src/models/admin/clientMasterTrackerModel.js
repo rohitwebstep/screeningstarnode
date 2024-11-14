@@ -961,7 +961,7 @@ const Customer = {
               .then(() => {
                 const insertSql = `UPDATE \`${db_table}\` SET \`${db_column}\` = ? WHERE \`client_application_id\` = ?`;
                 const joinedPaths = savedImagePaths.join(", ");
-
+                console.log(insertSql, [joinedPaths, client_application_id]);
                 connection.query(
                   insertSql,
                   [joinedPaths, client_application_id],
