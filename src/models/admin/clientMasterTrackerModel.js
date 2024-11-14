@@ -939,7 +939,7 @@ const Customer = {
             }
 
             const existingColumns = results.map((row) => row.COLUMN_NAME);
-            const expectedColumns = [db_column]; // Add more expected columns as needed
+            const expectedColumns = [db_column];
             const missingColumns = expectedColumns.filter(
               (column) => !existingColumns.includes(column)
             );
@@ -960,40 +960,27 @@ const Customer = {
             Promise.all(addColumnPromises)
               .then(() => {
                 const insertSql = `UPDATE \`${db_table}\` SET \`${db_column}\` = ? WHERE \`client_application_id\` = ?`;
-                const promises = savedImagePaths.map((imagePath) => {
-                  return new Promise((resolve, reject) => {
-                    connection.query(
-                      insertSql,
-                      [imagePath, client_application_id],
-                      (insertErr) => {
-                        if (insertErr) {
-                          reject(insertErr);
-                        } else {
-                          resolve();
-                        }
-                      }
-                    );
-                  });
-                });
+                const joinedPaths = savedImagePaths.join(", ");
 
-                Promise.all(promises)
-                  .then(() => {
-                    connectionRelease(connection); // Release connection after all operations are done
-                    callback(true, {
-                      message: "Images uploaded successfully.",
-                    });
-                  })
-                  .catch((insertErr) => {
-                    connectionRelease(connection); // Ensure connection is released on error
-                    console.error("Error inserting images:", insertErr);
-                    callback(false, {
-                      error: "Error inserting images.",
-                      details: insertErr,
-                    });
-                  });
+                connection.query(
+                  insertSql,
+                  [joinedPaths, client_application_id],
+                  (queryErr, results) => {
+                    connectionRelease(connection);
+
+                    if (queryErr) {
+                      console.error("Error updating records:", queryErr);
+                      return callback(false, {
+                        error: "Error updating records.",
+                        details: queryErr,
+                      });
+                    }
+                    callback(null, results);
+                  }
+                );
               })
               .catch((columnErr) => {
-                connectionRelease(connection); // Ensure connection is released on error
+                connectionRelease(connection);
                 console.error("Error adding columns:", columnErr);
                 callback(false, {
                   error: "Error adding columns.",
