@@ -376,9 +376,9 @@ const clientApplication = {
       SET ${db_column} = ?
       WHERE id = ?
     `;
-
+      const joinedPaths = savedImagePaths.join(", ");
       // Prepare the parameters for the query
-      const queryParams = [savedImagePaths, client_application_id];
+      const queryParams = [joinedPaths, client_application_id];
 
       connection.query(sqlUpdateCustomer, queryParams, (err, results) => {
         connectionRelease(connection); // Ensure the connection is released
