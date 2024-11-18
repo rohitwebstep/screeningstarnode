@@ -8,11 +8,13 @@ const clientApplication = {
   generateApplicationID: (branch_id, callback) => {
     startConnection((err, connection) => {
       if (err) {
+        console.error("Failed to connect to the database:", err);
         return callback(
           { message: "Failed to connect to the database", error: err },
           null
         );
       }
+
       // Step 1: Fetch customer_id from branches using branch_id
       const getCustomerIdSql = `
         SELECT \`customer_id\`
@@ -28,6 +30,7 @@ const clientApplication = {
         }
 
         if (branchResults.length === 0) {
+          console.warn("Branch not found for branch_id:", branch_id);
           connectionRelease(connection);
           return callback(new Error("Branch not found"), null);
         }
@@ -55,6 +58,7 @@ const clientApplication = {
             }
 
             if (customerResults.length === 0) {
+              console.warn("Customer not found for customer_id:", customer_id);
               connectionRelease(connection);
               return callback(new Error("Customer not found"), null);
             }
@@ -63,15 +67,13 @@ const clientApplication = {
 
             // Step 3: Fetch the most recent application_id based on client_unique_id
             const getApplicationIdSql = `
-            SELECT \`application_id\`
-            FROM \`client_applications\`
-            WHERE \`application_id\` LIKE ?
-            ORDER BY \`created_at\` DESC
-            LIMIT 1
-          `;
-
+              SELECT \`application_id\`
+              FROM \`client_applications\`
+              WHERE \`application_id\` LIKE ?
+              ORDER BY \`created_at\` DESC
+              LIMIT 1
+            `;
             const applicationIdParam = `${client_unique_id}%`;
-
             // Execute the query
             connection.query(
               getApplicationIdSql,
@@ -90,13 +92,14 @@ const clientApplication = {
                 } else {
                   const latest_application_id =
                     applicationResults[0].application_id;
-                  const parts = latest_application_id.split("-");
 
-                  if (parts.length === 3) {
-                    const numberPart = parseInt(parts[2], 10);
-                    new_application_id = `${parts[0]}-${parts[1]}-${
-                      numberPart + 1
-                    }`;
+                  const parts = latest_application_id.split("-");
+                  const lastIndex = parts.length - 1; // Get the last index of the parts array
+
+                  if (!isNaN(parts[lastIndex])) {
+                    const numberPart = parseInt(parts[lastIndex], 10);
+                    parts[lastIndex] = (numberPart + 1).toString(); // Increment the number part at the last index
+                    new_application_id = parts.join("-"); // Reassemble the application_id
                   } else {
                     new_application_id = `${client_unique_id}-1`;
                   }
@@ -151,7 +154,6 @@ const clientApplication = {
           console.error("Error generating new application ID:", err);
           return callback(err, null);
         }
-
         startConnection((err, connection) => {
           if (err) {
             return callback(
