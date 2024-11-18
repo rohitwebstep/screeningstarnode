@@ -140,14 +140,13 @@ exports.annexureData = (req, res) => {
   )
     missingFields.push("Token");
 
-  const modifiedDbTable = db_table.replace(/-/g, "_");
-
   if (missingFields.length > 0) {
     return res.status(400).json({
       status: false,
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
+  const modifiedDbTable = db_table.replace(/-/g, "_");
 
   const action = JSON.stringify({ report_case_status: "view" });
 
@@ -249,8 +248,6 @@ exports.list = (req, res) => {
     _token === "undefined"
   )
     missingFields.push("Token");
-
-  const modifiedDbTable = db_table.replace(/-/g, "_");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
