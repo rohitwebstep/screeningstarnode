@@ -223,7 +223,23 @@ const Customer = {
           ca.*, 
           ca.id AS main_id, 
           cs.name AS client_spoc_name,
-          cmt.*
+          cmt.first_insufficiency_marks,
+          cmt.first_insuff_date,
+          cmt.first_insuff_reopened_date,
+          cmt.second_insufficiency_marks,
+          cmt.second_insuff_date,
+          cmt.second_insuff_reopened_date,
+          cmt.third_insufficiency_marks,
+          cmt.third_insuff_date,
+          cmt.third_insuff_reopened_date,
+          cmt.overall_status,
+          cmt.report_date,
+          cmt.report_status,
+          cmt.report_type,
+          cmt.qc_done_by,
+          cmt.delay_reason,
+          cmt.report_generate_by,
+          cmt.case_upload
         FROM 
           \`client_applications\` ca
         LEFT JOIN 
