@@ -34,19 +34,24 @@ function calculateServiceStats(applications, services) {
         const id = parseInt(serviceId, 10);
         allServiceIds.push(id);
 
-        // Check if the service ID exists in the customer services
-        const serviceExists = services.some(
-          (service) => service.serviceId === id
-        );
+        // Iterate through each group of services and find the matching service ID
+        let serviceExists = false;
+        let matchedService = null;
+        services.forEach((group) => {
+          const service = group.services.find((s) => s.serviceId === id);
+          if (service) {
+            serviceExists = true;
+            matchedService = service;
+          }
+        });
 
         // Initialize the service stats if it doesn't exist
         if (!serviceStats[id]) {
           if (serviceExists) {
-            const service = services.find((s) => s.serviceId === id);
             serviceStats[id] = {
               serviceId: id,
-              serviceTitle: service.serviceTitle,
-              price: parseFloat(service.price),
+              serviceTitle: matchedService.serviceTitle,
+              price: parseFloat(matchedService.price),
               count: 0,
               totalCost: 0,
             };
@@ -232,7 +237,7 @@ exports.generateInvoice = async (req, res) => {
               }
 
               // Extract services and applications
-              const services = JSON.parse(results.customerInfo.services); // Parse services JSON string
+              const services = JSON.parse(results.customerInfo.services);
               const applications = results.applicationsByBranch;
 
               // Calculate service statistics
@@ -254,9 +259,10 @@ exports.generateInvoice = async (req, res) => {
               const customerServiceList = JSON.parse(
                 results.customerInfo.services
               );
-              const customerServiceIds = customerServiceList.map(
-                (service) => service.serviceId
+              const customerServiceIds = customerServiceList.flatMap((group) =>
+                group.services.map((service) => service.serviceId)
               );
+
               const serviceNames = await getServiceNames(customerServiceIds);
 
               // Respond with the fetched customer data and applications
