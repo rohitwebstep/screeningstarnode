@@ -217,31 +217,14 @@ exports.annexureData = (req, res) => {
 };
 
 exports.list = (req, res) => {
-  const { application_id, branch_id, _token } = req.query;
+  const { branch_id, _token } = req.query;
 
-  let missingFields = [];
-  if (
-    !application_id ||
-    application_id === "" ||
-    application_id === undefined ||
-    application_id === "undefined"
-  ) {
-    missingFields.push("Application ID");
-  }
-  if (
-    !branch_id ||
-    branch_id === "" ||
-    branch_id === undefined ||
-    branch_id === "undefined"
-  ) {
+  // Validate required fields
+  const missingFields = [];
+  if (!branch_id || branch_id.trim() === "" || branch_id === "undefined") {
     missingFields.push("Branch ID");
   }
-  if (
-    !_token ||
-    _token === "" ||
-    _token === undefined ||
-    _token === "undefined"
-  ) {
+  if (!_token || _token.trim() === "" || _token === "undefined") {
     missingFields.push("Token");
   }
 
@@ -254,16 +237,16 @@ exports.list = (req, res) => {
 
   const action = JSON.stringify({ report_case_status: "view" });
 
-  // Step 2: Check if the branch is authorized for the action
+  // Check branch authorization for the action
   BranchCommon.isBranchAuthorizedForAction(branch_id, action, (authResult) => {
     if (!authResult.status) {
       return res.status(403).json({
         status: false,
-        message: authResult.message, // Return the authorization error message
+        message: authResult.message,
       });
     }
 
-    // Step 3: Verify the branch token
+    // Verify branch token
     BranchCommon.isBranchTokenValid(
       _token,
       branch_id,
@@ -272,68 +255,41 @@ exports.list = (req, res) => {
           console.error("Error checking token validity:", tokenErr);
           return res.status(500).json({
             status: false,
-            message: tokenErr,
+            message: "An internal error occurred while validating the token.",
           });
         }
 
         if (!tokenResult.status) {
           return res.status(401).json({
             status: false,
-            message: tokenResult.message, // Return the token validation message
+            message: tokenResult.message,
           });
         }
 
         const newToken = tokenResult.newToken;
 
-        ClientMasterTrackerModel.applicationByID(
-          application_id,
+        // Fetch application data
+        ClientMasterTrackerModel.applicationListByBranch(
+          filter_status || "",
           branch_id,
-          (err, application) => {
+          status || "",
+          (err, result) => {
             if (err) {
               console.error("Database error:", err);
-              return res
-                .status(500)
-                .json({ status: false, message: err.message, token: newToken });
-            }
-
-            if (!application) {
-              return res.status(404).json({
+              return res.status(500).json({
                 status: false,
-                message: "Application not found",
+                message: "An internal error occurred while fetching data.",
                 token: newToken,
               });
             }
 
-            ClientMasterTrackerModel.getCMTApplicationById(
-              application_id,
-              (err, CMTApplicationData) => {
-                if (err) {
-                  console.error("Database error:", err);
-                  return res.status(500).json({
-                    status: false,
-                    message: err.message,
-                    token: newToken,
-                  });
-                }
-
-                if (!CMTApplicationData) {
-                  return res.json({
-                    status: true,
-                    message: "Application fetched successfully 1",
-                    application,
-                    token: newToken,
-                  });
-                } else {
-                  return res.json({
-                    status: true,
-                    message: "Application fetched successfully 2",
-                    application,
-                    CMTData: CMTApplicationData,
-                    token: newToken,
-                  });
-                }
-              }
-            );
+            res.json({
+              status: true,
+              message: "Applications fetched successfully.",
+              customers: result,
+              totalResults: result.length,
+              token: newToken,
+            });
           }
         );
       }
