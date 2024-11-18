@@ -225,7 +225,7 @@ exports.listByBranchAuth = (req, res) => {
   const { branch_id, _token } = req.query;
 
   let missingFields = [];
-  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
+  if (!branch_id || branch_id === "") missingFields.push("Admin ID");
   if (!_token || _token === "") missingFields.push("Token");
 
   if (missingFields.length > 0) {
