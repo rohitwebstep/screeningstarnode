@@ -11,7 +11,7 @@ const clientSpocController = require("../../../controllers/admin/clientSpocContr
 // Basic routes
 router.post("/login", authController.login);
 router.get("/logout", authController.logout);
-router.get("/list", clientSpocController.listByBranchAuth);
+router.get("/client-spoc/list", clientSpocController.listByBranchAuth);
 router.post("/forgot-password-request", authController.forgotPasswordRequest);
 router.post("/forgot-password", authController.forgotPassword);
 
