@@ -6,10 +6,12 @@ const customerController = require("../../../controllers/customer/profileControl
 const clientRoutes = require("./clientRoutes");
 const reportCaseStatusRoutes = require("./reportCaseStatusRoutes");
 const candidateRoutes = require("./candidateRoutes");
+const clientSpocController = require("../../../controllers/admin/clientSpocController");
 
 // Basic routes
 router.post("/login", authController.login);
 router.get("/logout", authController.logout);
+router.get("/list", clientSpocController.listByBranchAuth);
 router.post("/forgot-password-request", authController.forgotPasswordRequest);
 router.post("/forgot-password", authController.forgotPassword);
 
