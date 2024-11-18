@@ -11,8 +11,18 @@ const { upload, saveImage, saveImages } = require("../../utils/imageSave");
 
 // Helper function to generate a password
 const generatePassword = (companyName) => {
-  const firstName = companyName.split(" ")[0];
-  return `${firstName}@123`;
+  // Check if companyName is null, undefined, or has a length of 0
+  if (!companyName || companyName.length < 1) {
+    // Generate a random password if companyName is invalid
+    return Math.random().toString(36).slice(-8) + "@123";
+  }
+
+  // Extract the first word (company name) and remove special characters
+  const firstName = companyName.split(" ")[0].replace(/[^a-zA-Z0-9]/g, "");
+
+  // Create the raw password and return the final password
+  const rawPassword = firstName;
+  return `${rawPassword}@123`;
 };
 
 const areEmailsUsed = (emails) => {
