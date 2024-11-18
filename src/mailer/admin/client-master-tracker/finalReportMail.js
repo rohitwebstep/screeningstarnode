@@ -47,6 +47,9 @@ async function finalReportMail(
   gender_title,
   client_name,
   application_id,
+  case_initiated_date,
+  final_report_date,
+  report_type,
   attachments_url,
   toArr,
   ccArr
@@ -103,11 +106,13 @@ async function finalReportMail(
 
     // Replace placeholders in the email template
     let template = email.template
+      .replace(/{{application_id}}/g, application_id)
+      .replace(/{{client_name}}/g, client_name)
       .replace(/{{company_name}}/g, company_name)
       .replace(/{{gender_title}}/g, gender_title)
-      .replace(/{{client_name}}/g, client_name)
-      .replace(/{{application_id}}/g, application_id);
-
+      .replace(/{{case_initiated_date}}/g, case_initiated_date)
+      .replace(/{{final_report_date}}/g, final_report_date)
+      .replace(/{{report_type}}/g, report_type);
     // Prepare CC list
     const ccList = ccArr
       .map((entry) => {

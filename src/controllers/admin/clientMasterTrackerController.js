@@ -1147,274 +1147,367 @@ exports.generateReport = (req, res) => {
                                     token: newToken,
                                   });
                                 }
-
-                                ClientMasterTrackerModel.getAttachmentsByClientAppID(
-                                  application_id,
-                                  (err, attachments) => {
+                                ClientMasterTrackerModel.getCMTApplicationById(
+                                  appId,
+                                  (err, CMTApplicationData) => {
                                     if (err) {
                                       console.error("Database error:", err);
                                       return res.status(500).json({
                                         status: false,
-                                        message: "Database error occurred",
+                                        message: err.message,
+                                        token: newToken,
                                       });
                                     }
 
-                                    ClientApplication.updateStatus(
-                                      mainJson.overall_status,
+                                    const case_initiated_date =
+                                      CMTApplicationData.initiation_date ||
+                                      "N/A";
+                                    const final_report_date =
+                                      CMTApplicationData.report_date || "N/A";
+                                    const report_type =
+                                      CMTApplicationData.report_type || "N/A";
+
+                                    ClientMasterTrackerModel.getAttachmentsByClientAppID(
                                       application_id,
-                                      (err, result) => {
+                                      (err, attachments) => {
                                         if (err) {
-                                          console.error(
-                                            "Database error during client application status update:",
-                                            err
-                                          );
+                                          console.error("Database error:", err);
                                           return res.status(500).json({
                                             status: false,
-                                            message: err.message,
-                                            token: newToken,
+                                            message: "Database error occurred",
                                           });
                                         }
 
-                                        if (
-                                          mainJson.overall_status &&
-                                          mainJson.is_verify
-                                        ) {
-                                          const status =
-                                            mainJson.overall_status.toLowerCase();
-                                          const verified =
-                                            mainJson.is_verify.toLowerCase();
-
-                                          const gender =
-                                            mainJson.gender?.toLowerCase();
-                                          const marital_status =
-                                            mainJson.marital_status?.toLowerCase();
-
-                                          let gender_title = "Mr.";
-
-                                          if (gender === "male") {
-                                            gender_title = "Mr.";
-                                          } else if (gender === "female") {
-                                            gender_title =
-                                              marital_status === "married"
-                                                ? "Mrs."
-                                                : "Ms.";
-                                          }
-
-                                          if (
-                                            status === "completed" ||
-                                            status === "complete"
-                                          ) {
-                                            if (verified === "yes") {
-                                              if (send_mail == 0) {
-                                                return res.status(200).json({
-                                                  status: true,
-                                                  message: `CMT Application ${
-                                                    currentCMTApplication &&
-                                                    Object.keys(
-                                                      currentCMTApplication
-                                                    ).length > 0
-                                                      ? "updated"
-                                                      : "created"
-                                                  } successfully`,
-                                                  email_status: 1,
-                                                  token: newToken,
-                                                });
-                                              }
-                                              // Send email notification
-                                              finalReportMail(
-                                                "cmt",
-                                                "final",
-                                                company_name,
-                                                gender_title,
-                                                application.name,
-                                                application.application_id,
-                                                attachments,
-                                                toArr,
-                                                ccArr
-                                              )
-                                                .then(() => {
-                                                  return res.status(200).json({
-                                                    status: true,
-                                                    message: `CMT Application ${
-                                                      currentCMTApplication &&
-                                                      Object.keys(
-                                                        currentCMTApplication
-                                                      ).length > 0
-                                                        ? "updated"
-                                                        : "created"
-                                                    } successfully and mail sent.`,
-                                                    token: newToken,
-                                                  });
-                                                })
-                                                .catch((emailError) => {
-                                                  console.error(
-                                                    "Error sending email:",
-                                                    emailError
-                                                  );
-
-                                                  return res.status(200).json({
-                                                    status: true,
-                                                    message: `CMT Application ${
-                                                      currentCMTApplication &&
-                                                      Object.keys(
-                                                        currentCMTApplication
-                                                      ).length > 0
-                                                        ? "updated"
-                                                        : "created"
-                                                    } successfully but failed to send mail.`,
-                                                    token: newToken,
-                                                  });
-                                                });
-                                            } else if (verified === "no") {
-                                              if (send_mail == 0) {
-                                                return res.status(200).json({
-                                                  status: true,
-                                                  message: `CMT Application ${
-                                                    currentCMTApplication &&
-                                                    Object.keys(
-                                                      currentCMTApplication
-                                                    ).length > 0
-                                                      ? "updated"
-                                                      : "created"
-                                                  } successfully`,
-                                                  email_status: 2,
-                                                  token: newToken,
-                                                });
-                                              }
-                                              qcReportCheckMail(
-                                                "cmt",
-                                                "qc",
-                                                gender_title,
-                                                application.name,
-                                                application.application_id,
-                                                attachments,
-                                                toArr,
-                                                ccArr
-                                              )
-                                                .then(() => {
-                                                  return res.status(200).json({
-                                                    status: true,
-                                                    message: `CMT Application ${
-                                                      currentCMTApplication &&
-                                                      Object.keys(
-                                                        currentCMTApplication
-                                                      ).length > 0
-                                                        ? "updated"
-                                                        : "created"
-                                                    } successfully and mail sent.`,
-                                                    token: newToken,
-                                                  });
-                                                })
-                                                .catch((emailError) => {
-                                                  console.error(
-                                                    "Error sending email:",
-                                                    emailError
-                                                  );
-
-                                                  return res.status(200).json({
-                                                    status: true,
-                                                    message: `CMT Application ${
-                                                      currentCMTApplication &&
-                                                      Object.keys(
-                                                        currentCMTApplication
-                                                      ).length > 0
-                                                        ? "updated"
-                                                        : "created"
-                                                    } successfully but failed to send mail.`,
-                                                    token: newToken,
-                                                  });
-                                                });
-                                            } else {
-                                              return res.status(200).json({
-                                                status: true,
-                                                message: `CMT Application ${
-                                                  currentCMTApplication &&
-                                                  Object.keys(
-                                                    currentCMTApplication
-                                                  ).length > 0
-                                                    ? "updated"
-                                                    : "created"
-                                                } successfully.`,
+                                        ClientApplication.updateStatus(
+                                          mainJson.overall_status,
+                                          application_id,
+                                          (err, result) => {
+                                            if (err) {
+                                              console.error(
+                                                "Database error during client application status update:",
+                                                err
+                                              );
+                                              return res.status(500).json({
+                                                status: false,
+                                                message: err.message,
                                                 token: newToken,
                                               });
                                             }
-                                          } else {
-                                            const completeStatusArr = [
-                                              "completed",
-                                              "completed_green",
-                                              "completed_red",
-                                              "completed_yellow",
-                                              "completed_pink",
-                                              "completed_orange",
-                                            ];
 
-                                            let allMatch = true;
+                                            if (
+                                              mainJson.overall_status &&
+                                              mainJson.is_verify
+                                            ) {
+                                              const status =
+                                                mainJson.overall_status.toLowerCase();
+                                              const verified =
+                                                mainJson.is_verify.toLowerCase();
 
-                                            // Loop through the annexure object
-                                            for (let key in annexure) {
-                                              const db_table = key ?? null;
-                                              const modifiedDbTable =
-                                                db_table.replace(/-/g, "_");
-                                              const subJson =
-                                                annexure[modifiedDbTable] ??
-                                                null;
+                                              const gender =
+                                                mainJson.gender?.toLowerCase();
+                                              const marital_status =
+                                                mainJson.marital_status?.toLowerCase();
 
-                                              if (subJson) {
-                                                for (let prop in subJson) {
-                                                  if (
-                                                    prop.startsWith(
-                                                      "color_status"
-                                                    )
-                                                  ) {
-                                                    const colorStatusValue =
-                                                      typeof subJson[prop] ===
-                                                      "string"
-                                                        ? subJson[
-                                                            prop
-                                                          ].toLowerCase()
-                                                        : null;
+                                              let gender_title = "Mr.";
 
-                                                    if (
-                                                      !completeStatusArr.includes(
-                                                        colorStatusValue
-                                                      )
-                                                    ) {
-                                                      allMatch = false;
-                                                      break;
-                                                    }
+                                              if (gender === "male") {
+                                                gender_title = "Mr.";
+                                              } else if (gender === "female") {
+                                                gender_title =
+                                                  marital_status === "married"
+                                                    ? "Mrs."
+                                                    : "Ms.";
+                                              }
+
+                                              if (
+                                                status === "completed" ||
+                                                status === "complete"
+                                              ) {
+                                                if (verified === "yes") {
+                                                  if (send_mail == 0) {
+                                                    return res
+                                                      .status(200)
+                                                      .json({
+                                                        status: true,
+                                                        message: `CMT Application ${
+                                                          currentCMTApplication &&
+                                                          Object.keys(
+                                                            currentCMTApplication
+                                                          ).length > 0
+                                                            ? "updated"
+                                                            : "created"
+                                                        } successfully`,
+                                                        email_status: 1,
+                                                        token: newToken,
+                                                      });
                                                   }
+                                                  // Send email notification
+                                                  finalReportMail(
+                                                    "cmt",
+                                                    "final",
+                                                    company_name,
+                                                    gender_title,
+                                                    application.name,
+                                                    application.application_id,
+                                                    case_initiated_date,
+                                                    final_report_date,
+                                                    report_type,
+                                                    attachments,
+                                                    toArr,
+                                                    ccArr
+                                                  )
+                                                    .then(() => {
+                                                      return res
+                                                        .status(200)
+                                                        .json({
+                                                          status: true,
+                                                          message: `CMT Application ${
+                                                            currentCMTApplication &&
+                                                            Object.keys(
+                                                              currentCMTApplication
+                                                            ).length > 0
+                                                              ? "updated"
+                                                              : "created"
+                                                          } successfully and mail sent.`,
+                                                          token: newToken,
+                                                        });
+                                                    })
+                                                    .catch((emailError) => {
+                                                      console.error(
+                                                        "Error sending email:",
+                                                        emailError
+                                                      );
+
+                                                      return res
+                                                        .status(200)
+                                                        .json({
+                                                          status: true,
+                                                          message: `CMT Application ${
+                                                            currentCMTApplication &&
+                                                            Object.keys(
+                                                              currentCMTApplication
+                                                            ).length > 0
+                                                              ? "updated"
+                                                              : "created"
+                                                          } successfully but failed to send mail.`,
+                                                          token: newToken,
+                                                        });
+                                                    });
+                                                } else if (verified === "no") {
+                                                  if (send_mail == 0) {
+                                                    return res
+                                                      .status(200)
+                                                      .json({
+                                                        status: true,
+                                                        message: `CMT Application ${
+                                                          currentCMTApplication &&
+                                                          Object.keys(
+                                                            currentCMTApplication
+                                                          ).length > 0
+                                                            ? "updated"
+                                                            : "created"
+                                                        } successfully`,
+                                                        email_status: 2,
+                                                        token: newToken,
+                                                      });
+                                                  }
+                                                  qcReportCheckMail(
+                                                    "cmt",
+                                                    "qc",
+                                                    gender_title,
+                                                    application.name,
+                                                    application.application_id,
+                                                    attachments,
+                                                    toArr,
+                                                    ccArr
+                                                  )
+                                                    .then(() => {
+                                                      return res
+                                                        .status(200)
+                                                        .json({
+                                                          status: true,
+                                                          message: `CMT Application ${
+                                                            currentCMTApplication &&
+                                                            Object.keys(
+                                                              currentCMTApplication
+                                                            ).length > 0
+                                                              ? "updated"
+                                                              : "created"
+                                                          } successfully and mail sent.`,
+                                                          token: newToken,
+                                                        });
+                                                    })
+                                                    .catch((emailError) => {
+                                                      console.error(
+                                                        "Error sending email:",
+                                                        emailError
+                                                      );
+
+                                                      return res
+                                                        .status(200)
+                                                        .json({
+                                                          status: true,
+                                                          message: `CMT Application ${
+                                                            currentCMTApplication &&
+                                                            Object.keys(
+                                                              currentCMTApplication
+                                                            ).length > 0
+                                                              ? "updated"
+                                                              : "created"
+                                                          } successfully but failed to send mail.`,
+                                                          token: newToken,
+                                                        });
+                                                    });
+                                                } else {
+                                                  return res.status(200).json({
+                                                    status: true,
+                                                    message: `CMT Application ${
+                                                      currentCMTApplication &&
+                                                      Object.keys(
+                                                        currentCMTApplication
+                                                      ).length > 0
+                                                        ? "updated"
+                                                        : "created"
+                                                    } successfully.`,
+                                                    token: newToken,
+                                                  });
                                                 }
                                               } else {
-                                                allMatch = false;
-                                                break;
-                                              }
-                                            }
+                                                const completeStatusArr = [
+                                                  "completed",
+                                                  "completed_green",
+                                                  "completed_red",
+                                                  "completed_yellow",
+                                                  "completed_pink",
+                                                  "completed_orange",
+                                                ];
 
-                                            // Log the overall result
-                                            if (allMatch) {
-                                              if (send_mail == 0) {
-                                                return res.status(200).json({
-                                                  status: true,
-                                                  message: `CMT Application ${
-                                                    currentCMTApplication &&
-                                                    Object.keys(
-                                                      currentCMTApplication
-                                                    ).length > 0
-                                                      ? "updated"
-                                                      : "created"
-                                                  } successfully`,
-                                                  email_status: 2,
-                                                  token: newToken,
-                                                });
-                                              }
-                                              readyForReport(
-                                                "cmt",
-                                                "ready",
-                                                application.application_id,
-                                                toArr,
-                                                ccArr
-                                              )
-                                                .then(() => {
+                                                let allMatch = true;
+
+                                                // Loop through the annexure object
+                                                for (let key in annexure) {
+                                                  const db_table = key ?? null;
+                                                  const modifiedDbTable =
+                                                    db_table.replace(/-/g, "_");
+                                                  const subJson =
+                                                    annexure[modifiedDbTable] ??
+                                                    null;
+
+                                                  if (subJson) {
+                                                    for (let prop in subJson) {
+                                                      if (
+                                                        prop.startsWith(
+                                                          "color_status"
+                                                        )
+                                                      ) {
+                                                        const colorStatusValue =
+                                                          typeof subJson[
+                                                            prop
+                                                          ] === "string"
+                                                            ? subJson[
+                                                                prop
+                                                              ].toLowerCase()
+                                                            : null;
+
+                                                        if (
+                                                          !completeStatusArr.includes(
+                                                            colorStatusValue
+                                                          )
+                                                        ) {
+                                                          allMatch = false;
+                                                          break;
+                                                        }
+                                                      }
+                                                    }
+                                                  } else {
+                                                    allMatch = false;
+                                                    break;
+                                                  }
+                                                }
+
+                                                // Log the overall result
+                                                if (allMatch) {
+                                                  if (send_mail == 0) {
+                                                    return res
+                                                      .status(200)
+                                                      .json({
+                                                        status: true,
+                                                        message: `CMT Application ${
+                                                          currentCMTApplication &&
+                                                          Object.keys(
+                                                            currentCMTApplication
+                                                          ).length > 0
+                                                            ? "updated"
+                                                            : "created"
+                                                        } successfully`,
+                                                        email_status: 2,
+                                                        token: newToken,
+                                                      });
+                                                  }
+                                                  readyForReport(
+                                                    "cmt",
+                                                    "ready",
+                                                    application.application_id,
+                                                    application.name,
+                                                    mainJson.overall_status
+                                                      .length < 4
+                                                      ? mainJson.overall_status
+                                                          .toUpperCase()
+                                                          .replace(
+                                                            /[^a-zA-Z0-9]/g,
+                                                            " "
+                                                          )
+                                                      : mainJson.overall_status
+                                                          .replace(
+                                                            /[^a-zA-Z0-9\s]/g,
+                                                            " "
+                                                          )
+                                                          .replace(
+                                                            /\b\w/g,
+                                                            (char) =>
+                                                              char.toUpperCase()
+                                                          ),
+                                                    toArr,
+                                                    ccArr
+                                                  )
+                                                    .then(() => {
+                                                      return res
+                                                        .status(200)
+                                                        .json({
+                                                          status: true,
+                                                          message: `CMT Application ${
+                                                            currentCMTApplication &&
+                                                            Object.keys(
+                                                              currentCMTApplication
+                                                            ).length > 0
+                                                              ? "updated"
+                                                              : "created"
+                                                          } successfully and mail sent.`,
+                                                          token: newToken,
+                                                        });
+                                                    })
+                                                    .catch((emailError) => {
+                                                      console.error(
+                                                        "Error sending email:",
+                                                        emailError
+                                                      );
+
+                                                      return res
+                                                        .status(200)
+                                                        .json({
+                                                          status: true,
+                                                          message: `CMT Application ${
+                                                            currentCMTApplication &&
+                                                            Object.keys(
+                                                              currentCMTApplication
+                                                            ).length > 0
+                                                              ? "updated"
+                                                              : "created"
+                                                          } successfully but failed to send mail.`,
+                                                          token: newToken,
+                                                        });
+                                                    });
+                                                } else {
                                                   return res.status(200).json({
                                                     status: true,
                                                     message: `CMT Application ${
@@ -1424,45 +1517,14 @@ exports.generateReport = (req, res) => {
                                                       ).length > 0
                                                         ? "updated"
                                                         : "created"
-                                                    } successfully and mail sent.`,
+                                                    } successfully.`,
                                                     token: newToken,
                                                   });
-                                                })
-                                                .catch((emailError) => {
-                                                  console.error(
-                                                    "Error sending email:",
-                                                    emailError
-                                                  );
-
-                                                  return res.status(200).json({
-                                                    status: true,
-                                                    message: `CMT Application ${
-                                                      currentCMTApplication &&
-                                                      Object.keys(
-                                                        currentCMTApplication
-                                                      ).length > 0
-                                                        ? "updated"
-                                                        : "created"
-                                                    } successfully but failed to send mail.`,
-                                                    token: newToken,
-                                                  });
-                                                });
-                                            } else {
-                                              return res.status(200).json({
-                                                status: true,
-                                                message: `CMT Application ${
-                                                  currentCMTApplication &&
-                                                  Object.keys(
-                                                    currentCMTApplication
-                                                  ).length > 0
-                                                    ? "updated"
-                                                    : "created"
-                                                } successfully.`,
-                                                token: newToken,
-                                              });
+                                                }
+                                              }
                                             }
                                           }
-                                        }
+                                        );
                                       }
                                     );
                                   }
@@ -1898,126 +1960,150 @@ exports.upload = async (req, res) => {
                             });
                           }
 
-                          const gender = application.gender?.toLowerCase();
-                          const maritalStatus =
-                            application.marital_status?.toLowerCase();
+                          ClientMasterTrackerModel.getCMTApplicationById(
+                            appId,
+                            (err, CMTApplicationData) => {
+                              if (err) {
+                                console.error("Database error:", err);
+                                return res.status(500).json({
+                                  status: false,
+                                  message: err.message,
+                                  token: newToken,
+                                });
+                              }
 
-                          let genderTitle = "Mr.";
-                          if (gender === "male") {
-                            genderTitle = "Mr.";
-                          } else if (gender === "female") {
-                            genderTitle =
-                              maritalStatus === "married" ? "Mrs." : "Ms.";
-                          }
+                              const case_initiated_date =
+                                CMTApplicationData.initiation_date || "N/A";
+                              const final_report_date =
+                                CMTApplicationData.report_date || "N/A";
+                              const report_type =
+                                CMTApplicationData.report_type || "N/A";
 
-                          // Prepare and send email based on application status
-                          // Final report email
-                          if (emailStatus == 1) {
-                            finalReportMail(
-                              "cmt",
-                              "final",
-                              companyName,
-                              genderTitle,
-                              application.name,
-                              application.application_id,
-                              attachments,
-                              toArr,
-                              ccArr
-                            )
-                              .then(() => {
+                              const gender = application.gender?.toLowerCase();
+                              const maritalStatus =
+                                application.marital_status?.toLowerCase();
+
+                              let genderTitle = "Mr.";
+                              if (gender === "male") {
+                                genderTitle = "Mr.";
+                              } else if (gender === "female") {
+                                genderTitle =
+                                  maritalStatus === "married" ? "Mrs." : "Ms.";
+                              }
+
+                              // Prepare and send email based on application status
+                              // Final report email
+                              if (emailStatus == 1) {
+                                finalReportMail(
+                                  "cmt",
+                                  "final",
+                                  companyName,
+                                  genderTitle,
+                                  application.name,
+                                  application.application_id,
+                                  case_initiated_date,
+                                  final_report_date,
+                                  report_type,
+                                  attachments,
+                                  toArr,
+                                  ccArr
+                                )
+                                  .then(() => {
+                                    return res.status(200).json({
+                                      status: true,
+                                      message: "CMT Final Report mail sent.",
+                                      token: newToken,
+                                      savedImagePaths,
+                                    });
+                                  })
+                                  .catch((emailError) => {
+                                    console.error(
+                                      "Error sending email for final report:",
+                                      emailError
+                                    );
+                                    return res.status(200).json({
+                                      status: true,
+                                      message: "Failed to send CMT mail.",
+                                      token: newToken,
+                                      savedImagePaths,
+                                    });
+                                  });
+                              }
+                              // QC report email
+                              else if (emailStatus == 2) {
+                                qcReportCheckMail(
+                                  "cmt",
+                                  "qc",
+                                  genderTitle,
+                                  application.name,
+                                  application.application_id,
+                                  attachments,
+                                  toArr,
+                                  ccArr
+                                )
+                                  .then(() => {
+                                    return res.status(200).json({
+                                      status: true,
+                                      message:
+                                        "CMT Quality Check Report mail sent.",
+                                      token: newToken,
+                                      savedImagePaths,
+                                    });
+                                  })
+                                  .catch((emailError) => {
+                                    console.error(
+                                      "Error sending email for QC report:",
+                                      emailError
+                                    );
+                                    return res.status(200).json({
+                                      status: true,
+                                      message: "Failed to send CMT mail.",
+                                      token: newToken,
+                                      savedImagePaths,
+                                    });
+                                  });
+                              }
+                              // Handling for other statuses
+                              else if (emailStatus == 3) {
+                                readyForReport(
+                                  "cmt",
+                                  "ready",
+                                  application.application_id,
+                                  toArr,
+                                  ccArr
+                                )
+                                  .then(() => {
+                                    return res.status(200).json({
+                                      status: true,
+                                      message: "Ready for Report mail sent.",
+                                      token: newToken,
+                                      savedImagePaths,
+                                    });
+                                  })
+                                  .catch((emailError) => {
+                                    console.error(
+                                      "Error sending email for report:",
+                                      emailError
+                                    );
+                                    return res.status(200).json({
+                                      status: true,
+                                      message: "Failed to send CMT mail.",
+                                      token: newToken,
+                                      savedImagePaths,
+                                    });
+                                  });
+                              }
+                              // Handle unknown email status
+                              else {
                                 return res.status(200).json({
                                   status: true,
-                                  message: "CMT Final Report mail sent.",
+                                  message: "Images uploaded successfully.",
                                   token: newToken,
                                   savedImagePaths,
                                 });
-                              })
-                              .catch((emailError) => {
-                                console.error(
-                                  "Error sending email for final report:",
-                                  emailError
-                                );
-                                return res.status(200).json({
-                                  status: true,
-                                  message: "Failed to send CMT mail.",
-                                  token: newToken,
-                                  savedImagePaths,
-                                });
-                              });
-                          }
-                          // QC report email
-                          else if (emailStatus == 2) {
-                            qcReportCheckMail(
-                              "cmt",
-                              "qc",
-                              genderTitle,
-                              application.name,
-                              application.application_id,
-                              attachments,
-                              toArr,
-                              ccArr
-                            )
-                              .then(() => {
-                                return res.status(200).json({
-                                  status: true,
-                                  message:
-                                    "CMT Quality Check Report mail sent.",
-                                  token: newToken,
-                                  savedImagePaths,
-                                });
-                              })
-                              .catch((emailError) => {
-                                console.error(
-                                  "Error sending email for QC report:",
-                                  emailError
-                                );
-                                return res.status(200).json({
-                                  status: true,
-                                  message: "Failed to send CMT mail.",
-                                  token: newToken,
-                                  savedImagePaths,
-                                });
-                              });
-                          }
-                          // Handling for other statuses
-                          else if (emailStatus == 3) {
-                            readyForReport(
-                              "cmt",
-                              "ready",
-                              application.application_id,
-                              toArr,
-                              ccArr
-                            )
-                              .then(() => {
-                                return res.status(200).json({
-                                  status: true,
-                                  message: "Ready for Report mail sent.",
-                                  token: newToken,
-                                  savedImagePaths,
-                                });
-                              })
-                              .catch((emailError) => {
-                                console.error(
-                                  "Error sending email for report:",
-                                  emailError
-                                );
-                                return res.status(200).json({
-                                  status: true,
-                                  message: "Failed to send CMT mail.",
-                                  token: newToken,
-                                  savedImagePaths,
-                                });
-                              });
-                          }
-                          // Handle unknown email status
-                          else {
-                            return res.status(200).json({
-                              status: true,
-                              message: "Images uploaded successfully.",
-                              token: newToken,
-                              savedImagePaths,
-                            });
-                          }
+                              }
+                            }
+                          );
                         }
                       );
                     }

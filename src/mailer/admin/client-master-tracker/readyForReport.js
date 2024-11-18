@@ -2,7 +2,15 @@ const nodemailer = require("nodemailer");
 const { startConnection, connectionRelease } = require("../../../config/db");
 
 // Function to send email
-async function readyForReport(module, action, application_id, toArr, ccArr) {
+async function readyForReport(
+  module,
+  action,
+  application_id,
+  name,
+  qc_status,
+  toArr,
+  ccArr
+) {
   const connection = await new Promise((resolve, reject) => {
     startConnection((err, conn) => {
       if (err) {
@@ -52,7 +60,10 @@ async function readyForReport(module, action, application_id, toArr, ccArr) {
 
     // Replace placeholders in the email template
     let template = email.template;
-    template = template.replace(/{{application_id}}/g, application_id);
+    template = template
+      .replace(/{{application_id}}/g, application_id)
+      .replace(/{{name}}/g, name)
+      .replace(/{{qc_status}}/g, qc_status);
 
     // Prepare CC list
     const ccList = ccArr
