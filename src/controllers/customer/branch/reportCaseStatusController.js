@@ -217,7 +217,7 @@ exports.annexureData = (req, res) => {
   });
 };
 
-exports.annexureData = (req, res) => {
+exports.list = (req, res) => {
   const { application_id, db_table, branch_id, _token } = req.query;
 
   let missingFields = [];
