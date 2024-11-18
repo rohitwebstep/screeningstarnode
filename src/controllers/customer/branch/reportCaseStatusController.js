@@ -217,7 +217,7 @@ exports.annexureData = (req, res) => {
 };
 
 exports.list = (req, res) => {
-  const { application_id, db_table, branch_id, _token } = req.query;
+  const { application_id, branch_id, _token } = req.query;
 
   let missingFields = [];
   if (
@@ -225,29 +225,25 @@ exports.list = (req, res) => {
     application_id === "" ||
     application_id === undefined ||
     application_id === "undefined"
-  )
+  ) {
     missingFields.push("Application ID");
-  if (
-    !db_table ||
-    db_table === "" ||
-    db_table === undefined ||
-    db_table === "undefined"
-  )
-    missingFields.push("DB Table");
+  }
   if (
     !branch_id ||
     branch_id === "" ||
     branch_id === undefined ||
     branch_id === "undefined"
-  )
-    missingFields.push("Admin ID");
+  ) {
+    missingFields.push("Branch ID");
+  }
   if (
     !_token ||
     _token === "" ||
     _token === undefined ||
     _token === "undefined"
-  )
+  ) {
     missingFields.push("Token");
+  }
 
   if (missingFields.length > 0) {
     return res.status(400).json({
