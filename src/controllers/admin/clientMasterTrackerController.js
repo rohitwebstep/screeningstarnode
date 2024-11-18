@@ -1148,7 +1148,7 @@ exports.generateReport = (req, res) => {
                                   });
                                 }
                                 ClientMasterTrackerModel.getCMTApplicationById(
-                                  appId,
+                                  application_id,
                                   (err, CMTApplicationData) => {
                                     if (err) {
                                       console.error("Database error:", err);
