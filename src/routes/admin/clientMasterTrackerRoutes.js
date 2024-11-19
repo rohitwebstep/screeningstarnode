@@ -32,6 +32,11 @@ router.get(
 );
 
 router.get(
+  "/services-annexure-data",
+  clientMasterTrackerController.annexureDataByServiceIds
+);
+
+router.get(
   "/application-service",
   clientMasterTrackerController.annexureDataByServiceIdofApplication
 );
