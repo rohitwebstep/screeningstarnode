@@ -464,35 +464,61 @@ const Customer = {
   },
 
   list: (callback) => {
-    const sql = `
-      SELECT 
-        customers.*, 
-        customers.id AS main_id, 
-        customer_metas.*, 
-        customer_metas.id AS meta_id,
-        COALESCE(branch_counts.branch_count, 0) AS branch_count
-      FROM 
-        customers
-      LEFT JOIN 
-        customer_metas 
-      ON 
-        customers.id = customer_metas.customer_id
-      LEFT JOIN 
-        (
+   const sql = `
+      WITH BranchesCTE AS (
           SELECT 
-            customer_id, 
-            COUNT(*) AS branch_count
+              b.id AS branch_id,
+              b.customer_id
           FROM 
-            branches
+              branches b
+      )
+      SELECT 
+          customers.client_unique_id,
+          customers.name,
+          customer_metas.tat_days,
+          customer_metas.single_point_of_contact,
+          customers.id AS main_id,
+          COALESCE(branch_counts.branch_count, 0) AS branch_count,
+          COALESCE(application_counts.application_count, 0) AS application_count,
+          report_admin.name AS report_generated_by_name,
+          qc_admin.name AS qc_done_by_name
+      FROM 
+          customers
+      LEFT JOIN 
+          customer_metas ON customers.id = customer_metas.customer_id
+      LEFT JOIN (
+          SELECT 
+              customer_id, 
+              COUNT(*) AS branch_count
+          FROM 
+              branches
           GROUP BY 
-            customer_id
-        ) AS branch_counts
-      ON 
-        customers.id = branch_counts.customer_id
+              customer_id
+      ) AS branch_counts ON customers.id = branch_counts.customer_id
+      LEFT JOIN (
+          SELECT 
+              b.customer_id, 
+              COUNT(ca.id) AS application_count,
+              MAX(ca.created_at) AS latest_application_date
+          FROM 
+              BranchesCTE b
+          INNER JOIN 
+              client_applications ca ON b.branch_id = ca.branch_id
+          /* WHERE ca.status != 'closed' */
+          GROUP BY 
+              b.customer_id
+      ) AS application_counts ON customers.id = application_counts.customer_id
+      LEFT JOIN 
+          admin AS report_admin ON report_admin.id = customers.report_generate_by
+      LEFT JOIN 
+          admin AS qc_admin ON qc_admin.id = customers.qc_done_by
       WHERE 
-        customers.status != '0'
-    `;
-
+          COALESCE(application_counts.application_count, 0) > 0
+          ${customersIDConditionString}
+      ORDER BY 
+          application_counts.latest_application_date DESC;
+  `;
+    
     startConnection((err, connection) => {
       if (err) {
         return callback(
