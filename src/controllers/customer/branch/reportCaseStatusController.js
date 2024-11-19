@@ -243,14 +243,7 @@ exports.annexureDataByServiceIds = (req, res) => {
 
         function finalizeRequest() {
           pendingRequests -= 1;
-          console.log(`Pending requests: ${pendingRequests}`);
           if (pendingRequests === 0) {
-            console.log({
-              status: true,
-              message: "Applications fetched successfully.",
-              results: annexureResults,
-              token: newToken,
-            });
             return res.status(200).json({
               status: true,
               message: "Applications fetched successfully.",
