@@ -737,6 +737,10 @@ exports.upload = async (req, res) => {
               targetDir = `uploads/customer/${customer_code}/logo`;
               db_column = `logo`;
               break;
+            case "custom_logo":
+              targetDir = `uploads/customer/${customer_code}/custom-logo`;
+              db_column = `custom_logo`;
+              break;
             case "agr_upload":
               targetDir = `uploads/customer/${customer_code}/agreement`;
               db_column = `agreement`;
