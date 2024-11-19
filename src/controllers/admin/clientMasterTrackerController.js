@@ -2208,13 +2208,13 @@ exports.annexureDataByServiceIds = (req, res) => {
               );
               annexureResults.push({
                 service_id: id,
-                status: false,
+                serviceStatus: false,
                 message: err.message,
               });
             } else if (!reportFormJson) {
               annexureResults.push({
                 service_id: id,
-                status: false,
+                serviceStatus: false,
                 message: "Report form JSON not found",
               });
             } else {
@@ -2234,7 +2234,10 @@ exports.annexureDataByServiceIds = (req, res) => {
                     );
                     annexureResults.push({
                       service_id: id,
-                      status: false,
+                      annexureStatus: false,
+                      annexureInfo: null,
+                      serviceStatus: true,
+                      serviceInfo: reportFormJson,
                       message:
                         "An error occurred while fetching annexure data.",
                       error: err,
@@ -2242,13 +2245,17 @@ exports.annexureDataByServiceIds = (req, res) => {
                   } else if (!annexureData) {
                     annexureResults.push({
                       service_id: id,
-                      status: false,
+                      annexureStatus: false,
+                      annexureInfo: null,
+                      serviceStatus: true,
+                      serviceInfo: reportFormJson,
                       message: "Annexure Data not found.",
                     });
                   } else {
                     annexureResults.push({
                       service_id: id,
-                      status: true,
+                      annexureStatus: true,
+                      serviceStatus: true,
                       serviceInfo: reportFormJson,
                       annexureInfo: annexureData,
                       heading,
