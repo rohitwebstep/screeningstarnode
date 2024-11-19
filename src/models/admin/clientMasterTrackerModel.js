@@ -253,11 +253,11 @@ const Customer = {
         ON 
           ca.id = cmt.client_application_id
         LEFT JOIN 
-          \`admin\` AS qc_admin 
+          \`admins\` AS qc_admin 
         ON 
           qc_admin.id = cmt.qc_done_by
         LEFT JOIN 
-          \`admin\` AS report_admin 
+          \`admins\` AS report_admin 
         ON 
           report_admin.id = cmt.report_generate_by
         WHERE 
