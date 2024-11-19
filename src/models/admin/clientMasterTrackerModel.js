@@ -237,8 +237,10 @@ const Customer = {
           cmt.report_status,
           cmt.report_type,
           cmt.qc_done_by,
+          qc_admin.name AS qc_done_by_name,
           cmt.delay_reason,
           cmt.report_generate_by,
+          report_admin.name AS report_generated_by_name,
           cmt.case_upload
         FROM 
           \`client_applications\` ca
@@ -250,6 +252,14 @@ const Customer = {
           \`cmt_applications\` cmt 
         ON 
           ca.id = cmt.client_application_id
+        LEFT JOIN 
+          \`admin\` AS qc_admin 
+        ON 
+          qc_admin.id = cmt.qc_done_by
+        LEFT JOIN 
+          \`admin\` AS report_admin 
+        ON 
+          report_admin.id = cmt.report_generate_by
         WHERE 
           ca.\`branch_id\` = ?`;
 
