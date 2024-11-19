@@ -2197,13 +2197,23 @@ exports.annexureDataByServiceIds = (req, res) => {
       const annexureResults = [];
       let pendingRequests = serviceIds.length;
 
+      if (pendingRequests === 0) {
+        // No service IDs provided, return immediately.
+        return res.status(200).json({
+          status: true,
+          message: "No service IDs to process.",
+          results: annexureResults,
+          token: newToken,
+        });
+      }
+
       serviceIds.forEach((id) => {
         ClientMasterTrackerModel.reportFormJsonByServiceID(
           id,
           (err, reportFormJson) => {
             if (err) {
               console.error(
-                `Error fetching report form JSON for service_id ${id}:`,
+                `Error fetching report form JSON for service ID ${id}:`,
                 err
               );
               annexureResults.push({
@@ -2211,73 +2221,88 @@ exports.annexureDataByServiceIds = (req, res) => {
                 serviceStatus: false,
                 message: err.message,
               });
-            } else if (!reportFormJson) {
+              finalizeRequest();
+              return;
+            }
+
+            if (!reportFormJson) {
+              console.warn(`Report form JSON not found for service ID ${id}`);
               annexureResults.push({
                 service_id: id,
                 serviceStatus: false,
                 message: "Report form JSON not found",
               });
-            } else {
-              const parsedData = JSON.parse(reportFormJson.json);
-              const db_table = parsedData.db_table;
-              const heading = parsedData.heading;
-              const modifiedDbTable = db_table.replace(/-/g, "_");
-
-              ClientMasterTrackerModel.annexureData(
-                application_id,
-                modifiedDbTable,
-                (err, annexureData) => {
-                  if (err) {
-                    console.error(
-                      `Error fetching annexure data for service_id ${id}:`,
-                      err
-                    );
-                    annexureResults.push({
-                      service_id: id,
-                      annexureStatus: false,
-                      annexureData: null,
-                      serviceStatus: true,
-                      reportFormJson: reportFormJson,
-                      message:
-                        "An error occurred while fetching annexure data.",
-                      error: err,
-                    });
-                  } else if (!annexureData) {
-                    annexureResults.push({
-                      service_id: id,
-                      annexureStatus: false,
-                      annexureData: null,
-                      serviceStatus: true,
-                      reportFormJson: reportFormJson,
-                      message: "Annexure Data not found.",
-                    });
-                  } else {
-                    annexureResults.push({
-                      service_id: id,
-                      annexureStatus: true,
-                      serviceStatus: true,
-                      reportFormJson: reportFormJson,
-                      annexureData: annexureData,
-                      heading,
-                    });
-                  }
-                  pendingRequests -= 1;
-
-                  // If all requests are complete, send the response
-                  if (pendingRequests === 0) {
-                    return res.status(200).json({
-                      status: true,
-                      message: "Applications fetched successfully.",
-                      results: annexureResults,
-                      token: newToken,
-                    });
-                  }
-                }
-              );
+              finalizeRequest();
+              return;
             }
+
+            const parsedData = JSON.parse(reportFormJson.json);
+            const db_table = parsedData.db_table.replace(/-/g, "_"); // Modify table name
+            const heading = parsedData.heading;
+
+            ClientMasterTrackerModel.annexureData(
+              application_id,
+              db_table,
+              (err, annexureData) => {
+                if (err) {
+                  console.error(
+                    `Error fetching annexure data for service ID ${id}:`,
+                    err
+                  );
+                  annexureResults.push({
+                    service_id: id,
+                    annexureStatus: false,
+                    annexureData: null,
+                    serviceStatus: true,
+                    reportFormJson,
+                    message: "An error occurred while fetching annexure data.",
+                    error: err,
+                  });
+                } else if (!annexureData) {
+                  console.warn(`Annexure data not found for service ID ${id}`);
+                  annexureResults.push({
+                    service_id: id,
+                    annexureStatus: false,
+                    annexureData: null,
+                    serviceStatus: true,
+                    reportFormJson,
+                    message: "Annexure Data not found.",
+                  });
+                } else {
+                  annexureResults.push({
+                    service_id: id,
+                    annexureStatus: true,
+                    serviceStatus: true,
+                    reportFormJson,
+                    annexureData,
+                    heading,
+                  });
+                }
+                finalizeRequest();
+              }
+            );
           }
         );
       });
+
+      function finalizeRequest() {
+        pendingRequests -= 1;
+        console.log(`Pending requests: ${pendingRequests}`);
+        if (pendingRequests === 0) {
+          console.log({
+            status: true,
+            message: "Applications fetched successfully.",
+            results: annexureResults,
+            token: newToken,
+          });
+          return res.status(200).json({
+            status: true,
+            message: "Applications fetched successfully.",
+            results: annexureResults,
+            token: newToken,
+          });
+        }
+      }
     });
   });
 };
