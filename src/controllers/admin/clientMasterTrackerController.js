@@ -1252,6 +1252,7 @@ exports.generateReport = (req, res) => {
                                                     case_initiated_date,
                                                     final_report_date,
                                                     report_type,
+                                                    mainJson.overall_status,
                                                     attachments,
                                                     toArr,
                                                     ccArr
@@ -1978,6 +1979,8 @@ exports.upload = async (req, res) => {
                                 CMTApplicationData.report_date || "N/A";
                               const report_type =
                                 CMTApplicationData.report_type || "N/A";
+                              const overall_status =
+                                CMTApplicationData.overall_status || "N/A";
 
                               const gender = application.gender?.toLowerCase();
                               const maritalStatus =
@@ -2004,6 +2007,7 @@ exports.upload = async (req, res) => {
                                   case_initiated_date,
                                   final_report_date,
                                   report_type,
+                                  overall_status,
                                   attachments,
                                   toArr,
                                   ccArr
