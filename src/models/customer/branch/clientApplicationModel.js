@@ -272,10 +272,9 @@ const clientApplication = {
                     return reject(err);
                   }
 
-                  const servicesTitles = servicesResults
-                    .map((service) => service.title)
-                    .join(", ");
-
+                  const servicesTitles = servicesResults.map(
+                    (service) => service.title
+                  );
                   finalResults.push({
                     ...clientApp,
                     cmtApplications: cmtData.length > 0 ? cmtData : [],
