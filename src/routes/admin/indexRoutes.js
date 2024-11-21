@@ -10,7 +10,7 @@ router.post("/forgot-password-request", authController.forgotPasswordRequest);
 router.post("/forgot-password", authController.forgotPassword);
 router.get("/logout", authController.logout);
 router.get("/list", adminController.list);
-router.get("/spocs-list", adminController.spocsList);
+router.get("/add-client-listings", adminController.addClientListings);
 router.post("/verify-admin-login", authController.validateLogin);
 
 module.exports = router;

@@ -5,6 +5,7 @@ const AuthorizedDetail = require("../../models/admin/authorizedDetailModel");
 const BillingEscalation = require("../../models/admin/billingEscalationModel");
 const BillingSpoc = require("../../models/admin/billingSpocModel");
 const ClientSpoc = require("../../models/admin/clientSpocModel");
+const Service = require("../../models/admin/serviceModel");
 
 // Controller to list all Billing SPOCs
 exports.list = (req, res) => {
@@ -60,7 +61,7 @@ exports.list = (req, res) => {
   });
 };
 
-exports.spocsList = (req, res) => {
+exports.addClientListings = (req, res) => {
   const { admin_id, _token } = req.query;
 
   // Check for missing fields
@@ -106,6 +107,12 @@ exports.spocsList = (req, res) => {
       // Fetch all required data
       const dataPromises = [
         new Promise((resolve) =>
+          Admin.list((err, result) => {
+            if (err) return resolve([]);
+            resolve(result);
+          })
+        ),
+        new Promise((resolve) =>
           AuthorizedDetail.list((err, result) => {
             if (err) return resolve([]);
             resolve(result);
@@ -135,32 +142,43 @@ exports.spocsList = (req, res) => {
             resolve(result);
           })
         ),
+        new Promise((resolve) =>
+          Service.servicesPackagesData((err, result) => {
+            if (err) return resolve([]);
+            resolve(result);
+          })
+        ),
       ];
 
       Promise.all(dataPromises).then(
         ([
+          admins,
           authorizedDetails,
           billingEscalations,
           billingSpocs,
           clientSpocs,
           escalationManagers,
+          servicesPackages,
         ]) => {
           res.json({
             status: true,
             message: "Billing SPOCs fetched successfully",
             data: {
+              admins,
               authorized_details: authorizedDetails,
               billing_escalations: billingEscalations,
               billing_spocs: billingSpocs,
               client_spocs: clientSpocs,
               escalation_managers: escalationManagers,
+              services_packages: servicesPackages,
             },
             totalResults: {
-              authorized_details: authorizedDetails.length,
+              admins: admins.length,
               billing_escalations: billingEscalations.length,
               billing_spocs: billingSpocs.length,
               client_spocs: clientSpocs.length,
               escalation_managers: escalationManagers.length,
+              services_packages: servicesPackages.length,
             },
             token: newToken,
           });
