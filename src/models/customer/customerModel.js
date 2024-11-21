@@ -590,13 +590,55 @@ const Customer = {
           null
         );
       }
+
       connection.query(sql, [customer_id], (err, results) => {
-        connectionRelease(connection);
         if (err) {
+          connectionRelease(connection);
           console.error("Database query error: 59", err);
           return callback(err, null);
         }
-        callback(null, results);
+
+        if (results.length === 0) {
+          connectionRelease(connection);
+          return callback(null, { message: "No customer data found" });
+        }
+
+        const customerData = results[0];
+        const clientSpocId = customerData.client_spoc_id;
+
+        if (clientSpocId) {
+          let spocIds = [];
+
+          // Check if clientSpocId is a number
+          if (typeof clientSpocId === "number") {
+            spocIds = [clientSpocId]; // Directly use as an array
+          } else if (typeof clientSpocId === "string") {
+            spocIds = clientSpocId.split(",").map((id) => id.trim());
+          }
+
+          // Query to fetch SPOC details
+          const spocSql = `
+            SELECT id, name 
+            FROM client_spocs 
+            WHERE id IN (${spocIds.map(() => "?").join(",")})
+          `;
+
+          connection.query(spocSql, spocIds, (err, spocResults) => {
+            connectionRelease(connection);
+            if (err) {
+              console.error("Database query error: fetching SPOCs", err);
+              return callback(err, null);
+            }
+
+            // Attach SPOC details to the customer data
+            customerData.spoc_details = spocResults;
+            callback(null, customerData);
+          });
+        } else {
+          connectionRelease(connection);
+          // No SPOC ID, return the original customer data
+          callback(null, customerData);
+        }
       });
     });
   },
