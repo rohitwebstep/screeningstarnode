@@ -212,7 +212,7 @@ const Service = {
     });
   },
 
-  servicesPackagesData: (callback) => {
+  servicesWithGroup: (callback) => {
     const sql = `
       SELECT 
         sg.id AS group_id, 

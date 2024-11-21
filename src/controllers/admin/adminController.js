@@ -6,6 +6,7 @@ const BillingEscalation = require("../../models/admin/billingEscalationModel");
 const BillingSpoc = require("../../models/admin/billingSpocModel");
 const ClientSpoc = require("../../models/admin/clientSpocModel");
 const Service = require("../../models/admin/serviceModel");
+const Package = require("../../models/admin/packageModel");
 
 // Controller to list all Billing SPOCs
 exports.list = (req, res) => {
@@ -143,7 +144,13 @@ exports.addClientListings = (req, res) => {
           })
         ),
         new Promise((resolve) =>
-          Service.servicesPackagesData((err, result) => {
+          Service.servicesWithGroup((err, result) => {
+            if (err) return resolve([]);
+            resolve(result);
+          })
+        ),
+        new Promise((resolve) =>
+          Package.list((err, result) => {
             if (err) return resolve([]);
             resolve(result);
           })
@@ -159,6 +166,7 @@ exports.addClientListings = (req, res) => {
           clientSpocs,
           escalationManagers,
           servicesPackages,
+          packages,
         ]) => {
           res.json({
             status: true,
@@ -171,6 +179,7 @@ exports.addClientListings = (req, res) => {
               client_spocs: clientSpocs,
               escalation_managers: escalationManagers,
               services_packages: servicesPackages,
+              packages,
             },
             totalResults: {
               admins: admins.length,
@@ -179,6 +188,7 @@ exports.addClientListings = (req, res) => {
               client_spocs: clientSpocs.length,
               escalation_managers: escalationManagers.length,
               services_packages: servicesPackages.length,
+              packages: packages.length,
             },
             token: newToken,
           });
