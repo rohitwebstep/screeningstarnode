@@ -165,7 +165,7 @@ exports.addClientListings = (req, res) => {
           billingSpocs,
           clientSpocs,
           escalationManagers,
-          servicesPackages,
+          servicesWithGroup,
           packages,
         ]) => {
           res.json({
@@ -178,7 +178,7 @@ exports.addClientListings = (req, res) => {
               billing_spocs: billingSpocs,
               client_spocs: clientSpocs,
               escalation_managers: escalationManagers,
-              services_packages: servicesPackages,
+              services_with_Group: servicesWithGroup,
               packages,
             },
             totalResults: {
@@ -187,7 +187,7 @@ exports.addClientListings = (req, res) => {
               billing_spocs: billingSpocs.length,
               client_spocs: clientSpocs.length,
               escalation_managers: escalationManagers.length,
-              services_packages: servicesPackages.length,
+              services_with_Group: servicesWithGroup.length,
               packages: packages.length,
             },
             token: newToken,
