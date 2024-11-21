@@ -2,6 +2,7 @@ const ClientApplication = require("../../../../models/customer/branch/clientAppl
 const BranchCommon = require("../../../../models/customer/branch/commonModel");
 const Branch = require("../../../../models/customer/branch/branchModel");
 const Service = require("../../../../models/admin/serviceModel");
+const Customer = require("../../../../models/customer/customerModel");
 const AppModel = require("../../../../models/appModel");
 const {
   createMail,
@@ -431,7 +432,8 @@ exports.update = (req, res) => {
             );
             return res.status(500).json({
               status: false,
-              message: "Failed to retrieve ClientApplication. Please try again.",
+              message:
+                "Failed to retrieve ClientApplication. Please try again.",
               token: newToken,
             });
           }
@@ -713,7 +715,8 @@ exports.upload = async (req, res) => {
                       );
                       return res.status(500).json({
                         status: false,
-                        message: "Failed to retrieve ClientApplication. Please try again.",
+                        message:
+                          "Failed to retrieve ClientApplication. Please try again.",
                         token: newToken,
                         savedImagePaths,
                       });
@@ -1006,68 +1009,145 @@ exports.delete = (req, res) => {
         const newToken = tokenValidationResult.newToken;
 
         // Fetch the current clientApplication
-        ClientApplication.getClientApplicationById(id, (err, currentClientApplication) => {
-          if (err) {
-            console.error(
-              "Database error during clientApplication retrieval:",
-              err
-            );
-            return res.status(500).json({
-              status: false,
-              message: "Failed to retrieve ClientApplication. Please try again.",
-              token: newToken,
-            });
-          }
-
-          if (!currentClientApplication) {
-            return res.status(404).json({
-              status: false,
-              message: "Client Aplication not found.",
-              token: newToken,
-            });
-          }
-
-          // Delete the clientApplication
-          ClientApplication.delete(id, (err, result) => {
+        ClientApplication.getClientApplicationById(
+          id,
+          (err, currentClientApplication) => {
             if (err) {
               console.error(
-                "Database error during clientApplication deletion:",
+                "Database error during clientApplication retrieval:",
                 err
-              );
-              BranchCommon.branchActivityLog(
-                branch_id,
-                "Client Application",
-                "Delete",
-                "0",
-                JSON.stringify({ id }),
-                err,
-                () => {}
               );
               return res.status(500).json({
                 status: false,
-                message: "Failed to delete ClientApplication. Please try again.",
+                message:
+                  "Failed to retrieve ClientApplication. Please try again.",
                 token: newToken,
               });
             }
 
-            BranchCommon.branchActivityLog(
-              branch_id,
-              "Client Application",
-              "Delete",
-              "1",
-              JSON.stringify({ id }),
-              null,
-              () => {}
-            );
+            if (!currentClientApplication) {
+              return res.status(404).json({
+                status: false,
+                message: "Client Aplication not found.",
+                token: newToken,
+              });
+            }
 
-            res.status(200).json({
-              status: true,
-              message: "Client Application deleted successfully.",
-              token: newToken,
+            // Delete the clientApplication
+            ClientApplication.delete(id, (err, result) => {
+              if (err) {
+                console.error(
+                  "Database error during clientApplication deletion:",
+                  err
+                );
+                BranchCommon.branchActivityLog(
+                  branch_id,
+                  "Client Application",
+                  "Delete",
+                  "0",
+                  JSON.stringify({ id }),
+                  err,
+                  () => {}
+                );
+                return res.status(500).json({
+                  status: false,
+                  message:
+                    "Failed to delete ClientApplication. Please try again.",
+                  token: newToken,
+                });
+              }
+
+              BranchCommon.branchActivityLog(
+                branch_id,
+                "Client Application",
+                "Delete",
+                "1",
+                JSON.stringify({ id }),
+                null,
+                () => {}
+              );
+
+              res.status(200).json({
+                status: true,
+                message: "Client Application deleted successfully.",
+                token: newToken,
+              });
             });
-          });
-        });
+          }
+        );
       }
     );
+  });
+};
+
+exports.createClientAppListings = (req, res) => {
+  const { branch_id, _token, customer_id } = req.query;
+
+  // Check for missing fields
+  let missingFields = [];
+  if (!branch_id || branch_id === "") missingFields.push("Branch ID");
+  if (!_token || _token === "") missingFields.push("Token");
+  if (!customer_id || customer_id === "") missingFields.push("Customer ID");
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  const action = JSON.stringify({ client_application: "create" });
+  BranchCommon.isBranchAuthorizedForAction(branch_id, action, (result) => {
+    if (!result.status) {
+      return res.status(403).json({
+        status: false,
+        message: result.message,
+      });
+    }
+
+    BranchCommon.isBranchTokenValid(_token, branch_id, async (err, result) => {
+      if (err) {
+        console.error("Error checking token validity:", err);
+        return res.status(500).json({ status: false, message: err.message });
+      }
+
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
+      }
+
+      const newToken = result.newToken;
+
+      // Fetch all required data
+      const dataPromises = [
+        new Promise((resolve) =>
+          Customer.basicInfoByID(customer_id, (err, result) => {
+            if (err) return resolve([]);
+            resolve(result);
+          })
+        ),
+        new Promise((resolve) =>
+          ClientApplication.list(branch_id, (err, result) => {
+            if (err) return resolve([]);
+            resolve(result);
+          })
+        ),
+      ];
+
+      Promise.all(dataPromises).then(([customer, clientApplications]) => {
+        res.json({
+          status: true,
+          message: "Billing SPOCs fetched successfully",
+          data: {
+            customer,
+            clientApplications,
+          },
+          totalResults: {
+            customer: customer.length,
+            clientApplications: clientApplications.length,
+          },
+          token: newToken,
+        });
+      });
+    });
   });
 };

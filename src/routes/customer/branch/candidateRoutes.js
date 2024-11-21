@@ -11,6 +11,7 @@ app.use(cors());
 // Basic routes
 router.post("/create", candidateController.create);
 router.get("/list", candidateController.list);
+router.get("/listings", candidateController.createCandidateAppListings);
 router.put("/update", candidateController.update);
 router.delete("/delete", candidateController.delete);
 router.delete("/", candidateController.delete);

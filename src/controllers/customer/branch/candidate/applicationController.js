@@ -1,6 +1,7 @@
 const Candidate = require("../../../../models/customer/branch/candidateApplicationModel");
 const BranchCommon = require("../../../../models/customer/branch/commonModel");
 const Service = require("../../../../models/admin/serviceModel");
+const Customer = require("../../../../models/customer/customerModel");
 const AppModel = require("../../../../models/appModel");
 
 const {
@@ -714,5 +715,77 @@ exports.delete = (req, res) => {
         );
       }
     );
+  });
+};
+
+exports.createCandidateAppListings = (req, res) => {
+  const { branch_id, _token, customer_id } = req.query;
+
+  // Check for missing fields
+  let missingFields = [];
+  if (!branch_id || branch_id === "") missingFields.push("Branch ID");
+  if (!_token || _token === "") missingFields.push("Token");
+  if (!customer_id || _token === "") missingFields.push("Customer ID");
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  const action = JSON.stringify({ client_application: "create" });
+  BranchCommon.isBranchAuthorizedForAction(branch_id, action, (result) => {
+    if (!result.status) {
+      return res.status(403).json({
+        status: false,
+        message: result.message,
+      });
+    }
+
+    BranchCommon.isBranchTokenValid(_token, branch_id, async (err, result) => {
+      if (err) {
+        console.error("Error checking token validity:", err);
+        return res.status(500).json({ status: false, message: err.message });
+      }
+
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
+      }
+
+      const newToken = result.newToken;
+
+      // Fetch all required data
+      const dataPromises = [
+        new Promise((resolve) =>
+          Customer.basicInfoByID(customer_id, (err, result) => {
+            if (err) return resolve([]);
+            resolve(result);
+          })
+        ),
+        new Promise((resolve) =>
+          Candidate.list(branch_id, (err, result) => {
+            if (err) return resolve([]);
+            resolve(result);
+          })
+        ),
+      ];
+
+      Promise.all(dataPromises).then(([customer, candidateApplications]) => {
+        res.json({
+          status: true,
+          message: "Billing SPOCs fetched successfully",
+          data: {
+            customer,
+            candidateApplications,
+          },
+          totalResults: {
+            customer: customer.length,
+            candidateApplications: candidateApplications.length,
+          },
+          token: newToken,
+        });
+      });
+    });
   });
 };
