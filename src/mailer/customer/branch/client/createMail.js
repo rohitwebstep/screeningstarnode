@@ -4,11 +4,11 @@ const { startConnection, connectionRelease } = require("../../../../config/db");
 // Function to generate HTML table from service details
 const generateTable = (services) => {
   if (!Array.isArray(services) || services.length === 0) {
-    return `<tr><td style="text-align: center;">No services available.</td></tr>`;
+    return `No services available.`;
   }
 
   let rows = services.map((service) => service).join(", "); // Join services with a comma separator
-  return `<tr><td>${rows}</td></tr>`;
+  return `${rows}`;
 };
 
 const generateDocs = (docs) => {
