@@ -129,22 +129,22 @@ const clientApplication = {
     const serviceIds =
       typeof services === "string" && services.trim() !== ""
         ? services
-            .split(",")
-            .map((id) => id.trim())
-            .join(",")
+          .split(",")
+          .map((id) => id.trim())
+          .join(",")
         : Array.isArray(services) && services.length > 0
-        ? services.map((id) => id.trim()).join(",")
-        : "";
+          ? services.map((id) => id.trim()).join(",")
+          : "";
 
     const packageIds =
       typeof packages === "string" && packages.trim() !== ""
         ? packages
-            .split(",")
-            .map((id) => id.trim())
-            .join(",")
+          .split(",")
+          .map((id) => id.trim())
+          .join(",")
         : Array.isArray(packages) && packages.length > 0
-        ? packages.map((id) => id.trim()).join(",")
-        : "";
+          ? packages.map((id) => id.trim()).join(",")
+          : "";
 
     // Generate a new application ID
     clientApplication.generateApplicationID(
@@ -200,7 +200,7 @@ const clientApplication = {
     );
   },
 
-  // Other methods remain unchanged, but should include startConnection and connectionRelease
+
   list: (branch_id, callback) => {
     startConnection((err, connection) => {
       if (err) {
@@ -236,14 +236,10 @@ const clientApplication = {
         const cmtPromises = clientResults.map((clientApp) => {
           return new Promise((resolve, reject) => {
             // Query for CMT applications
-            const sqlCmt =
-              "SELECT * FROM cmt_applications WHERE client_application_id = ?";
+            const sqlCmt = "SELECT * FROM cmt_applications WHERE client_application_id = ?";
             connection.query(sqlCmt, [clientApp.id], (err, cmtResults) => {
               if (err) {
-                console.error(
-                  "Database query error for cmt_applications:",
-                  err
-                );
+                console.error("Database query error for cmt_applications:", err);
                 return reject(err);
               }
 
@@ -256,33 +252,36 @@ const clientApplication = {
                 );
               });
 
-              // Handle services splitting and querying
+              // Handle services splitting and querying, only if servicesIds > 0
               const servicesIds = clientApp.services
                 ? clientApp.services.split(",")
                 : [];
-              const servicesQuery =
-                "SELECT title FROM services WHERE id IN (?)";
 
-              connection.query(
-                servicesQuery,
-                [servicesIds],
-                (err, servicesResults) => {
+              if (servicesIds.length > 0) {
+                const servicesQuery = "SELECT title FROM services WHERE id IN (?)";
+                connection.query(servicesQuery, [servicesIds], (err, servicesResults) => {
                   if (err) {
                     console.error("Database query error for services:", err);
                     return reject(err);
                   }
 
-                  const servicesTitles = servicesResults.map(
-                    (service) => service.title
-                  );
+                  const servicesTitles = servicesResults.map((service) => service.title);
                   finalResults.push({
                     ...clientApp,
                     cmtApplications: cmtData.length > 0 ? cmtData : [],
                     serviceNames: servicesTitles, // Add services titles to the result
                   });
                   resolve();
-                }
-              );
+                });
+              } else {
+                // If no servicesIds are available, still push the data with empty serviceNames
+                finalResults.push({
+                  ...clientApp,
+                  cmtApplications: cmtData.length > 0 ? cmtData : [],
+                  serviceNames: [],
+                });
+                resolve();
+              }
             });
           });
         });
@@ -468,22 +467,22 @@ const clientApplication = {
       const serviceIds =
         typeof services === "string" && services.trim() !== ""
           ? services
-              .split(",")
-              .map((id) => id.trim())
-              .join(",")
+            .split(",")
+            .map((id) => id.trim())
+            .join(",")
           : Array.isArray(services) && services.length > 0
-          ? services.map((id) => id.trim()).join(",")
-          : "";
+            ? services.map((id) => id.trim()).join(",")
+            : "";
 
       const packageIds =
         typeof packages === "string" && packages.trim() !== ""
           ? packages
-              .split(",")
-              .map((id) => id.trim())
-              .join(",")
+            .split(",")
+            .map((id) => id.trim())
+            .join(",")
           : Array.isArray(packages) && packages.length > 0
-          ? packages.map((id) => id.trim()).join(",")
-          : "";
+            ? packages.map((id) => id.trim()).join(",")
+            : "";
 
       const values = [
         name,
