@@ -37,8 +37,7 @@ const dav = {
     customer_id,
     callback
   ) => {
-    const fields = Object.keys(personal_information);
-
+    const fields = Object.keys(personal_information).map(field => field.toLowerCase());
     startConnection((err, connection) => {
       if (err) {
         console.error("Failed to connect to the database:", err);
@@ -69,7 +68,7 @@ const dav = {
         // 2. If there are missing columns, alter the table to add them
         if (missingColumns.length > 0) {
           const alterQueries = missingColumns.map((column) => {
-            return `ALTER TABLE dav_applications ADD COLUMN \`${column}\` VARCHAR(255)`; // Adjust data type as necessary
+            return `ALTER TABLE dav_applications ADD COLUMN \`${column}\` LONGTEXT`; // Adjust data type as necessary
           });
 
           // Run all ALTER statements

@@ -591,7 +591,7 @@ const Customer = {
     customer_id,
     callback
   ) => {
-    const fields = Object.keys(mainJson);
+    const fields = Object.keys(mainJson).map(field => field.toLowerCase());
 
     // Start a connection
     startConnection((err, connection) => {
@@ -621,7 +621,7 @@ const Customer = {
         const addMissingColumns = () => {
           if (missingColumns.length > 0) {
             const alterQueries = missingColumns.map((column) => {
-              return `ALTER TABLE cmt_applications ADD COLUMN ${column} VARCHAR(255)`; // Adjust data type as needed
+              return `ALTER TABLE cmt_applications ADD COLUMN ${column} LONGTEXT`;
             });
 
             // Run all ALTER statements sequentially
@@ -724,7 +724,7 @@ const Customer = {
     mainJson,
     callback
   ) => {
-    const fields = Object.keys(mainJson);
+    const fields = Object.keys(mainJson).map(field => field.toLowerCase());
     startConnection((err, connection) => {
       if (err) {
         return callback(err, null);
@@ -800,7 +800,7 @@ const Customer = {
 
                 if (missingColumns.length > 0) {
                   const alterQueries = missingColumns.map((column) => {
-                    return `ALTER TABLE \`${db_table}\` ADD COLUMN \`${column}\` VARCHAR(255)`; // Adjust data type as necessary
+                    return `ALTER TABLE \`${db_table}\` ADD COLUMN \`${column}\` LONGTEXT`; // Adjust data type as necessary
                   });
 
                   const alterPromises = alterQueries.map(
@@ -1107,11 +1107,10 @@ const Customer = {
                   for (const [dbTable, fileInputNames] of Object.entries(
                     dbTableFileInputs
                   )) {
-                    const selectQuery = `SELECT ${
-                      fileInputNames && fileInputNames.length > 0
+                    const selectQuery = `SELECT ${fileInputNames && fileInputNames.length > 0
                         ? fileInputNames.join(", ")
                         : "*"
-                    } FROM ${dbTable} WHERE client_application_id = ?`;
+                      } FROM ${dbTable} WHERE client_application_id = ?`;
 
                     connection.query(
                       selectQuery,

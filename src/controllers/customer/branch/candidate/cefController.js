@@ -272,7 +272,7 @@ exports.submit = (req, res) => {
                         const modifiedDbTableForDbQuery = `cef_${key.replace(
                           /-/g,
                           "_"
-                        )}`;
+                        ).toLowerCase()}`;
                         const subJson = annexure[modifiedDbTable];
 
                         return new Promise((resolve, reject) => {
