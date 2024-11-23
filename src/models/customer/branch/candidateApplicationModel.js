@@ -122,46 +122,41 @@ const candidateApplication = {
         const servicePromises = results.map((application) => {
           return new Promise((resolve, reject) => {
             // Extract service IDs
-            const servicesIds = application.services
-              ? application.services.split(",")
-              : [];
+            const servicesIds = application.services ? application.services.split(",") : [];
 
             if (servicesIds.length === 0) {
-              finalResults.push({ ...application, serviceNames: "" });
-              return resolve(); // No services to fetch
+              finalResults.push({ ...application, serviceNames: [] }); // No services to fetch
+              return resolve(); // Resolve for applications with no services
             }
 
             // Query for service titles
             const servicesQuery =
               "SELECT title FROM `services` WHERE id IN (?)";
-            connection.query(
-              servicesQuery,
-              [servicesIds],
-              (err, servicesResults) => {
-                if (err) {
-                  console.error("Database query error for services:", err);
-                  return reject(err);
-                }
-
-                const servicesTitles = servicesResults.map((service) => service.title);
-
-                finalResults.push({
-                  ...application,
-                  serviceNames: servicesTitles, // Add services titles to the result
-                });
-                resolve();
+            connection.query(servicesQuery, [servicesIds], (err, servicesResults) => {
+              if (err) {
+                console.error("Database query error for services:", err);
+                return reject(err);
               }
-            );
+
+              const servicesTitles = servicesResults.map((service) => service.title);
+
+              // Push the application with the corresponding service titles
+              finalResults.push({
+                ...application,
+                serviceNames: servicesTitles, // Add services titles to the result
+              });
+              resolve();
+            });
           });
         });
 
         Promise.all(servicePromises)
           .then(() => {
-            connectionRelease(connection); // Ensure connection is released
+            connectionRelease(connection); // Ensure connection is released after all promises resolve
             callback(null, finalResults);
           })
           .catch((err) => {
-            connectionRelease(connection); // Ensure connection is released
+            connectionRelease(connection); // Ensure connection is released on error
             callback(err, null);
           });
       });
