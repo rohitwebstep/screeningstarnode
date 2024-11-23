@@ -84,7 +84,7 @@ async function davMail(
 
     // Send email
     const info = await transporter.sendMail({
-      from: `"GoldQuest Global" <${smtp.username}>`,
+      from: `"ScreeningStar" <${smtp.username}>`,
       to: toList,
       subject: email.title,
       html: template,

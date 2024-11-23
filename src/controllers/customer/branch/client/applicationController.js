@@ -1074,7 +1074,7 @@ exports.upload = async (req, res) => {
 
                         if (appInfo) {
                           const appHost =
-                            appInfo.host || "www.goldquestglobal.com";
+                            appInfo.host || "www.screeningstar.in";
                           const documentsArray =
                             currentClientApplication.attach_documents
                               .split(",")
