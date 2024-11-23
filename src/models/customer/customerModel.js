@@ -332,6 +332,24 @@ const Customer = {
     });
   },
 
+
+
+  createCustomerMeta: (metaData, callback) => {
+    const sqlCustomerMetas = `
+      INSERT INTO \`customer_metas\` (
+        \`customer_id\`, \`address\`,
+        \`client_spoc_id\`, \`escalation_manager_id\`,
+        \`billing_spoc_id\`, \`billing_escalation_id\`,
+        \`gst_number\`, \`tat_days\`, 
+        \`agreement_date\`, \`agreement_duration\`, \`custom_template\`,
+        \`custom_address\`, \`state\`, \`state_code\`, 
+        \`client_standard\`
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+
+  },
+
   createCustomerMeta: (metaData, callback) => {
     const sqlCustomerMetas = `
       INSERT INTO \`customer_metas\` (
@@ -352,7 +370,6 @@ const Customer = {
       metaData.escalation_manager_id,
       metaData.billing_spoc_id,
       metaData.billing_escalation_id,
-      metaData.authorized_detail_id,
       metaData.gst_number,
       metaData.tat_days,
       metaData.agreement_date,
