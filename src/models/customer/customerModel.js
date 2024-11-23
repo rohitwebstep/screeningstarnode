@@ -217,8 +217,8 @@ const Customer = {
         );
       }
       const sqlCustomers = `
-        INSERT INTO \`customers\` (\`client_unique_id\`, \`name\`, \`additional_login\`, \`username\`, \`profile_picture\`, \`emails\`, \`mobile\`, \`services\`, \`admin_id\`
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO \`customers\` (\`client_unique_id\`, \`name\`, \`additional_login\`, \`username\`, \`profile_picture\`, \`emails\`, \`mobile\`, \`role\`, \`services\`, \`admin_id\`
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
       const valuesCustomers = [
@@ -229,6 +229,7 @@ const Customer = {
         customerData.profile_picture,
         customerData.emails_json,
         customerData.mobile_number,
+        customerData.role,
         customerData.services,
         customerData.admin_id,
       ];
@@ -298,6 +299,7 @@ const Customer = {
           \`profile_picture\` = ?, 
           \`emails\` = ?, 
           \`mobile\` = ?, 
+          \`role\` = ?, 
           \`services\` = ?, 
           \`admin_id\` = ?
         WHERE \`id\` = ?
@@ -310,6 +312,7 @@ const Customer = {
         customerData.profile_picture,
         customerData.emails_json,
         customerData.mobile,
+        customerData.role,
         JSON.stringify(customerData.services),
         customerData.admin_id,
         customerId,
@@ -331,8 +334,6 @@ const Customer = {
       );
     });
   },
-
-
 
   createCustomerMeta: (metaData, callback) => {
     const sqlCustomerMetas = `

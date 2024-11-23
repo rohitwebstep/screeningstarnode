@@ -154,6 +154,7 @@ exports.create = (req, res) => {
     admin_id,
     _token,
     tat,
+    role,
     state,
     gstin,
     emails,
@@ -184,6 +185,7 @@ exports.create = (req, res) => {
     admin_id,
     _token,
     tat,
+    role,
     state,
     gstin,
     emails,
@@ -321,6 +323,7 @@ exports.create = (req, res) => {
                 profile_picture: null,
                 emails_json: JSON.stringify(emails),
                 mobile_number,
+                role,
                 services: JSON.stringify(scopeOfServices),
                 additional_login: additional_login_int,
                 username:
@@ -1087,6 +1090,7 @@ exports.update = (req, res) => {
     _token,
     customer_id,
     name,
+    role,
     state,
     mobile,
     emails,
@@ -1116,6 +1120,7 @@ exports.update = (req, res) => {
     _token,
     customer_id,
     name,
+    role,
     state,
     mobile,
     emails,
@@ -1217,6 +1222,7 @@ exports.update = (req, res) => {
         }
         compareAndAddChanges("mobile", mobile);
         compareAndAddChanges("services", services);
+        compareAndAddChanges("role", role);
 
         Customer.getCustomerMetaById(
           customer_id,
@@ -1333,6 +1339,7 @@ exports.update = (req, res) => {
                   profile_picture: currentCustomer.profile_picture,
                   emails_json: JSON.stringify(emails),
                   mobile,
+                  role,
                   services:
                     typeof services === "string"
                       ? JSON.parse(services)
