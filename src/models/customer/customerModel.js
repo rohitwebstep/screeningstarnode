@@ -577,6 +577,40 @@ const Customer = {
     });
   },
 
+  getFirstSpoc: (customer_id, callback) => {
+    const sql = `SELECT client_spoc_id FROM customer_metas WHERE customer_id = ?`;
+
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
+
+      connection.query(sql, [customer_id], (err, results) => {
+        connectionRelease(connection); // Ensure connection is released after query execution
+
+        if (err) {
+          console.error("Database query error: ", err);
+          return callback({ message: "Database query error", error: err }, null);
+        }
+
+        // If no results are found, return a meaningful message
+        if (results.length === 0 || !results[0].client_spoc_id) {
+          return callback({ message: "No SPoC found for this customer" }, null);
+        }
+
+        // Convert client_spoc_id to string and then split by commas
+        const clientSpocIdString = String(results[0].client_spoc_id);  // Ensure it is a string
+        const spocIds = clientSpocIdString.split(',');  // Split by comma
+        const firstSpocId = spocIds[0].trim();  // Trim any extra spaces
+
+        callback(null, firstSpocId);  // Return the first SPoC ID
+      });
+    });
+  },
+
   basicInfoByID: (customer_id, callback) => {
     const sql = `
       SELECT 
