@@ -363,17 +363,39 @@ exports.bulkCreate = (req, res) => {
         const emptyValues = [];
         const updatedApplications = applications.filter((app) => {
           // Check if all specified fields are empty
-          const allFieldsEmpty = !app.applicant_full_name.trim() && !app.employee_id.trim() && !app.location.trim();
+          const allFieldsEmpty =
+            !app.applicant_full_name?.trim() &&
+            !app.employee_id?.trim() &&
+            !app.location?.trim();
 
           // If all fields are empty, exclude this application
           if (allFieldsEmpty) {
             return false;
           }
 
-          // Check if any of the fields are empty, and track those applicants
-          const hasEmptyField = !app.applicant_full_name.trim() || !app.employee_id.trim() || !app.location.trim();
-          if (hasEmptyField) {
-            emptyValues.push(app.applicant_full_name || "Unnamed applicant");
+          // Check if any of the required fields are missing and track missing fields
+          const missingFields = [];
+          if (!("applicant_full_name" in app)) missingFields.push("Applicant Full Name");
+          if (!("employee_id" in app)) missingFields.push("Employee ID");
+          if (!("location" in app)) missingFields.push("Location");
+
+          if (missingFields.length > 0) {
+            emptyValues.push(
+              `${app.applicant_full_name || "Unnamed applicant"} (missing fields: ${missingFields.join(", ")})`
+            );
+            return false; // Exclude applications with missing fields
+          }
+
+          // Check if any of the fields are empty and track those applicants
+          const emptyFields = [];
+          if (!app.applicant_full_name?.trim()) emptyFields.push("Applicant Full Name");
+          if (!app.employee_id?.trim()) emptyFields.push("Employee ID");
+          if (!app.location?.trim()) emptyFields.push("Location");
+
+          if (emptyFields.length > 0) {
+            emptyValues.push(
+              `${app.applicant_full_name || "Unnamed applicant"} (empty fields: ${emptyFields.join(", ")})`
+            );
           }
 
           // Include the application if it has at least one non-empty field

@@ -17,7 +17,7 @@ const generateTable = (services, applications, branchName, customerName) => {
     return `
       <tr>
         <td>${serialNumber++}</td> <!-- Increment serialNumber after each row -->
-        <td>${application.new_application_id}</td>
+        <td>${application.employee_id}</td>
         <td>${application.applicant_full_name}</td>
         <td>${servicesNames}</td>
       </tr>

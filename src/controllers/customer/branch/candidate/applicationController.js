@@ -1,5 +1,6 @@
 const Candidate = require("../../../../models/customer/branch/candidateApplicationModel");
 const BranchCommon = require("../../../../models/customer/branch/commonModel");
+const Branch = require("../../../../models/customer/branch/branchModel");
 const Service = require("../../../../models/admin/serviceModel");
 const Customer = require("../../../../models/customer/customerModel");
 const AppModel = require("../../../../models/appModel");
@@ -7,6 +8,10 @@ const AppModel = require("../../../../models/appModel");
 const {
   createMail,
 } = require("../../../../mailer/customer/branch/candidate/createMail");
+
+const {
+  bulkCreateMail,
+} = require("../../../../mailer/customer/branch/candidate/bulkCreateMail");
 
 const {
   davMail,
@@ -126,7 +131,7 @@ exports.create = (req, res) => {
                   "0",
                   null,
                   err,
-                  () => {}
+                  () => { }
                 );
                 return res.status(500).json({
                   status: false,
@@ -142,7 +147,7 @@ exports.create = (req, res) => {
                 "1",
                 `{id: ${result.insertId}}`,
                 null,
-                () => {}
+                () => { }
               );
 
               BranchCommon.getBranchandCustomerEmailsForNotification(
@@ -177,9 +182,9 @@ exports.create = (req, res) => {
 
                   const serviceIds = services
                     ? services
-                        .split(",")
-                        .map((id) => parseInt(id.trim(), 10))
-                        .filter(Number.isInteger)
+                      .split(",")
+                      .map((id) => parseInt(id.trim(), 10))
+                      .filter(Number.isInteger)
                     : [];
 
                   const serviceNames = [];
@@ -330,6 +335,339 @@ exports.create = (req, res) => {
             }
           );
         });
+      });
+    });
+  });
+};
+
+exports.bulkCreate = (req, res) => {
+  const { branch_id, _token, customer_id, applications, services, package } = req.body;
+
+  // Define required fields
+  const requiredFields = { branch_id, _token, customer_id, applications };
+
+  // Check for missing fields
+  const missingFields = Object.keys(requiredFields)
+    .filter((field) => !requiredFields[field] || requiredFields[field] === "")
+    .map((field) => field.replace(/_/g, " "));
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  const action = JSON.stringify({ candidate_application: "create" });
+
+  // Check branch authorization
+  BranchCommon.isBranchAuthorizedForAction(branch_id, action, (result) => {
+    if (!result.status) {
+      return res.status(403).json({
+        status: false,
+        message: result.message,
+      });
+    }
+
+    // Validate branch token
+    BranchCommon.isBranchTokenValid(_token, branch_id, (err, result) => {
+      if (err) {
+        console.error("Error checking token validity:", err);
+        return res.status(500).json({ status: false, message: err.message });
+      }
+
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
+      }
+
+      const newToken = result.newToken;
+
+      // Get SPoC ID
+      const emptyValues = [];
+      const updatedApplications = applications.filter((app) => {
+        // Check if all specified fields are empty
+        const allFieldsEmpty =
+          !app.applicant_full_name?.trim() &&
+          !app.mobile_number?.trim() &&
+          !app.email_id?.trim() &&
+          !app.employee_id?.trim();
+
+        // If all fields are empty, exclude this application
+        if (allFieldsEmpty) {
+          return false;
+        }
+
+        // Check if any of the required fields are missing and track missing fields
+        const missingFields = [];
+        if (!("applicant_full_name" in app)) missingFields.push("Applicant Full Name");
+        if (!("mobile_number" in app)) missingFields.push("Mobile Number");
+        if (!("email_id" in app)) missingFields.push("Email ID");
+        if (!("employee_id" in app)) missingFields.push("Employee ID");
+
+        if (missingFields.length > 0) {
+          emptyValues.push(
+            `${app.applicant_full_name || "Unnamed applicant"} (missing fields: ${missingFields.join(", ")})`
+          );
+          return false; // Exclude applications with missing fields
+        }
+
+        // Check if any of the fields are empty and track those applicants
+        const emptyFields = [];
+        if (!app.applicant_full_name?.trim()) emptyFields.push("Applicant Full Name");
+        if (!app.mobile_number?.trim()) emptyFields.push("Mobile Number");
+        if (!app.email_id?.trim()) emptyFields.push("Email ID");
+        if (!app.employee_id?.trim()) emptyFields.push("Employee ID");
+
+        if (emptyFields.length > 0) {
+          emptyValues.push(
+            `${app.applicant_full_name || "Unnamed applicant"} (empty fields: ${emptyFields.join(", ")})`
+          );
+        }
+
+        // Include the application if it has at least one non-empty field
+        return true;
+      });
+
+      console.log("Applications with issues:", emptyValues);
+
+
+      if (emptyValues.length > 0) {
+        return res.status(400).json({
+          status: false,
+          message: `Details are not complete for the following applicants: ${emptyValues.join(", ")}`,
+          token: newToken,
+        });
+      }
+
+      // Check for duplicate employee IDs
+      const employeeIds = updatedApplications.map(app => app.employee_id);
+
+      const employeeIdChecks = employeeIds.map(employee_id => {
+
+        return new Promise((resolve, reject) => {
+          Candidate.checkUniqueEmpId(employee_id, (err, exists) => {
+            if (err) {
+              reject(err);
+            } else if (exists) {
+              reject(`Employee ID '${employee_id}' already exists.`);
+            } else {
+              resolve(employee_id);  // Pass the unique employee ID to the resolve
+            }
+          });
+        });
+      });
+
+      // Handle employee ID uniqueness checks
+      Promise.allSettled(employeeIdChecks)
+        .then((results) => {
+          // Collect the employee IDs that are already used
+          const alreadyUsedEmpIds = results
+            .filter(result => result.status === 'rejected')
+            .map(result => result.reason);
+
+          if (alreadyUsedEmpIds.length > 0) {
+            return res.status(400).json({
+              status: false,
+              message: `Employee IDs already used: ${alreadyUsedEmpIds.join(', ')}`,
+              token: newToken,
+            });
+          }
+
+          // Proceed with creating candidate applications if all IDs are unique
+          const applicationPromises = updatedApplications.map((app) => {
+            return new Promise((resolve, reject) => {
+              Candidate.create(
+                {
+                  name: app.applicant_full_name,
+                  employee_id: app.employee_id,
+                  mobile_number: app.mobile_number,
+                  email: app.email_id,
+                  branch_id,
+                  services,
+                  packages: package,
+                  customer_id,
+                },
+                (err, result) => {
+                  if (err) {
+                    reject({
+                      status: false,
+                      message: "Failed to create candidate application. Please try again.",
+                      token: newToken,
+                    });
+                  } else {
+                    // Log the activity
+                    BranchCommon.branchActivityLog(
+                      branch_id,
+                      "Candidate Application",
+                      "Create",
+                      "1",
+                      `{id: ${result.insertId}}`,
+                      null,
+                      () => { }
+                    );
+                    resolve(app);
+                  }
+                }
+              );
+            });
+          });
+
+          Promise.all(applicationPromises)
+            .then(() => {
+              // Send notification emails once all applications are created
+              sendNotificationEmails(branch_id, customer_id, services, updatedApplications, newToken, res);
+            })
+            .catch((error) => {
+              // Handle error if any application creation fails
+              console.error('Error during candidate application creation:', error);
+              return res.status(400).json({
+                status: false,
+                message: error.message || 'Failed to create one or more candidate applications.',
+                token: newToken,
+              });
+            });
+
+          sendNotificationEmails(branch_id, customer_id, services, updatedApplications, newToken, res);
+        })
+        .catch((error) => {
+          return res.status(400).json({
+            status: false,
+            message: error,
+            token: newToken,
+          });
+        });
+
+    });
+  });
+};
+
+// Function to send email notifications
+function sendNotificationEmails(branch_id, customer_id, services, updatedApplications, newToken, res) {
+  Branch.getClientUniqueIDByBranchId(branch_id, (err, clientCode) => {
+    if (err) {
+      console.error("Error checking unique ID:", err);
+      return res.status(500).json({
+        status: false,
+        message: err.message,
+        token: newToken,
+      });
+    }
+
+    if (!clientCode) {
+      return res.status(400).json({
+        status: false,
+        message: "Customer Unique ID not Found",
+        token: newToken,
+      });
+    }
+
+    Branch.getClientNameByBranchId(branch_id, (err, clientName) => {
+      if (err) {
+        console.error("Error checking candidate name:", err);
+        return res.status(500).json({
+          status: false,
+          message: err.message,
+          token: newToken,
+        });
+      }
+
+      if (!clientName) {
+        return res.status(400).json({
+          status: false,
+          message: "Customer Unique ID not found",
+          token: newToken,
+        });
+      }
+
+      // Fetch emails for notification
+      BranchCommon.getBranchandCustomerEmailsForNotification(branch_id, (emailError, emailData) => {
+        if (emailError) {
+          console.error("Error fetching emails:", emailError);
+          return res.status(500).json({
+            status: false,
+            message: "Failed to retrieve email addresses.",
+            token: newToken,
+          });
+        }
+
+        const { branch, customer } = emailData;
+        const toArr = [{ name: branch.name, email: branch.email }];
+        const ccArr = JSON.parse(customer.emails).map((email) => ({
+          name: customer.name,
+          email: email.trim(),
+        }));
+
+        const serviceIds = typeof services === "string" && services.trim() !== ""
+          ? services.split(",").map((id) => id.trim())
+          : [];
+        const serviceNames = [];
+
+        const fetchServiceNames = (index = 0) => {
+          let responseSent = false; // Flag to track if the response has already been sent
+
+          if (index >= serviceIds.length) {
+
+            bulkCreateMail(
+              "candidate application",
+              "bulk-create",
+              updatedApplications,
+              branch.name,
+              customer.name,
+              serviceNames,
+              "",
+              toArr,
+              ccArr
+            )
+              .then(() => {
+                if (!responseSent) {
+                  responseSent = true; // Mark the response as sent
+                  return res.status(201).json({
+                    status: true,
+                    message: "Candidate application created successfully and email sent.",
+                    token: newToken,
+                  });
+                }
+              })
+              .catch((emailError) => {
+                if (!responseSent) {
+                  console.error("Error sending email (controller):", emailError);
+                  responseSent = true; // Mark the response as sent
+                  return res.status(201).json({
+                    status: true,
+                    message: "Candidate application created successfully, but failed to send email.",
+                    token: newToken,
+                  });
+                }
+              });
+            return;
+          }
+
+          const id = serviceIds[index];
+
+          Service.getServiceById(id, (err, currentService) => {
+            if (err) {
+              console.error("Error fetching service data:", err);
+              if (!responseSent) {
+                responseSent = true; // Mark the response as sent
+                return res.status(500).json({
+                  status: false,
+                  message: err.message,
+                  token: newToken,
+                });
+              }
+            }
+
+            if (!currentService || !currentService.title) {
+              return fetchServiceNames(index + 1);
+            }
+
+            serviceNames.push(currentService.title);
+            fetchServiceNames(index + 1);
+          });
+        };
+
+
+        fetchServiceNames();
       });
     });
   });
@@ -562,7 +900,7 @@ exports.update = (req, res) => {
                       "0",
                       JSON.stringify({ candidate_application_id, ...changes }),
                       err,
-                      () => {}
+                      () => { }
                     );
                     return res.status(500).json({
                       status: false,
@@ -578,7 +916,7 @@ exports.update = (req, res) => {
                     "1",
                     JSON.stringify({ candidate_application_id, ...changes }),
                     null,
-                    () => {}
+                    () => { }
                   );
 
                   res.status(200).json({
@@ -685,7 +1023,7 @@ exports.delete = (req, res) => {
                   "0",
                   JSON.stringify({ id }),
                   err,
-                  () => {}
+                  () => { }
                 );
                 return res.status(500).json({
                   status: false,
@@ -701,7 +1039,7 @@ exports.delete = (req, res) => {
                 "1",
                 JSON.stringify({ id }),
                 null,
-                () => {}
+                () => { }
               );
 
               res.status(200).json({
