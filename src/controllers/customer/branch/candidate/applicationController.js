@@ -663,8 +663,10 @@ function sendNotificationEmails(branch_id, customer_id, services, updatedApplica
                 if (appInfo) {
                   const appHost = appInfo.host || "www.screeningstar.in";
 
-                  // Initialize a counter for tracking when all applications are processed
+                  // Initialize counters for tracking email success/failure
                   let processedApplications = 0;
+                  let failedApplications = 0;
+                  let responseSent = false; // Flag to track if the response is already sent
 
                   updatedApplications.forEach((app) => {
                     const base64_app_id = btoa(app.insertId);
@@ -705,6 +707,7 @@ function sendNotificationEmails(branch_id, customer_id, services, updatedApplica
                             })
                             .catch((emailError) => {
                               console.error("Error sending digital address email:", emailError);
+                              failedApplications++;
                             });
                         }
                       }
@@ -722,33 +725,37 @@ function sendNotificationEmails(branch_id, customer_id, services, updatedApplica
                       )
                         .then(() => {
                           processedApplications++;
-
-                          // If all applications are processed, send the final response
-                          if (processedApplications === updatedApplications.length) {
-                            return res.status(201).json({
-                              status: true,
-                              message: "Candidate applications created successfully and emails sent.",
-                              token: newToken,
-                            });
-                          }
                         })
                         .catch((emailError) => {
                           console.error("Error sending application creation email:", emailError);
-
+                          failedApplications++;
+                        })
+                        .finally(() => {
                           processedApplications++;
 
-                          // If all applications are processed, send the final response with failure notification
-                          if (processedApplications === updatedApplications.length) {
-                            return res.status(201).json({
-                              status: true,
-                              message: "Candidate application created successfully, but email failed to send for some applications.",
-                              token: newToken,
-                            });
+                          // After processing each application, check if all are processed
+                          if (processedApplications + failedApplications === updatedApplications.length && !responseSent) {
+                            responseSent = true; // Ensure the response is only sent once
+
+                            if (failedApplications > 0) {
+                              return res.status(201).json({
+                                status: false,
+                                message: "Some emails failed to send. Candidate applications created successfully.",
+                                token: newToken,
+                              });
+                            } else {
+                              return res.status(201).json({
+                                status: true,
+                                message: "Candidate applications created successfully and emails sent.",
+                                token: newToken,
+                              });
+                            }
                           }
                         });
                     });
                   });
                 }
+
               });
             })
             .catch((emailError) => {
