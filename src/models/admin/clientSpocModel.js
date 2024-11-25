@@ -78,25 +78,29 @@ const ClientSpoc = {
   },
 
   checkEmailExists: (email, callback) => {
-    const sql = `SELECT 1 FROM \`client_spocs\` WHERE email = ? LIMIT 1`;
+    const sql = `SELECT 1 FROM \`client_spocs\` WHERE \`email\` = ? OR \`email1\` = ? OR \`email2\` = ? OR \`email3\` = ? OR \`email4\` = ? LIMIT 1`;
 
     startConnection((err, connection) => {
       if (err) {
         return callback(err, null);
       }
 
-      connection.query(sql, [email], (queryErr, results) => {
-        connectionRelease(connection); // Release the connection
+      connection.query(
+        sql,
+        [email, email, email, email, email],
+        (queryErr, results) => {
+          connectionRelease(connection); // Release the connection
 
-        if (queryErr) {
-          console.error("Database query error: 47", queryErr);
-          return callback(queryErr, null);
+          if (queryErr) {
+            console.error("Database query error: 47", queryErr);
+            return callback(queryErr, null);
+          }
+
+          // Return true if the email exists, else false
+          const emailExists = results.length > 0;
+          callback(null, emailExists);
         }
-
-        // Return true if the email exists, else false
-        const emailExists = results.length > 0;
-        callback(null, emailExists);
-      });
+      );
     });
   },
 

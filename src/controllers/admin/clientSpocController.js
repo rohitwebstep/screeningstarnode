@@ -2,6 +2,65 @@ const ClientSpoc = require("../../models/admin/clientSpocModel");
 const BranchCommon = require("../../../src/models/customer/branch/commonModel");
 const Common = require("../../models/admin/commonModel");
 
+const areEmailsUsed = (emails) => {
+  return new Promise((resolve, reject) => {
+    // Validate inputs
+    if (!emails || !Array.isArray(emails) || emails.length === 0) {
+      return reject(new Error("Missing required field: Emails"));
+    }
+
+    // Check each email, skipping empty or null emails
+    const emailCheckPromises = emails
+      .filter((email) => email && email.trim() !== "") // Skip empty or null emails
+      .map((email) => {
+        return new Promise((resolve, reject) => {
+          ClientSpoc.checkEmailExists(email, (err, isUsed) => {
+            if (err) {
+              return reject(err);
+            }
+            resolve({ email, isUsed });
+          });
+        });
+      });
+
+    // Wait for all email checks to complete
+    Promise.all(emailCheckPromises)
+      .then((results) => {
+        // Filter out emails that are in use
+        const usedEmails = results
+          .filter((result) => result.isUsed)
+          .map((result) => result.email);
+
+        // Determine if any emails are used
+        const areAnyUsed = usedEmails.length > 0;
+
+        // Create the response message if any emails are used
+        let message = "";
+        if (areAnyUsed) {
+          const emailCount = usedEmails.length;
+
+          if (emailCount === 1) {
+            message = `${usedEmails[0]} is already used.`;
+          } else if (emailCount === 2) {
+            message = `${usedEmails[0]} and ${usedEmails[1]} are already used.`;
+          } else {
+            const lastEmail = usedEmails.pop(); // Remove the last email for formatting
+            message = `${usedEmails.join(
+              ", "
+            )} and ${lastEmail} are already used.`;
+          }
+        }
+
+        // Resolve with a boolean and the message
+        resolve({ areAnyUsed, message });
+      })
+      .catch((err) => {
+        console.error("Error checking email usage:", err);
+        reject(new Error("Error checking email usage: " + err.message));
+      });
+  });
+};
+
 // Controller to create a new Client SPOC
 exports.create = (req, res) => {
   const {
@@ -55,126 +114,150 @@ exports.create = (req, res) => {
       });
     }
 
-    // Validate admin token
-    Common.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
-      if (err) {
-        console.error("Token validation error:", err);
-        return res
-          .status(500)
-          .json({ status: false, message: "Internal server error" });
-      }
+    const allEmails = [
+      email,
+      normalizedEmail1,
+      normalizedEmail2,
+      normalizedEmail3,
+      normalizedEmail4,
+    ].filter(Boolean);
 
-      if (!tokenResult.status) {
-        return res
-          .status(401)
-          .json({ status: false, message: tokenResult.message });
-      }
-
-      const newToken = tokenResult.newToken;
-
-      // List of emails to check
-      const emailsToCheck = [email, email1, email2, email3, email4].filter(
-        Boolean
-      );
-
-      // Function to check each email using checkEmailExists
-      const checkEmails = (emails, callback) => {
-        const usedEmails = [];
-        let checkedCount = 0;
-
-        emails.forEach((email) => {
-          ClientSpoc.checkEmailExists(email, (err, emailExists) => {
-            checkedCount++;
-            if (err) {
-              console.error(
-                `Error checking email existence for ${email}:`,
-                err
-              );
-              return callback(err);
-            }
-
-            if (emailExists) {
-              usedEmails.push(email);
-            }
-
-            // When all emails are checked
-            if (checkedCount === emails.length) {
-              callback(null, usedEmails);
-            }
-          });
-        });
-      };
-
-      // Check all emails
-      checkEmails(emailsToCheck, (err, usedEmails) => {
-        if (err) {
-          return res.status(500).json({
+    areEmailsUsed(allEmails)
+      .then(({ areAnyUsed, message }) => {
+        if (areAnyUsed) {
+          return res.status(400).json({
             status: false,
-            message: "Internal server error",
-            token: newToken,
+            message: message,
           });
         }
+        // Validate admin token
+        Common.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
+          if (err) {
+            console.error("Token validation error:", err);
+            return res
+              .status(500)
+              .json({ status: false, message: err.message });
+          }
 
-        if (usedEmails.length > 0) {
-          return res.status(409).json({
-            status: false,
-            message: `The following emails are already in use: ${usedEmails.join(
-              ", "
-            )}`,
-            token: newToken,
-          });
-        }
+          if (!tokenResult.status) {
+            return res
+              .status(401)
+              .json({ status: false, message: tokenResult.message });
+          }
 
-        // Proceed with creating Client SPOC if all emails are available
-        ClientSpoc.create(
-          name,
-          designation,
-          phone,
-          email,
-          normalizedEmail1,
-          normalizedEmail2,
-          normalizedEmail3,
-          normalizedEmail4,
-          admin_id,
-          (err, result) => {
+          const newToken = tokenResult.newToken;
+
+          // List of emails to check
+          const emailsToCheck = [email, email1, email2, email3, email4].filter(
+            Boolean
+          );
+
+          // Function to check each email using checkEmailExists
+          const checkEmails = (emails, callback) => {
+            const usedEmails = [];
+            let checkedCount = 0;
+
+            emails.forEach((email) => {
+              ClientSpoc.checkEmailExists(email, (err, emailExists) => {
+                checkedCount++;
+                if (err) {
+                  console.error(
+                    `Error checking email existence for ${email}:`,
+                    err
+                  );
+                  return callback(err);
+                }
+
+                if (emailExists) {
+                  usedEmails.push(email);
+                }
+
+                // When all emails are checked
+                if (checkedCount === emails.length) {
+                  callback(null, usedEmails);
+                }
+              });
+            });
+          };
+
+          // Check all emails
+          checkEmails(emailsToCheck, (err, usedEmails) => {
             if (err) {
-              console.error("Database error:", err);
-              Common.adminActivityLog(
-                admin_id,
-                "Client SPOC",
-                "Create",
-                "0",
-                null,
-                err,
-                () => {}
-              );
               return res.status(500).json({
                 status: false,
-                message: err.message,
+                message: "Internal server error",
                 token: newToken,
               });
             }
 
-            Common.adminActivityLog(
-              admin_id,
-              "Client SPOC",
-              "Create",
-              "1",
-              `{id: ${result.insertId}}`,
-              null,
-              () => {}
-            );
+            if (usedEmails.length > 0) {
+              return res.status(409).json({
+                status: false,
+                message: `The following emails are already in use: ${usedEmails.join(
+                  ", "
+                )}`,
+                token: newToken,
+              });
+            }
 
-            res.json({
-              status: true,
-              message: "Client SPOC created successfully",
-              client_spocs: result,
-              token: newToken,
-            });
-          }
-        );
+            // Proceed with creating Client SPOC if all emails are available
+            ClientSpoc.create(
+              name,
+              designation,
+              phone,
+              email,
+              normalizedEmail1,
+              normalizedEmail2,
+              normalizedEmail3,
+              normalizedEmail4,
+              admin_id,
+              (err, result) => {
+                if (err) {
+                  console.error("Database error:", err);
+                  Common.adminActivityLog(
+                    admin_id,
+                    "Client SPOC",
+                    "Create",
+                    "0",
+                    null,
+                    err,
+                    () => {}
+                  );
+                  return res.status(500).json({
+                    status: false,
+                    message: err.message,
+                    token: newToken,
+                  });
+                }
+
+                Common.adminActivityLog(
+                  admin_id,
+                  "Client SPOC",
+                  "Create",
+                  "1",
+                  `{id: ${result.insertId}}`,
+                  null,
+                  () => {}
+                );
+
+                res.json({
+                  status: true,
+                  message: "Client SPOC created successfully",
+                  client_spocs: result,
+                  token: newToken,
+                });
+              }
+            );
+          });
+        });
+      })
+      .catch((err) => {
+        console.error(err);
+        return res.status(500).json({
+          status: false,
+          message: "An error occurred while checking email usage.",
+        });
       });
-    });
   });
 };
 
