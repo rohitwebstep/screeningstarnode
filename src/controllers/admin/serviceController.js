@@ -151,7 +151,7 @@ exports.list = (req, res) => {
   });
 };
 
-exports.isServiceCodeUsedBefore = (req, res) => {
+exports.isServiceCodeUnique = (req, res) => {
   const { service_code, admin_id, _token } = req.query;
 
   let missingFields = [];
@@ -184,7 +184,7 @@ exports.isServiceCodeUsedBefore = (req, res) => {
       }
 
       const newToken = result.newToken;
-      Service.isServiceCodeUsedBefore(service_code, (err, serviceCodeUsed) => {
+      Service.isServiceCodeUnique(service_code, (err, serviceCodeUsed) => {
         if (err) {
           return res.status(500).json({
             status: false,

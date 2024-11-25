@@ -1,7 +1,7 @@
 const { pool, startConnection, connectionRelease } = require("../../config/db");
 
 const Service = {
-  isServiceCodeUsedBefore: (service_code, callback) => {
+  isServiceCodeUnique: (service_code, callback) => {
     startConnection((err, connection) => {
       if (err) {
         return callback(
