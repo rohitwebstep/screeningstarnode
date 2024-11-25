@@ -54,6 +54,50 @@ const generateInvoiceModel = {
           return callback(new Error("Customer not found."), null);
         }
 
+        const customerData = customerResults[0];
+
+        let servicesData;
+        try {
+          servicesData = JSON.parse(customerData.services);
+        } catch (parseError) {
+          connectionRelease(connection);
+          return callback(parseError, null);
+        }
+
+        const updateServiceTitles = async () => {
+          try {
+            for (const group of servicesData) {
+              for (const service of group.services) {
+                const serviceSql = `SELECT title FROM services WHERE id = ?`;
+                const [rows] = await new Promise((resolve, reject) => {
+                  connection.query(
+                    serviceSql,
+                    [service.serviceId],
+                    (err, results) => {
+                      if (err) {
+                        console.error("Error querying service title:", err);
+                        return reject(err);
+                      }
+                      resolve(results);
+                    }
+                  );
+                });
+
+                if (rows && rows.title) {
+                  service.serviceTitle = rows.title;
+                }
+              }
+            }
+          } catch (err) {
+            console.error("Error updating service titles:", err);
+          } finally {
+            connectionRelease(connection);
+            customerData.services = JSON.stringify(servicesData);
+          }
+        };
+
+        updateServiceTitles();
+
         const applicationQuery = `
           SELECT
             ca.id,
@@ -264,7 +308,7 @@ const generateInvoiceModel = {
               .then(() => {
                 // Compile the final results
                 const finalResults = {
-                  customerInfo: customerResults[0],
+                  customerInfo: customerData,
                   applicationsByBranch: branchesWithApplications,
                 };
                 connectionRelease(connection);

@@ -21,7 +21,7 @@ const fs = require("fs");
 const path = require("path");
 const { upload, saveImage, saveImages } = require("../../utils/imageSave");
 
-function calculateServiceStats(applications, services) {
+function calculateServiceStats(serviceNames, applications, services) {
   const serviceStats = {};
   const allServiceIds = [];
   const servicesToAllocate = [];
@@ -50,7 +50,9 @@ function calculateServiceStats(applications, services) {
           if (serviceExists) {
             serviceStats[id] = {
               serviceId: id,
-              serviceTitle: matchedService.serviceTitle,
+              serviceTitle:
+                serviceNames.find((service) => service.id === id)?.title ||
+                matchedService.serviceTitle,
               price: parseFloat(matchedService.price),
               count: 0,
               totalCost: 0,
@@ -236,13 +238,19 @@ exports.generateInvoice = async (req, res) => {
                 });
               }
 
-              // Extract services and applications
               const services = JSON.parse(results.customerInfo.services);
+              const customerServiceIds = services.flatMap((group) =>
+                group.services.map((service) => service.serviceId)
+              );
+
+              const serviceNames = await getServiceNames(customerServiceIds);
+
+              // Extract services and applications
               const applications = results.applicationsByBranch;
 
               // Calculate service statistics
               const { serviceStats, servicesToAllocate } =
-                calculateServiceStats(applications, services);
+                calculateServiceStats(serviceNames, applications, services);
 
               // Calculate overall costs with 9% as parameter
               const overallCosts = calculateOverallCosts(serviceStats, 9);
@@ -255,15 +263,6 @@ exports.generateInvoice = async (req, res) => {
                 serviceInfo: totalCostsArray,
                 costInfo: overallCosts,
               };
-
-              const customerServiceList = JSON.parse(
-                results.customerInfo.services
-              );
-              const customerServiceIds = customerServiceList.flatMap((group) =>
-                group.services.map((service) => service.serviceId)
-              );
-
-              const serviceNames = await getServiceNames(customerServiceIds);
 
               // Respond with the fetched customer data and applications
               return res.json({

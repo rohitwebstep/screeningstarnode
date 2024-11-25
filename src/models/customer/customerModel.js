@@ -632,6 +632,7 @@ const Customer = {
 
     startConnection((err, connection) => {
       if (err) {
+        console.error("Failed to connect to the database:", err);
         return callback(
           { message: "Failed to connect to the database", error: err },
           null
@@ -641,7 +642,6 @@ const Customer = {
       connection.query(sql, [customer_id], (err, results) => {
         if (err) {
           connectionRelease(connection);
-          console.error("Database query error: 59", err);
           return callback(err, null);
         }
 
@@ -651,41 +651,49 @@ const Customer = {
         }
 
         const customerData = results[0];
-        const clientSpocId = customerData.client_spoc_id;
 
-        if (clientSpocId) {
-          let spocIds = [];
-
-          // Check if clientSpocId is a number
-          if (typeof clientSpocId === "number") {
-            spocIds = [clientSpocId]; // Directly use as an array
-          } else if (typeof clientSpocId === "string") {
-            spocIds = clientSpocId.split(",").map((id) => id.trim());
-          }
-
-          // Query to fetch SPOC details
-          const spocSql = `
-            SELECT id, name 
-            FROM client_spocs 
-            WHERE id IN (${spocIds.map(() => "?").join(",")})
-          `;
-
-          connection.query(spocSql, spocIds, (err, spocResults) => {
-            connectionRelease(connection);
-            if (err) {
-              console.error("Database query error: fetching SPOCs", err);
-              return callback(err, null);
-            }
-
-            // Attach SPOC details to the customer data
-            customerData.spoc_details = spocResults;
-            callback(null, customerData);
-          });
-        } else {
+        let servicesData;
+        try {
+          servicesData = JSON.parse(customerData.services);
+        } catch (parseError) {
           connectionRelease(connection);
-          // No SPOC ID, return the original customer data
-          callback(null, customerData);
+          return callback(parseError, null);
         }
+
+        const updateServiceTitles = async () => {
+          try {
+            for (const group of servicesData) {
+              for (const service of group.services) {
+                const serviceSql = `SELECT title FROM services WHERE id = ?`;
+                const [rows] = await new Promise((resolve, reject) => {
+                  connection.query(
+                    serviceSql,
+                    [service.serviceId],
+                    (err, results) => {
+                      if (err) {
+                        console.error("Error querying service title:", err);
+                        return reject(err);
+                      }
+                      resolve(results);
+                    }
+                  );
+                });
+
+                if (rows && rows.title) {
+                  service.serviceTitle = rows.title;
+                }
+              }
+            }
+          } catch (err) {
+            console.error("Error updating service titles:", err);
+          } finally {
+            connectionRelease(connection);
+            customerData.services = JSON.stringify(servicesData);
+            callback(null, customerData);
+          }
+        };
+
+        updateServiceTitles();
       });
     });
   },
@@ -705,7 +713,55 @@ const Customer = {
           console.error("Database query error: 60", err);
           return callback(err, null);
         }
-        callback(null, results[0]);
+        if (results.length === 0) {
+          connectionRelease(connection);
+          return callback(null, { message: "No customer data found" });
+        }
+
+        const customerData = results[0];
+
+        let servicesData;
+        try {
+          servicesData = JSON.parse(customerData.services);
+        } catch (parseError) {
+          connectionRelease(connection);
+          return callback(parseError, null);
+        }
+
+        const updateServiceTitles = async () => {
+          try {
+            for (const group of servicesData) {
+              for (const service of group.services) {
+                const serviceSql = `SELECT title FROM services WHERE id = ?`;
+                const [rows] = await new Promise((resolve, reject) => {
+                  connection.query(
+                    serviceSql,
+                    [service.serviceId],
+                    (err, results) => {
+                      if (err) {
+                        console.error("Error querying service title:", err);
+                        return reject(err);
+                      }
+                      resolve(results);
+                    }
+                  );
+                });
+
+                if (rows && rows.title) {
+                  service.serviceTitle = rows.title;
+                }
+              }
+            }
+          } catch (err) {
+            console.error("Error updating service titles:", err);
+          } finally {
+            connectionRelease(connection);
+            customerData.services = JSON.stringify(servicesData);
+            callback(null, customerData);
+          }
+        };
+
+        updateServiceTitles();
       });
     });
   },
