@@ -33,6 +33,17 @@ exports.create = (req, res) => {
     });
   }
 
+  // Normalize optional email fields
+  const normalizeEmail = (emailField) =>
+    emailField && emailField.trim() !== "" && emailField !== "undefined"
+      ? emailField
+      : null;
+
+  const normalizedEmail1 = normalizeEmail(email1);
+  const normalizedEmail2 = normalizeEmail(email2);
+  const normalizedEmail3 = normalizeEmail(email3);
+  const normalizedEmail4 = normalizeEmail(email4);
+
   const action = JSON.stringify({ client_spoc: "create" });
 
   // Check admin authorization
@@ -120,10 +131,10 @@ exports.create = (req, res) => {
           designation,
           phone,
           email,
-          email1,
-          email2,
-          email3,
-          email4,
+          normalizedEmail1,
+          normalizedEmail2,
+          normalizedEmail3,
+          normalizedEmail4,
           admin_id,
           (err, result) => {
             if (err) {
@@ -356,14 +367,15 @@ exports.update = (req, res) => {
     _token,
   } = req.body;
 
-  let missingFields = [];
-  if (!id || id === "") missingFields.push("Client SPOC ID");
-  if (!name || name === "") missingFields.push("Name");
-  if (!designation || designation === "") missingFields.push("Description");
-  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
-  if (!_token || _token === "") missingFields.push("Token");
-  if (!phone || phone === "") missingFields.push("Phone");
-  if (!email || email === "") missingFields.push("Email");
+  // Validate required fields
+  const missingFields = [];
+  if (!id) missingFields.push("Client SPOC ID");
+  if (!name) missingFields.push("Name");
+  if (!designation) missingFields.push("Designation");
+  if (!admin_id) missingFields.push("Admin ID");
+  if (!_token) missingFields.push("Token");
+  if (!phone) missingFields.push("Phone");
+  if (!email) missingFields.push("Email");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -371,43 +383,69 @@ exports.update = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
+
+  // Normalize optional email fields
+  const normalizeEmail = (emailField) =>
+    emailField && emailField.trim() !== "" && emailField !== "undefined"
+      ? emailField
+      : null;
+
+  const normalizedEmail1 = normalizeEmail(email1);
+  const normalizedEmail2 = normalizeEmail(email2);
+  const normalizedEmail3 = normalizeEmail(email3);
+  const normalizedEmail4 = normalizeEmail(email4);
+
   const action = JSON.stringify({ client_spoc: "update" });
+
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
-      // Check the status returned by the authorization function
       return res.status(403).json({
         status: false,
-        message: result.message, // Return the message from the authorization function
+        message: result.message,
       });
     }
+
     Common.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
-        console.error("Error checking token validity:", err);
-        return res.status(500).json(err);
+        console.error("Error validating token:", err);
+        return res.status(500).json({
+          status: false,
+          message: "Internal server error while validating token",
+        });
       }
 
       if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message });
+        return res.status(401).json({
+          status: false,
+          message: result.message,
+        });
       }
 
       const newToken = result.newToken;
 
+      // Fetch current Client SPOC details
       ClientSpoc.getClientSpocById(id, (err, currentClientSpoc) => {
         if (err) {
           console.error("Error fetching Client SPOC data:", err);
           return res.status(500).json({
             status: false,
-            message: err.message,
+            message: "Error fetching Client SPOC data",
             token: newToken,
           });
         }
 
+        if (!currentClientSpoc) {
+          return res.status(404).json({
+            status: false,
+            message: "Client SPOC not found",
+            token: newToken,
+          });
+        }
+
+        // Track changes
         const changes = {};
         if (currentClientSpoc.name !== name) {
-          changes.name = {
-            old: currentClientSpoc.name,
-            new: name,
-          };
+          changes.name = { old: currentClientSpoc.name, new: name };
         }
         if (currentClientSpoc.designation !== designation) {
           changes.designation = {
@@ -416,19 +454,20 @@ exports.update = (req, res) => {
           };
         }
 
+        // Update Client SPOC in the database
         ClientSpoc.update(
           id,
           name,
           designation,
           phone,
           email,
-          email1,
-          email2,
-          email3,
-          email4,
-          (err, result) => {
+          normalizedEmail1,
+          normalizedEmail2,
+          normalizedEmail3,
+          normalizedEmail4,
+          (err, updateResult) => {
             if (err) {
-              console.error("Database error:", err);
+              console.error("Database update error:", err);
               Common.adminActivityLog(
                 admin_id,
                 "Client SPOC",
@@ -440,11 +479,12 @@ exports.update = (req, res) => {
               );
               return res.status(500).json({
                 status: false,
-                message: err.message,
+                message: "Error updating Client SPOC",
                 token: newToken,
               });
             }
 
+            // Log admin activity
             Common.adminActivityLog(
               admin_id,
               "Client SPOC",
@@ -457,8 +497,8 @@ exports.update = (req, res) => {
 
             res.json({
               status: true,
-              message: "Client SPOC named successfully",
-              client_spocs: result,
+              message: "Client SPOC updated successfully",
+              client_spocs: updateResult,
               token: newToken,
             });
           }
