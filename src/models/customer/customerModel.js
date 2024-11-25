@@ -342,13 +342,11 @@ const Customer = {
         \`client_spoc_id\`, \`escalation_manager_id\`,
         \`billing_spoc_id\`, \`billing_escalation_id\`,
         \`gst_number\`, \`tat_days\`, 
-        \`agreement_date\`, \`agreement_duration\`, \`custom_template\`,
-        \`custom_address\`, \`state\`, \`state_code\`, 
+        \`agreement_date\`, \`agreement_duration\`,
+        \`state\`, \`state_code\`, 
         \`client_standard\`
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-
-
   },
 
   createCustomerMeta: (metaData, callback) => {
@@ -358,10 +356,10 @@ const Customer = {
         \`client_spoc_id\`, \`escalation_manager_id\`,
         \`billing_spoc_id\`, \`billing_escalation_id\`,
         \`gst_number\`, \`tat_days\`, 
-        \`agreement_date\`, \`agreement_duration\`, \`custom_template\`,
-        \`custom_address\`, \`state\`, \`state_code\`, 
+        \`agreement_date\`, \`agreement_duration\`,
+        \`state\`, \`state_code\`, 
         \`client_standard\`
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const valuesCustomerMetas = [
@@ -375,8 +373,6 @@ const Customer = {
       metaData.tat_days,
       metaData.agreement_date,
       metaData.agreement_duration,
-      metaData.custom_template || "no",
-      metaData.custom_address || null,
       metaData.state,
       metaData.state_code,
       metaData.client_standard,
@@ -424,9 +420,7 @@ const Customer = {
         \`gst_number\` = ?, 
         \`tat_days\` = ?, 
         \`agreement_date\` = ?, 
-        \`agreement_duration\` = ?, 
-        \`custom_template\` = ?, 
-        \`custom_address\` = ?, 
+        \`agreement_duration\` = ?,
         \`state\` = ?, 
         \`state_code\` = ?, 
         \`client_standard\` = ?
@@ -444,8 +438,6 @@ const Customer = {
       metaData.tat_days,
       metaData.agreement_date,
       metaData.agreement_duration,
-      metaData.custom_template || "no",
-      metaData.custom_address || null,
       metaData.state,
       metaData.state_code,
       metaData.client_standard,
@@ -593,7 +585,10 @@ const Customer = {
 
         if (err) {
           console.error("Database query error: ", err);
-          return callback({ message: "Database query error", error: err }, null);
+          return callback(
+            { message: "Database query error", error: err },
+            null
+          );
         }
 
         // If no results are found, return a meaningful message
@@ -602,11 +597,11 @@ const Customer = {
         }
 
         // Convert client_spoc_id to string and then split by commas
-        const clientSpocIdString = String(results[0].client_spoc_id);  // Ensure it is a string
-        const spocIds = clientSpocIdString.split(',');  // Split by comma
-        const firstSpocId = spocIds[0].trim();  // Trim any extra spaces
+        const clientSpocIdString = String(results[0].client_spoc_id); // Ensure it is a string
+        const spocIds = clientSpocIdString.split(","); // Split by comma
+        const firstSpocId = spocIds[0].trim(); // Trim any extra spaces
 
-        callback(null, firstSpocId);  // Return the first SPoC ID
+        callback(null, firstSpocId); // Return the first SPoC ID
       });
     });
   },

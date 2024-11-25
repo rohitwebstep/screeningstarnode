@@ -165,11 +165,9 @@ exports.create = (req, res) => {
     client_code,
     company_name,
     mobile_number,
-    custom_address,
     date_agreement,
     client_spoc_id,
     client_standard,
-    custom_template,
     scopeOfServices,
     billing_spoc_id,
     additional_login,
@@ -199,7 +197,6 @@ exports.create = (req, res) => {
     client_spoc_id,
     scopeOfServices,
     client_standard,
-    custom_template,
     billing_spoc_id,
     additional_login,
     agreement_period,
@@ -212,10 +209,6 @@ exports.create = (req, res) => {
   if (additional_login && additional_login.toLowerCase() === "yes") {
     additional_login_int = 1;
     requiredFields.username = username;
-  }
-
-  if (custom_template && custom_template.toLowerCase() === "yes") {
-    requiredFields.custom_address = custom_address;
   }
 
   // Check for missing fields
@@ -365,11 +358,6 @@ exports.create = (req, res) => {
                     tat_days: tat,
                     agreement_date: date_agreement,
                     agreement_duration: agreement_period,
-                    custom_template,
-                    custom_address:
-                      custom_template && custom_template.toLowerCase() === "yes"
-                        ? custom_address
-                        : null,
                     state,
                     state_code,
                     client_standard,
@@ -1100,11 +1088,9 @@ exports.update = (req, res) => {
     services,
     state_code,
     gst_number,
-    custom_address,
     agreement_date,
     client_spoc_id,
     client_standard,
-    custom_template,
     billing_spoc_id,
     additional_login,
     client_unique_id,
@@ -1133,7 +1119,6 @@ exports.update = (req, res) => {
     client_spoc_id,
     agreement_date,
     billing_spoc_id,
-    custom_template,
     client_standard,
     additional_login,
     agreement_duration,
@@ -1146,10 +1131,6 @@ exports.update = (req, res) => {
   if (additional_login && additional_login.toLowerCase() === "yes") {
     additional_login_int = 1;
     requiredFields.username = username;
-  }
-
-  if (custom_template && custom_template.toLowerCase() === "yes") {
-    requiredFields.custom_address = custom_address;
   }
 
   // Check for missing fields
@@ -1260,7 +1241,6 @@ exports.update = (req, res) => {
               compareAndAddChanges("agreement_date", agreement_date);
               compareAndAddChanges("client_standard", client_standard);
               compareAndAddChanges("agreement_duration", agreement_duration);
-              compareAndAddChanges("custom_template", custom_template);
               compareAndAddChanges("state", state);
               compareAndAddChanges("state_code", state_code);
             }
@@ -1383,16 +1363,6 @@ exports.update = (req, res) => {
                         tat_days,
                         agreement_date,
                         agreement_duration,
-                        custom_template:
-                          custom_template &&
-                          custom_template.toLowerCase() === "yes"
-                            ? 1
-                            : 0,
-                        custom_address:
-                          custom_template &&
-                          custom_template.toLowerCase() === "yes"
-                            ? custom_address
-                            : null,
                         state,
                         state_code,
                         client_standard,
