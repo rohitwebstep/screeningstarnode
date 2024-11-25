@@ -520,7 +520,9 @@ const Customer = {
           return callback(err, null);
         }
 
-        // Loop through each customer in the results
+        // Array to accumulate the updated customer data
+        const updatedCustomers = [];
+
         const updateAllServiceTitles = async () => {
           for (const customerData of results) {
             let servicesData;
@@ -528,7 +530,7 @@ const Customer = {
               servicesData = JSON.parse(customerData.services);
             } catch (parseError) {
               console.error(
-                "Error parsing services for customer ID:",
+                "Error parsing services data for customer ID:",
                 customerData.main_id,
                 parseError
               );
@@ -557,8 +559,9 @@ const Customer = {
                       }
                     );
                   });
-                  if (rows && rows.title) {
-                    service.serviceTitle = rows.title;
+
+                  if (rows && rows.length > 0 && rows[0].title) {
+                    service.serviceTitle = rows[0].title;
                   }
                 }
               }
@@ -572,12 +575,11 @@ const Customer = {
             }
 
             customerData.services = JSON.stringify(servicesData);
-            // Return updated customer data
-            callback(null, customerData);
+            // Add the updated customer data to the array
+            updatedCustomers.push(customerData);
           }
+          callback(null, updatedCustomers);
         };
-
-        // Start updating service titles
         updateAllServiceTitles();
       });
     });
@@ -630,7 +632,9 @@ const Customer = {
           return callback(err, null);
         }
 
-        // Loop through each customer in the results
+        // Array to accumulate the updated customer data
+        const updatedCustomers = [];
+
         const updateAllServiceTitles = async () => {
           for (const customerData of results) {
             let servicesData;
@@ -638,7 +642,7 @@ const Customer = {
               servicesData = JSON.parse(customerData.services);
             } catch (parseError) {
               console.error(
-                "Error parsing services for customer ID:",
+                "Error parsing services data for customer ID:",
                 customerData.main_id,
                 parseError
               );
@@ -667,8 +671,9 @@ const Customer = {
                       }
                     );
                   });
-                  if (rows && rows.title) {
-                    service.serviceTitle = rows.title;
+
+                  if (rows && rows.length > 0 && rows[0].title) {
+                    service.serviceTitle = rows[0].title;
                   }
                 }
               }
@@ -682,12 +687,11 @@ const Customer = {
             }
 
             customerData.services = JSON.stringify(servicesData);
-            // Return updated customer data
-            callback(null, customerData);
+            // Add the updated customer data to the array
+            updatedCustomers.push(customerData);
           }
+          callback(null, updatedCustomers);
         };
-
-        // Start updating service titles
         updateAllServiceTitles();
       });
     });
