@@ -258,7 +258,8 @@ const Service = {
         sg.symbol, 
         sg.title AS group_title, 
         s.id AS service_id, 
-        s.title AS service_title
+        s.title AS service_title,
+        s.service_code AS service_code
       FROM 
         service_groups sg
       LEFT JOIN 
@@ -299,8 +300,14 @@ const Service = {
         const groupMap = new Map();
 
         results.forEach((row) => {
-          const { group_id, symbol, group_title, service_id, service_title } =
-            row;
+          const {
+            group_id,
+            symbol,
+            group_title,
+            service_id,
+            service_title,
+            service_code,
+          } = row;
 
           // Retrieve the group from the map, or initialize a new entry
           let group = groupMap.get(group_id);
@@ -320,6 +327,7 @@ const Service = {
             group.services.push({
               service_id,
               service_title,
+              service_code,
             });
           }
         });
