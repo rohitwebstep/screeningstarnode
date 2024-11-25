@@ -154,10 +154,12 @@ exports.list = (req, res) => {
 exports.isServiceCodeUnique = (req, res) => {
   const { service_code, admin_id, _token } = req.query;
 
-  let missingFields = [];
-  if (!service_code || service_code === "") missingFields.push("Service Code");
-  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
-  if (!_token || _token === "") missingFields.push("Token");
+  // Validate required fields
+  const missingFields = [];
+  if (!service_code || service_code.trim() === "")
+    missingFields.push("Service Code");
+  if (!admin_id || admin_id.trim() === "") missingFields.push("Admin ID");
+  if (!_token || _token.trim() === "") missingFields.push("Token");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -165,32 +167,47 @@ exports.isServiceCodeUnique = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
+
   const action = JSON.stringify({ service: "view" });
-  Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
-    if (!result.status) {
+
+  // Check admin authorization
+  Common.isAdminAuthorizedForAction(admin_id, action, (authResult) => {
+    if (!authResult.status) {
       return res.status(403).json({
         status: false,
-        message: result.message, // Return the message from the authorization function
+        message: authResult.message, // Return the message from the authorization function
       });
     }
-    Common.isAdminTokenValid(_token, admin_id, (err, result) => {
+
+    // Validate admin token
+    Common.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json(err);
+        return res.status(500).json({
+          status: false,
+          message: "Internal Server Error: Token validation failed.",
+          error: err,
+        });
       }
 
-      if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message });
+      if (!tokenResult.status) {
+        return res.status(401).json({
+          status: false,
+          message: tokenResult.message,
+        });
       }
 
-      const newToken = result.newToken;
+      const newToken = tokenResult.newToken;
+
+      // Check if service code is unique
       Service.isServiceCodeUnique(service_code, (err, serviceCodeUsed) => {
         if (err) {
+          console.error("Error checking service code uniqueness:", err);
           return res.status(500).json({
             status: false,
             message: "Internal Server Error: Unable to check Service Code.",
             error: err,
-            token: newToken,
+            token: newToken, // Pass the new token even on errors
           });
         }
 
@@ -202,9 +219,10 @@ exports.isServiceCodeUnique = (req, res) => {
           });
         }
 
-        return res.status(409).json({
+        // Service code is unique
+        return res.status(200).json({
           status: true,
-          message: "Service Code is not used",
+          message: "Service Code is unique and not used.",
           token: newToken,
         });
       });
