@@ -505,18 +505,80 @@ const Customer = {
 
     startConnection((err, connection) => {
       if (err) {
+        console.error("Connection error:", err);
         return callback(
           { message: "Failed to connect to the database", error: err },
           null
         );
       }
+
       connection.query(sql, (err, results) => {
         connectionRelease(connection);
+
         if (err) {
           console.error("Database query error: 57", err);
           return callback(err, null);
         }
-        callback(null, results);
+
+        // Loop through each customer in the results
+        const updateAllServiceTitles = async () => {
+          for (const customerData of results) {
+            let servicesData;
+            try {
+              servicesData = JSON.parse(customerData.services);
+            } catch (parseError) {
+              console.error(
+                "Error parsing services for customer ID:",
+                customerData.main_id,
+                parseError
+              );
+              return callback(parseError, null);
+            }
+
+            try {
+              // Update service titles for each group of services
+              for (const group of servicesData) {
+                for (const service of group.services) {
+                  const serviceSql = `SELECT title FROM services WHERE id = ?`;
+                  const [rows] = await new Promise((resolve, reject) => {
+                    connection.query(
+                      serviceSql,
+                      [service.serviceId],
+                      (err, results) => {
+                        if (err) {
+                          console.error(
+                            "Error querying service title for service ID:",
+                            service.serviceId,
+                            err
+                          );
+                          return reject(err);
+                        }
+                        resolve(results);
+                      }
+                    );
+                  });
+                  if (rows && rows.title) {
+                    service.serviceTitle = rows.title;
+                  }
+                }
+              }
+            } catch (err) {
+              console.error(
+                "Error updating service titles for customer ID:",
+                customerData.main_id,
+                err
+              );
+              return callback(err, null);
+            }
+
+            customerData.services = JSON.stringify(servicesData);
+            // Return updated customer data
+            callback(null, customerData);
+          }
+        };
+
+        // Start updating service titles
+        updateAllServiceTitles();
       });
     });
   },
@@ -553,18 +615,80 @@ const Customer = {
 
     startConnection((err, connection) => {
       if (err) {
+        console.error("Connection error:", err);
         return callback(
           { message: "Failed to connect to the database", error: err },
           null
         );
       }
+
       connection.query(sql, (err, results) => {
         connectionRelease(connection);
+
         if (err) {
-          console.error("Database query error: 58", err);
+          console.error("Database query error: 57", err);
           return callback(err, null);
         }
-        callback(null, results);
+
+        // Loop through each customer in the results
+        const updateAllServiceTitles = async () => {
+          for (const customerData of results) {
+            let servicesData;
+            try {
+              servicesData = JSON.parse(customerData.services);
+            } catch (parseError) {
+              console.error(
+                "Error parsing services for customer ID:",
+                customerData.main_id,
+                parseError
+              );
+              return callback(parseError, null);
+            }
+
+            try {
+              // Update service titles for each group of services
+              for (const group of servicesData) {
+                for (const service of group.services) {
+                  const serviceSql = `SELECT title FROM services WHERE id = ?`;
+                  const [rows] = await new Promise((resolve, reject) => {
+                    connection.query(
+                      serviceSql,
+                      [service.serviceId],
+                      (err, results) => {
+                        if (err) {
+                          console.error(
+                            "Error querying service title for service ID:",
+                            service.serviceId,
+                            err
+                          );
+                          return reject(err);
+                        }
+                        resolve(results);
+                      }
+                    );
+                  });
+                  if (rows && rows.title) {
+                    service.serviceTitle = rows.title;
+                  }
+                }
+              }
+            } catch (err) {
+              console.error(
+                "Error updating service titles for customer ID:",
+                customerData.main_id,
+                err
+              );
+              return callback(err, null);
+            }
+
+            customerData.services = JSON.stringify(servicesData);
+            // Return updated customer data
+            callback(null, customerData);
+          }
+        };
+
+        // Start updating service titles
+        updateAllServiceTitles();
       });
     });
   },
