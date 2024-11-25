@@ -7,8 +7,8 @@ exports.create = (req, res) => {
     title,
     description,
     group_id,
-    short_code,
-    sac_code,
+    service_code,
+    hsn_code,
     admin_id,
     _token,
   } = req.body;
@@ -17,8 +17,8 @@ exports.create = (req, res) => {
   if (!title || title === "") missingFields.push("Title");
   if (!description || description === "") missingFields.push("Description");
   if (!group_id || group_id === "") missingFields.push("Group ID");
-  if (!short_code || short_code === "") missingFields.push("Short Code");
-  if (!sac_code || sac_code === "") missingFields.push("SAC Code");
+  if (!service_code || service_code === "") missingFields.push("Service Code");
+  if (!hsn_code || hsn_code === "") missingFields.push("HSN Code");
   if (!admin_id || description === "") missingFields.push("Admin ID");
   if (!_token || _token === "") missingFields.push("Token");
 
@@ -55,8 +55,8 @@ exports.create = (req, res) => {
         title,
         description,
         group_id,
-        short_code,
-        sac_code,
+        service_code,
+        hsn_code,
         admin_id,
         (err, result) => {
           if (err) {
@@ -151,6 +151,67 @@ exports.list = (req, res) => {
   });
 };
 
+exports.isServiceCodeUsedBefore = (req, res) => {
+  const { service_code, admin_id, _token } = req.query;
+
+  let missingFields = [];
+  if (!service_code || service_code === "") missingFields.push("Service Code");
+  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
+  if (!_token || _token === "") missingFields.push("Token");
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+  const action = JSON.stringify({ service: "view" });
+  Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
+    if (!result.status) {
+      return res.status(403).json({
+        status: false,
+        message: result.message, // Return the message from the authorization function
+      });
+    }
+    Common.isAdminTokenValid(_token, admin_id, (err, result) => {
+      if (err) {
+        console.error("Error checking token validity:", err);
+        return res.status(500).json(err);
+      }
+
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
+      }
+
+      const newToken = result.newToken;
+      Service.isServiceCodeUsedBefore(service_code, (err, serviceCodeUsed) => {
+        if (err) {
+          return res.status(500).json({
+            status: false,
+            message: "Internal Server Error: Unable to check Service Code.",
+            error: err,
+            token: newToken,
+          });
+        }
+
+        if (serviceCodeUsed) {
+          return res.status(409).json({
+            status: false,
+            message: "Conflict: The Service Code has already been used.",
+            token: newToken,
+          });
+        }
+
+        return res.status(409).json({
+          status: true,
+          message: "Service Code is not used",
+          token: newToken,
+        });
+      });
+    });
+  });
+};
+
 exports.getServiceById = (req, res) => {
   const { id, admin_id, _token } = req.query;
   let missingFields = [];
@@ -220,8 +281,8 @@ exports.update = (req, res) => {
     title,
     description,
     group_id,
-    short_code,
-    sac_code,
+    service_code,
+    hsn_code,
     admin_id,
     _token,
   } = req.body;
@@ -231,8 +292,8 @@ exports.update = (req, res) => {
   if (!title || title === "") missingFields.push("Title");
   if (!description || description === "") missingFields.push("Description");
   if (!group_id || group_id === "") missingFields.push("Group ID");
-  if (!short_code || short_code === "") missingFields.push("Short Code");
-  if (!sac_code || sac_code === "") missingFields.push("SAC Code");
+  if (!service_code || service_code === "") missingFields.push("Service Code");
+  if (!hsn_code || hsn_code === "") missingFields.push("HSN Code");
   if (!admin_id || admin_id === "") missingFields.push("Admin ID");
   if (!_token || _token === "") missingFields.push("Token");
 
@@ -292,8 +353,8 @@ exports.update = (req, res) => {
           title,
           description,
           group_id,
-          short_code,
-          sac_code,
+          service_code,
+          hsn_code,
           (err, result) => {
             if (err) {
               console.error("Database error:", err);

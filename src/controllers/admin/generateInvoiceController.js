@@ -123,7 +123,7 @@ async function getServiceNames(serviceIds) {
         return {
           id: service.id,
           title: service.title,
-          shortCode: service.short_code,
+          shortCode: service.service_code,
         };
       }
       return null;

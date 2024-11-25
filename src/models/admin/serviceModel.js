@@ -1,18 +1,51 @@
 const { pool, startConnection, connectionRelease } = require("../../config/db");
 
 const Service = {
+  isServiceCodeUsedBefore: (service_code, callback) => {
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
+
+      const serviceCodeCheckSql = `
+        SELECT COUNT(*) as count
+        FROM \`services\`
+        WHERE \`service_code\` = ?
+      `;
+
+      connection.query(
+        serviceCodeCheckSql,
+        [service_code],
+        (err, serviceCodeCheckResults) => {
+          connectionRelease(connection); // Ensure connection is released
+
+          if (err) {
+            console.error("Error checking service code in services:", err);
+            return callback(err, null);
+          }
+
+          const serviceCodeExists = serviceCodeCheckResults[0].count > 0;
+          return callback(null, serviceCodeExists);
+        }
+      );
+    });
+  },
+
   create: (
     title,
     description,
     group_id,
-    short_code,
-    sac_code,
+    service_code,
+    hsn_code,
     admin_id,
     callback
   ) => {
     // Step 1: Check if a service with the same title already exists
     const checkServiceSql = `
-      SELECT * FROM \`services\` WHERE \`title\` = ?
+      SELECT * FROM \`services\` WHERE \`title\` = ? OR \`service_code\` = ?
     `;
 
     startConnection((err, connection) => {
@@ -20,41 +53,47 @@ const Service = {
         return callback(err, null);
       }
 
-      connection.query(checkServiceSql, [title], (checkErr, serviceResults) => {
-        if (checkErr) {
-          console.error("Error checking service:", checkErr);
-          connectionRelease(connection); // Release connection on error
-          return callback(checkErr, null);
-        }
+      connection.query(
+        checkServiceSql,
+        [title, service_code],
+        (checkErr, serviceResults) => {
+          if (checkErr) {
+            console.error("Error checking service:", checkErr);
+            connectionRelease(connection); // Release connection on error
+            return callback(checkErr, null);
+          }
 
-        // Step 2: If a service with the same title exists, return an error
-        if (serviceResults.length > 0) {
-          const error = new Error("Service with the same name already exists");
-          console.error(error.message);
-          connectionRelease(connection); // Release connection before returning error
-          return callback(error, null);
-        }
+          // Step 2: If a service with the same title exists, return an error
+          if (serviceResults.length > 0) {
+            const error = new Error(
+              "Service with the same name or service code already exists"
+            );
+            console.error(error.message);
+            connectionRelease(connection); // Release connection before returning error
+            return callback(error, null);
+          }
 
-        // Step 3: Insert the new service
-        const insertServiceSql = `
-          INSERT INTO \`services\` (\`title\`, \`description\`, \`group_id\`, \`short_code\`,  \`sac_code\`, \`admin_id\`)
+          // Step 3: Insert the new service
+          const insertServiceSql = `
+          INSERT INTO \`services\` (\`title\`, \`description\`, \`group_id\`, \`service_code\`,  \`hsn_code\`, \`admin_id\`)
           VALUES (?, ?, ?, ?, ?, ?)
         `;
 
-        connection.query(
-          insertServiceSql,
-          [title, description, group_id, short_code, sac_code, admin_id],
-          (insertErr, results) => {
-            connectionRelease(connection); // Release the connection
+          connection.query(
+            insertServiceSql,
+            [title, description, group_id, service_code, hsn_code, admin_id],
+            (insertErr, results) => {
+              connectionRelease(connection); // Release the connection
 
-            if (insertErr) {
-              console.error("Database query error: 46", insertErr);
-              return callback(insertErr, null);
+              if (insertErr) {
+                console.error("Database query error: 46", insertErr);
+                return callback(insertErr, null);
+              }
+              callback(null, results);
             }
-            callback(null, results);
-          }
-        );
-      });
+          );
+        }
+      );
     });
   },
 
@@ -158,13 +197,13 @@ const Service = {
     title,
     description,
     group_id,
-    short_code,
-    sac_code,
+    service_code,
+    hsn_code,
     callback
   ) => {
     const sql = `
       UPDATE \`services\`
-      SET \`title\` = ?, \`description\` = ?, \`group_id\` = ?, \`short_code\` = ?, \`sac_code\` = ?
+      SET \`title\` = ?, \`description\` = ?, \`group_id\` = ?, \`service_code\` = ?, \`hsn_code\` = ?
       WHERE \`id\` = ?
     `;
 
@@ -175,7 +214,7 @@ const Service = {
 
       connection.query(
         sql,
-        [title, description, group_id, short_code, sac_code, id],
+        [title, description, group_id, service_code, hsn_code, id],
         (queryErr, results) => {
           connectionRelease(connection); // Release the connection
 
