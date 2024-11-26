@@ -1,4 +1,4 @@
-const Notification = require("../../models/admin/notificationModel");
+const NotificationModel = require("../../models/admin/notificationsModel");
 const ClientApplication = require("../../models/customer/branch/clientApplicationModel");
 const Common = require("../../models/admin/commonModel");
 
@@ -28,54 +28,65 @@ exports.index = (req, res) => {
       });
     }
 
-    // Authorization action
-    const action = JSON.stringify({ tat_delay: "view" });
+    let newApplicationStatus = false;
+    let tatDelayStatus = false;
 
-    Common.isAdminAuthorizedForAction(adminId, action, (authResult) => {
+    // Authorization actions
+    const tatDelayAction = JSON.stringify({ tat_delay: "view" });
+    const newApplicationsAction = JSON.stringify({
+      cmt_application: "generate_report",
+    });
+
+    // Check authorization for new applications
+    Common.isAdminAuthorizedForAction(
+      adminId,
+      newApplicationsAction,
+      (authResult) => {
+        if (!authResult.status) {
+          return res.status(403).json({
+            status: false,
+            message: authResult.message,
+          });
+        }
+        newApplicationStatus = true; // Set true if authorized
+      }
+    );
+
+    // Check authorization for tat delay actions
+    Common.isAdminAuthorizedForAction(adminId, tatDelayAction, (authResult) => {
       if (!authResult.status) {
         return res.status(403).json({
           status: false,
-          message: authResult.message, // Authorization failure message
+          message: authResult.message,
+        });
+      }
+      tatDelayStatus = true; // Set true if authorized
+    });
+
+    // Fetch TAT delay list
+    NotificationModel.index((notificationErr, notificationResult) => {
+      if (notificationErr) {
+        console.error("TAT Delay List Error:", notificationErr);
+        return res.status(500).json({
+          status: false,
+          message: "Error fetching TAT delay list.",
         });
       }
 
-      // Fetch TAT delay list
-      Notification.tatDelaylist((tatDelayErr, tatDelayResult) => {
-        if (tatDelayErr) {
-          console.error("TAT Delay List Error:", tatDelayErr);
-          return res.status(500).json({
-            status: false,
-            message: "Error fetching TAT delay list.",
-          });
-        }
+      // Filter notifications based on authorization
+      if (!tatDelayStatus) {
+        notificationResult.tatDelayList = [];
+      }
 
-        return res.status(200).json({
-          status: true,
-          message: "Data fetched successfully.",
-          data: tatDelayResult,
-          totalTatDelays: tatDelayResult.length,
-        });
+      if (!newApplicationStatus) {
+        notificationResult.newApplications = [];
+      }
 
-        // Fetch new applications list
-        Notification.newApplicationsList((newAppErr, newAppResult) => {
-          if (newAppErr) {
-            console.error("New Applications List Error:", newAppErr);
-            return res.status(500).json({
-              status: false,
-              message: "Error fetching new applications list.",
-            });
-          }
-
-          // Success response
-          res.status(200).json({
-            status: true,
-            message: "Data fetched successfully.",
-            tatDelays: tatDelayResult,
-            newApplications: newAppResult,
-            totalTatDelays: tatDelayResult.length,
-            totalNewApplications: newAppResult.length,
-          });
-        });
+      return res.status(200).json({
+        status: true,
+        message: "Data fetched successfully.",
+        data: notificationResult,
+        totalNotifications: notificationResult.length,
       });
     });
   } catch (error) {

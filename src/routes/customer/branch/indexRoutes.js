@@ -43,6 +43,8 @@ router.get("/annexure-by-service", profileController.annexureDataByServiceId);
 
 router.delete("/delete", profileController.delete);
 
+router.get("/notification", profileController.notifications);
+
 router.use("/client-application", clientRoutes);
 router.use("/report-case-status", reportCaseStatusRoutes);
 router.use("/candidate-application", candidateRoutes);

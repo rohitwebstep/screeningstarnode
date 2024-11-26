@@ -1240,3 +1240,67 @@ exports.annexureDataByServiceId = (req, res) => {
     }
   );
 };
+
+exports.notifications = (req, res) => {
+  try {
+    const { YnJhbmNoX2lk } = req.query;
+
+    // Validate if the admin_id query parameter is provided
+    if (!YnJhbmNoX2lk) {
+      return res.status(400).json({
+        status: false,
+        message: "Missing required field: admin_id",
+      });
+    }
+
+    // Decode the Base64 encoded admin ID and parse it
+    const decodedBranchID = Buffer.from(YnJhbmNoX2lk, "base64").toString(
+      "utf8"
+    );
+    const branchIDNumber = parseFloat(decodedBranchID);
+    const branchID = branchIDNumber / 1.5;
+
+    // Check if branchID is valid
+    if (isNaN(branchID) || !branchID) {
+      return res.status(400).json({
+        status: false,
+        message: "Invalid admin ID provided.",
+      });
+    }
+
+    // Authorization action
+    const action = JSON.stringify({ client_application: "create" });
+
+    BranchCommon.isBranchAuthorizedForAction(branchID, action, (result) => {
+      if (!result.status) {
+        return res.status(403).json({
+          status: false,
+          message: result.message,
+        });
+      }
+      // Fetch Ready Report list
+      BranchCommon.reportReadylist((reportReadyErr, reportReadyResult) => {
+        if (reportReadyErr) {
+          console.error("Ready Report List Error:", reportReadyErr);
+          return res.status(500).json({
+            status: false,
+            message: "Error fetching Ready Report list.",
+          });
+        }
+
+        return res.status(200).json({
+          status: true,
+          message: "Data fetched successfully.",
+          data: reportReadyResult,
+          totalReportReady: reportReadyResult.length,
+        });
+      });
+    });
+  } catch (error) {
+    console.error("Unexpected Error:", error);
+    res.status(500).json({
+      status: false,
+      message: "An unexpected error occurred.",
+    });
+  }
+};

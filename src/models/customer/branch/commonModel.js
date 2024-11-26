@@ -407,6 +407,70 @@ const common = {
       });
     });
   },
+
+  reportReadylist: (callback) => {
+    // SQL query to retrieve applications, customers, branches, and tat_days
+    const applicationsQuery = `
+      SELECT 
+        cmt.report_date, 
+        ca.id AS client_application_id, 
+        ca.is_priority, 
+        ca.customer_id, 
+        ca.branch_id, 
+        ca.application_id, 
+        ca.name AS application_name, 
+        ca.created_at AS application_created_at, 
+        cust.name AS customer_name, 
+        cust.client_unique_id AS customer_unique_id, 
+        br.name AS branch_name
+      FROM client_applications AS ca
+      JOIN customers AS cust ON cust.id = ca.customer_id
+      JOIN branches AS br ON br.id = ca.branch_id
+      LEFT JOIN customer_metas AS cm ON cm.customer_id = cust.id
+      LEFT JOIN cmt_applications AS cmt ON ca.id = cmt.client_application_id
+      WHERE cmt.report_date IS NOT NULL 
+        AND TRIM(cmt.report_date) = '0000-00-00'
+        AND TRIM(cmt.report_date) = '';
+    `;
+
+    startConnection((connectionError, connection) => {
+      if (connectionError) {
+        return callback(connectionError, null);
+      }
+
+      // Execute the applications query
+      connection.query(
+        applicationsQuery,
+        (appQueryError, applicationResults) => {
+          if (appQueryError) {
+            return handleQueryError(appQueryError, connection, callback);
+          }
+
+          // Process the results and send back to the callback
+          if (applicationResults && applicationResults.length > 0) {
+            const applications = applicationResults.map((application) => ({
+              client_application_id: application.client_application_id,
+              is_priority: application.is_priority,
+              customer_id: application.customer_id,
+              branch_id: application.branch_id,
+              application_id: application.application_id,
+              application_name: application.application_name,
+              application_created_at: application.application_created_at,
+              customer_name: application.customer_name,
+              customer_unique_id: application.customer_unique_id,
+              branch_name: application.branch_name,
+              report_date: application.report_date,
+            }));
+
+            // Pass the processed results to the callback
+            return callback(null, applications);
+          } else {
+            return callback(null, []); // No results found
+          }
+        }
+      );
+    });
+  },
 };
 
 module.exports = common;

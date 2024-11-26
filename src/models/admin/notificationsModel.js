@@ -2,7 +2,7 @@ const { pool, startConnection, connectionRelease } = require("../../config/db");
 const moment = require("moment"); // Ensure you have moment.js installed
 
 const notification = {
-  tatDelaylist: (callback) => {
+  index: (callback) => {
     // SQL query to retrieve applications, customers, branches, and tat_days
     const applicationsQuery = `
       SELECT 
@@ -218,8 +218,6 @@ const notification = {
                       ca.created_at DESC;
                 `;
 
-                  console.log(`sqlClient - `, sqlClient);
-
                   connection.query(sqlClient, (queryErr, clientResults) => {
                     if (queryErr) {
                       console.error("Database query error: 110", queryErr);
@@ -284,7 +282,7 @@ const notification = {
                     callback(null, {
                       tatDelayList: applicationHierarchyArray,
                       newApplications: formattedHierarchy,
-                      holidays: holidaysArray,
+                      // holidays: holidaysArray,
                     });
                     connectionRelease(connection);
                   });
@@ -356,109 +354,6 @@ const notification = {
       }
       return count; // Return total days out of TAT
     }
-  },
-
-  newApplicationsList: (callback) => {
-    startConnection((err, connection) => {
-      if (err) {
-        return callback(
-          { message: "Failed to connect to the database", error: err },
-          null
-        );
-      }
-
-      const sqlClient = `
-      SELECT 
-          ca.name AS client_applicant_name, 
-          ca.is_priority, 
-          ca.customer_id, 
-          ca.branch_id, 
-          ca.application_id, 
-          ca.id, 
-          c.name AS customer_name, 
-          c.client_unique_id AS customer_unique_id, 
-          br.name AS branch_name
-      FROM 
-          \`client_applications\` AS ca
-      LEFT JOIN 
-          \`client_spocs\` AS cs 
-          ON ca.client_spoc_id = cs.id
-      LEFT JOIN 
-          \`customers\` AS c 
-          ON ca.customer_id = c.id
-      LEFT JOIN 
-          \`branches\` AS br 
-          ON ca.branch_id = br.id
-      LEFT JOIN 
-          \`cmt_applications\` AS cmt 
-          ON ca.id = cmt.client_application_id
-      WHERE 
-          cmt.client_application_id IS NULL
-      ORDER BY 
-          ca.created_at DESC;
-    `;
-
-      connection.query(sqlClient, (queryErr, clientResults) => {
-        if (queryErr) {
-          console.error("Database query error: 110", queryErr);
-          connectionRelease(connection);
-          return callback(
-            { message: "Error executing query", error: queryErr },
-            null
-          );
-        }
-
-        const hierarchy = clientResults.reduce((acc, row) => {
-          const {
-            customer_id,
-            customer_name,
-            customer_unique_id,
-            branch_id,
-            branch_name,
-            application_id,
-            client_applicant_name,
-            is_priority,
-          } = row;
-
-          // Initialize customer object if not already present
-          if (!acc[customer_id]) {
-            acc[customer_id] = {
-              customer_id,
-              customer_name,
-              customer_unique_id,
-              branches: {},
-            };
-          }
-
-          // Initialize branch object if not already present under the customer
-          if (!acc[customer_id].branches[branch_id]) {
-            acc[customer_id].branches[branch_id] = {
-              branch_id,
-              branch_name,
-              applications: [],
-            };
-          }
-
-          // Add the application under the branch
-          acc[customer_id].branches[branch_id].applications.push({
-            application_id,
-            client_applicant_name,
-            is_priority,
-          });
-
-          return acc;
-        }, {});
-
-        // Convert hierarchical object to an array format
-        const formattedHierarchy = Object.values(hierarchy).map((customer) => ({
-          ...customer,
-          branches: Object.values(customer.branches),
-        }));
-
-        connectionRelease(connection);
-        return callback(null, formattedHierarchy);
-      });
-    });
   },
 };
 
