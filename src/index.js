@@ -22,6 +22,7 @@ const serviceGroupRoutes = require("./routes/admin/serviceGroupRoutes");
 const holidayRoutes = require("./routes/admin/holidayRoutes");
 const testRoutes = require("./routes/testRoutes");
 const tatDelayRoutes = require("./routes/admin/tatDelayRoutes");
+const notificationRoutes = require("./routes/admin/notificationRoutes");
 const weeklyReportRoutes = require("./routes/admin/weeklyReportRoutes");
 
 const app = express();
@@ -51,6 +52,7 @@ app.use("/service-group", serviceGroupRoutes);
 app.use("/service", serviceRoutes);
 app.use("/holiday", holidayRoutes);
 app.use("/tat-delay", tatDelayRoutes);
+app.use("/notification", notificationRoutes);
 app.use("/test", testRoutes);
 
 // Error handling middleware (optional)
