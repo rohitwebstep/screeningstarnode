@@ -32,6 +32,7 @@ exports.create = (req, res) => {
     services,
     package,
     send_mail,
+    is_priority,
   } = req.body;
 
   // Define required fields
@@ -44,6 +45,10 @@ exports.create = (req, res) => {
     client_spoc_id,
     location,
   };
+
+  const isPriority = ["1", 1, "Yes", "yes"].includes(String(is_priority).trim())
+    ? 1
+    : 0;
 
   // Check for missing fields
   const missingFields = Object.keys(requiredFields)
@@ -109,6 +114,7 @@ exports.create = (req, res) => {
             services,
             packages: package,
             customer_id,
+            is_priority: isPriority,
           },
           (err, result) => {
             if (err) {
@@ -123,7 +129,7 @@ exports.create = (req, res) => {
                 "0",
                 null,
                 err,
-                () => { }
+                () => {}
               );
               return res.status(500).json({
                 status: false,
@@ -141,7 +147,7 @@ exports.create = (req, res) => {
               "1",
               `{id: ${result.insertId}}`,
               null,
-              () => { }
+              () => {}
             );
 
             if (send_mail == 0) {
@@ -307,7 +313,8 @@ exports.create = (req, res) => {
 };
 
 exports.bulkCreate = (req, res) => {
-  const { branch_id, _token, customer_id, applications, services, package } = req.body;
+  const { branch_id, _token, customer_id, applications, services, package } =
+    req.body;
 
   // Define required fields
   const requiredFields = { branch_id, _token, customer_id, applications };
@@ -375,26 +382,32 @@ exports.bulkCreate = (req, res) => {
 
           // Check if any of the required fields are missing and track missing fields
           const missingFields = [];
-          if (!("applicant_full_name" in app)) missingFields.push("Applicant Full Name");
+          if (!("applicant_full_name" in app))
+            missingFields.push("Applicant Full Name");
           if (!("employee_id" in app)) missingFields.push("Employee ID");
           if (!("location" in app)) missingFields.push("Location");
 
           if (missingFields.length > 0) {
             emptyValues.push(
-              `${app.applicant_full_name || "Unnamed applicant"} (missing fields: ${missingFields.join(", ")})`
+              `${
+                app.applicant_full_name || "Unnamed applicant"
+              } (missing fields: ${missingFields.join(", ")})`
             );
             return false; // Exclude applications with missing fields
           }
 
           // Check if any of the fields are empty and track those applicants
           const emptyFields = [];
-          if (!app.applicant_full_name?.trim()) emptyFields.push("Applicant Full Name");
+          if (!app.applicant_full_name?.trim())
+            emptyFields.push("Applicant Full Name");
           if (!app.employee_id?.trim()) emptyFields.push("Employee ID");
           if (!app.location?.trim()) emptyFields.push("Location");
 
           if (emptyFields.length > 0) {
             emptyValues.push(
-              `${app.applicant_full_name || "Unnamed applicant"} (empty fields: ${emptyFields.join(", ")})`
+              `${
+                app.applicant_full_name || "Unnamed applicant"
+              } (empty fields: ${emptyFields.join(", ")})`
             );
           }
 
@@ -405,15 +418,16 @@ exports.bulkCreate = (req, res) => {
         if (emptyValues.length > 0) {
           return res.status(400).json({
             status: false,
-            message: `Details are not complete for the following applicants: ${emptyValues.join(", ")}`,
+            message: `Details are not complete for the following applicants: ${emptyValues.join(
+              ", "
+            )}`,
           });
         }
 
         // Check for duplicate employee IDs
-        const employeeIds = updatedApplications.map(app => app.employee_id);
+        const employeeIds = updatedApplications.map((app) => app.employee_id);
 
-        const employeeIdChecks = employeeIds.map(employee_id => {
-
+        const employeeIdChecks = employeeIds.map((employee_id) => {
           return new Promise((resolve, reject) => {
             ClientApplication.checkUniqueEmpId(employee_id, (err, exists) => {
               if (err) {
@@ -421,7 +435,7 @@ exports.bulkCreate = (req, res) => {
               } else if (exists) {
                 reject(`Employee ID '${employee_id}' already exists.`);
               } else {
-                resolve(employee_id);  // Pass the unique employee ID to the resolve
+                resolve(employee_id); // Pass the unique employee ID to the resolve
               }
             });
           });
@@ -432,13 +446,15 @@ exports.bulkCreate = (req, res) => {
           .then((results) => {
             // Collect the employee IDs that are already used
             const alreadyUsedEmpIds = results
-              .filter(result => result.status === 'rejected')
-              .map(result => result.reason);
+              .filter((result) => result.status === "rejected")
+              .map((result) => result.reason);
 
             if (alreadyUsedEmpIds.length > 0) {
               return res.status(400).json({
                 status: false,
-                message: `Employee IDs already used: ${alreadyUsedEmpIds.join(', ')}`,
+                message: `Employee IDs already used: ${alreadyUsedEmpIds.join(
+                  ", "
+                )}`,
                 token: newToken,
               });
             }
@@ -461,7 +477,8 @@ exports.bulkCreate = (req, res) => {
                     if (err) {
                       reject({
                         status: false,
-                        message: "Failed to create client application. Please try again.",
+                        message:
+                          "Failed to create client application. Please try again.",
                         token: newToken,
                       });
                     } else {
@@ -473,7 +490,7 @@ exports.bulkCreate = (req, res) => {
                         "1",
                         `{id: ${result.insertId}}`,
                         null,
-                        () => { }
+                        () => {}
                       );
 
                       // Assign the new application ID to the corresponding app object
@@ -490,19 +507,38 @@ exports.bulkCreate = (req, res) => {
             Promise.all(applicationPromises)
               .then(() => {
                 // Send notification emails once all applications are created
-                sendNotificationEmails(branch_id, customer_id, services, updatedApplications, newToken, res);
+                sendNotificationEmails(
+                  branch_id,
+                  customer_id,
+                  services,
+                  updatedApplications,
+                  newToken,
+                  res
+                );
               })
               .catch((error) => {
                 // Handle error if any application creation fails
-                console.error('Error during client application creation:', error);
+                console.error(
+                  "Error during client application creation:",
+                  error
+                );
                 return res.status(400).json({
                   status: false,
-                  message: error.message || 'Failed to create one or more client applications.',
+                  message:
+                    error.message ||
+                    "Failed to create one or more client applications.",
                   token: newToken,
                 });
               });
 
-            sendNotificationEmails(branch_id, customer_id, services, updatedApplications, newToken, res);
+            sendNotificationEmails(
+              branch_id,
+              customer_id,
+              services,
+              updatedApplications,
+              newToken,
+              res
+            );
           })
           .catch((error) => {
             return res.status(400).json({
@@ -511,14 +547,20 @@ exports.bulkCreate = (req, res) => {
               token: newToken,
             });
           });
-
       });
     });
   });
 };
 
 // Function to send email notifications
-function sendNotificationEmails(branch_id, customer_id, services, updatedApplications, newToken, res) {
+function sendNotificationEmails(
+  branch_id,
+  customer_id,
+  services,
+  updatedApplications,
+  newToken,
+  res
+) {
   Branch.getClientUniqueIDByBranchId(branch_id, (err, clientCode) => {
     if (err) {
       console.error("Error checking unique ID:", err);
@@ -556,98 +598,105 @@ function sendNotificationEmails(branch_id, customer_id, services, updatedApplica
       }
 
       // Fetch emails for notification
-      BranchCommon.getBranchandCustomerEmailsForNotification(branch_id, (emailError, emailData) => {
-        if (emailError) {
-          console.error("Error fetching emails:", emailError);
-          return res.status(500).json({
-            status: false,
-            message: "Failed to retrieve email addresses.",
-            token: newToken,
-          });
-        }
-
-        const { branch, customer } = emailData;
-        const toArr = [{ name: branch.name, email: branch.email }];
-        const ccArr = JSON.parse(customer.emails).map((email) => ({
-          name: customer.name,
-          email: email.trim(),
-        }));
-
-        const serviceIds = typeof services === "string" && services.trim() !== ""
-          ? services.split(",").map((id) => id.trim())
-          : [];
-        const serviceNames = [];
-
-        const fetchServiceNames = (index = 0) => {
-          let responseSent = false; // Flag to track if the response has already been sent
-
-          if (index >= serviceIds.length) {
-
-            bulkCreateMail(
-              "client application",
-              "bulk-create",
-              updatedApplications,
-              branch.name,
-              customer.name,
-              serviceNames,
-              "",
-              toArr,
-              ccArr
-            )
-              .then(() => {
-                if (!responseSent) {
-                  responseSent = true; // Mark the response as sent
-                  return res.status(201).json({
-                    status: true,
-                    message: "Client application created successfully and email sent.",
-                    token: newToken,
-                  });
-                }
-              })
-              .catch((emailError) => {
-                if (!responseSent) {
-                  console.error("Error sending email (controller):", emailError);
-                  responseSent = true; // Mark the response as sent
-                  return res.status(201).json({
-                    status: true,
-                    message: "Client application created successfully, but failed to send email.",
-                    token: newToken,
-                  });
-                }
-              });
-            return;
+      BranchCommon.getBranchandCustomerEmailsForNotification(
+        branch_id,
+        (emailError, emailData) => {
+          if (emailError) {
+            console.error("Error fetching emails:", emailError);
+            return res.status(500).json({
+              status: false,
+              message: "Failed to retrieve email addresses.",
+              token: newToken,
+            });
           }
 
-          const id = serviceIds[index];
+          const { branch, customer } = emailData;
+          const toArr = [{ name: branch.name, email: branch.email }];
+          const ccArr = JSON.parse(customer.emails).map((email) => ({
+            name: customer.name,
+            email: email.trim(),
+          }));
 
-          Service.getServiceById(id, (err, currentService) => {
-            if (err) {
-              console.error("Error fetching service data:", err);
-              if (!responseSent) {
-                responseSent = true; // Mark the response as sent
-                return res.status(500).json({
-                  status: false,
-                  message: err.message,
-                  token: newToken,
+          const serviceIds =
+            typeof services === "string" && services.trim() !== ""
+              ? services.split(",").map((id) => id.trim())
+              : [];
+          const serviceNames = [];
+
+          const fetchServiceNames = (index = 0) => {
+            let responseSent = false; // Flag to track if the response has already been sent
+
+            if (index >= serviceIds.length) {
+              bulkCreateMail(
+                "client application",
+                "bulk-create",
+                updatedApplications,
+                branch.name,
+                customer.name,
+                serviceNames,
+                "",
+                toArr,
+                ccArr
+              )
+                .then(() => {
+                  if (!responseSent) {
+                    responseSent = true; // Mark the response as sent
+                    return res.status(201).json({
+                      status: true,
+                      message:
+                        "Client application created successfully and email sent.",
+                      token: newToken,
+                    });
+                  }
+                })
+                .catch((emailError) => {
+                  if (!responseSent) {
+                    console.error(
+                      "Error sending email (controller):",
+                      emailError
+                    );
+                    responseSent = true; // Mark the response as sent
+                    return res.status(201).json({
+                      status: true,
+                      message:
+                        "Client application created successfully, but failed to send email.",
+                      token: newToken,
+                    });
+                  }
                 });
+              return;
+            }
+
+            const id = serviceIds[index];
+
+            Service.getServiceById(id, (err, currentService) => {
+              if (err) {
+                console.error("Error fetching service data:", err);
+                if (!responseSent) {
+                  responseSent = true; // Mark the response as sent
+                  return res.status(500).json({
+                    status: false,
+                    message: err.message,
+                    token: newToken,
+                  });
+                }
               }
-            }
 
-            if (!currentService || !currentService.title) {
-              return fetchServiceNames(index + 1);
-            }
+              if (!currentService || !currentService.title) {
+                return fetchServiceNames(index + 1);
+              }
 
-            serviceNames.push(currentService.title);
-            fetchServiceNames(index + 1);
-          });
-        };
+              serviceNames.push(currentService.title);
+              fetchServiceNames(index + 1);
+            });
+          };
 
-
-        fetchServiceNames();
-      });
+          fetchServiceNames();
+        }
+      );
     });
   });
-};
+}
 
 // Controller to list all clientApplications
 exports.list = (req, res) => {
@@ -877,7 +926,7 @@ exports.update = (req, res) => {
                       "0",
                       JSON.stringify({ client_application_id, ...changes }),
                       err,
-                      () => { }
+                      () => {}
                     );
                     return res.status(500).json({
                       status: false,
@@ -893,7 +942,7 @@ exports.update = (req, res) => {
                     "1",
                     JSON.stringify({ client_application_id, ...changes }),
                     null,
-                    () => { }
+                    () => {}
                   );
 
                   res.status(200).json({
@@ -1186,7 +1235,7 @@ exports.upload = async (req, res) => {
 
                                 const serviceIds =
                                   typeof services === "string" &&
-                                    services.trim() !== ""
+                                  services.trim() !== ""
                                     ? services.split(",").map((id) => id.trim())
                                     : [];
 
@@ -1394,7 +1443,7 @@ exports.delete = (req, res) => {
                   "0",
                   JSON.stringify({ id }),
                   err,
-                  () => { }
+                  () => {}
                 );
                 return res.status(500).json({
                   status: false,
@@ -1411,7 +1460,7 @@ exports.delete = (req, res) => {
                 "1",
                 JSON.stringify({ id }),
                 null,
-                () => { }
+                () => {}
               );
 
               res.status(200).json({
