@@ -56,11 +56,27 @@ exports.list = (req, res) => {
 };
 
 exports.listWithoutAuth = (req, res) => {
-  const { admin_id, _token } = req.query;
+  const { YWRtaW5faWQ } = req.query;
+
+  // Decode the Base64 string
+  const decoded_admin_id = Buffer.from(YWRtaW5faWQ, "base64").toString("utf8");
+
+  // Convert the decoded value to a number
+  const admin_id_number = parseFloat(decoded_admin_id);
+
+  // Divide by 1.5
+  const admin_id = admin_id_number / 1.5;
+
+  // Check if admin_id is valid
+  if (isNaN(admin_id) || !admin_id) {
+    return res.status(400).json({
+      status: false,
+      message: "Please provide a valid admin id",
+    });
+  }
 
   let missingFields = [];
   if (!admin_id || admin_id === "") missingFields.push("Admin ID");
-  if (!_token || _token === "") missingFields.push("Token");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -68,6 +84,7 @@ exports.listWithoutAuth = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
+
   const action = JSON.stringify({ tat_delay: "view" });
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
@@ -76,12 +93,14 @@ exports.listWithoutAuth = (req, res) => {
         message: result.message, // Return the message from the authorization function
       });
     }
+
     tatDelay.list((err, result) => {
       if (err) {
         console.error("Database error:", err);
-        return res
-          .status(500)
-          .json({ status: false, message: err.message, token: newToken });
+        return res.status(500).json({
+          status: false,
+          message: err.message,
+        });
       }
 
       res.json({
@@ -89,7 +108,6 @@ exports.listWithoutAuth = (req, res) => {
         message: "Delay TATs fetched successfully",
         tatDelays: result,
         totalResults: result.length,
-        token: newToken,
       });
     });
   });
