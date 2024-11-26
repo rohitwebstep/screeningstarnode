@@ -8,6 +8,7 @@ const tatDelay = {
       SELECT 
         cmt.report_date, 
         ca.id AS client_application_id, 
+        ca.is_priority, 
         ca.customer_id, 
         ca.branch_id, 
         ca.application_id, 
@@ -99,6 +100,7 @@ const tatDelay = {
                       client_application_id,
                       application_id,
                       application_name,
+                      is_priority,
                       application_created_at,
                     } = row;
 
@@ -152,6 +154,7 @@ const tatDelay = {
                         client_application_id,
                         application_id,
                         application_name,
+                        is_priority,
                         application_created_at,
                         days_out_of_tat: daysOutOfTat, // Include days out of TAT
                       });
