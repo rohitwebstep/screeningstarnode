@@ -484,8 +484,6 @@ exports.upload = async (req, res) => {
                   }
                   if (result && result.affectedRows > 0) {
                     if (send_mail == 1) {
-                      let appHost = "www.screeningstar.in";
-
                       App.appInfo("backend", (err, appInfo) => {
                         if (err) {
                           console.error("Database error:", err);
@@ -497,60 +495,57 @@ exports.upload = async (req, res) => {
                           });
                         }
 
+                        let appHost = "www.screeningstar.in";
+
                         if (appInfo) {
                           appHost = appInfo.host || "www.screeningstar.in";
-                          console.log(`appHost(main) - `, appHost);
                         }
+
+                        const newAttachedDocsString =
+                          currentAdmin.profile_picture
+                            .split(",")
+                            .map((doc) => `${appHost}/${doc.trim()}`)
+                            .join("");
+
+                        const toArr = [
+                          {
+                            name: currentAdmin.name,
+                            email: currentAdmin.email,
+                          },
+                        ];
+
+                        // Send an email notification
+                        createMail(
+                          "Admin",
+                          "create",
+                          currentAdmin.name,
+                          currentAdmin.mobile,
+                          currentAdmin.email,
+                          currentAdmin.date_of_joining,
+                          currentAdmin.role.toUpperCase(),
+                          newAttachedDocsString,
+                          currentAdmin.designation,
+                          password,
+                          toArr
+                        )
+                          .then(() => {
+                            return res.status(201).json({
+                              status: true,
+                              message:
+                                "Admin created and email sent successfully.",
+                              token: newToken,
+                            });
+                          })
+                          .catch((emailError) => {
+                            console.error("Error sending email:", emailError);
+                            return res.status(201).json({
+                              status: true,
+                              message:
+                                "Admin created successfully, but email sending failed.",
+                              token: newToken,
+                            });
+                          });
                       });
-                      console.log(`appHost - `, appHost);
-                      const newAttachedDocsString = currentAdmin.profile_picture
-                        .split(",")
-                        .map((doc) => `${appHost}/${doc.trim()}`)
-                        .join("");
-
-                      const toArr = [
-                        {
-                          name: currentAdmin.name,
-                          email: currentAdmin.email,
-                        },
-                      ];
-
-                      console.log(
-                        `newAttachedDocsString - `,
-                        newAttachedDocsString
-                      );
-
-                      // Send an email notification
-                      createMail(
-                        "Admin",
-                        "create",
-                        currentAdmin.name,
-                        currentAdmin.mobile,
-                        currentAdmin.email,
-                        currentAdmin.date_of_joining,
-                        currentAdmin.role.toUpperCase(),
-                        newAttachedDocsString,
-                        currentAdmin.designation,
-                        password,
-                        toArr
-                      )
-                        .then(() => {
-                          return res.status(201).json({
-                            status: true,
-                            message:
-                              "Admin created and email sent successfully.",
-                            token: newToken,
-                          });
-                        })
-                        .catch((emailError) => {
-                          console.error("Error sending email:", emailError);
-                          return res.status(201).json({
-                            status: true,
-                            message:
-                              "Admin created successfully, but email sending failed.",
-                            token: newToken,
-                          });
-                        });
                     } else {
                       return res.status(201).json({
                         status: true,
