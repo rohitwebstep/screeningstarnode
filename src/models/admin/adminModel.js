@@ -107,6 +107,127 @@ const Admin = {
     });
   },
 
+  update: (data, callback) => {
+    const {
+      id,
+      name,
+      mobile,
+      email,
+      employee_id,
+      date_of_joining,
+      role,
+      password,
+      designation,
+    } = data;
+
+    // SQL query to check if any field already exists in the admins table
+    const checkExistingQuery = `
+      SELECT * FROM \`admins\` 
+      WHERE (\`email\` = ? OR \`mobile\` = ? OR \`emp_id\` = ?) AND \`id\` != ?
+    `;
+
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(err, null);
+      }
+
+      // Check if any field already exists in the admins table
+      connection.query(
+        checkExistingQuery,
+        [email, mobile, employee_id, id],
+        (checkErr, results) => {
+          if (checkErr) {
+            connectionRelease(connection); // Release connection on error
+            return callback(checkErr, null);
+          }
+
+          // If results are found, check which fields are already in use
+          if (results.length > 0) {
+            const existingAdmin = results[0];
+            const usedFields = [];
+
+            if (existingAdmin.email === email) usedFields.push("email");
+            if (existingAdmin.mobile === mobile) usedFields.push("mobile");
+            if (existingAdmin.emp_id === employee_id)
+              usedFields.push("Employee ID");
+
+            if (usedFields.length > 0) {
+              connectionRelease(connection); // Release connection if duplicates found
+              return callback(
+                `Another admin is registered with the following ${usedFields.join(
+                  " and "
+                )}.`,
+                null
+              );
+            }
+          }
+
+          // If no duplicates are found, proceed with updating the admin record
+          const sql = `
+            UPDATE \`admins\` 
+            SET 
+              \`name\` = ?, 
+              \`emp_id\` = ?, 
+              \`mobile\` = ?, 
+              \`email\` = ?, 
+              \`date_of_joining\` = ?, 
+              \`role\` = ?, 
+              \`password\` = ?, 
+              \`designation\` = ?
+            WHERE \`id\` = ?
+          `;
+
+          connection.query(
+            sql,
+            [
+              name,
+              employee_id,
+              mobile,
+              email,
+              date_of_joining,
+              role,
+              password ? md5(password) : null, // Update password only if provided
+              designation,
+              id,
+            ],
+            (queryErr, results) => {
+              connectionRelease(connection); // Release the connection
+
+              if (queryErr) {
+                console.error("Database query error: 47", queryErr);
+                return callback(queryErr, null);
+              }
+              callback(null, results); // Successfully updated the admin
+            }
+          );
+        }
+      );
+    });
+  },
+
+  delete: (id, callback) => {
+    const sql = `
+      DELETE FROM \`admins\`
+      WHERE \`id\` = ?
+    `;
+
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(err, null);
+      }
+
+      connection.query(sql, [id], (queryErr, results) => {
+        connectionRelease(connection); // Release the connection
+
+        if (queryErr) {
+          console.error("Database query error: 51", queryErr);
+          return callback(queryErr, null);
+        }
+        callback(null, results);
+      });
+    });
+  },
+
   upload: (id, savedImagePaths, callback) => {
     startConnection((err, connection) => {
       if (err) {

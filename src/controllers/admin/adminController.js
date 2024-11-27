@@ -365,6 +365,246 @@ exports.create = (req, res) => {
   });
 };
 
+exports.update = (req, res) => {
+  const {
+    admin_id,
+    _token,
+    id,
+    role,
+    name,
+    email,
+    mobile,
+    password,
+    designation,
+    employee_id,
+    date_of_joining,
+  } = req.body;
+
+  // Define required fields for creating a new admin
+  const requiredFields = {
+    admin_id,
+    _token,
+    id,
+    role,
+    name,
+    email,
+    mobile,
+    password,
+    designation,
+    employee_id,
+    date_of_joining,
+  };
+
+  // Check for missing fields
+  const missingFields = Object.keys(requiredFields)
+    .filter((field) => !requiredFields[field] || requiredFields[field] === "")
+    .map((field) => field.replace(/_/g, " "));
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+  // Define the action for admin authorization check
+  const action = JSON.stringify({ admin: "create" });
+  // Check if the admin is authorized to perform the action
+  Common.isAdminAuthorizedForAction(admin_id, action, (authResult) => {
+    if (!authResult.status) {
+      return res.status(403).json({
+        status: false,
+        message: authResult.message, // Return the message from the authorization check
+      });
+    }
+
+    // Validate the admin's token
+    Common.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
+      if (err) {
+        console.error("Error checking token validity:", err);
+        return res
+          .status(500)
+          .json({ status: false, message: "Internal server error" });
+      }
+
+      if (!tokenResult.status) {
+        return res
+          .status(401)
+          .json({ status: false, message: tokenResult.message });
+      }
+
+      const newToken = tokenResult.newToken;
+      Admin.findById(id, async (err, currentAdmin) => {
+        if (err) {
+          console.error("Error retrieving Admin:", err);
+          return res.status(500).json({
+            status: false,
+            message: "Database error.",
+            token: newToken,
+          });
+        }
+
+        if (!currentAdmin) {
+          return res.status(404).json({
+            status: false,
+            message: "Admin not found.",
+            token: newToken,
+          });
+        }
+        Admin.update(
+          {
+            id,
+            name,
+            email,
+            employee_id,
+            mobile,
+            date_of_joining,
+            role: role.toLowerCase(),
+            password,
+            designation,
+          },
+          (err, result) => {
+            if (err) {
+              console.error("Database error during admin updation:", err);
+              Common.adminActivityLog(
+                admin_id,
+                "Admin",
+                "Update",
+                "0",
+                null,
+                err,
+                () => {}
+              );
+              return res.status(500).json({
+                status: false,
+                message: "Failed to update Admin. Please try again later.",
+                token: newToken,
+                error: err,
+              });
+            }
+
+            // Log the successful creation of the Admin
+            Common.adminActivityLog(
+              admin_id,
+              "Admin",
+              "Update",
+              "1",
+              `{id: ${id}}`,
+              null,
+              () => {}
+            );
+
+            return res.status(201).json({
+              status: true,
+              message: "Admin updated successfully and email sent.",
+              token: newToken,
+            });
+          }
+        );
+      });
+    });
+  });
+};
+
+exports.delete = (req, res) => {
+  const { id, admin_id, _token } = req.query;
+
+  // Validate required fields
+  const missingFields = [];
+  if (!id) missingFields.push("Admin ID for Update");
+  if (!admin_id) missingFields.push("Admin ID");
+  if (!_token) missingFields.push("Token");
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  const action = JSON.stringify({ client_application: "delete" });
+  // Check if the admin is authorized to perform the action
+  Common.isAdminAuthorizedForAction(admin_id, action, (authResult) => {
+    if (!authResult.status) {
+      return res.status(403).json({
+        status: false,
+        message: authResult.message, // Return the message from the authorization check
+      });
+    }
+
+    // Validate the admin's token
+    Common.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
+      if (err) {
+        console.error("Error checking token validity:", err);
+        return res
+          .status(500)
+          .json({ status: false, message: "Internal server error" });
+      }
+
+      if (!tokenResult.status) {
+        return res
+          .status(401)
+          .json({ status: false, message: tokenResult.message });
+      }
+
+      const newToken = tokenResult.newToken;
+      Admin.findById(id, async (err, currentAdmin) => {
+        if (err) {
+          console.error("Error retrieving Admin:", err);
+          return res.status(500).json({
+            status: false,
+            message: "Database error.",
+            token: newToken,
+          });
+        }
+
+        if (!currentAdmin) {
+          return res.status(404).json({
+            status: false,
+            message: "Admin not found.",
+            token: newToken,
+          });
+        }
+
+        Admin.delete(id, (err, result) => {
+          if (err) {
+            console.error("Database error during Admin deletion:", err);
+            Common.adminActivityLog(
+              admin_id,
+              "Admin",
+              "Delete",
+              "0",
+              JSON.stringify({ id }),
+              err,
+              () => {}
+            );
+            return res.status(500).json({
+              status: false,
+              message: "Failed to delete Admin. Please try again.",
+              token: newToken,
+            });
+          }
+
+          Common.adminActivityLog(
+            admin_id,
+            "Admin",
+            "Delete",
+            "1",
+            JSON.stringify({ id }),
+            null,
+            () => {}
+          );
+
+          res.status(200).json({
+            status: true,
+            message: "Admin deleted successfully.",
+            token: newToken,
+          });
+        });
+      });
+    });
+  });
+};
+
 exports.upload = async (req, res) => {
   try {
     // Handle file upload using Multer
@@ -549,7 +789,7 @@ exports.upload = async (req, res) => {
                     } else {
                       return res.status(201).json({
                         status: true,
-                        message: "Admin created successfully.",
+                        message: "Admin profile picture uploaded successfully.",
                         token: newToken,
                         savedImagePaths,
                       });
