@@ -508,15 +508,37 @@ const Branch = {
         );
       }
 
-      const sql = `DELETE FROM \`branches\` WHERE \`id\` = ?`;
-      connection.query(sql, [id], (err, results) => {
-        connectionRelease(connection); // Ensure connection is released
-
+      // Check if the branch is a head branch (is_head = 1)
+      const checkSql = `SELECT \`is_head\` FROM \`branches\` WHERE \`id\` = ?`;
+      connection.query(checkSql, [id], (err, results) => {
         if (err) {
-          console.error("Database query error: 98", err);
+          connectionRelease(connection); // Ensure connection is released
+          console.error("Database query error: Checking branch status", err);
           return callback(err, null);
         }
-        callback(null, results);
+
+        if (results.length === 0) {
+          connectionRelease(connection);
+          return callback({ message: "Branch not found" }, null);
+        }
+
+        if (results[0].is_head === 1) {
+          connectionRelease(connection); // Ensure connection is released
+          return callback({ message: "Can't delete head branch" }, null);
+        }
+
+        // Proceed with deletion if not a head branch
+        const deleteSql = `DELETE FROM \`branches\` WHERE \`id\` = ?`;
+        connection.query(deleteSql, [id], (err, deleteResults) => {
+          connectionRelease(connection); // Ensure connection is released
+
+          if (err) {
+            console.error("Database query error: Deleting branch", err);
+            return callback(err, null);
+          }
+
+          callback(null, deleteResults);
+        });
       });
     });
   },
