@@ -207,49 +207,70 @@ exports.applicationListByBranch = (req, res) => {
       });
     }
 
-    // Verify admin token
-    AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
+    Branch.getBranchById(branch_id, (err, currentBranch) => {
       if (err) {
-        console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
+        console.error("Database error during branch retrieval:", err);
+        return res.status(500).json({
+          status: false,
+          message: "Failed to retrieve Branch. Please try again.",
+          token: newToken,
+        });
       }
 
-      if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message });
+      if (!currentBranch) {
+        return res.status(404).json({
+          status: false,
+          message: "Branch not found.",
+          token: newToken,
+        });
       }
-
-      const newToken = result.newToken;
-
-      if (
-        !status ||
-        status === "" ||
-        status === undefined ||
-        status === "undefined"
-      ) {
-        let status = null;
-      }
-
-      ClientMasterTrackerModel.applicationListByBranch(
-        filter_status,
-        branch_id,
-        status,
-        (err, result) => {
-          if (err) {
-            console.error("Database error:", err);
-            return res
-              .status(500)
-              .json({ status: false, message: err.message, token: newToken });
-          }
-
-          res.json({
-            status: true,
-            message: "Branches tracker fetched successfully",
-            customers: result,
-            totalResults: result.length,
-            token: newToken,
-          });
+      // Verify admin token
+      AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
+        if (err) {
+          console.error("Error checking token validity:", err);
+          return res.status(500).json({ status: false, message: err.message });
         }
-      );
+
+        if (!result.status) {
+          return res
+            .status(401)
+            .json({ status: false, message: result.message });
+        }
+
+        const newToken = result.newToken;
+
+        if (
+          !status ||
+          status === "" ||
+          status === undefined ||
+          status === "undefined"
+        ) {
+          let status = null;
+        }
+
+        ClientMasterTrackerModel.applicationListByBranch(
+          filter_status,
+          branch_id,
+          status,
+          (err, result) => {
+            if (err) {
+              console.error("Database error:", err);
+              return res
+                .status(500)
+                .json({ status: false, message: err.message, token: newToken });
+            }
+
+            res.json({
+              status: true,
+              message: "Branches tracker fetched successfully",
+              parentName: currentBranch.name,
+              customers: result,
+              totalResults: result.length,
+              token: newToken,
+            });
+          }
+        );
+      });
     });
   });
 };
