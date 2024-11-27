@@ -1249,7 +1249,7 @@ exports.notifications = (req, res) => {
     if (!YnJhbmNoX2lk) {
       return res.status(400).json({
         status: false,
-        message: "Missing required field: admin_id",
+        message: "Missing required field: Branch ID",
       });
     }
 
@@ -1279,22 +1279,25 @@ exports.notifications = (req, res) => {
         });
       }
       // Fetch Ready Report list
-      BranchCommon.reportReadylist((reportReadyErr, reportReadyResult) => {
-        if (reportReadyErr) {
-          console.error("Ready Report List Error:", reportReadyErr);
-          return res.status(500).json({
-            status: false,
-            message: "Error fetching Ready Report list.",
+      BranchCommon.reportReadylist(
+        branchID,
+        (reportReadyErr, reportReadyResult) => {
+          if (reportReadyErr) {
+            console.error("Ready Report List Error:", reportReadyErr);
+            return res.status(500).json({
+              status: false,
+              message: "Error fetching Ready Report list.",
+            });
+          }
+
+          return res.status(200).json({
+            status: true,
+            message: "Data fetched successfully.",
+            data: reportReadyResult,
+            totalReportReady: reportReadyResult.length,
           });
         }
-
-        return res.status(200).json({
-          status: true,
-          message: "Data fetched successfully.",
-          data: reportReadyResult,
-          totalReportReady: reportReadyResult.length,
-        });
-      });
+      );
     });
   } catch (error) {
     console.error("Unexpected Error:", error);

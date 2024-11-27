@@ -408,11 +408,15 @@ const common = {
     });
   },
 
-  reportReadylist: (callback) => {
+  reportReadylist: (branch_id, callback) => {
     // SQL query to retrieve applications, customers, branches, and tat_days
     const applicationsQuery = `
       SELECT 
         cmt.report_date, 
+        cmt.report_generate_by, 
+        ad_report.name AS report_generator_name,
+        cmt.qc_done_by, 
+        ad_qc.name AS qc_done_by_name,
         ca.id AS client_application_id, 
         ca.is_priority, 
         ca.customer_id, 
@@ -428,9 +432,14 @@ const common = {
       JOIN branches AS br ON br.id = ca.branch_id
       LEFT JOIN customer_metas AS cm ON cm.customer_id = cust.id
       LEFT JOIN cmt_applications AS cmt ON ca.id = cmt.client_application_id
+      LEFT JOIN admins AS ad_report ON ad_report.id = cmt.report_generate_by
+      LEFT JOIN admins AS ad_qc ON ad_qc.id = cmt.qc_done_by
       WHERE cmt.report_date IS NOT NULL 
-        AND TRIM(cmt.report_date) = '0000-00-00'
-        AND TRIM(cmt.report_date) = '';
+        AND TRIM(cmt.report_date) != '0000-00-00'
+        AND TRIM(cmt.report_date) != ''
+        AND cmt.overall_status IN ('complete', 'completed')
+        AND (cmt.is_verify = 'yes' OR cmt.is_verify = 1 OR cmt.is_verify = '1')
+        AND ca.branch_id = ?;
     `;
 
     startConnection((connectionError, connection) => {
@@ -441,32 +450,57 @@ const common = {
       // Execute the applications query
       connection.query(
         applicationsQuery,
+        [branch_id],
         (appQueryError, applicationResults) => {
           if (appQueryError) {
             return handleQueryError(appQueryError, connection, callback);
           }
 
-          // Process the results and send back to the callback
-          if (applicationResults && applicationResults.length > 0) {
-            const applications = applicationResults.map((application) => ({
-              client_application_id: application.client_application_id,
-              is_priority: application.is_priority,
-              customer_id: application.customer_id,
-              branch_id: application.branch_id,
-              application_id: application.application_id,
-              application_name: application.application_name,
-              application_created_at: application.application_created_at,
-              customer_name: application.customer_name,
-              customer_unique_id: application.customer_unique_id,
-              branch_name: application.branch_name,
-              report_date: application.report_date,
-            }));
+          // Initialize an empty object to hold the final result
+          const finalResults = {};
 
-            // Pass the processed results to the callback
-            return callback(null, applications);
-          } else {
-            return callback(null, []); // No results found
-          }
+          // Process the application results into the hierarchical structure
+          applicationResults.forEach((row) => {
+            const customerId = row.customer_id;
+            const branchId = row.branch_id;
+
+            // Initialize customer if it doesn't exist
+            if (!finalResults[customerId]) {
+              finalResults[customerId] = {
+                customer_id: row.customer_id,
+                customer_name: row.customer_name,
+                customer_unique_id: row.customer_unique_id,
+                branches: {},
+              };
+            }
+
+            // Initialize branch if it doesn't exist for the customer
+            if (!finalResults[customerId].branches[branchId]) {
+              finalResults[customerId].branches[branchId] = {
+                branch_id: row.branch_id,
+                branch_name: row.branch_name,
+                applications: [],
+              };
+            }
+
+            // Add the application to the branch
+            finalResults[customerId].branches[branchId].applications.push({
+              id: row.client_application_id,
+              application_id: row.application_id,
+              application_name: row.application_name,
+              application_created_at: row.application_created_at,
+              report_date: row.report_date,
+              report_generate_by: row.report_generator_name,
+              qc_done_by: row.qc_done_by_name,
+              is_priority: row.is_priority,
+            });
+          });
+
+          // Convert finalResults object to an array
+          const resultArray = Object.values(finalResults);
+
+          // Return the final structured data as an array
+          return callback(null, resultArray);
         }
       );
     });
