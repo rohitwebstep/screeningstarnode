@@ -8,6 +8,8 @@ const ClientSpoc = require("../../models/admin/clientSpocModel");
 const Service = require("../../models/admin/serviceModel");
 const Package = require("../../models/admin/packageModel");
 
+const { createMail } = require("../../mailer/admin/createMail");
+
 // Controller to list all Billing SPOCs
 exports.list = (req, res) => {
   const { admin_id, _token } = req.query;
@@ -192,6 +194,166 @@ exports.addClientListings = (req, res) => {
             },
             token: newToken,
           });
+        }
+      );
+    });
+  });
+};
+
+exports.create = (req, res) => {
+  const {
+    admin_id,
+    _token,
+    role,
+    name,
+    email,
+    mobile,
+    password,
+    designation,
+    employee_id,
+    date_of_joining,
+    send_mail,
+  } = req.body;
+
+  // Define required fields for creating a new admin
+  const requiredFields = {
+    admin_id,
+    _token,
+    role,
+    name,
+    email,
+    mobile,
+    password,
+    designation,
+    employee_id,
+    date_of_joining,
+  };
+
+  // Check for missing fields
+  const missingFields = Object.keys(requiredFields)
+    .filter((field) => !requiredFields[field] || requiredFields[field] === "")
+    .map((field) => field.replace(/_/g, " "));
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+  // Define the action for admin authorization check
+  const action = JSON.stringify({ admin: "create" });
+  // Check if the admin is authorized to perform the action
+  Common.isAdminAuthorizedForAction(admin_id, action, (authResult) => {
+    if (!authResult.status) {
+      return res.status(403).json({
+        status: false,
+        message: authResult.message, // Return the message from the authorization check
+      });
+    }
+
+    // Validate the admin's token
+    Common.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
+      if (err) {
+        console.error("Error checking token validity:", err);
+        return res
+          .status(500)
+          .json({ status: false, message: "Internal server error" });
+      }
+
+      if (!tokenResult.status) {
+        return res
+          .status(401)
+          .json({ status: false, message: tokenResult.message });
+      }
+
+      const newToken = tokenResult.newToken;
+
+      Admin.create(
+        {
+          name,
+          email,
+          employee_id,
+          mobile,
+          date_of_joining,
+          role: role.toLowerCase(),
+          password,
+          designation,
+        },
+        (err, result) => {
+          if (err) {
+            console.error("Database error during admin creation:", err);
+            Common.adminActivityLog(
+              admin_id,
+              "Admin",
+              "Create",
+              "0",
+              null,
+              err,
+              () => {}
+            );
+            return res.status(500).json({
+              status: false,
+              message: "Failed to create Admin. Please try again later.",
+              token: newToken,
+              error: err,
+            });
+          }
+
+          // Log the successful creation of the Admin
+          Common.adminActivityLog(
+            admin_id,
+            "Admin",
+            "Create",
+            "1",
+            `{id: ${result.insertId}}`,
+            null,
+            () => {}
+          );
+
+          // If email sending is not required
+          if (send_mail == 0) {
+            return res.status(201).json({
+              status: true,
+              message: "Admin created successfully.",
+              token: newToken,
+            });
+          }
+
+          const newAttachedDocsString = "";
+          // Prepare the recipient and CC list for the email
+          const toArr = [{ name, email }];
+
+          // Send an email notification
+          createMail(
+            "Admin",
+            "create",
+            name,
+            mobile,
+            email,
+            date_of_joining,
+            role.toUpperCase(),
+            newAttachedDocsString,
+            designation,
+            password,
+            toArr
+          )
+            .then(() => {
+              return res.status(201).json({
+                status: true,
+                message: "Admin created successfully and email sent.",
+                token: newToken,
+              });
+            })
+            .catch((emailError) => {
+              console.error("Error sending email:", emailError);
+              return res.status(201).json({
+                status: true,
+                message:
+                  "Admin created successfully, but failed to send email.",
+                client: result,
+                token: newToken,
+              });
+            });
         }
       );
     });
