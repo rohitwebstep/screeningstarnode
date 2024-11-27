@@ -321,6 +321,7 @@ exports.create = (req, res) => {
               status: true,
               message: "Admin created successfully.",
               token: newToken,
+              result,
             });
           }
 
