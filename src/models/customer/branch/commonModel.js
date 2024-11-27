@@ -9,7 +9,7 @@ const {
 const generateToken = () => crypto.randomBytes(32).toString("hex");
 
 // Returns the expiry time for the token (1 hour from now)
-const getTokenExpiry = () => new Date(Date.now() + 3600000).toISOString();
+const getTokenExpiry = () => new Date(Date.now() + 3600000);
 
 const common = {
   isBranchTokenValid: (_token, branch_id, callback) => {

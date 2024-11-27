@@ -5,7 +5,7 @@ const { pool, startConnection, connectionRelease } = require("../../config/db");
 const generateToken = () => crypto.randomBytes(32).toString("hex");
 
 // Returns the expiry time for the token (1 hour from now)
-const getTokenExpiry = () => new Date(Date.now() + 3600000).toISOString();
+const getTokenExpiry = () => new Date(Date.now() + 3600000);
 
 const common = {
   /**
@@ -49,6 +49,8 @@ const common = {
             null
           );
         }
+        console.log(`tokenExpiry - `, tokenExpiry);
+        console.log(`currentTime - `, currentTime);
 
         if (tokenExpiry > currentTime) {
           connectionRelease(connection);
@@ -56,6 +58,8 @@ const common = {
         } else {
           const newToken = generateToken();
           const newTokenExpiry = getTokenExpiry();
+
+          console.log(`newTokenExpiry - `, newTokenExpiry);
 
           const updateSql = `
             UPDATE \`admins\`
