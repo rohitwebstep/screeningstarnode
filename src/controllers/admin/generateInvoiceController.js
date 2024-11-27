@@ -126,6 +126,7 @@ async function getServiceNames(serviceIds) {
           id: service.id,
           title: service.title,
           shortCode: service.service_code,
+          hsnCode: service.hsn_code,
         };
       }
       return null;
