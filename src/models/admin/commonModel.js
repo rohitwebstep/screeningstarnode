@@ -49,18 +49,12 @@ const common = {
             null
           );
         }
-        console.log(`tokenExpiry - `, tokenExpiry);
-        console.log(`currentTime - `, currentTime);
-
         if (tokenExpiry > currentTime) {
           connectionRelease(connection);
           callback(null, { status: true, message: "Token is valid" });
         } else {
           const newToken = generateToken();
           const newTokenExpiry = getTokenExpiry();
-
-          console.log(`newTokenExpiry - `, newTokenExpiry);
-
           const updateSql = `
             UPDATE \`admins\`
             SET \`login_token\` = ?, \`token_expiry\` = ?
