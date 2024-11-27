@@ -107,6 +107,52 @@ const Admin = {
     });
   },
 
+  upload: (id, savedImagePaths, callback) => {
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
+      const sqlUpdateCustomer = `
+      UPDATE admins 
+      SET profile_picture = ?
+      WHERE id = ?
+    `;
+      const joinedPaths = savedImagePaths.join(", ");
+      // Prepare the parameters for the query
+      const queryParams = [joinedPaths, id];
+
+      connection.query(sqlUpdateCustomer, queryParams, (err, results) => {
+        connectionRelease(connection); // Ensure the connection is released
+
+        if (err) {
+          // Return error details and the final query with parameters
+          return callback(false, {
+            error: "Database error occurred.",
+            details: err, // Include error details for debugging
+            query: sqlUpdateCustomer,
+            params: queryParams, // Return the parameters used in the query
+          });
+        }
+
+        // Check if any rows were affected by the update
+        if (results.affectedRows > 0) {
+          return callback(true, results); // Success with results
+        } else {
+          // No rows updated, return a specific message along with the query details
+          return callback(false, {
+            error: "No rows updated. Please check the Admin ID.",
+            details: results,
+            query: sqlUpdateCustomer,
+            params: queryParams, // Return the parameters used in the query
+          });
+        }
+      });
+    });
+  },
+
   findByEmailOrMobile: (username, callback) => {
     const sql = `
       SELECT \`id\`, \`emp_id\`, \`name\`, \`profile_picture\`, \`email\`, \`mobile\`, \`status\`, \`login_token\`, \`token_expiry\`
@@ -406,7 +452,7 @@ const Admin = {
 
   findById: (id, callback) => {
     const sql = `
-      SELECT \`id\`, \`emp_id\`, \`name\`, \`profile_picture\`, \`email\`, \`mobile\`, \`status\`, \`login_token\`, \`token_expiry\`
+      SELECT \`id\`, \`emp_id\`, \`name\`, \`profile_picture\`, \`date_of_joining\`, \`designation\`, \`role\`, \`email\`, \`mobile\`, \`status\`, \`login_token\`, \`token_expiry\`
       FROM \`admins\`
       WHERE \`id\` = ?
     `;

@@ -1,4 +1,5 @@
 const Admin = require("../../models/admin/adminModel");
+const App = require("../../models/appModel");
 const Common = require("../../models/admin/commonModel");
 const EscalationManager = require("../../models/admin/escalationManagerModel");
 const AuthorizedDetail = require("../../models/admin/authorizedDetailModel");
@@ -9,6 +10,10 @@ const Service = require("../../models/admin/serviceModel");
 const Package = require("../../models/admin/packageModel");
 
 const { createMail } = require("../../mailer/admin/createMail");
+
+const fs = require("fs");
+const path = require("path");
+const { upload, saveImage, saveImages } = require("../../utils/imageSave");
 
 // Controller to list all Billing SPOCs
 exports.list = (req, res) => {
@@ -358,4 +363,220 @@ exports.create = (req, res) => {
       );
     });
   });
+};
+
+exports.upload = async (req, res) => {
+  try {
+    // Handle file upload using Multer
+    upload(req, res, async (err) => {
+      if (err) {
+        return res
+          .status(400)
+          .json({ status: false, message: "Error uploading file." });
+      }
+
+      // Destructure required fields from request body
+      const {
+        admin_id: adminId,
+        _token: token,
+        id,
+        password,
+        send_mail,
+      } = req.body;
+
+      // Validate required fields
+      const requiredFields = { adminId, token, id, send_mail };
+      if (send_mail == 1) requiredFields.password = password;
+
+      const missingFields = Object.keys(requiredFields)
+        .filter(
+          (field) =>
+            !requiredFields[field] ||
+            requiredFields[field] === "" ||
+            requiredFields[field] === "undefined"
+        )
+        .map((field) => field.replace(/_/g, " "));
+
+      if (missingFields.length > 0) {
+        return res.status(400).json({
+          status: false,
+          message: `Missing required fields: ${missingFields.join(", ")}`,
+        });
+      }
+
+      Admin.findById(id, async (err, currentAdmin) => {
+        if (err) {
+          console.error("Error retrieving Admin:", err);
+          return res.status(500).json({
+            status: false,
+            message: "Database error.",
+            token: newToken,
+          });
+        }
+
+        if (!currentAdmin) {
+          return res.status(404).json({
+            status: false,
+            message: "Admin not found.",
+            token: newToken,
+          });
+        }
+        const action = JSON.stringify({ admin: "update" });
+        // Check authorization
+        Common.isAdminAuthorizedForAction(
+          adminId,
+          action,
+          async (authResult) => {
+            if (!authResult.status) {
+              return res
+                .status(403)
+                .json({ status: false, message: authResult.message });
+            }
+
+            // Validate token
+            Common.isAdminTokenValid(
+              token,
+              adminId,
+              async (err, tokenResult) => {
+                if (err) {
+                  console.error("Token validation error:", err);
+                  return res
+                    .status(500)
+                    .json({ status: false, message: "Internal server error." });
+                }
+
+                if (!tokenResult.status) {
+                  return res
+                    .status(401)
+                    .json({ status: false, message: tokenResult.message });
+                }
+
+                const newToken = tokenResult.newToken;
+                const targetDirectory = `uploads/admin/${currentAdmin.emp_id}`;
+
+                // Create directory for uploads
+                await fs.promises.mkdir(targetDirectory, { recursive: true });
+
+                const savedImagePaths = [];
+
+                // Process multiple or single file uploads
+                if (req.files.images) {
+                  savedImagePaths.push(
+                    ...(await saveImages(req.files.images, targetDirectory))
+                  );
+                }
+
+                if (req.files.image && req.files.image.length > 0) {
+                  savedImagePaths.push(
+                    await saveImage(req.files.image[0], targetDirectory)
+                  );
+                }
+
+                // Save images and update Admin
+                Admin.upload(id, savedImagePaths, (success, result) => {
+                  if (!success) {
+                    return res.status(500).json({
+                      status: false,
+                      message: result || "Error occurred while saving images.",
+                      token: newToken,
+                      savedImagePaths,
+                    });
+                  }
+                  if (result && result.affectedRows > 0) {
+                    if (send_mail == 1) {
+                      let appHost = "www.screeningstar.in";
+
+                      App.appInfo("backend", (err, appInfo) => {
+                        if (err) {
+                          console.error("Database error:", err);
+                          return res.status(500).json({
+                            status: false,
+                            message: err.message,
+                            token: newToken,
+                            savedImagePaths,
+                          });
+                        }
+
+                        if (appInfo) {
+                          appHost = appInfo.host || "www.screeningstar.in";
+                          console.log(`appHost(main) - `, appHost);
+                        }
+                      });
+                      console.log(`appHost - `, appHost);
+                      const newAttachedDocsString = currentAdmin.profile_picture
+                        .split(",")
+                        .map((doc) => `${appHost}/${doc.trim()}`)
+                        .join("");
+
+                      const toArr = [
+                        {
+                          name: currentAdmin.name,
+                          email: currentAdmin.email,
+                        },
+                      ];
+
+                      console.log(
+                        `newAttachedDocsString - `,
+                        newAttachedDocsString
+                      );
+
+                      // Send an email notification
+                      createMail(
+                        "Admin",
+                        "create",
+                        currentAdmin.name,
+                        currentAdmin.mobile,
+                        currentAdmin.email,
+                        currentAdmin.date_of_joining,
+                        currentAdmin.role.toUpperCase(),
+                        newAttachedDocsString,
+                        currentAdmin.designation,
+                        password,
+                        toArr
+                      )
+                        .then(() => {
+                          return res.status(201).json({
+                            status: true,
+                            message:
+                              "Admin created and email sent successfully.",
+                            token: newToken,
+                          });
+                        })
+                        .catch((emailError) => {
+                          console.error("Error sending email:", emailError);
+                          return res.status(201).json({
+                            status: true,
+                            message:
+                              "Admin created successfully, but email sending failed.",
+                            token: newToken,
+                          });
+                        });
+                    } else {
+                      return res.status(201).json({
+                        status: true,
+                        message: "Admin created successfully.",
+                        token: newToken,
+                        savedImagePaths,
+                      });
+                    }
+                  } else {
+                    return res.status(400).json({
+                      status: false,
+                      message: "No changes were made. Check Admin ID.",
+                      token: newToken,
+                    });
+                  }
+                });
+              }
+            );
+          }
+        );
+      });
+    });
+  } catch (error) {
+    console.error("Unexpected error:", error);
+    return res
+      .status(500)
+      .json({ status: false, message: "Unexpected server error." });
+  }
 };
