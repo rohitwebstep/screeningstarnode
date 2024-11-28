@@ -19,7 +19,7 @@ exports.create = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ package: "create" });
+  const action = "see_more";
 
   // Check admin authorization
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
@@ -105,7 +105,7 @@ exports.list = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-  const action = JSON.stringify({ package: "view" });
+  const action = "see_more";
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
@@ -159,7 +159,7 @@ exports.getPackageById = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-  const action = JSON.stringify({ package: "view" });
+  const action = "see_more";
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
@@ -227,7 +227,7 @@ exports.update = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ package: "update" });
+  const action = "see_more";
 
   // Check admin authorization
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
@@ -346,7 +346,7 @@ exports.delete = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ package: "delete" });
+  const action = "see_more";
 
   // Check admin authorization
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {

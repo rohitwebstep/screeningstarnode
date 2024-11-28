@@ -252,43 +252,33 @@ exports.list = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ branch: "view" });
-  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
-    if (!result.status) {
-      return res.status(403).json({
-        status: false,
-        message: result.message, // Return the message from the authorization function
-      });
+  // Verify admin token
+  AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
+    if (err) {
+      console.error("Error checking token validity:", err);
+      return res.status(500).json({ status: false, message: err.message });
     }
 
-    // Verify admin token
-    AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
+    if (!result.status) {
+      return res.status(401).json({ status: false, message: result.message });
+    }
+
+    const newToken = result.newToken;
+
+    Branch.list((err, result) => {
       if (err) {
-        console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
+        console.error("Database error:", err);
+        return res
+          .status(500)
+          .json({ status: false, message: err.message, token: newToken });
       }
 
-      if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message });
-      }
-
-      const newToken = result.newToken;
-
-      Branch.list((err, result) => {
-        if (err) {
-          console.error("Database error:", err);
-          return res
-            .status(500)
-            .json({ status: false, message: err.message, token: newToken });
-        }
-
-        res.json({
-          status: true,
-          message: "branches fetched successfully",
-          branches: result,
-          totalResults: result.length,
-          token: newToken,
-        });
+      res.json({
+        status: true,
+        message: "branches fetched successfully",
+        branches: result,
+        totalResults: result.length,
+        token: newToken,
       });
     });
   });
@@ -310,46 +300,36 @@ exports.listByCustomerID = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ branch: "view" });
-  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (authResult) => {
-    if (!authResult.status) {
-      return res.status(403).json({
-        status: false,
-        message: authResult.message, // Return the message from the authorization function
-      });
+  // Verify admin token
+  AdminCommon.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
+    if (err) {
+      console.error("Error checking token validity:", err);
+      return res.status(500).json({ status: false, message: err.message });
     }
 
-    // Verify admin token
-    AdminCommon.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
+    if (!tokenResult.status) {
+      return res
+        .status(401)
+        .json({ status: false, message: tokenResult.message });
+    }
+
+    const newToken = tokenResult.newToken;
+
+    // Call the model method with customer_id
+    Branch.listByCustomerID(customer_id, (err, branches) => {
       if (err) {
-        console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
-      }
-
-      if (!tokenResult.status) {
+        console.error("Database error:", err);
         return res
-          .status(401)
-          .json({ status: false, message: tokenResult.message });
+          .status(500)
+          .json({ status: false, message: err.message, token: newToken });
       }
 
-      const newToken = tokenResult.newToken;
-
-      // Call the model method with customer_id
-      Branch.listByCustomerID(customer_id, (err, branches) => {
-        if (err) {
-          console.error("Database error:", err);
-          return res
-            .status(500)
-            .json({ status: false, message: err.message, token: newToken });
-        }
-
-        res.json({
-          status: true,
-          message: "Branches fetched successfully",
-          branches: branches,
-          totalResults: branches.length,
-          token: newToken,
-        });
+      res.json({
+        status: true,
+        message: "Branches fetched successfully",
+        branches: branches,
+        totalResults: branches.length,
+        token: newToken,
       });
     });
   });
@@ -562,7 +542,7 @@ exports.update = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ branch: "update" });
+  const action = "client_overview";
 
   // Check admin authorization
   AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
@@ -695,7 +675,7 @@ exports.active = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ branch: "status" });
+  const action = "client_overview";
 
   // Check admin authorization
   AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
@@ -821,7 +801,7 @@ exports.inactive = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ branch: "status" });
+  const action = "client_overview";
 
   // Check admin authorization
   AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
@@ -947,7 +927,7 @@ exports.delete = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ branch: "delete" });
+  const action = "client_overview";
 
   // Check admin authorization
   AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {

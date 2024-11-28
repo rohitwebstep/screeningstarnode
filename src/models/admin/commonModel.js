@@ -232,35 +232,17 @@ const common = {
               ? JSON.parse(permissionsJson)
               : permissionsJson;
 
-          const actionObj =
-            typeof action === "string" ? JSON.parse(action) : action;
-
-          // Extract action type and action name from the action object
-          const [actionType, actionName] = Object.entries(actionObj)[0] || [];
-
-          // Check if action type and action name are valid
-          if (!actionType || !actionName) {
-            console.error("Invalid action format");
-            return callback({ status: false, message: "Access Denied" });
-          }
-
           // Check if the action type exists in the permissions object
-          if (!permissions[actionType]) {
+          if (!permissions[action]) {
             console.error("Action type not found in permissions");
             return callback({
               status: false,
               message: "Access Denied",
             });
           }
-
-          // Check if the action name is authorized
-          const isAuthorized = permissions[actionType][actionName] === true;
-
           return callback({
-            status: isAuthorized,
-            message: isAuthorized
-              ? "Authorization Successful"
-              : "Access Denied",
+            status: true,
+            message: "Authorization Successful",
           });
         });
       });

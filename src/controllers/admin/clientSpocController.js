@@ -103,7 +103,7 @@ exports.create = (req, res) => {
   const normalizedEmail3 = normalizeEmail(email3);
   const normalizedEmail4 = normalizeEmail(email4);
 
-  const action = JSON.stringify({ client_spoc: "create" });
+  const action = "client_overview";
 
   // Check admin authorization
   Common.isAdminAuthorizedForAction(admin_id, action, (authResult) => {
@@ -275,7 +275,7 @@ exports.list = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-  const action = JSON.stringify({ client_spoc: "view" });
+  const action = "client_overview";
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
@@ -385,7 +385,7 @@ exports.getClientSpocById = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-  const action = JSON.stringify({ client_spoc: "view" });
+  const action = "client_overview";
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
@@ -478,7 +478,7 @@ exports.update = (req, res) => {
   const normalizedEmail3 = normalizeEmail(email3);
   const normalizedEmail4 = normalizeEmail(email4);
 
-  const action = JSON.stringify({ client_spoc: "update" });
+  const action = "client_overview";
 
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
@@ -606,7 +606,7 @@ exports.delete = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-  const action = JSON.stringify({ client_spoc: "delete" });
+  const action = "client_overview";
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       // Check the status returned by the authorization function
@@ -691,7 +691,7 @@ exports.checkEmailExists = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ client_spoc: "create" });
+  const action = "client_overview";
 
   // Check admin authorization
   Common.isAdminAuthorizedForAction(admin_id, action, (authResult) => {

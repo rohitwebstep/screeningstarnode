@@ -20,7 +20,7 @@ exports.create = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ billing_spoc: "create" });
+  const action = "client_overview";
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       // Check the status returned by the authorization function
@@ -117,7 +117,7 @@ exports.list = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-  const action = JSON.stringify({ billing_spoc: "view" });
+  const action = "client_overview";
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
@@ -170,7 +170,7 @@ exports.getBillingSpocById = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-  const action = JSON.stringify({ billing_spoc: "view" });
+  const action = "client_overview";
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
@@ -238,7 +238,7 @@ exports.update = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-  const action = JSON.stringify({ billing_spoc: "update" });
+  const action = "client_overview";
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       // Check the status returned by the authorization function
@@ -344,7 +344,7 @@ exports.delete = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-  const action = JSON.stringify({ billing_spoc: "delete" });
+  const action = "client_overview";
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       // Check the status returned by the authorization function

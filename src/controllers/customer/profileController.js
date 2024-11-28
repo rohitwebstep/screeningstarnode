@@ -96,7 +96,7 @@ exports.servicesPackagesData = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ service: "view" });
+  const action = "see_more";
   AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
@@ -223,7 +223,7 @@ exports.create = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ customer: "create" });
+  const action = "client_overview";
   AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
@@ -692,7 +692,7 @@ exports.upload = async (req, res) => {
       }
 
       // Check if the admin is authorized
-      const action = JSON.stringify({ customer: "create" });
+      const action = "client_overview";
       AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
         if (!result.status) {
           console.warn("Admin not authorized:", result.message);
@@ -974,7 +974,7 @@ exports.inactiveList = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ customer: "view" });
+  const action = "client_overview";
   AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
@@ -1030,7 +1030,7 @@ exports.list = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ customer: "view" });
+  const action = "client_overview";
   AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
@@ -1086,7 +1086,7 @@ exports.listWithBasicInfo = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ customer: "view" });
+  const action = "client_overview";
   AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
@@ -1201,7 +1201,7 @@ exports.update = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ customer: "update" });
+  const action = "client_overview";
 
   AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
@@ -1493,50 +1493,40 @@ exports.fetchBranchPassword = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ branch: "view" });
-  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
-    if (!result.status) {
-      return res.status(403).json({
-        status: false,
-        message: result.message,
-      });
+  // Verify admin token
+  AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
+    if (err) {
+      console.error("Error checking token validity:", err);
+      return res.status(500).json({ status: false, message: err.message });
     }
 
-    // Verify admin token
-    AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
+    if (!result.status) {
+      return res.status(401).json({ status: false, message: result.message });
+    }
+
+    const newToken = result.newToken;
+
+    Customer.fetchBranchPasswordByEmail(branch_email, (err, result) => {
       if (err) {
-        console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
+        console.error("Database error:", err);
+        return res
+          .status(500)
+          .json({ status: false, message: err.message, token: newToken });
       }
 
-      if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message });
-      }
-
-      const newToken = result.newToken;
-
-      Customer.fetchBranchPasswordByEmail(branch_email, (err, result) => {
-        if (err) {
-          console.error("Database error:", err);
-          return res
-            .status(500)
-            .json({ status: false, message: err.message, token: newToken });
-        }
-
-        if (!result) {
-          return res.status(404).json({
-            status: false,
-            message: "Password not found",
-            token: newToken,
-          });
-        }
-
-        res.json({
-          status: true,
-          message: "Password fetched successfully",
-          password: result,
+      if (!result) {
+        return res.status(404).json({
+          status: false,
+          message: "Password not found",
           token: newToken,
         });
+      }
+
+      res.json({
+        status: true,
+        message: "Password fetched successfully",
+        password: result,
+        token: newToken,
       });
     });
   });
@@ -1564,7 +1554,7 @@ exports.active = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ customer: "status" });
+  const action = "client_overview";
 
   AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
@@ -1672,8 +1662,7 @@ exports.inactive = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ customer: "status" });
-
+  const action = "client_overview";
   AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
@@ -1774,8 +1763,7 @@ exports.delete = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ customer: "delete" });
-
+  const action = "client_overview";
   // Check admin authorization
   AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {

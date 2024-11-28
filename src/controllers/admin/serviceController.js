@@ -29,7 +29,7 @@ exports.create = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ service: "create" });
+  const action = "see_more";
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       // Check the status returned by the authorization function
@@ -111,7 +111,7 @@ exports.list = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-  const action = JSON.stringify({ service: "view" });
+  const action = "see_more";
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
@@ -168,7 +168,7 @@ exports.isServiceCodeUnique = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ service: "view" });
+  const action = "see_more";
 
   // Check admin authorization
   Common.isAdminAuthorizedForAction(admin_id, action, (authResult) => {
@@ -243,7 +243,7 @@ exports.getServiceById = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-  const action = JSON.stringify({ service: "view" });
+  const action = "see_more";
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
@@ -321,7 +321,7 @@ exports.update = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-  const action = JSON.stringify({ service: "update" });
+  const action = "see_more";
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       // Check the status returned by the authorization function
@@ -428,7 +428,7 @@ exports.delete = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-  const action = JSON.stringify({ service: "delete" });
+  const action = "see_more";
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       // Check the status returned by the authorization function

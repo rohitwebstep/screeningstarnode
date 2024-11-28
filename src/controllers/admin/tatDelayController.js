@@ -15,7 +15,7 @@ exports.list = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-  const action = JSON.stringify({ tat_delay: "view" });
+  const action = "admin_manager";
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
@@ -85,7 +85,7 @@ exports.listWithoutAuth = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ tat_delay: "view" });
+  const action = "admin_manager";
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({

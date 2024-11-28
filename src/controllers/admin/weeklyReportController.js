@@ -16,56 +16,46 @@ exports.index = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ weekly_report: "send" });
-  Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
-    if (!result.status) {
-      return res.status(403).json({
-        status: false,
-        message: result.message,
-      });
+  Common.isAdminTokenValid(_token, admin_id, (err, result) => {
+    if (err) {
+      console.error("Error checking token validity:", err);
+      return res.status(500).json(err);
     }
 
-    Common.isAdminTokenValid(_token, admin_id, (err, result) => {
+    if (!result.status) {
+      return res.status(401).json({ status: false, message: result.message });
+    }
+
+    const newToken = result.newToken;
+
+    // Get the current date details
+    const currentDate = new Date();
+    const currentDay = currentDate.getDay();
+
+    // Calculate first and last days of the current week
+    const firstDayOfWeek = new Date(currentDate);
+    firstDayOfWeek.setDate(currentDate.getDate() - currentDay);
+    const lastDayOfWeek = new Date(currentDate);
+    lastDayOfWeek.setDate(currentDate.getDate() + (6 - currentDay));
+
+    // Format dates for SQL query
+    const startOfWeek = firstDayOfWeek.toISOString().split("T")[0];
+    const endOfWeek = lastDayOfWeek.toISOString().split("T")[0];
+
+    // Retrieve weekly reports within the current week
+    WeeklyReport.list(startOfWeek, endOfWeek, (err, result) => {
       if (err) {
-        console.error("Error checking token validity:", err);
-        return res.status(500).json(err);
+        console.error("Database error:", err);
+        return res
+          .status(500)
+          .json({ status: false, message: err.message, token: newToken });
       }
 
-      if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message });
-      }
-
-      const newToken = result.newToken;
-
-      // Get the current date details
-      const currentDate = new Date();
-      const currentDay = currentDate.getDay();
-
-      // Calculate first and last days of the current week
-      const firstDayOfWeek = new Date(currentDate);
-      firstDayOfWeek.setDate(currentDate.getDate() - currentDay);
-      const lastDayOfWeek = new Date(currentDate);
-      lastDayOfWeek.setDate(currentDate.getDate() + (6 - currentDay));
-
-      // Format dates for SQL query
-      const startOfWeek = firstDayOfWeek.toISOString().split("T")[0];
-      const endOfWeek = lastDayOfWeek.toISOString().split("T")[0];
-
-      // Retrieve weekly reports within the current week
-      WeeklyReport.list(startOfWeek, endOfWeek, (err, result) => {
-        if (err) {
-          console.error("Database error:", err);
-          return res
-            .status(500)
-            .json({ status: false, message: err.message, token: newToken });
-        }
-
-        res.json({
-          status: true,
-          message: "Weekly reports sent successfully",
-          token: newToken,
-          data: result,
-        });
+      res.json({
+        status: true,
+        message: "Weekly reports sent successfully",
+        token: newToken,
+        data: result,
       });
     });
   });

@@ -29,7 +29,7 @@ exports.list = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-  const action = JSON.stringify({ client_spoc: "view" });
+  const action = "client_overview";
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
@@ -84,7 +84,7 @@ exports.addClientListings = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ client_spoc: "view" });
+  const action = "client_overview";
 
   Common.isAdminAuthorizedForAction(admin_id, action, (authResult) => {
     if (!authResult || !authResult.status) {
@@ -246,7 +246,7 @@ exports.create = (req, res) => {
     });
   }
   // Define the action for admin authorization check
-  const action = JSON.stringify({ admin: "create" });
+  const action = "employee_credentials";
   // Check if the admin is authorized to perform the action
   Common.isAdminAuthorizedForAction(admin_id, action, (authResult) => {
     if (!authResult.status) {
@@ -409,8 +409,7 @@ exports.update = (req, res) => {
   }
 
   // Define the action for admin authorization check
-  const action = JSON.stringify({ admin: "update" });
-
+  const action = "employee_credentials";
   Common.isAdminAuthorizedForAction(admin_id, action, (authResult) => {
     if (!authResult.status) {
       return res.status(403).json({
@@ -530,7 +529,7 @@ exports.delete = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ admin: "delete" });
+  const action = "employee_credentials";
   // Check if the admin is authorized to perform the action
   Common.isAdminAuthorizedForAction(admin_id, action, (authResult) => {
     if (!authResult.status) {
@@ -677,7 +676,7 @@ exports.upload = async (req, res) => {
             token: newToken,
           });
         }
-        const action = JSON.stringify({ admin: "update" });
+        const action = "employee_credentials";
         // Check authorization
         Common.isAdminAuthorizedForAction(
           adminId,
