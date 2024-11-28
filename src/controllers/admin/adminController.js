@@ -407,14 +407,22 @@ exports.update = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
+
   // Define the action for admin authorization check
   const action = JSON.stringify({ admin: "update" });
-  // Check if the admin is authorized to perform the action
+
   Common.isAdminAuthorizedForAction(admin_id, action, (authResult) => {
     if (!authResult.status) {
       return res.status(403).json({
         status: false,
         message: authResult.message, // Return the message from the authorization check
+      });
+    }
+
+    if (admin_id === id) {
+      return res.status(403).json({
+        status: false,
+        message: "You cannot update your own profile from this section.",
       });
     }
 
@@ -529,6 +537,13 @@ exports.delete = (req, res) => {
       return res.status(403).json({
         status: false,
         message: authResult.message, // Return the message from the authorization check
+      });
+    }
+
+    if (admin_id === id) {
+      return res.status(403).json({
+        status: false,
+        message: "You cannot delete your own profile from this section.",
       });
     }
 
@@ -672,6 +687,13 @@ exports.upload = async (req, res) => {
               return res
                 .status(403)
                 .json({ status: false, message: authResult.message });
+            }
+            if (adminId === id) {
+              return res.status(403).json({
+                status: false,
+                message:
+                  "You cannot upload your own profile picture from this section.",
+              });
             }
 
             // Validate token

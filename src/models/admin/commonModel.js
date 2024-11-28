@@ -221,10 +221,8 @@ const common = {
           }
 
           if (results.length === 0) {
-            return callback(
-              { message: "No permissions found for the admin role" },
-              null
-            );
+            console.error(`No permissions found for the admin role`);
+            return callback({ message: "Access Denied" }, null);
           }
 
           // Console log the json
