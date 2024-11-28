@@ -23,10 +23,8 @@ exports.index = async (req, res) => {
       });
     }
 
-    const tatDelayAction = JSON.stringify({ tat_delay: "view" });
-    const newApplicationsAction = JSON.stringify({
-      cmt_application: "generate_report",
-    });
+    const tatDelayAction = "admin_manager";
+    const newApplicationsAction = "admin_manager";
 
     // Wrap authorization checks in promises
     const isAuthorized = (adminId, action) =>
