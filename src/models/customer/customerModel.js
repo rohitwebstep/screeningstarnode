@@ -585,6 +585,41 @@ const Customer = {
     });
   },
 
+  listWithBasicInfo: (callback) => {
+    const sql = `
+      SELECT
+        id, 
+        name,
+        client_unique_id
+      FROM 
+        customers
+      WHERE 
+        customers.status != '0'
+    `;
+
+    startConnection((err, connection) => {
+      if (err) {
+        console.error("Connection error:", err);
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
+
+      connection.query(sql, (err, results) => {
+        connectionRelease(connection);
+
+        if (err) {
+          console.error("Database query error: 57", err);
+          return callback(err, null);
+        }
+
+        // Processing results and invoking callback
+        callback(null, results);
+      });
+    });
+  },
+
   inactiveList: (callback) => {
     const sql = `
       SELECT 
