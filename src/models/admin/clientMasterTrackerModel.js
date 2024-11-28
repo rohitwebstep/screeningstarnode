@@ -60,6 +60,7 @@ const Customer = {
             SELECT 
                 customers.client_unique_id,
                 customers.name,
+                customer_metas.client_spoc_id,
                 customer_metas.tat_days,
                 customer_metas.single_point_of_contact,
                 customers.id AS main_id,
@@ -120,6 +121,7 @@ const Customer = {
           SELECT 
               customers.client_unique_id,
               customers.name,
+              customer_metas.client_spoc_id,
               customer_metas.tat_days,
               customer_metas.single_point_of_contact,
               customers.id AS main_id,
@@ -156,13 +158,60 @@ const Customer = {
           ORDER BY 
               application_counts.latest_application_date DESC;
         `;
-
-        connection.query(finalSql, (err, results) => {
+        connection.query(finalSql, async (err, results) => {
           connectionRelease(connection); // Always release the connection
           if (err) {
             console.error("Database query error:16", err);
             return callback(err, null);
           }
+
+          console.log(`Initial results - `, results);
+
+          // Process each result to fetch client_spoc names
+          for (const result of results) {
+            const spocIdString = result.client_spoc_id;
+            if (spocIdString) {
+              // Ensure client_spoc_id is treated as a string and split by commas
+              const spocIds = spocIdString
+                .toString()
+                .split(",")
+                .map((id) => id.trim());
+
+              // Query client_spoc table to fetch names for these IDs
+              const spocQuery = `
+                SELECT name 
+                FROM client_spocs
+                WHERE id IN (${spocIds.map(() => "?").join(",")});
+              `;
+
+              try {
+                const spocNames = await new Promise((resolve, reject) => {
+                  connection.query(
+                    spocQuery,
+                    spocIds,
+                    (spocErr, spocResults) => {
+                      if (spocErr) {
+                        return reject(spocErr);
+                      }
+                      resolve(spocResults.map((spoc) => spoc.name || "N/A"));
+                    }
+                  );
+                });
+
+                // Attach spoc names to the current result
+                result.client_spoc_name = spocNames;
+              } catch (spocErr) {
+                console.error("Error fetching client_spoc names:", spocErr);
+                result.client_spoc_name = null; // Default to null if error occurs
+              }
+            } else {
+              // If client_spoc_id is null or empty
+              result.client_spoc_name = null;
+            }
+          }
+
+          console.log(`Processed results - `, results);
+
           callback(null, results);
         });
       }
@@ -591,7 +640,7 @@ const Customer = {
     customer_id,
     callback
   ) => {
-    const fields = Object.keys(mainJson).map(field => field.toLowerCase());
+    const fields = Object.keys(mainJson).map((field) => field.toLowerCase());
 
     // Start a connection
     startConnection((err, connection) => {
@@ -724,7 +773,7 @@ const Customer = {
     mainJson,
     callback
   ) => {
-    const fields = Object.keys(mainJson).map(field => field.toLowerCase());
+    const fields = Object.keys(mainJson).map((field) => field.toLowerCase());
     startConnection((err, connection) => {
       if (err) {
         return callback(err, null);
@@ -1107,10 +1156,11 @@ const Customer = {
                   for (const [dbTable, fileInputNames] of Object.entries(
                     dbTableFileInputs
                   )) {
-                    const selectQuery = `SELECT ${fileInputNames && fileInputNames.length > 0
+                    const selectQuery = `SELECT ${
+                      fileInputNames && fileInputNames.length > 0
                         ? fileInputNames.join(", ")
                         : "*"
-                      } FROM ${dbTable} WHERE client_application_id = ?`;
+                    } FROM ${dbTable} WHERE client_application_id = ?`;
 
                     connection.query(
                       selectQuery,
