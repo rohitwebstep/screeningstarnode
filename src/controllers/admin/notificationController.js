@@ -1,13 +1,10 @@
 const NotificationModel = require("../../models/admin/notificationsModel");
-const ClientApplication = require("../../models/customer/branch/clientApplicationModel");
 const Common = require("../../models/admin/commonModel");
 
-// Controller to list all tatDelays
-exports.index = (req, res) => {
+exports.index = async (req, res) => {
   try {
     const { YWRtaW5faWQ } = req.query;
 
-    // Validate if the admin_id query parameter is provided
     if (!YWRtaW5faWQ) {
       return res.status(400).json({
         status: false,
@@ -15,12 +12,10 @@ exports.index = (req, res) => {
       });
     }
 
-    // Decode the Base64 encoded admin ID and parse it
     const decodedAdminId = Buffer.from(YWRtaW5faWQ, "base64").toString("utf8");
     const adminIdNumber = parseFloat(decodedAdminId);
     const adminId = adminIdNumber / 1.5;
 
-    // Check if adminId is valid
     if (isNaN(adminId) || !adminId) {
       return res.status(400).json({
         status: false,
@@ -28,40 +23,24 @@ exports.index = (req, res) => {
       });
     }
 
-    let newApplicationStatus = false;
-    let tatDelayStatus = false;
-
-    // Authorization actions
     const tatDelayAction = JSON.stringify({ tat_delay: "view" });
     const newApplicationsAction = JSON.stringify({
       cmt_application: "generate_report",
     });
 
-    // Check authorization for new applications
-    Common.isAdminAuthorizedForAction(
-      adminId,
-      newApplicationsAction,
-      (authResult) => {
-        if (!authResult.status) {
-          return res.status(403).json({
-            status: false,
-            message: authResult.message,
-          });
-        }
-        newApplicationStatus = true; // Set true if authorized
-      }
-    );
+    // Wrap authorization checks in promises
+    const isAuthorized = (adminId, action) =>
+      new Promise((resolve) => {
+        Common.isAdminAuthorizedForAction(adminId, action, (authResult) =>
+          resolve(authResult.status)
+        );
+      });
 
-    // Check authorization for tat delay actions
-    Common.isAdminAuthorizedForAction(adminId, tatDelayAction, (authResult) => {
-      if (!authResult.status) {
-        return res.status(403).json({
-          status: false,
-          message: authResult.message,
-        });
-      }
-      tatDelayStatus = true; // Set true if authorized
-    });
+    // Perform both authorization checks concurrently
+    const [newApplicationStatus, tatDelayStatus] = await Promise.all([
+      isAuthorized(adminId, newApplicationsAction),
+      isAuthorized(adminId, tatDelayAction),
+    ]);
 
     // Fetch TAT delay list
     NotificationModel.index((notificationErr, notificationResult) => {
@@ -73,7 +52,6 @@ exports.index = (req, res) => {
         });
       }
 
-      // Filter notifications based on authorization
       if (!tatDelayStatus) {
         notificationResult.tatDelayList = [];
       }
