@@ -208,6 +208,36 @@ const Customer = {
               // If client_spoc_id is null or empty
               result.client_spoc_name = null;
             }
+
+            if (result.branch_count === 1) {
+              // Query client_spoc table to fetch names for these IDs
+              const headBranchQuery = `SELECT is_head FROM \`branches\` WHERE \`customer_id\` = ? AND \`is_head\` = ?`;
+
+              try {
+                const headBranchID = await new Promise((resolve, reject) => {
+                  connection.query(
+                    headBranchQuery,
+                    [result.main_id, 1], // Properly pass query parameters as an array
+                    (headBranchErr, headBranchResults) => {
+                      if (headBranchErr) {
+                        return reject(headBranchErr);
+                      }
+                      resolve(
+                        headBranchResults.length > 0
+                          ? headBranchResults[0].is_head
+                          : null
+                      );
+                    }
+                  );
+                });
+
+                // Attach spoc names to the current result
+                result.head_branch_id = headBranchID;
+              } catch (headBranchErr) {
+                console.error("Error fetching head branch id:", headBranchErr);
+                result.head_branch_id = null; // Default to null if an error occurs
+              }
+            }
           }
 
           console.log(`Processed results - `, results);
