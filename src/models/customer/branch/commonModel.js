@@ -447,7 +447,6 @@ const common = {
         return callback(connectionError, null);
       }
 
-      // Execute the applications query
       connection.query(
         applicationsQuery,
         [branch_id],
@@ -456,13 +455,10 @@ const common = {
             return handleQueryError(appQueryError, connection, callback);
           }
 
-          // Initialize an empty object to hold the final result
           const finalResults = {};
 
-          // Process the application results into the hierarchical structure
           applicationResults.forEach((row) => {
             const customerId = row.customer_id;
-            const branchId = row.branch_id;
 
             // Initialize customer if it doesn't exist
             if (!finalResults[customerId]) {
@@ -470,21 +466,27 @@ const common = {
                 customer_id: row.customer_id,
                 customer_name: row.customer_name,
                 customer_unique_id: row.customer_unique_id,
-                branches: {},
+                branches: [],
               };
             }
 
-            // Initialize branch if it doesn't exist for the customer
-            if (!finalResults[customerId].branches[branchId]) {
-              finalResults[customerId].branches[branchId] = {
+            // Find the branch in the customer's branches array
+            let branch = finalResults[customerId].branches.find(
+              (b) => b.branch_id === row.branch_id
+            );
+
+            // If branch doesn't exist, create and add it
+            if (!branch) {
+              branch = {
                 branch_id: row.branch_id,
                 branch_name: row.branch_name,
                 applications: [],
               };
+              finalResults[customerId].branches.push(branch);
             }
 
             // Add the application to the branch
-            finalResults[customerId].branches[branchId].applications.push({
+            branch.applications.push({
               id: row.client_application_id,
               application_id: row.application_id,
               application_name: row.application_name,
@@ -499,8 +501,16 @@ const common = {
           // Convert finalResults object to an array
           const resultArray = Object.values(finalResults);
 
+          // Add the total report ready count
+          const totalReportReady = applicationResults.length;
+
           // Return the final structured data as an array
-          return callback(null, resultArray);
+          return callback(null, {
+            status: true,
+            message: "Data fetched successfully.",
+            data: resultArray,
+            totalReportReady,
+          });
         }
       );
     });
