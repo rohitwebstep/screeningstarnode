@@ -36,7 +36,7 @@ app.use("/uploads", express.static("uploads"));
 
 // Define routes
 app.use("/admin", adminRoutes);
-app.use("/admin", permissionRoutes);
+app.use("/permission", permissionRoutes);
 app.use("/client-master-tracker", clientMasterTrackerRoutes);
 app.use("/billing-spoc", billingSpocRoutes);
 app.use("/billing-escalation", billingEscalationRoutes);
