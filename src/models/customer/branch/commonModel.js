@@ -501,16 +501,8 @@ const common = {
           // Convert finalResults object to an array
           const resultArray = Object.values(finalResults);
 
-          // Add the total report ready count
-          const totalReportReady = applicationResults.length;
-
           // Return the final structured data as an array
-          return callback(null, {
-            status: true,
-            message: "Data fetched successfully.",
-            data: resultArray,
-            totalReportReady,
-          });
+          return callback(null, resultArray);
         }
       );
     });
