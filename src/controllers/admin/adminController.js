@@ -375,7 +375,7 @@ exports.update = (req, res) => {
     name,
     email,
     mobile,
-    password,
+    status,
     designation,
     employee_id,
     date_of_joining,
@@ -460,7 +460,7 @@ exports.update = (req, res) => {
             mobile,
             date_of_joining,
             role: role.toLowerCase(),
-            password,
+            status,
             designation,
           },
           (err, result) => {

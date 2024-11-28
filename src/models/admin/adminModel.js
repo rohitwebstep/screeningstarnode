@@ -116,7 +116,7 @@ const Admin = {
       employee_id,
       date_of_joining,
       role,
-      password,
+      status,
       designation,
     } = data;
 
@@ -172,7 +172,7 @@ const Admin = {
               \`email\` = ?, 
               \`date_of_joining\` = ?, 
               \`role\` = ?, 
-              \`password\` = ?, 
+              \`status\` = ?, 
               \`designation\` = ?
             WHERE \`id\` = ?
           `;
@@ -186,7 +186,7 @@ const Admin = {
               email,
               date_of_joining,
               role,
-              password ? md5(password) : null, // Update password only if provided
+              status,
               designation,
               id,
             ],
