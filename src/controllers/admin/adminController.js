@@ -408,7 +408,7 @@ exports.update = (req, res) => {
     });
   }
   // Define the action for admin authorization check
-  const action = JSON.stringify({ admin: "create" });
+  const action = JSON.stringify({ admin: "update" });
   // Check if the admin is authorized to perform the action
   Common.isAdminAuthorizedForAction(admin_id, action, (authResult) => {
     if (!authResult.status) {
@@ -522,7 +522,7 @@ exports.delete = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ client_application: "delete" });
+  const action = JSON.stringify({ admin: "delete" });
   // Check if the admin is authorized to perform the action
   Common.isAdminAuthorizedForAction(admin_id, action, (authResult) => {
     if (!authResult.status) {
