@@ -742,11 +742,9 @@ exports.upload = async (req, res) => {
                           appHost = appInfo.host || "www.screeningstar.in";
                         }
 
-                        const newAttachedDocsString =
-                          currentAdmin.profile_picture
-                            .split(",")
-                            .map((doc) => `${appHost}/${doc.trim()}`)
-                            .join("");
+                        const newAttachedDocsString = savedImagePaths
+                          .map((doc) => `${appHost}/${doc.trim()}`)
+                          .join("");
 
                         const toArr = [
                           {
