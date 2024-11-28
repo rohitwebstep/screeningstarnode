@@ -211,7 +211,7 @@ const Customer = {
 
             if (result.branch_count === 1) {
               // Query client_spoc table to fetch names for these IDs
-              const headBranchQuery = `SELECT is_head FROM \`branches\` WHERE \`customer_id\` = ? AND \`is_head\` = ?`;
+              const headBranchQuery = `SELECT id, is_head FROM \`branches\` WHERE \`customer_id\` = ? AND \`is_head\` = ?`;
 
               try {
                 const headBranchID = await new Promise((resolve, reject) => {
@@ -224,7 +224,7 @@ const Customer = {
                       }
                       resolve(
                         headBranchResults.length > 0
-                          ? headBranchResults[0].is_head
+                          ? headBranchResults[0].id
                           : null
                       );
                     }
