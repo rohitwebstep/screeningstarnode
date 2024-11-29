@@ -130,6 +130,27 @@ exports.login = (req, res) => {
         });
       }
 
+      // Check if the existing token is still valid
+      if (
+        admin.date_of_joining &&
+        new Date(admin.date_of_joining) > currentTime
+      ) {
+        Common.adminLoginLog(
+          admin.id,
+          "login",
+          "0",
+          "Admin is not yet joined.",
+          () => {}
+        );
+        return res.status(401).json({
+          status: false,
+          message: `Access denied. Your account will be active from ${new Date(
+            admin.date_of_joining
+          ).toDateString()}.`,
+        });
+      }
+
+      return;
       // Generate new token and expiry time
       const token = generateToken();
       const newTokenExpiry = getTokenExpiry();
