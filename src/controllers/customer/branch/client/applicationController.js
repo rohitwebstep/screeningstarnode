@@ -477,7 +477,7 @@ exports.bulkCreate = (req, res) => {
                     if (err) {
                       reject({
                         status: false,
-                        message: err,
+                        message: err.message,
                         token: newToken,
                       });
                     } else {
