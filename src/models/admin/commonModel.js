@@ -225,8 +225,19 @@ const common = {
             return callback({ message: "Access Denied" }, null);
           }
 
+          const permissionsRaw = results[0].json;
+
+          // Check if permissions field is empty or null
+          if (!permissionsRaw) {
+            console.error("Permissions field is empty");
+            return callback({
+              status: false,
+              message: "Access Denied",
+            });
+          }
+
           // Console log the json
-          const permissionsJson = JSON.parse(results[0].json);
+          const permissionsJson = JSON.parse(permissionsRaw);
           const permissions =
             typeof permissionsJson === "string"
               ? JSON.parse(permissionsJson)
