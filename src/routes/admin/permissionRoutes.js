@@ -5,5 +5,6 @@ const permissionController = require("../../controllers/admin/permissionControll
 // Basic routes
 router.get("/roles", permissionController.rolesList);
 router.get("/list", permissionController.list);
+router.put("/update", permissionController.update);
 
 module.exports = router;

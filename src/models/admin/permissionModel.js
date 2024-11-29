@@ -52,6 +52,50 @@ const Permission = {
       });
     });
   },
+
+  getPermissionById: (id, callback) => {
+    const sql = `SELECT * FROM \`permissions\` WHERE \`id\` = ?`;
+
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(err, null);
+      }
+
+      connection.query(sql, [id], (queryErr, results) => {
+        connectionRelease(connection); // Release the connection
+
+        if (queryErr) {
+          console.error("Database query error: 49", queryErr);
+          return callback(queryErr, null);
+        }
+        callback(null, results[0]);
+      });
+    });
+  },
+
+  update: (id, permission_json, callback) => {
+    const sql = `
+      UPDATE \`permissions\`
+      SET \`permission_json\` = ?
+      WHERE \`id\` = ?
+    `;
+
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(err, null);
+      }
+
+      connection.query(sql, [permission_json, id], (queryErr, results) => {
+        connectionRelease(connection); // Release the connection
+
+        if (queryErr) {
+          console.error(" 51", queryErr);
+          return callback(queryErr, null);
+        }
+        callback(null, results);
+      });
+    });
+  },
 };
 
 module.exports = Permission;
