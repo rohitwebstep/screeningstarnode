@@ -76,7 +76,7 @@ const Permission = {
   update: (id, permission_json, callback) => {
     const sql = `
       UPDATE \`permissions\`
-      SET \`permission_json\` = ?
+      SET \`json\` = ?
       WHERE \`id\` = ?
     `;
 

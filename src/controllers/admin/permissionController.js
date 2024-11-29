@@ -163,7 +163,7 @@ exports.update = (req, res) => {
             new: permission_json,
           };
         }
-        Permission.update(id, permission_json, (err, result) => {
+        Permission.update(id, JSON.stringify(permission_json), (err, result) => {
           if (err) {
             console.error("Database error:", err);
             Common.adminActivityLog(
