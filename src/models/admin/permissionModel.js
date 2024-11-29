@@ -29,6 +29,7 @@ const Permission = {
   list: (callback) => {
     const sql = `
       SELECT 
+        id,
         role,
         json
       FROM \`permissions\`
