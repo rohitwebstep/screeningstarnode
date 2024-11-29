@@ -477,8 +477,7 @@ exports.bulkCreate = (req, res) => {
                     if (err) {
                       reject({
                         status: false,
-                        message:
-                          "Failed to create client application. Please try again.",
+                        message: err,
                         token: newToken,
                       });
                     } else {
