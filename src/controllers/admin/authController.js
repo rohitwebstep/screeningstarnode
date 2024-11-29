@@ -150,7 +150,6 @@ exports.login = (req, res) => {
         });
       }
 
-      return;
       // Generate new token and expiry time
       const token = generateToken();
       const newTokenExpiry = getTokenExpiry();
