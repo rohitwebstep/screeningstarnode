@@ -193,7 +193,6 @@ exports.update = (req, res) => {
           res.json({
             status: true,
             message: "Permission updated successfully",
-            service: result,
             token: newToken,
           });
         });
