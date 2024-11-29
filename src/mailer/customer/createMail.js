@@ -11,7 +11,9 @@ const generateTable = (branches, password) => {
   branches.forEach((branch, index) => {
     table += `<tr>
                 <td>${index + 1}</td>
-                <td>${branch.email}</td>
+                <td style="text-decoration: none; color: inherit; background-color: inherit; user-select: none;">${
+                  branch.email
+                }</td>
                 <td>${branch.name}</td>
                 <td>${password}</td>
               </tr>`;
