@@ -173,7 +173,7 @@ const clientApplication = {
             \`services\`,
             \`package\`,
             \`customer_id\`,
-            \`is_priority\`,
+            \`is_priority\`
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
