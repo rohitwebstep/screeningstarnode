@@ -36,68 +36,56 @@ exports.index = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ index: "view" });
-
-  // Step 1: Check if the branch is authorized for the action
-  BranchCommon.isBranchAuthorizedForAction(branch_id, action, (authResult) => {
-    if (!authResult.status) {
-      return res.status(403).json({
-        status: false,
-        message: authResult.message,
-      });
-    }
-
-    // Step 2: Verify the branch token
-    BranchCommon.isBranchTokenValid(
-      _token,
-      branch_id,
-      (tokenErr, tokenResult) => {
-        if (tokenErr) {
-          console.error("Error checking token validity:", tokenErr);
-          return res.status(500).json({
-            status: false,
-            message: tokenErr,
-          });
-        }
-
-        if (!tokenResult.status) {
-          return res.status(401).json({
-            status: false,
-            message: tokenResult.message,
-          });
-        }
-
-        const newToken = tokenResult.newToken;
-
-        // Step 3: Fetch client applications from database
-        Branch.index(branch_id, (dbErr, clientApplications) => {
-          if (dbErr) {
-            console.error("Database error:", dbErr);
-            return res.status(500).json({
-              status: false,
-              message: "An error occurred while fetching client applications.",
-              token: newToken,
-            });
-          }
-
-          // Calculate total application count
-          const totalApplicationCount = clientApplications
-            ? Object.values(clientApplications).reduce((total, statusGroup) => {
-                return total + statusGroup.applicationCount;
-              }, 0)
-            : 0;
-
-          return res.status(200).json({
-            status: true,
-            message: "Client applications fetched successfully.",
-            clientApplications,
-            totalApplicationCount,
-            token: newToken,
-          });
+  // Verify the branch token
+  BranchCommon.isBranchTokenValid(
+    _token,
+    branch_id,
+    (tokenErr, tokenResult) => {
+      if (tokenErr) {
+        console.error("Error checking token validity:", tokenErr);
+        return res.status(500).json({
+          status: false,
+          message: tokenErr,
         });
       }
-    );
-  });
+
+      if (!tokenResult.status) {
+        return res.status(401).json({
+          status: false,
+          message: tokenResult.message,
+        });
+      }
+
+      const newToken = tokenResult.newToken;
+
+      // Step 3: Fetch client applications from database
+      Branch.index(branch_id, (dbErr, clientApplications) => {
+        if (dbErr) {
+          console.error("Database error:", dbErr);
+          return res.status(500).json({
+            status: false,
+            message: "An error occurred while fetching client applications.",
+            token: newToken,
+          });
+        }
+
+        // Calculate total application count
+        const totalApplicationCount = clientApplications
+          ? Object.values(clientApplications).reduce((total, statusGroup) => {
+              return total + statusGroup.applicationCount;
+            }, 0)
+          : 0;
+
+        return res.status(200).json({
+          status: true,
+          message: "Client applications fetched successfully.",
+          clientApplications,
+          totalApplicationCount,
+          token: newToken,
+        });
+      });
+    }
+  );
 };
 
 // Controller to list all branches
@@ -172,69 +160,55 @@ exports.getClientSpocById = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ customer_info: "view" });
-  // Step 1: Check if the branch is authorized for the action
-  BranchCommon.isBranchAuthorizedForAction(branch_id, action, (authResult) => {
-    if (!authResult.status) {
-      return res.status(403).json({
-        status: false,
-        message: authResult.message,
-      });
-    }
+  // Step 1: Verify the branch token
+  BranchCommon.isBranchTokenValid(
+    _token,
+    branch_id,
+    (tokenErr, tokenResult) => {
+      if (tokenErr) {
+        console.error("Error checking token validity:", tokenErr);
+        return res.status(500).json({
+          status: false,
+          message: tokenErr,
+        });
+      }
 
-    // Step 2: Verify the branch token
-    BranchCommon.isBranchTokenValid(
-      _token,
-      branch_id,
-      (tokenErr, tokenResult) => {
-        if (tokenErr) {
-          console.error("Error checking token validity:", tokenErr);
+      if (!tokenResult.status) {
+        return res.status(401).json({
+          status: false,
+          message: tokenResult.message,
+        });
+      }
+
+      const newToken = tokenResult.newToken;
+
+      ClientSpoc.getClientSpocById(client_spoc_id, (err, currentClientSpoc) => {
+        if (err) {
+          console.error("Error fetching Client SPOC data:", err);
           return res.status(500).json({
             status: false,
-            message: tokenErr,
+            message: err.message,
+            token: newToken,
           });
         }
 
-        if (!tokenResult.status) {
-          return res.status(401).json({
+        if (!currentClientSpoc) {
+          return res.status(404).json({
             status: false,
-            message: tokenResult.message,
+            message: "Client SPOC not found",
+            token: newToken,
           });
         }
 
-        const newToken = tokenResult.newToken;
-
-        ClientSpoc.getClientSpocById(
-          client_spoc_id,
-          (err, currentClientSpoc) => {
-            if (err) {
-              console.error("Error fetching Client SPOC data:", err);
-              return res.status(500).json({
-                status: false,
-                message: err.message,
-                token: newToken,
-              });
-            }
-
-            if (!currentClientSpoc) {
-              return res.status(404).json({
-                status: false,
-                message: "Client SPOC not found",
-                token: newToken,
-              });
-            }
-
-            res.json({
-              status: true,
-              message: "Client SPOC retrieved successfully",
-              client_spoc: currentClientSpoc,
-              token: newToken,
-            });
-          }
-        );
-      }
-    );
-  });
+        res.json({
+          status: true,
+          message: "Client SPOC retrieved successfully",
+          client_spoc: currentClientSpoc,
+          token: newToken,
+        });
+      });
+    }
+  );
 };
 
 // Controller to list all branches
@@ -364,69 +338,57 @@ exports.filterOptionsForClientApplications = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ index: "view" });
-  // Step 2: Check if the branch is authorized for the action
-  BranchCommon.isBranchAuthorizedForAction(branch_id, action, (authResult) => {
-    if (!authResult.status) {
-      return res.status(403).json({
-        status: false,
-        message: authResult.message, // Return the authorization error message
-      });
-    }
+  // Verify the branch token
+  BranchCommon.isBranchTokenValid(
+    _token,
+    branch_id,
+    (tokenErr, tokenResult) => {
+      if (tokenErr) {
+        console.error("Error checking token validity:", tokenErr);
+        return res.status(500).json({
+          status: false,
+          message: tokenErr,
+        });
+      }
 
-    // Step 3: Verify the branch token
-    BranchCommon.isBranchTokenValid(
-      _token,
-      branch_id,
-      (tokenErr, tokenResult) => {
-        if (tokenErr) {
-          console.error("Error checking token validity:", tokenErr);
-          return res.status(500).json({
-            status: false,
-            message: tokenErr,
-          });
-        }
+      if (!tokenResult.status) {
+        return res.status(401).json({
+          status: false,
+          message: tokenResult.message, // Return the token validation message
+        });
+      }
 
-        if (!tokenResult.status) {
-          return res.status(401).json({
-            status: false,
-            message: tokenResult.message, // Return the token validation message
-          });
-        }
-
-        Branch.filterOptionsForClientApplications(
-          branch_id,
-          (err, filterOptions) => {
-            if (err) {
-              console.error("Database error:", err);
-              return res.status(500).json({
-                status: false,
-                message:
-                  "An error occurred while fetching Filter options data.",
-                error: err,
-                token: newToken,
-              });
-            }
-
-            if (!filterOptions) {
-              return res.status(404).json({
-                status: false,
-                message: "Filter options Data not found.",
-                token: newToken,
-              });
-            }
-
-            res.status(200).json({
-              status: true,
-              message: "Filter options fetched successfully.",
-              filterOptions,
+      Branch.filterOptionsForClientApplications(
+        branch_id,
+        (err, filterOptions) => {
+          if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({
+              status: false,
+              message: "An error occurred while fetching Filter options data.",
+              error: err,
               token: newToken,
             });
           }
-        );
-      }
-    );
-  });
+
+          if (!filterOptions) {
+            return res.status(404).json({
+              status: false,
+              message: "Filter options Data not found.",
+              token: newToken,
+            });
+          }
+
+          res.status(200).json({
+            status: true,
+            message: "Filter options fetched successfully.",
+            filterOptions,
+            token: newToken,
+          });
+        }
+      );
+    }
+  );
 };
 
 exports.filterOptionsForCandidateApplications = (req, res) => {
@@ -458,69 +420,57 @@ exports.filterOptionsForCandidateApplications = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ index: "view" });
-  // Step 2: Check if the branch is authorized for the action
-  BranchCommon.isBranchAuthorizedForAction(branch_id, action, (authResult) => {
-    if (!authResult.status) {
-      return res.status(403).json({
-        status: false,
-        message: authResult.message, // Return the authorization error message
-      });
-    }
+  // Step 2: Verify the branch token
+  BranchCommon.isBranchTokenValid(
+    _token,
+    branch_id,
+    (tokenErr, tokenResult) => {
+      if (tokenErr) {
+        console.error("Error checking token validity:", tokenErr);
+        return res.status(500).json({
+          status: false,
+          message: tokenErr,
+        });
+      }
 
-    // Step 3: Verify the branch token
-    BranchCommon.isBranchTokenValid(
-      _token,
-      branch_id,
-      (tokenErr, tokenResult) => {
-        if (tokenErr) {
-          console.error("Error checking token validity:", tokenErr);
-          return res.status(500).json({
-            status: false,
-            message: tokenErr,
-          });
-        }
+      if (!tokenResult.status) {
+        return res.status(401).json({
+          status: false,
+          message: tokenResult.message, // Return the token validation message
+        });
+      }
 
-        if (!tokenResult.status) {
-          return res.status(401).json({
-            status: false,
-            message: tokenResult.message, // Return the token validation message
-          });
-        }
-
-        Branch.filterOptionsForCandidateApplications(
-          branch_id,
-          (err, filterOptions) => {
-            if (err) {
-              console.error("Database error:", err);
-              return res.status(500).json({
-                status: false,
-                message:
-                  "An error occurred while fetching Filter options data.",
-                error: err,
-                token: newToken,
-              });
-            }
-
-            if (!filterOptions) {
-              return res.status(404).json({
-                status: false,
-                message: "Filter options Data not found.",
-                token: newToken,
-              });
-            }
-
-            res.status(200).json({
-              status: true,
-              message: "Filter options fetched successfully.",
-              filterOptions,
+      Branch.filterOptionsForCandidateApplications(
+        branch_id,
+        (err, filterOptions) => {
+          if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({
+              status: false,
+              message: "An error occurred while fetching Filter options data.",
+              error: err,
               token: newToken,
             });
           }
-        );
-      }
-    );
-  });
+
+          if (!filterOptions) {
+            return res.status(404).json({
+              status: false,
+              message: "Filter options Data not found.",
+              token: newToken,
+            });
+          }
+
+          res.status(200).json({
+            status: true,
+            message: "Filter options fetched successfully.",
+            filterOptions,
+            token: newToken,
+          });
+        }
+      );
+    }
+  );
 };
 
 // Controller to update a branch
@@ -1249,7 +1199,7 @@ exports.notifications = (req, res) => {
     }
 
     // Authorization action
-    const action = JSON.stringify({ client_application: "create" });
+    const action = "client_manager";
 
     BranchCommon.isBranchAuthorizedForAction(branchID, action, (result) => {
       if (!result.status) {

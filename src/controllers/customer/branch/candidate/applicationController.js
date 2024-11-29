@@ -68,7 +68,7 @@ exports.create = (req, res) => {
         message: "Conflict: The email address has already been used.",
       });
     }
-    const action = JSON.stringify({ candidate_application: "create" });
+    const action = "candidate_manager";
     BranchCommon.isBranchAuthorizedForAction(branch_id, action, (result) => {
       if (!result.status) {
         return res.status(403).json({
@@ -359,7 +359,7 @@ exports.bulkCreate = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ candidate_application: "create" });
+  const action = "candidate_manager";
 
   // Check branch authorization
   BranchCommon.isBranchAuthorizedForAction(branch_id, action, (result) => {
@@ -874,7 +874,7 @@ exports.list = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ candidate_application: "view" });
+  const action = "candidate_manager";
   BranchCommon.isBranchAuthorizedForAction(branch_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
@@ -954,7 +954,7 @@ exports.update = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ candidate_application: "update" });
+  const action = "candidate_manager";
   BranchCommon.isBranchAuthorizedForAction(branch_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({
@@ -1137,8 +1137,7 @@ exports.delete = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ candidate_application: "delete" });
-
+  const action = "candidate_manager";
   // Check branch authorization
   BranchCommon.isBranchAuthorizedForAction(branch_id, action, (result) => {
     if (!result.status) {
@@ -1258,7 +1257,7 @@ exports.createCandidateAppListings = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ client_application: "create" });
+  const action = "client_manager";
   BranchCommon.isBranchAuthorizedForAction(branch_id, action, (result) => {
     if (!result.status) {
       return res.status(403).json({

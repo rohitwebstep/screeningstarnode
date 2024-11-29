@@ -25,7 +25,7 @@ exports.list = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ report_case_status: "view" });
+  const action = "verification_status";
 
   // Check branch authorization for the action
   BranchCommon.isBranchAuthorizedForAction(branch_id, action, (authResult) => {
@@ -117,7 +117,7 @@ exports.annexureDataByServiceIds = (req, res) => {
     });
   }
 
-  const action = JSON.stringify({ report_case_status: "view" });
+  const action = "verification_status";
   BranchCommon.isBranchAuthorizedForAction(branch_id, action, (authResult) => {
     if (!authResult.status) {
       return res.status(403).json({

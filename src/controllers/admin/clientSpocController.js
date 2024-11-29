@@ -328,7 +328,7 @@ exports.listByBranchAuth = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
-  const action = JSON.stringify({ client_application: "create" });
+  const action = "client_manager";
 
   // Check branch authorization
   BranchCommon.isBranchAuthorizedForAction(branch_id, action, (result) => {
