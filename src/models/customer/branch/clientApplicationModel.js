@@ -178,16 +178,16 @@ const clientApplication = {
         `;
 
           const values = [
-            new_application_id,
-            name,
-            employee_id,
-            client_spoc_id,
-            location,
-            branch_id,
-            serviceIds,
-            packageIds,
-            customer_id,
-            is_priority,
+            new_application_id || "N/A",
+            name || "N/A",
+            employee_id || "N/A",
+            client_spoc_id || "N/A",
+            location || "N/A",
+            branch_id || "N/A",
+            serviceIds || "N/A",
+            packageIds || "N/A",
+            customer_id || "N/A",
+            is_priority || "N/A",
           ];
 
           connection.query(sql, values, (err, results) => {
