@@ -27,9 +27,9 @@ async function createMail(
   action,
   client_name,
   branches,
+  password,
   is_head,
-  customerData,
-  password // Added password parameter
+  customerData
 ) {
   let connection;
 
