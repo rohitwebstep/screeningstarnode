@@ -4,6 +4,7 @@ const authController = require("../../../controllers/customer/branch/authControl
 const profileController = require("../../../controllers/customer/branch/profileController");
 const customerController = require("../../../controllers/customer/profileController");
 const clientRoutes = require("./clientRoutes");
+const subUserRoutes = require("./subUserRoutes");
 const reportCaseStatusRoutes = require("./reportCaseStatusRoutes");
 const candidateRoutes = require("./candidateRoutes");
 const clientSpocController = require("../../../controllers/admin/clientSpocController");
@@ -46,6 +47,7 @@ router.delete("/delete", profileController.delete);
 router.get("/notification", profileController.notifications);
 
 router.use("/client-application", clientRoutes);
+router.use("/sub-user", subUserRoutes);
 router.use("/report-case-status", reportCaseStatusRoutes);
 router.use("/candidate-application", candidateRoutes);
 module.exports = router;
