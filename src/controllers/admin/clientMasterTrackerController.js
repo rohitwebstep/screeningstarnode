@@ -2159,7 +2159,8 @@ exports.upload = async (req, res) => {
 };
 
 exports.annexureDataByServiceIds = (req, res) => {
-  const { service_ids, application_id, admin_id, _token } = req.query;
+  const { service_ids, report_download, application_id, admin_id, _token } =
+    req.query;
 
   let missingFields = [];
   if (
@@ -2270,7 +2271,7 @@ exports.annexureDataByServiceIds = (req, res) => {
             }
 
             const parsedData = JSON.parse(reportFormJson.json);
-            const db_table = parsedData.db_table.replace(/-/g, "_"); // Modify table name
+            const db_table = parsedData.db_table.replace(/-/g, "_");
             const heading = parsedData.heading;
 
             ClientMasterTrackerModel.annexureData(
@@ -2321,12 +2322,34 @@ exports.annexureDataByServiceIds = (req, res) => {
       function finalizeRequest() {
         pendingRequests -= 1;
         if (pendingRequests === 0) {
-          return res.status(200).json({
-            status: true,
-            message: "Applications fetched successfully.",
-            results: annexureResults,
-            token: newToken,
-          });
+          if (report_download) {
+            ClientMasterTrackerModel.updateReportDownloadStatus(
+              application_id,
+              (err) => {
+                if (err) {
+                  return res.status(500).json({
+                    message: "Error updating report download status",
+                    error: err,
+                    token: newToken,
+                  });
+                }
+
+                return res.status(200).json({
+                  status: true,
+                  message: "Applications fetched successfully.",
+                  results: annexureResults,
+                  token: newToken,
+                });
+              }
+            );
+          } else {
+            return res.status(200).json({
+              status: true,
+              message: "Applications fetched successfully.",
+              results: annexureResults,
+              token: newToken,
+            });
+          }
         }
       }
     });
