@@ -58,6 +58,7 @@ const common = {
           connectionRelease(connection);
           callback(null, { status: true, message: "Token is valid" });
         } else {
+          return callback(null, { status: true, message: "Token is valid" });
           const newToken = generateToken();
           const newTokenExpiry = getTokenExpiry();
 

@@ -189,9 +189,8 @@ exports.login = (req, res) => {
                 // Get current time and token expiry
                 const currentTime = getCurrentTime();
                 const tokenExpiry = new Date(record.token_expiry); // Convert token_expiry to Date object
-                console.log(`record - `, record);
-                console.log(`currentTime`, currentTime);
-                console.log(`tokenExpiry`, tokenExpiry);
+
+                /*
                 // Check if the existing token is still valid
                 if (record.login_token && tokenExpiry > currentTime) {
                   Common.branchLoginLog(
@@ -210,6 +209,7 @@ exports.login = (req, res) => {
                     } is currently logged in. Please try again later.`,
                   });
                 }
+                */
 
                 // Generate new token and expiry time
                 const token = generateToken();
