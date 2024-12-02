@@ -538,31 +538,38 @@ const Customer = {
             }
 
             try {
-              // Update service titles for each group of services
               for (const group of servicesData) {
-                for (const service of group.services) {
-                  const serviceSql = `SELECT title FROM services WHERE id = ?`;
-                  const [rows] = await new Promise((resolve, reject) => {
-                    connection.query(
-                      serviceSql,
-                      [service.serviceId],
-                      (err, results) => {
-                        if (err) {
-                          console.error(
-                            "Error querying service title for service ID:",
-                            service.serviceId,
-                            err
-                          );
-                          return reject(err);
+                if (Array.isArray(group.services)) {
+                  // Ensure 'group.services' is an array
+                  for (const service of group.services) {
+                    const serviceSql = `SELECT title FROM services WHERE id = ?`;
+                    const [rows] = await new Promise((resolve, reject) => {
+                      connection.query(
+                        serviceSql,
+                        [service.serviceId],
+                        (err, results) => {
+                          if (err) {
+                            console.error(
+                              "Error querying service title for service ID:",
+                              service.serviceId,
+                              err
+                            );
+                            return reject(err);
+                          }
+                          resolve(results);
                         }
-                        resolve(results);
-                      }
-                    );
-                  });
+                      );
+                    });
 
-                  if (rows && rows.length > 0 && rows[0].title) {
-                    service.serviceTitle = rows[0].title;
+                    if (rows && rows.length > 0 && rows[0].title) {
+                      service.serviceTitle = rows[0].title;
+                    }
                   }
+                } else {
+                  console.warn(
+                    "group.services is not an array:",
+                    group.services
+                  );
                 }
               }
             } catch (err) {
