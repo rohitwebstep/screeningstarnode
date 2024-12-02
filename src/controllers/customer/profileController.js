@@ -604,8 +604,6 @@ exports.create = (req, res) => {
                                 message:
                                   "Customer and branches created successfully.",
                                 token: newToken,
-                                data: { customerId },
-                                password,
                               });
                             }
                           })
