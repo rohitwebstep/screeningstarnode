@@ -146,7 +146,7 @@ async function qcReportCheckMail(
 
     // Send email
     const mailOptions = {
-      from: `"ScreeningStar" <${smtp.username}>`,
+      from: `"${smtp.title}" <${smtp.username}>`,
       to: toList,
       cc: ccList,
       subject: email.title,

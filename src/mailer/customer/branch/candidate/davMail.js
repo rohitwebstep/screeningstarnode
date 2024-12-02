@@ -84,7 +84,7 @@ async function davMail(
 
     // Send email
     const info = await transporter.sendMail({
-      from: `"ScreeningStar" <${smtp.username}>`,
+      from: `"${smtp.title}" <${smtp.username}>`,
       to: toList,
       subject: email.title,
       html: template,

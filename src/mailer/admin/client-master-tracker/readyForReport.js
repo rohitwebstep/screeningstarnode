@@ -111,7 +111,7 @@ async function readyForReport(
 
     // Send email
     const info = await transporter.sendMail({
-      from: `"ScreeningStar" <${smtp.username}>`,
+      from: `"${smtp.title}" <${smtp.username}>`,
       to: toList, // Main recipient list
       cc: ccList, // CC recipient list
       subject: email.title,
