@@ -1239,17 +1239,11 @@ const Customer = {
 
   updateReportDownloadStatus: (id, callback) => {
     const sql = `
-      UPDATE client_applications ca
-      JOIN cmt ON ca.id = cmt.client_application_id
+      UPDATE client_applications
       SET ca.is_report_downloaded = 1
-      WHERE 
-        ca.id = ? 
-        AND cmt.report_date IS NOT NULL
-        AND TRIM(cmt.report_date) != '0000-00-00'
-        AND TRIM(cmt.report_date) != ''
-        AND cmt.overall_status IN ('complete', 'completed')
-        AND (cmt.is_verify = 'yes' OR cmt.is_verify = 1 OR cmt.is_verify = '1');
+      WHERE ca.id = ?
     `;
+
     startConnection((err, connection) => {
       if (err) {
         return callback(err, null);
@@ -1259,7 +1253,7 @@ const Customer = {
         connectionRelease(connection);
 
         if (queryErr) {
-          console.error("51", queryErr);
+          console.error("Error in query execution:", queryErr);
           return callback(queryErr, null);
         }
         callback(null, results);
