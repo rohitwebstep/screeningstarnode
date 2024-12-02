@@ -2398,7 +2398,7 @@ exports.annexureDataByServiceIds = (req, res) => {
       function finalizeRequest() {
         pendingRequests -= 1;
         if (pendingRequests === 0) {
-          if (report_download) {
+          if (report_download == 1 || report_download == "1") {
             ClientMasterTrackerModel.updateReportDownloadStatus(
               application_id,
               (err) => {
