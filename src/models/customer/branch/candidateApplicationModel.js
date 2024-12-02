@@ -45,6 +45,7 @@ const candidateApplication = {
   // Method to create a new candidate application
   create: (data, callback) => {
     const {
+      sub_user_id,
       branch_id,
       name,
       employee_id,
@@ -58,6 +59,7 @@ const candidateApplication = {
     const sql = `
         INSERT INTO \`candidate_applications\` (
           \`branch_id\`,
+          \`sub_user_id\`,
           \`name\`,
           \`employee_id\`,
           \`mobile_number\`,
@@ -65,11 +67,12 @@ const candidateApplication = {
           \`services\`,
           \`package\`,
           \`customer_id\`
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
     const values = [
       branch_id,
+      sub_user_id || null,
       name,
       employee_id,
       mobile_number,
@@ -122,7 +125,9 @@ const candidateApplication = {
         const servicePromises = results.map((application) => {
           return new Promise((resolve, reject) => {
             // Extract service IDs
-            const servicesIds = application.services ? application.services.split(",") : [];
+            const servicesIds = application.services
+              ? application.services.split(",")
+              : [];
 
             if (servicesIds.length === 0) {
               finalResults.push({ ...application, serviceNames: [] }); // No services to fetch
@@ -132,21 +137,27 @@ const candidateApplication = {
             // Query for service titles
             const servicesQuery =
               "SELECT title FROM `services` WHERE id IN (?)";
-            connection.query(servicesQuery, [servicesIds], (err, servicesResults) => {
-              if (err) {
-                console.error("Database query error for services:", err);
-                return reject(err);
+            connection.query(
+              servicesQuery,
+              [servicesIds],
+              (err, servicesResults) => {
+                if (err) {
+                  console.error("Database query error for services:", err);
+                  return reject(err);
+                }
+
+                const servicesTitles = servicesResults.map(
+                  (service) => service.title
+                );
+
+                // Push the application with the corresponding service titles
+                finalResults.push({
+                  ...application,
+                  serviceNames: servicesTitles, // Add services titles to the result
+                });
+                resolve();
               }
-
-              const servicesTitles = servicesResults.map((service) => service.title);
-
-              // Push the application with the corresponding service titles
-              finalResults.push({
-                ...application,
-                serviceNames: servicesTitles, // Add services titles to the result
-              });
-              resolve();
-            });
+            );
           });
         });
 

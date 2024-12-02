@@ -1859,7 +1859,7 @@ exports.delete = (req, res) => {
 };
 
 exports.customerBasicInfoWithBranchAuth = (req, res) => {
-  const { customer_id, branch_id, branch_token } = req.query;
+  const { customer_id, sub_user_id, branch_id, branch_token } = req.query;
 
   let missingFields = [];
   if (!customer_id || customer_id === "") missingFields.push("Customer ID");
@@ -1874,33 +1874,38 @@ exports.customerBasicInfoWithBranchAuth = (req, res) => {
   }
 
   // Verify admin token
-  BranchCommon.isBranchTokenValid(branch_token, branch_id, (err, result) => {
-    if (err) {
-      console.error("Error checking token validity:", err);
-      return res.status(500).json({ status: false, message: err.message });
-    }
-
-    if (!result.status) {
-      return res.status(401).json({ status: false, message: result.message });
-    }
-
-    const newToken = result.newToken;
-
-    Customer.basicInfoByID(customer_id, (err, result) => {
+  BranchCommon.isBranchTokenValid(
+    branch_token,
+    sub_user_id || null,
+    branch_id,
+    (err, result) => {
       if (err) {
-        console.error("Database error:", err);
-        return res
-          .status(500)
-          .json({ status: false, message: err.message, token: newToken });
+        console.error("Error checking token validity:", err);
+        return res.status(500).json({ status: false, message: err.message });
       }
 
-      res.json({
-        status: true,
-        message: "Customer Info fetched successfully",
-        customers: result,
-        totalResults: result.length,
-        token: newToken,
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
+      }
+
+      const newToken = result.newToken;
+
+      Customer.basicInfoByID(customer_id, (err, result) => {
+        if (err) {
+          console.error("Database error:", err);
+          return res
+            .status(500)
+            .json({ status: false, message: err.message, token: newToken });
+        }
+
+        res.json({
+          status: true,
+          message: "Customer Info fetched successfully",
+          customers: result,
+          totalResults: result.length,
+          token: newToken,
+        });
       });
-    });
-  });
+    }
+  );
 };

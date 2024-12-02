@@ -7,7 +7,7 @@ const Service = require("../../../models/admin/serviceModel");
 const reportCaseStatus = require("../../../models/customer/branch/reportCaseStatusModel");
 
 exports.list = (req, res) => {
-  const { branch_id, _token } = req.query;
+  const { sub_user_id, branch_id, _token } = req.query;
 
   // Validate required fields
   const missingFields = [];
@@ -39,6 +39,7 @@ exports.list = (req, res) => {
     // Verify branch token
     BranchCommon.isBranchTokenValid(
       _token,
+      sub_user_id || null,
       branch_id,
       (tokenErr, tokenResult) => {
         if (tokenErr) {
@@ -90,7 +91,7 @@ exports.list = (req, res) => {
 };
 
 exports.annexureDataByServiceIds = (req, res) => {
-  const { service_ids, application_id, branch_id, _token } = req.query;
+  const { service_ids, application_id, sub_user_id, branch_id, _token } = req.query;
   let missingFields = [];
   if (!service_ids || service_ids === "" || service_ids === "undefined") {
     missingFields.push("Service ID");
@@ -128,6 +129,7 @@ exports.annexureDataByServiceIds = (req, res) => {
 
     BranchCommon.isBranchTokenValid(
       _token,
+      sub_user_id || null,
       branch_id,
       (tokenErr, tokenResult) => {
         if (tokenErr) {

@@ -316,7 +316,7 @@ exports.list = (req, res) => {
 };
 
 exports.listByBranchAuth = (req, res) => {
-  const { branch_id, _token } = req.query;
+  const { sub_user_id, branch_id, _token } = req.query;
 
   let missingFields = [];
   if (!branch_id || branch_id === "") missingFields.push("Admin ID");
@@ -340,35 +340,42 @@ exports.listByBranchAuth = (req, res) => {
     }
 
     // Validate branch token
-    BranchCommon.isBranchTokenValid(_token, branch_id, (err, result) => {
-      if (err) {
-        console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
-      }
-
-      if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message });
-      }
-
-      const newToken = result.newToken;
-
-      ClientSpoc.list((err, result) => {
+    BranchCommon.isBranchTokenValid(
+      _token,
+      sub_user_id || null,
+      branch_id,
+      (err, result) => {
         if (err) {
-          console.error("Database error:", err);
-          return res
-            .status(500)
-            .json({ status: false, message: err.message, token: newToken });
+          console.error("Error checking token validity:", err);
+          return res.status(500).json({ status: false, message: err.message });
         }
 
-        res.json({
-          status: true,
-          message: "Billing SPOCs fetched successfully",
-          client_spocs: result,
-          totalResults: result.length,
-          token: newToken,
+        if (!result.status) {
+          return res
+            .status(401)
+            .json({ status: false, message: result.message });
+        }
+
+        const newToken = result.newToken;
+
+        ClientSpoc.list((err, result) => {
+          if (err) {
+            console.error("Database error:", err);
+            return res
+              .status(500)
+              .json({ status: false, message: err.message, token: newToken });
+          }
+
+          res.json({
+            status: true,
+            message: "Billing SPOCs fetched successfully",
+            client_spocs: result,
+            totalResults: result.length,
+            token: newToken,
+          });
         });
-      });
-    });
+      }
+    );
   });
 };
 

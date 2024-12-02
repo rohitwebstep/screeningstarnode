@@ -173,7 +173,7 @@ async function bulkCreateMail(
 
     // Send email
     const info = await transporter.sendMail({
-      from: smtp.username,
+      from: `"ScreeningStar" <${smtp.username}>`,
       to: toList, // Main recipient list
       cc: ccList, // CC recipient list
       subject: email.title,

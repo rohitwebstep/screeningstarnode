@@ -269,7 +269,7 @@ exports.login = (req, res) => {
 };
 
 exports.updatePassword = (req, res) => {
-  const { new_password, branch_id, _token } = req.body;
+  const { new_password, sub_user_id, branch_id, _token } = req.body;
 
   // Validate required fields
   const missingFields = [];
@@ -310,61 +310,66 @@ exports.updatePassword = (req, res) => {
   }
 
   // Validate branch token
-  Common.isBranchTokenValid(_token, branch_id, (err, result) => {
-    if (err) {
-      console.error("Error checking token validity:", err);
-      return res.status(500).json({ status: false, message: err.message });
-    }
-
-    if (!result.status) {
-      return res.status(401).json({ status: false, message: result.message });
-    }
-
-    const newToken = result.newToken;
-
-    // Check if employee ID is unique
-    BranchAuth.updatePassword(new_password, branch_id, (err, result) => {
+  Common.isBranchTokenValid(
+    _token,
+    sub_user_id || null,
+    branch_id,
+    (err, result) => {
       if (err) {
-        console.error("Database error during password update:", err);
+        console.error("Error checking token validity:", err);
+        return res.status(500).json({ status: false, message: err.message });
+      }
+
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
+      }
+
+      const newToken = result.newToken;
+
+      // Check if employee ID is unique
+      BranchAuth.updatePassword(new_password, branch_id, (err, result) => {
+        if (err) {
+          console.error("Database error during password update:", err);
+          Common.branchActivityLog(
+            branch_id,
+            "Password",
+            "Update",
+            "o",
+            "Branch attempted to update password",
+            null,
+            () => {}
+          );
+          return res.status(500).json({
+            status: false,
+            message: "Failed to update password. Please try again later.",
+            token: newToken,
+          });
+        }
+
         Common.branchActivityLog(
           branch_id,
           "Password",
           "Update",
-          "o",
-          "Branch attempted to update password",
+          "1",
+          "Branch successfully updated password",
           null,
           () => {}
         );
-        return res.status(500).json({
-          status: false,
-          message: "Failed to update password. Please try again later.",
+
+        return res.status(200).json({
+          status: true,
+          message: "Password updated successfully.",
+          data: result,
           token: newToken,
         });
-      }
-
-      Common.branchActivityLog(
-        branch_id,
-        "Password",
-        "Update",
-        "1",
-        "Branch successfully updated password",
-        null,
-        () => {}
-      );
-
-      return res.status(200).json({
-        status: true,
-        message: "Password updated successfully.",
-        data: result,
-        token: newToken,
       });
-    });
-  });
+    }
+  );
 };
 
 // Branch logout handler
 exports.logout = (req, res) => {
-  const { branch_id, _token } = req.query;
+  const { sub_user_id, branch_id, _token } = req.query;
 
   // Validate required fields and create a custom message
   let missingFields = [];
@@ -379,37 +384,42 @@ exports.logout = (req, res) => {
   }
 
   // Validate the branch token
-  Common.isBranchTokenValid(_token, branch_id, (err, result) => {
-    if (err) {
-      console.error("Error checking token validity:", err);
-      return res.status(500).json(err);
-    }
-
-    if (!result.status) {
-      return res.status(401).json({ status: false, message: result.message });
-    }
-
-    // Update the token in the database to null
-    BranchAuth.logout(branch_id, (err) => {
+  Common.isBranchTokenValid(
+    _token,
+    sub_user_id || null,
+    branch_id,
+    (err, result) => {
       if (err) {
-        console.error("Database error:", err);
-        return res.status(500).json({
-          status: false,
-          message: `Error logging out: ${err}`,
-        });
+        console.error("Error checking token validity:", err);
+        return res.status(500).json(err);
       }
 
-      res.json({
-        status: true,
-        message: "Logout successful",
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
+      }
+
+      // Update the token in the database to null
+      BranchAuth.logout(branch_id, (err) => {
+        if (err) {
+          console.error("Database error:", err);
+          return res.status(500).json({
+            status: false,
+            message: `Error logging out: ${err}`,
+          });
+        }
+
+        res.json({
+          status: true,
+          message: "Logout successful",
+        });
       });
-    });
-  });
+    }
+  );
 };
 
 // Branch login validation handler
 exports.validateLogin = (req, res) => {
-  const { branch_id, _token } = req.body;
+  const { sub_user_id, branch_id, _token } = req.body;
   const missingFields = [];
   // Validate required fields
   if (!branch_id) {
@@ -482,25 +492,32 @@ exports.validateLogin = (req, res) => {
     }
 
     // Check if the existing token is still valid
-    Common.isBranchTokenValid(_token, branch_id, (err, result) => {
-      if (err) {
-        console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
+    Common.isBranchTokenValid(
+      _token,
+      sub_user_id || null,
+      branch_id,
+      (err, result) => {
+        if (err) {
+          console.error("Error checking token validity:", err);
+          return res.status(500).json({ status: false, message: err.message });
+        }
+
+        if (!result.status) {
+          return res
+            .status(401)
+            .json({ status: false, message: result.message });
+        }
+
+        const newToken = result.newToken;
+
+        // Here you can respond with success and the new token if applicable
+        return res.status(200).json({
+          status: true,
+          message: "Login verified successful",
+          token: newToken,
+        });
       }
-
-      if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message });
-      }
-
-      const newToken = result.newToken;
-
-      // Here you can respond with success and the new token if applicable
-      return res.status(200).json({
-        status: true,
-        message: "Login verified successful",
-        token: newToken,
-      });
-    });
+    );
   });
 };
 

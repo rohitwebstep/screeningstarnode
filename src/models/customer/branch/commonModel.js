@@ -12,17 +12,22 @@ const generateToken = () => crypto.randomBytes(32).toString("hex");
 const getTokenExpiry = () => new Date(Date.now() + 3600000);
 
 const common = {
-  isBranchTokenValid: (_token, branch_id, callback) => {
+  isBranchTokenValid: (_token, sub_user_id, branch_id, callback) => {
     if (typeof callback !== "function") {
       console.error("Callback is not a function");
       return;
     }
-
-    const sql = `
-      SELECT \`login_token\`, \`token_expiry\`
+    let sql;
+    if (sub_user_id) {
+      sql = `SELECT \`login_token\`, \`token_expiry\`
+      FROM \`branch_sub_users\`
+      WHERE \`id\` = ?`;
+    } else {
+      sql = `SELECT \`login_token\`, \`token_expiry\`
       FROM \`branches\`
       WHERE \`id\` = ?
     `;
+    }
 
     startConnection((err, connection) => {
       if (err) {

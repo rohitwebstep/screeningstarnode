@@ -151,7 +151,7 @@ async function acknowledgementMail(
       .join(", ");
 
     const info = await transporter.sendMail({
-      from: smtp.username,
+      from: `"ScreeningStar" <${smtp.username}>`,
       to: recipientList.join(", "),
       cc: ccList,
       subject: email.title,
