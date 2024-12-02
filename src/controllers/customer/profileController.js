@@ -1628,8 +1628,7 @@ exports.active = (req, res) => {
 
           res.status(200).json({
             status: true,
-            message: "Customer status updated successfully.",
-            customer: result,
+            message: "Customer status has been successfully updated to active.",
             token: newToken,
           });
         });
@@ -1735,8 +1734,7 @@ exports.inactive = (req, res) => {
 
           res.status(200).json({
             status: true,
-            message: "Customer status updated successfully.",
-            customer: result,
+            message: "Customer status has been successfully updated to inactive.",
             token: newToken,
           });
         });
