@@ -1240,8 +1240,8 @@ const Customer = {
   updateReportDownloadStatus: (id, callback) => {
     const sql = `
       UPDATE client_applications
-      SET ca.is_report_downloaded = 1
-      WHERE ca.id = ?
+      SET is_report_downloaded = 1
+      WHERE id = ?
     `;
 
     /*
