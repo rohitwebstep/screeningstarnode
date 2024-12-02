@@ -147,7 +147,7 @@ exports.list = (req, res) => {
 
         res.json({
           status: true,
-          message: "Billing SPOCs fetched successfully",
+          message: "Authorized Details fetched successfully",
           authorized_details: result,
           totalResults: result.length,
           token: newToken,

@@ -45,7 +45,7 @@ exports.applicationStatus = (req, res) => {
 
         res.json({
           status: true,
-          message: "Billing SPOCs fetched successfully",
+          message: "Applications fetched successfully",
           authorized_details: result,
           totalResults: result.length,
           token: newToken,
@@ -98,7 +98,7 @@ exports.reportGeneration = (req, res) => {
 
         res.json({
           status: true,
-          message: "Billing SPOCs fetched successfully",
+          message: "Applications fetched successfully",
           authorized_details: result,
           totalResults: result.length,
           token: newToken,

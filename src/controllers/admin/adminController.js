@@ -59,7 +59,7 @@ exports.list = (req, res) => {
 
         res.json({
           status: true,
-          message: "Billing SPOCs fetched successfully",
+          message: "Admins fetched successfully",
           client_spocs: result,
           totalResults: result.length,
           token: newToken,
@@ -177,7 +177,7 @@ exports.addClientListings = (req, res) => {
         ]) => {
           res.json({
             status: true,
-            message: "Billing SPOCs fetched successfully",
+            message: "Lists fetched successfully",
             data: {
               admins,
               authorized_details: authorizedDetails,

@@ -305,7 +305,7 @@ exports.list = (req, res) => {
 
         res.json({
           status: true,
-          message: "Billing SPOCs fetched successfully",
+          message: "Client SPOCs fetched successfully",
           client_spocs: result,
           totalResults: result.length,
           token: newToken,
@@ -368,7 +368,7 @@ exports.listByBranchAuth = (req, res) => {
 
           res.json({
             status: true,
-            message: "Billing SPOCs fetched successfully",
+            message: "Client SPOCs fetched successfully",
             client_spocs: result,
             totalResults: result.length,
             token: newToken,

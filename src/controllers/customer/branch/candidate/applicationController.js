@@ -1351,7 +1351,7 @@ exports.createCandidateAppListings = (req, res) => {
         Promise.all(dataPromises).then(([customer, candidateApplications]) => {
           res.json({
             status: true,
-            message: "Billing SPOCs fetched successfully",
+            message: "Listings fetched successfully",
             data: {
               customer,
               candidateApplications,

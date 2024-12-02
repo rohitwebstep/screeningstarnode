@@ -147,7 +147,7 @@ exports.list = (req, res) => {
 
         res.json({
           status: true,
-          message: "Billing SPOCs fetched successfully",
+          message: "Billing Escalations fetched successfully",
           billing_escalations: result,
           totalResults: result.length,
           token: newToken,

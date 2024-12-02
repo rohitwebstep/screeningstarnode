@@ -909,7 +909,6 @@ exports.generateReport = (req, res) => {
           return res.status(404).json({
             status: false,
             message: "Branch not found with customer match.",
-            branch: currentBranch,
             token: newToken,
           });
         }
