@@ -46,6 +46,7 @@ exports.index = async (req, res) => {
         console.error("TAT Delay List Error:", notificationErr);
         return res.status(500).json({
           status: false,
+          err: notificationErr,
           message: "Error fetching TAT delay list.",
         });
       }
