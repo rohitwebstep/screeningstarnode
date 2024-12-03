@@ -183,6 +183,10 @@ const notification = {
                     );
                   }
 
+                  const additionalCondition = tatDelaysApplicationIds.length
+                    ? `AND ca.id NOT IN (${tatDelaysApplicationIds.join(",")})`
+                    : "";
+
                   const sqlClient = `
                   SELECT 
                       ca.name AS client_applicant_name, 
@@ -211,7 +215,7 @@ const notification = {
                       ON ca.id = cmt.client_application_id
                   WHERE 
                       cmt.client_application_id IS NULL
-                      AND ca.id NOT IN (${tatDelaysApplicationIds})
+                      ${additionalCondition}
                   ORDER BY 
                       ca.created_at DESC;
                 `;
