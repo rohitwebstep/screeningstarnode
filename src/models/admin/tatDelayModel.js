@@ -27,9 +27,7 @@ const tatDelay = {
       JOIN branches AS br ON br.id = ca.branch_id
       LEFT JOIN customer_metas AS cm ON cm.customer_id = cust.id
       LEFT JOIN cmt_applications AS cmt ON ca.id = cmt.client_application_id
-      WHERE cmt.report_date IS NULL 
-       OR TRIM(cmt.report_date) = '0000-00-00'
-       OR TRIM(cmt.report_date) = '';
+      WHERE cmt.overall_status != 'completed';
     `;
 
     // SQL query to fetch holidays
