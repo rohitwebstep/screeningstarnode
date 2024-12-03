@@ -41,7 +41,7 @@ exports.login = (req, res) => {
   Admin.findByEmailOrMobile(username, (err, result) => {
     if (err) {
       console.error("Step 5: Database error:", err);
-      return res.status(500).json({ status: false, message: err.message });
+      return res.status(500).json({ status: false, err, message: err.message });
     }
 
     // If no admin found, return a 404 response
@@ -62,7 +62,9 @@ exports.login = (req, res) => {
           err
         );
         Common.adminLoginLog(admin.id, "login", "0", err.message, () => {});
-        return res.status(500).json({ status: false, message: err.message });
+        return res
+          .status(500)
+          .json({ status: false, err, message: err.message });
       }
 
       // If the password is incorrect, log the attempt and return a 401 response
@@ -225,7 +227,9 @@ exports.logout = (req, res) => {
     }
 
     if (!result.status) {
-      return res.status(401).json({ status: false, message: result.message });
+      return res
+        .status(401)
+        .json({ status: false, err: result, message: result.message });
     }
 
     // Update the token in the database to null
@@ -332,9 +336,11 @@ exports.validateLogin = (req, res) => {
       }
 
       if (!tokenResult.status) {
-        return res
-          .status(401)
-          .json({ status: false, message: tokenResult.message });
+        return res.status(401).json({
+          status: false,
+          err: tokenResult,
+          message: tokenResult.message,
+        });
       }
 
       const newToken = tokenResult.newToken;
@@ -403,6 +409,7 @@ exports.updatePassword = (req, res) => {
     if (!tokenValidationResult.status) {
       return res.status(401).json({
         status: false,
+        err: tokenValidationResult,
         message: tokenValidationResult.message,
       });
     }
@@ -467,6 +474,7 @@ exports.forgotPasswordRequest = (req, res) => {
       console.error("Database error:", err);
       return res.status(500).json({
         status: false,
+        err,
         message:
           err.message ||
           "An error occurred while processing your request. Please try again.",
@@ -511,6 +519,7 @@ exports.forgotPasswordRequest = (req, res) => {
             );
             return res.status(500).json({
               status: false,
+              err,
               message: err.message,
             });
           }
@@ -552,6 +561,7 @@ exports.forgotPasswordRequest = (req, res) => {
               );
               return res.status(500).json({
                 status: false,
+                err: emailError,
                 message: `Failed to send password reset email to ${admin.name}. Please try again later.`,
               });
             });

@@ -42,6 +42,7 @@ exports.list = (req, res) => {
     if (!authResult.status) {
       return res.status(403).json({
         status: false,
+        err: authResult,
         message: authResult.message, // Return the message from the authorization function
       });
     }
@@ -50,13 +51,17 @@ exports.list = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
+        return res
+          .status(500)
+          .json({ status: false, err, message: err.message });
       }
 
       if (!tokenResult.status) {
-        return res
-          .status(401)
-          .json({ status: false, message: tokenResult.message });
+        return res.status(401).json({
+          status: false,
+          err: tokenResult,
+          message: tokenResult.message,
+        });
       }
 
       const newToken = tokenResult.newToken;
@@ -65,9 +70,12 @@ exports.list = (req, res) => {
       ClientMasterTrackerModel.list(filter_status, (err, customerResults) => {
         if (err) {
           console.error("Database error:", err);
-          return res
-            .status(500)
-            .json({ status: false, message: err.message, token: newToken });
+          return res.status(500).json({
+            status: false,
+            err,
+            message: err.message,
+            token: newToken,
+          });
         }
 
         // Respond with the fetched customer data
@@ -124,6 +132,7 @@ exports.listByCustomerId = (req, res) => {
     if (!result.status) {
       return res.status(403).json({
         status: false,
+        err: result,
         message: result.message, // Return the message from the authorization function
       });
     }
@@ -132,11 +141,15 @@ exports.listByCustomerId = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
+        return res
+          .status(500)
+          .json({ status: false, err, message: err.message });
       }
 
       if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message });
+        return res
+          .status(401)
+          .json({ status: false, err: result, message: result.message });
       }
 
       const newToken = result.newToken;
@@ -147,9 +160,12 @@ exports.listByCustomerId = (req, res) => {
         (err, result) => {
           if (err) {
             console.error("Database error:", err);
-            return res
-              .status(500)
-              .json({ status: false, message: err.message, token: newToken });
+            return res.status(500).json({
+              status: false,
+              err,
+              message: err.message,
+              token: newToken,
+            });
           }
 
           res.json({
@@ -203,6 +219,7 @@ exports.applicationListByBranch = (req, res) => {
     if (!result.status) {
       return res.status(403).json({
         status: false,
+        err: result,
         message: result.message, // Return the message from the authorization function
       });
     }
@@ -227,13 +244,15 @@ exports.applicationListByBranch = (req, res) => {
       AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
         if (err) {
           console.error("Error checking token validity:", err);
-          return res.status(500).json({ status: false, message: err.message });
+          return res
+            .status(500)
+            .json({ status: false, err, message: err.message });
         }
 
         if (!result.status) {
           return res
             .status(401)
-            .json({ status: false, message: result.message });
+            .json({ status: false, err: result, message: result.message });
         }
 
         const newToken = result.newToken;
@@ -256,7 +275,12 @@ exports.applicationListByBranch = (req, res) => {
               console.error("Database error:", err);
               return res
                 .status(500)
-                .json({ status: false, message: err.message, token: newToken });
+                .json({
+                  status: false,
+                  err,
+                  message: err.message,
+                  token: newToken,
+                });
             }
 
             res.json({

@@ -52,6 +52,7 @@ exports.list = (req, res) => {
     if (!authResult.status) {
       return res.status(403).json({
         status: false,
+        err: authResult,
         message: authResult.message, // Return the message from the authorization function
       });
     }
@@ -60,13 +61,17 @@ exports.list = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
+        return res
+          .status(500)
+          .json({ status: false, err, message: err.message });
       }
 
       if (!tokenResult.status) {
-        return res
-          .status(401)
-          .json({ status: false, message: tokenResult.message });
+        return res.status(401).json({
+          status: false,
+          err: tokenResult,
+          message: tokenResult.message,
+        });
       }
 
       const newToken = tokenResult.newToken;
@@ -77,6 +82,7 @@ exports.list = (req, res) => {
           console.error("Database error:", err);
           return res.status(500).json({
             status: false,
+            err,
             message: err.message,
             token: newToken,
           });
@@ -119,6 +125,7 @@ exports.sendNotification = async (req, res) => {
       if (!authResult.status) {
         return res.status(403).json({
           status: false,
+          err: authResult,
           message: authResult.message,
         });
       }
@@ -132,12 +139,13 @@ exports.sendNotification = async (req, res) => {
             console.error("Error checking token validity:", err);
             return res
               .status(500)
-              .json({ status: false, message: err.message });
+              .json({ status: false, err, message: err.message });
           }
 
           if (!tokenResult.status) {
             return res.status(401).json({
               status: false,
+              err: tokenResult,
               message: tokenResult.message,
             });
           }

@@ -34,6 +34,7 @@ exports.list = (req, res) => {
     if (!result.status) {
       return res.status(403).json({
         status: false,
+        err: result,
         message: result.message, // Return the message from the authorization function
       });
     }
@@ -44,7 +45,9 @@ exports.list = (req, res) => {
       }
 
       if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message });
+        return res
+          .status(401)
+          .json({ status: false, err: result, message: result.message });
       }
 
       const newToken = result.newToken;
@@ -52,9 +55,12 @@ exports.list = (req, res) => {
       Admin.list((err, result) => {
         if (err) {
           console.error("Database error:", err);
-          return res
-            .status(500)
-            .json({ status: false, message: err.message, token: newToken });
+          return res.status(500).json({
+            status: false,
+            err,
+            message: err.message,
+            token: newToken,
+          });
         }
 
         res.json({
@@ -90,6 +96,7 @@ exports.addClientListings = (req, res) => {
     if (!authResult || !authResult.status) {
       return res.status(403).json({
         status: false,
+        err: authResult,
         message: authResult ? authResult.message : "Authorization failed",
       });
     }
@@ -106,6 +113,7 @@ exports.addClientListings = (req, res) => {
       if (!tokenResult || !tokenResult.status) {
         return res.status(401).json({
           status: false,
+          err: tokenResult,
           message: tokenResult ? tokenResult.message : "Invalid token",
         });
       }
@@ -252,6 +260,7 @@ exports.create = (req, res) => {
     if (!authResult.status) {
       return res.status(403).json({
         status: false,
+        err: authResult,
         message: authResult.message, // Return the message from the authorization check
       });
     }
@@ -266,9 +275,11 @@ exports.create = (req, res) => {
       }
 
       if (!tokenResult.status) {
-        return res
-          .status(401)
-          .json({ status: false, message: tokenResult.message });
+        return res.status(401).json({
+          status: false,
+          err: tokenResult,
+          message: tokenResult.message,
+        });
       }
 
       const newToken = tokenResult.newToken;
@@ -414,6 +425,7 @@ exports.update = (req, res) => {
     if (!authResult.status) {
       return res.status(403).json({
         status: false,
+        err: authResult,
         message: authResult.message, // Return the message from the authorization check
       });
     }
@@ -435,9 +447,11 @@ exports.update = (req, res) => {
       }
 
       if (!tokenResult.status) {
-        return res
-          .status(401)
-          .json({ status: false, message: tokenResult.message });
+        return res.status(401).json({
+          status: false,
+          err: tokenResult,
+          message: tokenResult.message,
+        });
       }
 
       const newToken = tokenResult.newToken;
@@ -535,6 +549,7 @@ exports.delete = (req, res) => {
     if (!authResult.status) {
       return res.status(403).json({
         status: false,
+        err: authResult,
         message: authResult.message, // Return the message from the authorization check
       });
     }
@@ -556,9 +571,11 @@ exports.delete = (req, res) => {
       }
 
       if (!tokenResult.status) {
-        return res
-          .status(401)
-          .json({ status: false, message: tokenResult.message });
+        return res.status(401).json({
+          status: false,
+          err: tokenResult,
+          message: tokenResult.message,
+        });
       }
 
       const newToken = tokenResult.newToken;
@@ -683,9 +700,11 @@ exports.upload = async (req, res) => {
           action,
           async (authResult) => {
             if (!authResult.status) {
-              return res
-                .status(403)
-                .json({ status: false, message: authResult.message });
+              return res.status(403).json({
+                status: false,
+                err: authResult,
+                message: authResult.message,
+              });
             }
             if (adminId === id) {
               return res.status(403).json({
@@ -710,7 +729,11 @@ exports.upload = async (req, res) => {
                 if (!tokenResult.status) {
                   return res
                     .status(401)
-                    .json({ status: false, message: tokenResult.message });
+                    .json({
+                      status: false,
+                      err: tokenResult,
+                      message: tokenResult.message,
+                    });
                 }
 
                 const newToken = tokenResult.newToken;
@@ -751,6 +774,7 @@ exports.upload = async (req, res) => {
                           console.error("Database error:", err);
                           return res.status(500).json({
                             status: false,
+                            err,
                             message: err.message,
                             token: newToken,
                             savedImagePaths,

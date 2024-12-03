@@ -110,19 +110,37 @@ const ReportMaster = {
             const dbTableHeading = parsedData.heading;
             console.log("Resolved DB table:", dbTable);
 
-            const statusResults = await new Promise((resolve, reject) =>
-              connection.query(
-                `SELECT status FROM ${dbTable} WHERE client_application_id = ?`,
-                [row.client_application_id],
-                (err, res) => (err ? reject(err) : resolve(res))
-              )
-            );
+            const statusResults = await new Promise((resolve, reject) => {
+              connection.query(`SHOW TABLES LIKE ?`, [dbTable], (err, res) =>
+                err ? reject(err) : resolve(res)
+              );
+            });
 
-            const status =
-              statusResults.length > 0 ? statusResults[0].status : null;
-            if (status) {
-              statuses[dbTableHeading] = status;
-              console.log("Invalid status detected:", status);
+            if (statusResults.length === 0) {
+              // If the table does not exist, set the status to "INITIATED"
+              statuses[dbTableHeading] = "INITIATED";
+              console.log(
+                `Table ${dbTable} does not exist. Status set to "INITIATED".`
+              );
+            } else {
+              // If the table exists, fetch the status
+              const existingStatusResults = await new Promise(
+                (resolve, reject) =>
+                  connection.query(
+                    `SELECT status FROM ${dbTable} WHERE client_application_id = ?`,
+                    [row.client_application_id],
+                    (err, res) => (err ? reject(err) : resolve(res))
+                  )
+              );
+
+              const status =
+                existingStatusResults.length > 0
+                  ? existingStatusResults[0].status
+                  : null;
+              if (status) {
+                statuses[dbTableHeading] = status;
+                console.log(`Status fetched from table ${dbTable}:`, status);
+              }
             }
           }
         }
@@ -284,21 +302,40 @@ const ReportMaster = {
             const dbTableHeading = parsedData.heading;
             console.log("Resolved DB table:", dbTable);
 
-            const statusResults = await new Promise((resolve, reject) =>
-              connection.query(
-                `SELECT status FROM ${dbTable} WHERE client_application_id = ?`,
-                [row.client_application_id],
-                (err, res) => (err ? reject(err) : resolve(res))
-              )
-            );
+            const statusResults = await new Promise((resolve, reject) => {
+              connection.query(`SHOW TABLES LIKE ?`, [dbTable], (err, res) =>
+                err ? reject(err) : resolve(res)
+              );
+            });
 
-            const status =
-              statusResults.length > 0 ? statusResults[0].status : null;
-            if (status) {
-              statuses[dbTableHeading] = status;
-              if (!validStatuses.includes(status)) {
-                allValidStatuses = false;
-                console.log("Invalid status detected:", status);
+            if (statusResults.length === 0) {
+              // If the table does not exist, set the status to "INITIATED"
+              statuses[dbTableHeading] = "INITIATED";
+              console.log(
+                `Table ${dbTable} does not exist. Status set to "INITIATED".`
+              );
+            } else {
+              // If the table exists, fetch the status
+              const existingStatusResults = await new Promise(
+                (resolve, reject) =>
+                  connection.query(
+                    `SELECT status FROM ${dbTable} WHERE client_application_id = ?`,
+                    [row.client_application_id],
+                    (err, res) => (err ? reject(err) : resolve(res))
+                  )
+              );
+
+              const status =
+                existingStatusResults.length > 0
+                  ? existingStatusResults[0].status
+                  : null;
+              if (status) {
+                statuses[dbTableHeading] = status;
+                if (!validStatuses.includes(status)) {
+                  allValidStatuses = false;
+                  console.log("Invalid status detected:", status);
+                }
+                console.log(`Status fetched from table ${dbTable}:`, status);
               }
             }
           }

@@ -26,6 +26,7 @@ exports.create = (req, res) => {
       // Check the status returned by the authorization function
       return res.status(403).json({
         status: false,
+        err: result,
         message: result.message, // Return the message from the authorization function
       });
     }
@@ -37,7 +38,9 @@ exports.create = (req, res) => {
       }
 
       if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message });
+        return res
+          .status(401)
+          .json({ status: false, err: result, message: result.message });
       }
 
       AuthorizedDetail.checkEmailExists(email, (err, emailExists) => {
@@ -75,9 +78,12 @@ exports.create = (req, res) => {
                 err,
                 () => {}
               );
-              return res
-                .status(500)
-                .json({ status: false, message: err.message, token: newToken });
+              return res.status(500).json({
+                status: false,
+                err,
+                message: err.message,
+                token: newToken,
+              });
             }
 
             Common.adminActivityLog(
@@ -122,6 +128,7 @@ exports.list = (req, res) => {
     if (!result.status) {
       return res.status(403).json({
         status: false,
+        err: result,
         message: result.message, // Return the message from the authorization function
       });
     }
@@ -132,7 +139,9 @@ exports.list = (req, res) => {
       }
 
       if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message });
+        return res
+          .status(401)
+          .json({ status: false, err: result, message: result.message });
       }
 
       const newToken = result.newToken;
@@ -140,9 +149,12 @@ exports.list = (req, res) => {
       AuthorizedDetail.list((err, result) => {
         if (err) {
           console.error("Database error:", err);
-          return res
-            .status(500)
-            .json({ status: false, message: err.message, token: newToken });
+          return res.status(500).json({
+            status: false,
+            err,
+            message: err.message,
+            token: newToken,
+          });
         }
 
         res.json({
@@ -175,6 +187,7 @@ exports.getAuthorizedDetailById = (req, res) => {
     if (!result.status) {
       return res.status(403).json({
         status: false,
+        err: result,
         message: result.message, // Return the message from the authorization function
       });
     }
@@ -185,7 +198,9 @@ exports.getAuthorizedDetailById = (req, res) => {
       }
 
       if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message });
+        return res
+          .status(401)
+          .json({ status: false, err: result, message: result.message });
       }
 
       const newToken = result.newToken;
@@ -197,6 +212,7 @@ exports.getAuthorizedDetailById = (req, res) => {
             console.error("Error fetching Authorized Detail data:", err);
             return res.status(500).json({
               status: false,
+              err,
               message: err.message,
               token: newToken,
             });
@@ -247,6 +263,7 @@ exports.update = (req, res) => {
       // Check the status returned by the authorization function
       return res.status(403).json({
         status: false,
+        err: result,
         message: result.message, // Return the message from the authorization function
       });
     }
@@ -257,7 +274,9 @@ exports.update = (req, res) => {
       }
 
       if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message });
+        return res
+          .status(401)
+          .json({ status: false, err: result, message: result.message });
       }
 
       const newToken = result.newToken;
@@ -269,6 +288,7 @@ exports.update = (req, res) => {
             console.error("Error fetching Authorized Detail data:", err);
             return res.status(500).json({
               status: false,
+              err,
               message: err.message,
               token: newToken,
             });
@@ -308,6 +328,7 @@ exports.update = (req, res) => {
                 );
                 return res.status(500).json({
                   status: false,
+                  err,
                   message: err.message,
                   token: newToken,
                 });
@@ -358,6 +379,7 @@ exports.delete = (req, res) => {
       // Check the status returned by the authorization function
       return res.status(403).json({
         status: false,
+        err: result,
         message: result.message, // Return the message from the authorization function
       });
     }
@@ -368,7 +390,9 @@ exports.delete = (req, res) => {
       }
 
       if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message });
+        return res
+          .status(401)
+          .json({ status: false, err: result, message: result.message });
       }
 
       const newToken = result.newToken;
@@ -380,6 +404,7 @@ exports.delete = (req, res) => {
             console.error("Error fetching Authorized Detail data:", err);
             return res.status(500).json({
               status: false,
+              err,
               message: err.message,
               token: newToken,
             });
@@ -399,7 +424,12 @@ exports.delete = (req, res) => {
               );
               return res
                 .status(500)
-                .json({ status: false, message: err.message, token: newToken });
+                .json({
+                  status: false,
+                  err,
+                  message: err.message,
+                  token: newToken,
+                });
             }
 
             Common.adminActivityLog(

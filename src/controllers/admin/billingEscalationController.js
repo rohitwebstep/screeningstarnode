@@ -26,6 +26,7 @@ exports.create = (req, res) => {
       // Check the status returned by the authorization function
       return res.status(403).json({
         status: false,
+        err: result,
         message: result.message, // Return the message from the authorization function
       });
     }
@@ -37,7 +38,9 @@ exports.create = (req, res) => {
       }
 
       if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message });
+        return res
+          .status(401)
+          .json({ status: false, err: result, message: result.message });
       }
 
       BillingEscalation.checkEmailExists(email, (err, emailExists) => {
@@ -77,7 +80,12 @@ exports.create = (req, res) => {
               );
               return res
                 .status(500)
-                .json({ status: false, message: err.message, token: newToken });
+                .json({
+                  status: false,
+                  err,
+                  message: err.message,
+                  token: newToken,
+                });
             }
 
             Common.adminActivityLog(

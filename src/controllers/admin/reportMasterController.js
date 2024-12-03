@@ -46,7 +46,7 @@ exports.applicationStatus = (req, res) => {
         res.json({
           status: true,
           message: "Applications fetched successfully",
-          authorized_details: result,
+          result: result,
           totalResults: result.length,
           token: newToken,
         });
@@ -99,7 +99,7 @@ exports.reportGeneration = (req, res) => {
         res.json({
           status: true,
           message: "Applications fetched successfully",
-          authorized_details: result,
+          result: result,
           totalResults: result.length,
           token: newToken,
         });
