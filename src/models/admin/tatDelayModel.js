@@ -23,6 +23,7 @@ const tatDelay = {
         cmt.third_insufficiency_marks,
         cmt.third_insuff_date,
         cmt.third_insuff_reopened_date,
+        cmt.delay_reason,
         cust.name AS customer_name, 
         cust.mobile AS customer_mobile, 
         cust.emails AS customer_emails, 
@@ -118,6 +119,7 @@ const tatDelay = {
                       third_insufficiency_marks,
                       third_insuff_date,
                       third_insuff_reopened_date,
+                      delay_reason,
                     } = row;
 
                     // Initialize customer entry if it doesn't exist
@@ -182,6 +184,7 @@ const tatDelay = {
                         third_insufficiency_marks,
                         third_insuff_date,
                         third_insuff_reopened_date,
+                        delay_reason,
                       });
                     }
 
