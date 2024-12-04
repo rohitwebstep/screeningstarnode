@@ -303,7 +303,7 @@ const Customer = {
       }
 
       const sql =
-        "SELECT * FROM `cmt_applications` WHERE `client_application_id` = ?";
+        "SELECT `id`, `month_year`,`initiation_date`,`organization_name`,`verification_purpose`,`employee_id`,`client_code`,`applicant_name`,`contact_number`,`contact_number2`,`father_name`,`dob`,`gender`,`marital_status`,`nationality`,`insuff`,`address`,`landmark`,`residence_mobile_number`,`state`,`permanent_address`,`permanent_sender_name`,`permanent_receiver_name`,`permanent_landmark`,`permanent_pin_code`,`permanent_state` FROM `cmt_applications` WHERE `client_application_id` = ?";
       connection.query(sql, [`${client_application_id}`], (err, results) => {
         connectionRelease(connection); // Release connection
         if (err) {
