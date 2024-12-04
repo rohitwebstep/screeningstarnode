@@ -164,7 +164,7 @@ const Customer = {
                MAX(ca.created_at) AS latest_application_date
         FROM client_applications ca
         INNER JOIN branches b ON ca.branch_id = b.id
-        WHERE b.customer_id = ?`;
+        WHERE b.customer_id = ? AND ca.is_data_qc = 0`;
 
       // Array to hold query parameters
       const queryParams = [customer_id];
@@ -242,7 +242,7 @@ const Customer = {
         ON 
           report_admin.id = cmt.report_generate_by
         WHERE 
-          ca.\`branch_id\` = ?`;
+          ca.\`branch_id\` = ? AND ca.\`is_data_qc\` = 0`;
 
       const params = [branch_id]; // Start with branch_id
 
@@ -281,7 +281,7 @@ const Customer = {
 
       // Use a parameterized query to prevent SQL injection
       const sql =
-        "SELECT * FROM `client_applications` WHERE `id` = ? AND `branch_id` = ? ORDER BY `created_at` DESC";
+        "SELECT * FROM `client_applications` WHERE `id` = ? AND `branch_id` = ? AND `is_data_qc` = 0 ORDER BY `created_at` DESC";
 
       connection.query(sql, [application_id, branch_id], (err, results) => {
         connectionRelease(connection); // Release the connection
@@ -391,6 +391,34 @@ const Customer = {
           }
         }
       );
+    });
+  },
+
+  updateDataQC: (data, callback) => {
+    const { application_id, data_qc } = data;
+
+    // If no duplicates are found, proceed with updating the admin record
+    const sql = `
+        UPDATE \`client_applications\` 
+        SET 
+          \`is_data_qc\` = ?
+        WHERE \`id\` = ?
+      `;
+
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(err, null);
+      }
+
+      connection.query(sql, [data_qc, application_id], (queryErr, results) => {
+        connectionRelease(connection); // Release the connection
+
+        if (queryErr) {
+          console.error("Database query error: 51", queryErr);
+          return callback(queryErr, null);
+        }
+        callback(null, results);
+      });
     });
   },
 

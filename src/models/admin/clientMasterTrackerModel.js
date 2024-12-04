@@ -88,7 +88,7 @@ const Customer = {
                     BranchesCTE b
                 INNER JOIN 
                     client_applications ca ON b.branch_id = ca.branch_id
-                /* WHERE ca.status != 'closed' */
+                WHERE ca.is_data_qc = 1
                 GROUP BY 
                     b.customer_id
             ) AS application_counts ON customers.id = application_counts.customer_id
@@ -263,7 +263,7 @@ const Customer = {
                MAX(ca.created_at) AS latest_application_date
         FROM client_applications ca
         INNER JOIN branches b ON ca.branch_id = b.id
-        WHERE b.customer_id = ?`;
+        WHERE b.customer_id = ? AND ca.is_data_qc = 1`;
 
       // Array to hold query parameters
       const queryParams = [customer_id];
@@ -341,7 +341,7 @@ const Customer = {
         ON 
           report_admin.id = cmt.report_generate_by
         WHERE 
-          ca.\`branch_id\` = ?`;
+          ca.\`branch_id\` = ? AND ca.\`is_data_qc\` = 1`;
 
       const params = [branch_id]; // Start with branch_id
 
@@ -380,7 +380,7 @@ const Customer = {
 
       // Use a parameterized query to prevent SQL injection
       const sql =
-        "SELECT * FROM `client_applications` WHERE `id` = ? AND `branch_id` = ? ORDER BY `created_at` DESC";
+        "SELECT * FROM `client_applications` WHERE `id` = ? AND `branch_id` = ? AND `is_data_qc` = 1 ORDER BY `created_at` DESC";
 
       connection.query(sql, [application_id, branch_id], (err, results) => {
         connectionRelease(connection); // Release the connection
