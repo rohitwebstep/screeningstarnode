@@ -202,12 +202,141 @@ exports.list = (req, res) => {
 };
 
 // Controller to update a service
-exports.update = (req, res) => {
-  const { id, email, password, sub_user_id, branch_id, _token } = req.body;
+exports.updateEmail = (req, res) => {
+  const { id, email, sub_user_id, branch_id, _token } = req.body;
   // Validate missing fields
   let missingFields = [];
   if (!id || id === "") missingFields.push("Sub User ID");
   if (!email || email === "") missingFields.push("Email Address");
+  if (!branch_id || branch_id === "") missingFields.push("Branch ID");
+  if (!_token || _token === "") missingFields.push("Authentication Token");
+
+  // If there are missing fields, return an error
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `The following required fields are missing: ${missingFields.join(
+        ", "
+      )}.`,
+    });
+  }
+
+  const action = "sub_user";
+
+  // Check if branch is authorized for the action
+  BranchCommon.isBranchAuthorizedForAction(branch_id, action, (result) => {
+    if (!result.status) {
+      return res.status(403).json({
+        status: false,
+        message: `Authorization failed: ${result.message}`,
+      });
+    }
+
+    // Validate the token for the branch
+    BranchCommon.isBranchTokenValid(
+      _token,
+      sub_user_id || null,
+      branch_id,
+      async (err, result) => {
+        if (err) {
+          console.error("Error validating token:", err);
+          return res.status(500).json({
+            status: false,
+            message: `An error occurred while validating the token. Please try again later.`,
+          });
+        }
+
+        if (!result.status) {
+          return res.status(401).json({
+            status: false,
+            message: `Invalid token: ${result.message}`,
+          });
+        }
+
+        const newToken = result.newToken;
+
+        // Retrieve branch details and proceed with sub-user creation
+        Branch.getBranchById(branch_id, (err, currentBranch) => {
+          if (err) {
+            console.error("Database error retrieving branch:", err);
+            return res.status(500).json({
+              status: false,
+              message:
+                "Unable to retrieve branch details at this time. Please try again later.",
+            });
+          }
+
+          const customer_id = currentBranch.customer_id;
+
+          SubUser.getSubUserById(id, (err, currentSubUser) => {
+            if (err) {
+              console.error("Database error during branch retrieval:", err);
+              return res.status(500).json({
+                status: false,
+                message: "Failed to retrieve sub user. Please try again.",
+                token: newToken,
+              });
+            }
+
+            if (!currentSubUser) {
+              return res.status(404).json({
+                status: false,
+                message: "Sub user not found.",
+              });
+            }
+            // Create SubUser
+            SubUser.updateEmail(
+              { id, branch_id, customer_id, email },
+              (err, result) => {
+                if (err) {
+                  console.error("Database error creating sub-user:", err);
+                  BranchCommon.branchActivityLog(
+                    branch_id,
+                    "Sub User",
+                    "Update",
+                    "0",
+                    null,
+                    err.message,
+                    () => {}
+                  );
+                  return res.status(500).json({
+                    status: false,
+                    message: err.message,
+                    token: newToken,
+                  });
+                }
+
+                // Log the activity
+                BranchCommon.branchActivityLog(
+                  branch_id,
+                  "Sub User",
+                  "Update",
+                  "0",
+                  null,
+                  null,
+                  () => {}
+                );
+
+                return res.json({
+                  status: true,
+                  message: "Sub-user account successfully updated.",
+                  token: newToken,
+                });
+              }
+            );
+          });
+        });
+      }
+    );
+  });
+};
+
+// Controller to update a service
+exports.updatePassword = (req, res) => {
+  const { id, password, sub_user_id, branch_id, _token } = req.body;
+  // Validate missing fields
+  let missingFields = [];
+  if (!id || id === "") missingFields.push("Sub User ID");
   if (!branch_id || branch_id === "") missingFields.push("Branch ID");
   if (!password || password === "") missingFields.push("Password");
   if (!_token || _token === "") missingFields.push("Authentication Token");
@@ -286,8 +415,8 @@ exports.update = (req, res) => {
               });
             }
             // Create SubUser
-            SubUser.update(
-              { id, branch_id, customer_id, email, password },
+            SubUser.updatePassword(
+              { id, branch_id, customer_id, password },
               (err, result) => {
                 if (err) {
                   console.error("Database error creating sub-user:", err);

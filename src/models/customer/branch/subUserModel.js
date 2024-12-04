@@ -3,6 +3,9 @@ const {
   startConnection,
   connectionRelease,
 } = require("../../../config/db");
+const {
+  updatePassword,
+} = require("../../../controllers/customer/branch/sub_user/subUserController");
 
 const subUser = {
   create: (data, callback) => {
@@ -140,8 +143,8 @@ const subUser = {
     });
   },
 
-  update: (data, callback) => {
-    const { id, branch_id, customer_id, email, password } = data;
+  updateEmail: (data, callback) => {
+    const { id, branch_id, customer_id, email } = data;
 
     // Start DB connection
     startConnection((err, connection) => {
@@ -185,11 +188,10 @@ const subUser = {
             \`branch_id\` = ?, 
             \`customer_id\` = ?, 
             \`email\` = ?, 
-            \`password\` = ?
           WHERE \`id\` = ?
         `;
 
-          const values = [branch_id, customer_id, email, password, id];
+          const values = [branch_id, customer_id, email, id];
 
           connection.query(updateSql, values, (err, results) => {
             // Release connection after query execution
@@ -207,6 +209,48 @@ const subUser = {
           });
         }
       );
+    });
+  },
+
+  updatePassword: (data, callback) => {
+    const { id, branch_id, customer_id, password } = data;
+
+    // Start DB connection
+    startConnection((err, connection) => {
+      if (err) {
+        console.error("Failed to connect to the database:", err);
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
+
+      // SQL query for updating the record in branch_sub_users
+      const updateSql = `
+          UPDATE \`branch_sub_users\` 
+          SET 
+            \`branch_id\` = ?, 
+            \`customer_id\` = ?, 
+            \`password\` = md5(?)
+          WHERE \`id\` = ?
+        `;
+
+      const values = [branch_id, customer_id, password, id];
+
+      connection.query(updateSql, values, (err, results) => {
+        // Release connection after query execution
+        connectionRelease(connection);
+
+        if (err) {
+          console.error("Database query error: 109", err);
+          return callback(err, null);
+        }
+
+        return callback(null, {
+          results,
+          message: "Record updated successfully.",
+        });
+      });
     });
   },
 
