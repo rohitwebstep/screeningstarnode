@@ -224,32 +224,52 @@ const subUser = {
         );
       }
 
-      // SQL query for updating the record in branch_sub_users
-      const updateSql = `
-          UPDATE \`branch_sub_users\` 
-          SET 
-            \`branch_id\` = ?, 
-            \`customer_id\` = ?, 
-            \`password\` = md5(?)
-          WHERE \`id\` = ?
-        `;
+      try {
+        // SQL query for updating the record in branch_sub_users
+        const updateSql = `
+                UPDATE \`branch_sub_users\` 
+                SET 
+                    \`branch_id\` = ?, 
+                    \`customer_id\` = ?, 
+                    \`password\` = md5(?)
+                WHERE \`id\` = ?
+            `;
 
-      const values = [branch_id, customer_id, password, id];
+        const values = [branch_id, customer_id, password, id];
 
-      connection.query(updateSql, values, (err, results) => {
-        // Release connection after query execution
-        connectionRelease(connection);
+        // Execute the query
+        connection.query(updateSql, values, (err, results) => {
+          // Release connection after query execution
+          connectionRelease(connection);
 
-        if (err) {
-          console.error("Database query error: 109", err);
-          return callback(err, null);
-        }
+          if (err) {
+            console.error("Database query error:", err);
+            return callback(
+              { message: "Error updating the record", error: err },
+              null
+            );
+          }
 
-        return callback(null, {
-          results,
-          message: "Record updated successfully.",
+          // Handle no rows affected
+          if (results.affectedRows === 0) {
+            return callback(
+              { message: "No record found with the given ID." },
+              null
+            );
+          }
+
+          // Success
+          return callback(null, {
+            results,
+            message: "Record updated successfully.",
+          });
         });
-      });
+      } catch (error) {
+        // Release connection and handle unexpected errors
+        connectionRelease(connection);
+        console.error("Unexpected error:", error);
+        return callback({ message: "Unexpected error occurred", error }, null);
+      }
     });
   },
 

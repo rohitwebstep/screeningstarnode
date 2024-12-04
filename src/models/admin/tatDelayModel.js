@@ -6,18 +6,27 @@ const tatDelay = {
     // SQL query to retrieve applications, customers, branches, and tat_days
     const applicationsQuery = `
       SELECT 
-        cmt.report_date, 
-        ca.id AS client_application_id, 
-        ca.is_priority, 
-        ca.customer_id, 
         ca.branch_id, 
+        ca.customer_id, 
+        ca.is_priority, 
         ca.application_id, 
         ca.name AS application_name, 
+        ca.id AS client_application_id, 
         ca.created_at AS application_created_at, 
+        cmt.report_date, 
+        cmt.first_insufficiency_marks,
+        cmt.first_insuff_date,
+        cmt.first_insuff_reopened_date,
+        cmt.second_insufficiency_marks,
+        cmt.second_insuff_date,
+        cmt.second_insuff_reopened_date,
+        cmt.third_insufficiency_marks,
+        cmt.third_insuff_date,
+        cmt.third_insuff_reopened_date,
         cust.name AS customer_name, 
+        cust.mobile AS customer_mobile, 
         cust.emails AS customer_emails, 
         cust.client_unique_id AS customer_unique_id, 
-        cust.mobile AS customer_mobile, 
         cm.tat_days AS tat_days,
         br.name AS branch_name, 
         br.email AS branch_email, 
@@ -100,6 +109,15 @@ const tatDelay = {
                       application_name,
                       is_priority,
                       application_created_at,
+                      first_insufficiency_marks,
+                      first_insuff_date,
+                      first_insuff_reopened_date,
+                      second_insufficiency_marks,
+                      second_insuff_date,
+                      second_insuff_reopened_date,
+                      third_insufficiency_marks,
+                      third_insuff_date,
+                      third_insuff_reopened_date,
                     } = row;
 
                     // Initialize customer entry if it doesn't exist
@@ -154,7 +172,16 @@ const tatDelay = {
                         application_name,
                         is_priority,
                         application_created_at,
-                        days_out_of_tat: daysOutOfTat, // Include days out of TAT
+                        days_out_of_tat: daysOutOfTat,
+                        first_insufficiency_marks,
+                        first_insuff_date,
+                        first_insuff_reopened_date,
+                        second_insufficiency_marks,
+                        second_insuff_date,
+                        second_insuff_reopened_date,
+                        third_insufficiency_marks,
+                        third_insuff_date,
+                        third_insuff_reopened_date,
                       });
                     }
 
