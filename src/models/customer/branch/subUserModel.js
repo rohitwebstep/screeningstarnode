@@ -158,8 +158,7 @@ const subUser = {
 
       // Check if the email already exists for the given branch_id, excluding the current record (id)
       const checkEmailSql = `
-        SELECT * FROM \`branch_sub_users\`
-        WHERE \`email\` = ? AND \`branch_id\` = ? AND \`id\` != ?
+        SELECT * FROM \`branch_sub_users\` WHERE \`email\` = ? AND \`branch_id\` = ? AND \`id\` != ?
       `;
 
       connection.query(
@@ -187,7 +186,7 @@ const subUser = {
           SET 
             \`branch_id\` = ?, 
             \`customer_id\` = ?, 
-            \`email\` = ?, 
+            \`email\` = ?
           WHERE \`id\` = ?
         `;
 
