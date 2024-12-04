@@ -170,6 +170,15 @@ const ReportMaster = {
             is_verify: row.is_verify,
             application_created_at: row.application_created_at,
             services_status: statuses,
+            first_insufficiency_marks: row.first_insufficiency_marks,
+            first_insuff_date: row.first_insuff_date,
+            first_insuff_reopened_date: row.first_insuff_reopened_date,
+            second_insufficiency_marks: row.second_insufficiency_marks,
+            second_insuff_date: row.second_insuff_date,
+            second_insuff_reopened_date: row.second_insuff_reopened_date,
+            third_insufficiency_marks: row.third_insufficiency_marks,
+            third_insuff_date: row.third_insuff_date,
+            third_insuff_reopened_date: row.third_insuff_reopened_date,
           });
           console.log("Application added:", row.application_name);
         }
@@ -378,6 +387,15 @@ const ReportMaster = {
             is_verify: row.is_verify,
             application_created_at: row.application_created_at,
             services_status: statuses,
+            first_insufficiency_marks: row.first_insufficiency_marks,
+            first_insuff_date: row.first_insuff_date,
+            first_insuff_reopened_date: row.first_insuff_reopened_date,
+            second_insufficiency_marks: row.second_insufficiency_marks,
+            second_insuff_date: row.second_insuff_date,
+            second_insuff_reopened_date: row.second_insuff_reopened_date,
+            third_insufficiency_marks: row.third_insufficiency_marks,
+            third_insuff_date: row.third_insuff_date,
+            third_insuff_reopened_date: row.third_insuff_reopened_date,
           });
           console.log("Application added:", row.application_name);
         }
