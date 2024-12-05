@@ -825,6 +825,7 @@ exports.generateReport = (req, res) => {
     branch_id,
     customer_id,
     application_id,
+    data_qc,
     updated_json,
     annexure,
     send_mail,
@@ -837,6 +838,7 @@ exports.generateReport = (req, res) => {
     branch_id,
     customer_id,
     application_id,
+    data_qc,
     updated_json,
   };
 
@@ -972,281 +974,275 @@ exports.generateReport = (req, res) => {
                   token: newToken,
                 });
               }
-              console.log(`Step 5`);
 
-              // Flatten the updated_json object and separate annexure
-              let { mainJsonRaw, annexureRawJson } =
-                flattenJsonWithAnnexure(updated_json);
-              console.log(`Step 6`);
-
-              // Array of keys you want to delete
-              const keysToDelete = [
-                "month_year",
-                "initiation_date",
-                "organization_name",
-                "verification_purpose",
-                "employee_id",
-                "client_code",
-                "applicant_name",
-                "contact_number",
-                "contact_number2",
-                "father_name",
-                "dob",
-                "gender",
-                "marital_status",
-                "address",
-                "landmark",
-                "residence_mobile_number",
-                "state",
-                "permanent_address",
-                "permanent_sender_name",
-                "permanent_receiver_name",
-                "permanent_landmark",
-                "permanent_pin_code",
-                "permanent_state",
-              ];
-
-              // Remove keys in keysToDelete from mainJsonRaw
-              Object.keys(mainJsonRaw).forEach((key) => {
-                if (keysToDelete.includes(key)) {
-                  delete mainJsonRaw[key];
-                }
-              });
-              const mainJson = mainJsonRaw;
-              // Declare changes outside the conditional block
-              const changes = {};
-              let logStatus = "create";
-              if (
-                currentCMTApplication &&
-                Object.keys(currentCMTApplication).length > 0
-              ) {
-                console.log(`Step 7`);
-
-                logStatus = "update";
-                const compareAndAddChanges = (key, newValue) => {
-                  if (currentCMTApplication[key] !== newValue) {
-                    changes[key] = {
-                      old: currentCMTApplication[key],
-                      new: newValue,
-                    };
-                  }
-                };
-                console.log(`Step 8`);
-
-                // Compare and log changes
-                Object.keys(mainJson).forEach((key) =>
-                  compareAndAddChanges(key, mainJson[key])
-                );
-              }
-              console.log(`Step 9`);
-
-              ClientMasterTrackerModel.generateReport(
-                mainJson,
-                application_id,
-                branch_id,
-                customer_id,
-                (err, cmtResult) => {
-                  console.log(`Step 10`);
-
+              ClientMasterTrackerModel.updateDataQC(
+                { application_id, data_qc },
+                (err, result) => {
                   if (err) {
-                    console.error(
-                      "Database error during CMT application update:",
-                      err
-                    );
-                    console.log(`Step 11`);
-                    const logData =
-                      currentCMTApplication &&
-                      Object.keys(currentCMTApplication).length > 0
-                        ? JSON.stringify({ application_id, ...changes }) // changes is defined here
-                        : JSON.stringify(mainJson);
-
-                    AdminCommon.adminActivityLog(
-                      admin_id,
-                      "admin/client-master-tracker",
-                      logStatus,
-                      "0",
-                      logData,
-                      err,
-                      () => {}
-                    );
-                    console.log(`Step 12`);
-
+                    console.error("Error updating data QC:", err);
                     return res.status(500).json({
                       status: false,
-                      message: err.message,
+                      message:
+                        "An error occurred while updating data QC. Please try again.",
                       token: newToken,
                     });
                   }
-                  console.log(`Step 13`);
-                  const logDataSuccess =
+                  console.log(`Step 5`);
+
+                  // Flatten the updated_json object and separate annexure
+                  let { mainJsonRaw, annexureRawJson } =
+                    flattenJsonWithAnnexure(updated_json);
+                  console.log(`Step 6`);
+
+                  // Array of keys you want to delete
+                  const keysToDelete = [
+                    "month_year",
+                    "initiation_date",
+                    "organization_name",
+                    "verification_purpose",
+                    "employee_id",
+                    "client_code",
+                    "applicant_name",
+                    "contact_number",
+                    "contact_number2",
+                    "father_name",
+                    "dob",
+                    "gender",
+                    "marital_status",
+                    "address",
+                    "landmark",
+                    "residence_mobile_number",
+                    "state",
+                    "permanent_address",
+                    "permanent_sender_name",
+                    "permanent_receiver_name",
+                    "permanent_landmark",
+                    "permanent_pin_code",
+                    "permanent_state",
+                  ];
+
+                  // Remove keys in keysToDelete from mainJsonRaw
+                  Object.keys(mainJsonRaw).forEach((key) => {
+                    if (keysToDelete.includes(key)) {
+                      delete mainJsonRaw[key];
+                    }
+                  });
+                  const mainJson = mainJsonRaw;
+                  // Declare changes outside the conditional block
+                  const changes = {};
+                  let logStatus = "create";
+                  if (
                     currentCMTApplication &&
                     Object.keys(currentCMTApplication).length > 0
-                      ? JSON.stringify({ application_id, ...changes }) // changes is defined here
-                      : JSON.stringify(mainJson);
+                  ) {
+                    console.log(`Step 7`);
 
-                  AdminCommon.adminActivityLog(
-                    admin_id,
-                    "admin/client-master-tracker",
-                    logStatus,
-                    "1",
-                    logDataSuccess,
-                    err,
-                    () => {}
-                  );
-                  console.log(`Step 14`);
-                  if (typeof annexure === "object" && annexure !== null) {
-                    const annexurePromises = [];
-                    console.log(`Step 15`);
-                    for (let key in annexure) {
-                      const db_table = key ?? null;
-                      const modifiedDbTable = db_table
-                        .replace(/-/g, "_")
-                        .toLowerCase();
-                      const subJson = annexure[modifiedDbTable] ?? null;
+                    logStatus = "update";
+                    const compareAndAddChanges = (key, newValue) => {
+                      if (currentCMTApplication[key] !== newValue) {
+                        changes[key] = {
+                          old: currentCMTApplication[key],
+                          new: newValue,
+                        };
+                      }
+                    };
+                    console.log(`Step 8`);
 
-                      const annexurePromise = new Promise((resolve, reject) => {
-                        ClientMasterTrackerModel.getCMTAnnexureByApplicationId(
-                          application_id,
-                          modifiedDbTable,
-                          (err, currentCMTAnnexure) => {
-                            if (err) {
-                              console.error(
-                                "Database error during CMT Annexure retrieval:",
-                                err
-                              );
-                              return reject(err); // Reject the promise on error
-                            }
+                    // Compare and log changes
+                    Object.keys(mainJson).forEach((key) =>
+                      compareAndAddChanges(key, mainJson[key])
+                    );
+                  }
+                  console.log(`Step 9`);
 
-                            let annexureLogStatus =
-                              currentCMTAnnexure &&
-                              Object.keys(currentCMTAnnexure).length > 0
-                                ? "update"
-                                : "create";
+                  ClientMasterTrackerModel.generateReport(
+                    mainJson,
+                    application_id,
+                    branch_id,
+                    customer_id,
+                    (err, cmtResult) => {
+                      console.log(`Step 10`);
 
-                            if (logStatus == "update") {
-                              cmt_id = currentCMTApplication.id;
-                            } else if (logStatus == "create") {
-                              cmt_id = cmtResult.insertId;
-                            }
+                      if (err) {
+                        console.error(
+                          "Database error during CMT application update:",
+                          err
+                        );
+                        console.log(`Step 11`);
+                        const logData =
+                          currentCMTApplication &&
+                          Object.keys(currentCMTApplication).length > 0
+                            ? JSON.stringify({ application_id, ...changes }) // changes is defined here
+                            : JSON.stringify(mainJson);
 
-                            ClientMasterTrackerModel.createOrUpdateAnnexure(
-                              cmt_id,
-                              application_id,
-                              branch_id,
-                              customer_id,
-                              modifiedDbTable,
-                              subJson,
-                              (err, annexureResult) => {
-                                if (err) {
-                                  console.error(
-                                    "Database error during CMT annexure create or update:",
-                                    err
-                                  );
+                        AdminCommon.adminActivityLog(
+                          admin_id,
+                          "admin/client-master-tracker",
+                          logStatus,
+                          "0",
+                          logData,
+                          err,
+                          () => {}
+                        );
+                        console.log(`Step 12`);
 
-                                  const annexureLogData =
+                        return res.status(500).json({
+                          status: false,
+                          message: err.message,
+                          token: newToken,
+                        });
+                      }
+                      console.log(`Step 13`);
+                      const logDataSuccess =
+                        currentCMTApplication &&
+                        Object.keys(currentCMTApplication).length > 0
+                          ? JSON.stringify({ application_id, ...changes }) // changes is defined here
+                          : JSON.stringify(mainJson);
+
+                      AdminCommon.adminActivityLog(
+                        admin_id,
+                        "admin/client-master-tracker",
+                        logStatus,
+                        "1",
+                        logDataSuccess,
+                        err,
+                        () => {}
+                      );
+                      console.log(`Step 14`);
+                      if (typeof annexure === "object" && annexure !== null) {
+                        const annexurePromises = [];
+                        console.log(`Step 15`);
+                        for (let key in annexure) {
+                          const db_table = key ?? null;
+                          const modifiedDbTable = db_table
+                            .replace(/-/g, "_")
+                            .toLowerCase();
+                          const subJson = annexure[modifiedDbTable] ?? null;
+
+                          const annexurePromise = new Promise(
+                            (resolve, reject) => {
+                              ClientMasterTrackerModel.getCMTAnnexureByApplicationId(
+                                application_id,
+                                modifiedDbTable,
+                                (err, currentCMTAnnexure) => {
+                                  if (err) {
+                                    console.error(
+                                      "Database error during CMT Annexure retrieval:",
+                                      err
+                                    );
+                                    return reject(err); // Reject the promise on error
+                                  }
+
+                                  let annexureLogStatus =
                                     currentCMTAnnexure &&
                                     Object.keys(currentCMTAnnexure).length > 0
-                                      ? JSON.stringify({
-                                          application_id,
-                                          ...changes,
-                                        })
-                                      : JSON.stringify(mainJson);
+                                      ? "update"
+                                      : "create";
 
-                                  AdminCommon.adminActivityLog(
-                                    admin_id,
-                                    "admin/client-master-tracker",
-                                    annexureLogStatus,
-                                    "0",
-                                    annexureLogData,
-                                    err,
-                                    () => {}
+                                  if (logStatus == "update") {
+                                    cmt_id = currentCMTApplication.id;
+                                  } else if (logStatus == "create") {
+                                    cmt_id = cmtResult.insertId;
+                                  }
+
+                                  ClientMasterTrackerModel.createOrUpdateAnnexure(
+                                    cmt_id,
+                                    application_id,
+                                    branch_id,
+                                    customer_id,
+                                    modifiedDbTable,
+                                    subJson,
+                                    (err, annexureResult) => {
+                                      if (err) {
+                                        console.error(
+                                          "Database error during CMT annexure create or update:",
+                                          err
+                                        );
+
+                                        const annexureLogData =
+                                          currentCMTAnnexure &&
+                                          Object.keys(currentCMTAnnexure)
+                                            .length > 0
+                                            ? JSON.stringify({
+                                                application_id,
+                                                ...changes,
+                                              })
+                                            : JSON.stringify(mainJson);
+
+                                        AdminCommon.adminActivityLog(
+                                          admin_id,
+                                          "admin/client-master-tracker",
+                                          annexureLogStatus,
+                                          "0",
+                                          annexureLogData,
+                                          err,
+                                          () => {}
+                                        );
+
+                                        return reject(err); // Reject the promise on error
+                                      }
+
+                                      AdminCommon.adminActivityLog(
+                                        admin_id,
+                                        "admin/client-master-tracker",
+                                        annexureLogStatus,
+                                        "1",
+                                        logDataSuccess,
+                                        err,
+                                        () => {}
+                                      );
+
+                                      resolve(); // Resolve the promise when successful
+                                    }
                                   );
-
-                                  return reject(err); // Reject the promise on error
                                 }
-
-                                AdminCommon.adminActivityLog(
-                                  admin_id,
-                                  "admin/client-master-tracker",
-                                  annexureLogStatus,
-                                  "1",
-                                  logDataSuccess,
-                                  err,
-                                  () => {}
-                                );
-
-                                resolve(); // Resolve the promise when successful
-                              }
-                            );
-                          }
-                        );
-                      });
-
-                      annexurePromises.push(annexurePromise); // Add the promise to the array
-                    }
-                    console.log(`Step 16`);
-                    // Wait for all annexure operations to complete
-                    Promise.all(annexurePromises)
-                      .then(() => {
-                        console.log(`Step 17`);
-                        BranchCommon.getBranchandCustomerEmailsForNotification(
-                          branch_id,
-                          (emailError, emailData) => {
-                            console.log(`Step 18`);
-                            if (emailError) {
-                              console.error(
-                                "Error fetching emails:",
-                                emailError
                               );
-                              return res.status(500).json({
-                                status: false,
-                                message: "Failed to retrieve email addresses.",
-                                token: newToken,
-                              });
                             }
-                            console.log(`Step 19`);
-                            const { branch, customer } = emailData;
-                            const company_name = customer.name;
+                          );
 
-                            // Prepare recipient and CC lists
-                            const toArr = [
-                              { name: branch.name, email: branch.email },
-                            ];
-                            const ccArr = customer.emails
-                              .split(",")
-                              .map((email) => ({
-                                name: customer.name,
-                                email: email.trim(),
-                              }));
-                            console.log(`Step 20`);
-                            ClientMasterTrackerModel.applicationByID(
-                              application_id,
+                          annexurePromises.push(annexurePromise); // Add the promise to the array
+                        }
+                        console.log(`Step 16`);
+                        // Wait for all annexure operations to complete
+                        Promise.all(annexurePromises)
+                          .then(() => {
+                            console.log(`Step 17`);
+                            BranchCommon.getBranchandCustomerEmailsForNotification(
                               branch_id,
-                              (err, application) => {
-                                console.log(`Step 21`);
-
-                                if (err) {
-                                  console.error("Database error:", err);
+                              (emailError, emailData) => {
+                                console.log(`Step 18`);
+                                if (emailError) {
+                                  console.error(
+                                    "Error fetching emails:",
+                                    emailError
+                                  );
                                   return res.status(500).json({
                                     status: false,
-                                    message: err.message,
+                                    message:
+                                      "Failed to retrieve email addresses.",
                                     token: newToken,
                                   });
                                 }
+                                console.log(`Step 19`);
+                                const { branch, customer } = emailData;
+                                const company_name = customer.name;
 
-                                if (!application) {
-                                  return res.status(404).json({
-                                    status: false,
-                                    message: "Application not found",
-                                    token: newToken,
-                                  });
-                                }
-                                console.log(`Step 22`);
-
-                                ClientMasterTrackerModel.getCMTApplicationById(
+                                // Prepare recipient and CC lists
+                                const toArr = [
+                                  { name: branch.name, email: branch.email },
+                                ];
+                                const ccArr = customer.emails
+                                  .split(",")
+                                  .map((email) => ({
+                                    name: customer.name,
+                                    email: email.trim(),
+                                  }));
+                                console.log(`Step 20`);
+                                ClientMasterTrackerModel.applicationByID(
                                   application_id,
-                                  (err, CMTApplicationData) => {
-                                    console.log(`Step 23`);
+                                  branch_id,
+                                  (err, application) => {
+                                    console.log(`Step 21`);
 
                                     if (err) {
                                       console.error("Database error:", err);
@@ -1256,365 +1252,454 @@ exports.generateReport = (req, res) => {
                                         token: newToken,
                                       });
                                     }
-                                    console.log(`Step 24`);
 
-                                    const case_initiated_date =
-                                      CMTApplicationData.initiation_date ||
-                                      "N/A";
-                                    const final_report_date =
-                                      CMTApplicationData.report_date || "N/A";
-                                    const report_type =
-                                      CMTApplicationData.report_type || "N/A";
-                                    ClientMasterTrackerModel.getAttachmentsByClientAppID(
+                                    if (!application) {
+                                      return res.status(404).json({
+                                        status: false,
+                                        message: "Application not found",
+                                        token: newToken,
+                                      });
+                                    }
+                                    console.log(`Step 22`);
+
+                                    ClientMasterTrackerModel.getCMTApplicationById(
                                       application_id,
-                                      (err, attachments) => {
-                                        console.log(`Step 25`);
+                                      (err, CMTApplicationData) => {
+                                        console.log(`Step 23`);
 
                                         if (err) {
                                           console.error("Database error:", err);
                                           return res.status(500).json({
                                             status: false,
-                                            message: "Database error occurred",
-                                          });
-                                        }
-                                        if (
-                                          !mainJson.overall_status ||
-                                          !mainJson.is_verify
-                                        ) {
-                                          // If there are no annexures, send the response directly
-                                          return res.status(200).json({
-                                            status: true,
-                                            message: `CMT Application ${
-                                              currentCMTApplication &&
-                                              Object.keys(currentCMTApplication)
-                                                .length > 0
-                                                ? "updated"
-                                                : "created"
-                                            } successfully.`,
+                                            message: err.message,
                                             token: newToken,
                                           });
                                         }
+                                        console.log(`Step 24`);
 
-                                        ClientApplication.updateStatus(
-                                          mainJson.overall_status,
+                                        const case_initiated_date =
+                                          CMTApplicationData.initiation_date ||
+                                          "N/A";
+                                        const final_report_date =
+                                          CMTApplicationData.report_date ||
+                                          "N/A";
+                                        const report_type =
+                                          CMTApplicationData.report_type ||
+                                          "N/A";
+                                        ClientMasterTrackerModel.getAttachmentsByClientAppID(
                                           application_id,
-                                          (err, result) => {
-                                            console.log(`Step 26`);
+                                          (err, attachments) => {
+                                            console.log(`Step 25`);
 
                                             if (err) {
                                               console.error(
-                                                "Database error during client application status update:",
+                                                "Database error:",
                                                 err
                                               );
                                               return res.status(500).json({
                                                 status: false,
-                                                message: err.message,
+                                                message:
+                                                  "Database error occurred",
+                                              });
+                                            }
+                                            if (
+                                              !mainJson.overall_status ||
+                                              !mainJson.is_verify
+                                            ) {
+                                              // If there are no annexures, send the response directly
+                                              return res.status(200).json({
+                                                status: true,
+                                                message: `CMT Application ${
+                                                  currentCMTApplication &&
+                                                  Object.keys(
+                                                    currentCMTApplication
+                                                  ).length > 0
+                                                    ? "updated"
+                                                    : "created"
+                                                } successfully.`,
                                                 token: newToken,
                                               });
                                             }
-                                            mainJson.is_verify =
-                                              mainJson.is_verify &&
-                                              mainJson.is_verify !== ""
-                                                ? mainJson.is_verify
-                                                : "no";
-                                            console.log(`Step 27`);
-                                            console.log(`Step 28`);
 
-                                            const status =
-                                              mainJson.overall_status.toLowerCase();
-                                            const verified =
-                                              mainJson.is_verify.toLowerCase();
+                                            ClientApplication.updateStatus(
+                                              mainJson.overall_status,
+                                              application_id,
+                                              (err, result) => {
+                                                console.log(`Step 26`);
 
-                                            const gender =
-                                              mainJson.gender?.toLowerCase();
-                                            const marital_status =
-                                              mainJson.marital_status?.toLowerCase();
-
-                                            let gender_title = "Mr.";
-
-                                            if (gender === "male") {
-                                              gender_title = "Mr.";
-                                            } else if (gender === "female") {
-                                              gender_title =
-                                                marital_status === "married"
-                                                  ? "Mrs."
-                                                  : "Ms.";
-                                            }
-
-                                            if (
-                                              status === "completed" ||
-                                              status === "complete"
-                                            ) {
-                                              console.log(`Step 29`);
-
-                                              if (verified === "yes") {
-                                                console.log(`Step 30`);
-
-                                                if (send_mail == 0) {
-                                                  console.log(`Step 31`);
-
-                                                  return res.status(200).json({
-                                                    status: true,
-                                                    message: `CMT Application ${
-                                                      currentCMTApplication &&
-                                                      Object.keys(
-                                                        currentCMTApplication
-                                                      ).length > 0
-                                                        ? "updated"
-                                                        : "created"
-                                                    } successfully`,
-                                                    email_status: 1,
+                                                if (err) {
+                                                  console.error(
+                                                    "Database error during client application status update:",
+                                                    err
+                                                  );
+                                                  return res.status(500).json({
+                                                    status: false,
+                                                    message: err.message,
                                                     token: newToken,
                                                   });
                                                 }
+                                                mainJson.is_verify =
+                                                  mainJson.is_verify &&
+                                                  mainJson.is_verify !== ""
+                                                    ? mainJson.is_verify
+                                                    : "no";
+                                                console.log(`Step 27`);
+                                                console.log(`Step 28`);
 
-                                                // Send email notification
-                                                finalReportMail(
-                                                  "cmt",
-                                                  "final",
-                                                  company_name,
-                                                  gender_title,
-                                                  application.name,
-                                                  application.application_id,
-                                                  case_initiated_date,
-                                                  final_report_date,
-                                                  report_type,
-                                                  mainJson.overall_status,
-                                                  attachments,
-                                                  toArr,
-                                                  ccArr
-                                                )
-                                                  .then(() => {
-                                                    console.log(`Step 32`);
+                                                const status =
+                                                  mainJson.overall_status.toLowerCase();
+                                                const verified =
+                                                  mainJson.is_verify.toLowerCase();
 
-                                                    return res
-                                                      .status(200)
-                                                      .json({
-                                                        status: true,
-                                                        message: `CMT Application ${
-                                                          currentCMTApplication &&
-                                                          Object.keys(
-                                                            currentCMTApplication
-                                                          ).length > 0
-                                                            ? "updated"
-                                                            : "created"
-                                                        } successfully and mail sent.`,
-                                                        token: newToken,
-                                                      });
-                                                  })
-                                                  .catch((emailError) => {
-                                                    console.error(
-                                                      "Error sending email:",
-                                                      emailError
-                                                    );
-                                                    console.log(`Step 33`);
+                                                const gender =
+                                                  mainJson.gender?.toLowerCase();
+                                                const marital_status =
+                                                  mainJson.marital_status?.toLowerCase();
 
-                                                    return res
-                                                      .status(200)
-                                                      .json({
-                                                        status: true,
-                                                        message: `CMT Application ${
-                                                          currentCMTApplication &&
-                                                          Object.keys(
-                                                            currentCMTApplication
-                                                          ).length > 0
-                                                            ? "updated"
-                                                            : "created"
-                                                        } successfully but failed to send mail.`,
-                                                        token: newToken,
-                                                      });
-                                                  });
-                                              } else if (verified === "no") {
-                                                console.log(`Step 34`);
+                                                let gender_title = "Mr.";
 
-                                                if (send_mail == 0) {
-                                                  console.log(`Step 35`);
-
-                                                  return res.status(200).json({
-                                                    status: true,
-                                                    message: `CMT Application ${
-                                                      currentCMTApplication &&
-                                                      Object.keys(
-                                                        currentCMTApplication
-                                                      ).length > 0
-                                                        ? "updated"
-                                                        : "created"
-                                                    } successfully`,
-                                                    email_status: 2,
-                                                    token: newToken,
-                                                  });
+                                                if (gender === "male") {
+                                                  gender_title = "Mr.";
+                                                } else if (
+                                                  gender === "female"
+                                                ) {
+                                                  gender_title =
+                                                    marital_status === "married"
+                                                      ? "Mrs."
+                                                      : "Ms.";
                                                 }
-                                                qcReportCheckMail(
-                                                  "cmt",
-                                                  "qc",
-                                                  gender_title,
-                                                  application.name,
-                                                  application.application_id,
-                                                  attachments,
-                                                  toArr,
-                                                  ccArr
-                                                )
-                                                  .then(() => {
-                                                    console.log(`Step 36`);
 
-                                                    return res
-                                                      .status(200)
-                                                      .json({
-                                                        status: true,
-                                                        message: `CMT Application ${
-                                                          currentCMTApplication &&
-                                                          Object.keys(
-                                                            currentCMTApplication
-                                                          ).length > 0
-                                                            ? "updated"
-                                                            : "created"
-                                                        } successfully and mail sent.`,
-                                                        token: newToken,
-                                                      });
-                                                  })
-                                                  .catch((emailError) => {
-                                                    console.error(
-                                                      "Error sending email:",
-                                                      emailError
-                                                    );
-                                                    console.log(`Step 37`);
+                                                if (
+                                                  status === "completed" ||
+                                                  status === "complete"
+                                                ) {
+                                                  console.log(`Step 29`);
 
-                                                    return res
-                                                      .status(200)
-                                                      .json({
-                                                        status: true,
-                                                        message: `CMT Application ${
-                                                          currentCMTApplication &&
-                                                          Object.keys(
-                                                            currentCMTApplication
-                                                          ).length > 0
-                                                            ? "updated"
-                                                            : "created"
-                                                        } successfully but failed to send mail.`,
-                                                        token: newToken,
-                                                      });
-                                                  });
-                                                console.log(`Step 38`);
-                                              } else {
-                                                console.log(`Step 39`);
+                                                  if (verified === "yes") {
+                                                    console.log(`Step 30`);
 
-                                                return res.status(200).json({
-                                                  status: true,
-                                                  message: `CMT Application ${
-                                                    currentCMTApplication &&
-                                                    Object.keys(
-                                                      currentCMTApplication
-                                                    ).length > 0
-                                                      ? "updated"
-                                                      : "created"
-                                                  } successfully.`,
-                                                  token: newToken,
-                                                });
-                                              }
-                                            } else {
-                                              console.log(`Step 40`);
+                                                    if (send_mail == 0) {
+                                                      console.log(`Step 31`);
 
-                                              const completeStatusArr = [
-                                                "completed",
-                                                "completed_green",
-                                                "completed_red",
-                                                "completed_yellow",
-                                                "completed_pink",
-                                                "completed_orange",
-                                              ];
-
-                                              let allMatch = true;
-
-                                              // Loop through the annexure object
-                                              for (let key in annexure) {
-                                                const db_table = key ?? null;
-                                                const modifiedDbTable =
-                                                  db_table.replace(/-/g, "_");
-                                                const subJson =
-                                                  annexure[modifiedDbTable] ??
-                                                  null;
-
-                                                if (subJson) {
-                                                  for (let prop in subJson) {
-                                                    if (
-                                                      prop.startsWith(
-                                                        "color_status"
-                                                      )
-                                                    ) {
-                                                      const colorStatusValue =
-                                                        typeof subJson[prop] ===
-                                                        "string"
-                                                          ? subJson[
-                                                              prop
-                                                            ].toLowerCase()
-                                                          : null;
-
-                                                      if (
-                                                        !completeStatusArr.includes(
-                                                          colorStatusValue
-                                                        )
-                                                      ) {
-                                                        allMatch = false;
-                                                        break;
-                                                      }
+                                                      return res
+                                                        .status(200)
+                                                        .json({
+                                                          status: true,
+                                                          message: `CMT Application ${
+                                                            currentCMTApplication &&
+                                                            Object.keys(
+                                                              currentCMTApplication
+                                                            ).length > 0
+                                                              ? "updated"
+                                                              : "created"
+                                                          } successfully`,
+                                                          email_status: 1,
+                                                          token: newToken,
+                                                        });
                                                     }
+
+                                                    // Send email notification
+                                                    finalReportMail(
+                                                      "cmt",
+                                                      "final",
+                                                      company_name,
+                                                      gender_title,
+                                                      application.name,
+                                                      application.application_id,
+                                                      case_initiated_date,
+                                                      final_report_date,
+                                                      report_type,
+                                                      mainJson.overall_status,
+                                                      attachments,
+                                                      toArr,
+                                                      ccArr
+                                                    )
+                                                      .then(() => {
+                                                        console.log(`Step 32`);
+
+                                                        return res
+                                                          .status(200)
+                                                          .json({
+                                                            status: true,
+                                                            message: `CMT Application ${
+                                                              currentCMTApplication &&
+                                                              Object.keys(
+                                                                currentCMTApplication
+                                                              ).length > 0
+                                                                ? "updated"
+                                                                : "created"
+                                                            } successfully and mail sent.`,
+                                                            token: newToken,
+                                                          });
+                                                      })
+                                                      .catch((emailError) => {
+                                                        console.error(
+                                                          "Error sending email:",
+                                                          emailError
+                                                        );
+                                                        console.log(`Step 33`);
+
+                                                        return res
+                                                          .status(200)
+                                                          .json({
+                                                            status: true,
+                                                            message: `CMT Application ${
+                                                              currentCMTApplication &&
+                                                              Object.keys(
+                                                                currentCMTApplication
+                                                              ).length > 0
+                                                                ? "updated"
+                                                                : "created"
+                                                            } successfully but failed to send mail.`,
+                                                            token: newToken,
+                                                          });
+                                                      });
+                                                  } else if (
+                                                    verified === "no"
+                                                  ) {
+                                                    console.log(`Step 34`);
+
+                                                    if (send_mail == 0) {
+                                                      console.log(`Step 35`);
+
+                                                      return res
+                                                        .status(200)
+                                                        .json({
+                                                          status: true,
+                                                          message: `CMT Application ${
+                                                            currentCMTApplication &&
+                                                            Object.keys(
+                                                              currentCMTApplication
+                                                            ).length > 0
+                                                              ? "updated"
+                                                              : "created"
+                                                          } successfully`,
+                                                          email_status: 2,
+                                                          token: newToken,
+                                                        });
+                                                    }
+                                                    qcReportCheckMail(
+                                                      "cmt",
+                                                      "qc",
+                                                      gender_title,
+                                                      application.name,
+                                                      application.application_id,
+                                                      attachments,
+                                                      toArr,
+                                                      ccArr
+                                                    )
+                                                      .then(() => {
+                                                        console.log(`Step 36`);
+
+                                                        return res
+                                                          .status(200)
+                                                          .json({
+                                                            status: true,
+                                                            message: `CMT Application ${
+                                                              currentCMTApplication &&
+                                                              Object.keys(
+                                                                currentCMTApplication
+                                                              ).length > 0
+                                                                ? "updated"
+                                                                : "created"
+                                                            } successfully and mail sent.`,
+                                                            token: newToken,
+                                                          });
+                                                      })
+                                                      .catch((emailError) => {
+                                                        console.error(
+                                                          "Error sending email:",
+                                                          emailError
+                                                        );
+                                                        console.log(`Step 37`);
+
+                                                        return res
+                                                          .status(200)
+                                                          .json({
+                                                            status: true,
+                                                            message: `CMT Application ${
+                                                              currentCMTApplication &&
+                                                              Object.keys(
+                                                                currentCMTApplication
+                                                              ).length > 0
+                                                                ? "updated"
+                                                                : "created"
+                                                            } successfully but failed to send mail.`,
+                                                            token: newToken,
+                                                          });
+                                                      });
+                                                    console.log(`Step 38`);
+                                                  } else {
+                                                    console.log(`Step 39`);
+
+                                                    return res
+                                                      .status(200)
+                                                      .json({
+                                                        status: true,
+                                                        message: `CMT Application ${
+                                                          currentCMTApplication &&
+                                                          Object.keys(
+                                                            currentCMTApplication
+                                                          ).length > 0
+                                                            ? "updated"
+                                                            : "created"
+                                                        } successfully.`,
+                                                        token: newToken,
+                                                      });
                                                   }
                                                 } else {
-                                                  allMatch = false;
-                                                  break;
-                                                }
-                                              }
-                                              console.log(`Step 41`);
+                                                  console.log(`Step 40`);
 
-                                              // Log the overall result
-                                              if (allMatch) {
-                                                console.log(`Step 42`);
+                                                  const completeStatusArr = [
+                                                    "completed",
+                                                    "completed_green",
+                                                    "completed_red",
+                                                    "completed_yellow",
+                                                    "completed_pink",
+                                                    "completed_orange",
+                                                  ];
 
-                                                if (send_mail == 0) {
-                                                  console.log(`Step 43`);
+                                                  let allMatch = true;
 
-                                                  return res.status(200).json({
-                                                    status: true,
-                                                    message: `CMT Application ${
-                                                      currentCMTApplication &&
-                                                      Object.keys(
-                                                        currentCMTApplication
-                                                      ).length > 0
-                                                        ? "updated"
-                                                        : "created"
-                                                    } successfully`,
-                                                    email_status: 2,
-                                                    token: newToken,
-                                                  });
-                                                }
-                                                readyForReport(
-                                                  "cmt",
-                                                  "ready",
-                                                  application.application_id,
-                                                  application.name,
-                                                  mainJson.overall_status
-                                                    .length < 4
-                                                    ? mainJson.overall_status
-                                                        .toUpperCase()
-                                                        .replace(
-                                                          /[^a-zA-Z0-9]/g,
-                                                          " "
-                                                        )
-                                                    : mainJson.overall_status
-                                                        .replace(
-                                                          /[^a-zA-Z0-9\s]/g,
-                                                          " "
-                                                        )
-                                                        .replace(
-                                                          /\b\w/g,
-                                                          (char) =>
-                                                            char.toUpperCase()
-                                                        ),
-                                                  toArr,
-                                                  ccArr
-                                                )
-                                                  .then(() => {
-                                                    console.log(`Step 44`);
+                                                  // Loop through the annexure object
+                                                  for (let key in annexure) {
+                                                    const db_table =
+                                                      key ?? null;
+                                                    const modifiedDbTable =
+                                                      db_table.replace(
+                                                        /-/g,
+                                                        "_"
+                                                      );
+                                                    const subJson =
+                                                      annexure[
+                                                        modifiedDbTable
+                                                      ] ?? null;
+
+                                                    if (subJson) {
+                                                      for (let prop in subJson) {
+                                                        if (
+                                                          prop.startsWith(
+                                                            "color_status"
+                                                          )
+                                                        ) {
+                                                          const colorStatusValue =
+                                                            typeof subJson[
+                                                              prop
+                                                            ] === "string"
+                                                              ? subJson[
+                                                                  prop
+                                                                ].toLowerCase()
+                                                              : null;
+
+                                                          if (
+                                                            !completeStatusArr.includes(
+                                                              colorStatusValue
+                                                            )
+                                                          ) {
+                                                            allMatch = false;
+                                                            break;
+                                                          }
+                                                        }
+                                                      }
+                                                    } else {
+                                                      allMatch = false;
+                                                      break;
+                                                    }
+                                                  }
+                                                  console.log(`Step 41`);
+
+                                                  // Log the overall result
+                                                  if (allMatch) {
+                                                    console.log(`Step 42`);
+
+                                                    if (send_mail == 0) {
+                                                      console.log(`Step 43`);
+
+                                                      return res
+                                                        .status(200)
+                                                        .json({
+                                                          status: true,
+                                                          message: `CMT Application ${
+                                                            currentCMTApplication &&
+                                                            Object.keys(
+                                                              currentCMTApplication
+                                                            ).length > 0
+                                                              ? "updated"
+                                                              : "created"
+                                                          } successfully`,
+                                                          email_status: 2,
+                                                          token: newToken,
+                                                        });
+                                                    }
+                                                    readyForReport(
+                                                      "cmt",
+                                                      "ready",
+                                                      application.application_id,
+                                                      application.name,
+                                                      mainJson.overall_status
+                                                        .length < 4
+                                                        ? mainJson.overall_status
+                                                            .toUpperCase()
+                                                            .replace(
+                                                              /[^a-zA-Z0-9]/g,
+                                                              " "
+                                                            )
+                                                        : mainJson.overall_status
+                                                            .replace(
+                                                              /[^a-zA-Z0-9\s]/g,
+                                                              " "
+                                                            )
+                                                            .replace(
+                                                              /\b\w/g,
+                                                              (char) =>
+                                                                char.toUpperCase()
+                                                            ),
+                                                      toArr,
+                                                      ccArr
+                                                    )
+                                                      .then(() => {
+                                                        console.log(`Step 44`);
+
+                                                        return res
+                                                          .status(200)
+                                                          .json({
+                                                            status: true,
+                                                            message: `CMT Application ${
+                                                              currentCMTApplication &&
+                                                              Object.keys(
+                                                                currentCMTApplication
+                                                              ).length > 0
+                                                                ? "updated"
+                                                                : "created"
+                                                            } successfully and mail sent.`,
+                                                            token: newToken,
+                                                          });
+                                                      })
+                                                      .catch((emailError) => {
+                                                        console.log(`Step 45`);
+
+                                                        console.error(
+                                                          "Error sending email:",
+                                                          emailError
+                                                        );
+
+                                                        return res
+                                                          .status(200)
+                                                          .json({
+                                                            status: true,
+                                                            message: `CMT Application ${
+                                                              currentCMTApplication &&
+                                                              Object.keys(
+                                                                currentCMTApplication
+                                                              ).length > 0
+                                                                ? "updated"
+                                                                : "created"
+                                                            } successfully but failed to send mail.`,
+                                                            token: newToken,
+                                                          });
+                                                      });
+                                                  } else {
+                                                    console.log(`Step 46`);
 
                                                     return res
                                                       .status(200)
@@ -1627,50 +1712,13 @@ exports.generateReport = (req, res) => {
                                                           ).length > 0
                                                             ? "updated"
                                                             : "created"
-                                                        } successfully and mail sent.`,
+                                                        } successfully.`,
                                                         token: newToken,
                                                       });
-                                                  })
-                                                  .catch((emailError) => {
-                                                    console.log(`Step 45`);
-
-                                                    console.error(
-                                                      "Error sending email:",
-                                                      emailError
-                                                    );
-
-                                                    return res
-                                                      .status(200)
-                                                      .json({
-                                                        status: true,
-                                                        message: `CMT Application ${
-                                                          currentCMTApplication &&
-                                                          Object.keys(
-                                                            currentCMTApplication
-                                                          ).length > 0
-                                                            ? "updated"
-                                                            : "created"
-                                                        } successfully but failed to send mail.`,
-                                                        token: newToken,
-                                                      });
-                                                  });
-                                              } else {
-                                                console.log(`Step 46`);
-
-                                                return res.status(200).json({
-                                                  status: true,
-                                                  message: `CMT Application ${
-                                                    currentCMTApplication &&
-                                                    Object.keys(
-                                                      currentCMTApplication
-                                                    ).length > 0
-                                                      ? "updated"
-                                                      : "created"
-                                                  } successfully.`,
-                                                  token: newToken,
-                                                });
+                                                  }
+                                                }
                                               }
-                                            }
+                                            );
                                           }
                                         );
                                       }
@@ -1679,29 +1727,29 @@ exports.generateReport = (req, res) => {
                                 );
                               }
                             );
-                          }
-                        );
-                      })
-                      .catch((error) => {
-                        return res.status(500).json({
-                          status: false,
-                          message: error,
+                          })
+                          .catch((error) => {
+                            return res.status(500).json({
+                              status: false,
+                              message: error,
+                              token: newToken,
+                            });
+                          });
+                      } else {
+                        // If there are no annexures, send the response directly
+                        return res.status(200).json({
+                          status: true,
+                          message: `CMT Application ${
+                            currentCMTApplication &&
+                            Object.keys(currentCMTApplication).length > 0
+                              ? "updated"
+                              : "created"
+                          } successfully.`,
                           token: newToken,
                         });
-                      });
-                  } else {
-                    // If there are no annexures, send the response directly
-                    return res.status(200).json({
-                      status: true,
-                      message: `CMT Application ${
-                        currentCMTApplication &&
-                        Object.keys(currentCMTApplication).length > 0
-                          ? "updated"
-                          : "created"
-                      } successfully.`,
-                      token: newToken,
-                    });
-                  }
+                      }
+                    }
+                  );
                 }
               );
             }

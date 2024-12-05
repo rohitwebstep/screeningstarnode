@@ -1278,6 +1278,34 @@ const Customer = {
       });
     });
   },
+
+  updateDataQC: (data, callback) => {
+    const { application_id, data_qc } = data;
+
+    // If no duplicates are found, proceed with updating the admin record
+    const sql = `
+        UPDATE \`client_applications\` 
+        SET 
+          \`is_data_qc\` = ?
+        WHERE \`id\` = ?
+      `;
+
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(err, null);
+      }
+
+      connection.query(sql, [data_qc, application_id], (queryErr, results) => {
+        connectionRelease(connection); // Release the connection
+
+        if (queryErr) {
+          console.error("Database query error: 51", queryErr);
+          return callback(queryErr, null);
+        }
+        callback(null, results);
+      });
+    });
+  },
 };
 
 module.exports = Customer;
