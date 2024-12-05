@@ -273,14 +273,12 @@ exports.applicationListByBranch = (req, res) => {
           (err, result) => {
             if (err) {
               console.error("Database error:", err);
-              return res
-                .status(500)
-                .json({
-                  status: false,
-                  err,
-                  message: err.message,
-                  token: newToken,
-                });
+              return res.status(500).json({
+                status: false,
+                err,
+                message: err.message,
+                token: newToken,
+              });
             }
 
             res.json({
@@ -977,10 +975,44 @@ exports.generateReport = (req, res) => {
               console.log(`Step 5`);
 
               // Flatten the updated_json object and separate annexure
-              let { mainJson, annexureRawJson } =
+              let { mainJsonRaw, annexureRawJson } =
                 flattenJsonWithAnnexure(updated_json);
               console.log(`Step 6`);
 
+              // Array of keys you want to delete
+              const keysToDelete = [
+                "month_year",
+                "initiation_date",
+                "organization_name",
+                "verification_purpose",
+                "employee_id",
+                "client_code",
+                "applicant_name",
+                "contact_number",
+                "contact_number2",
+                "father_name",
+                "dob",
+                "gender",
+                "marital_status",
+                "address",
+                "landmark",
+                "residence_mobile_number",
+                "state",
+                "permanent_address",
+                "permanent_sender_name",
+                "permanent_receiver_name",
+                "permanent_landmark",
+                "permanent_pin_code",
+                "permanent_state",
+              ];
+
+              // Remove keys in keysToDelete from mainJsonRaw
+              Object.keys(mainJsonRaw).forEach((key) => {
+                if (keysToDelete.includes(key)) {
+                  delete mainJsonRaw[key];
+                }
+              });
+              const mainJson = mainJsonRaw;
               // Declare changes outside the conditional block
               const changes = {};
               let logStatus = "create";
