@@ -207,19 +207,21 @@ const common = {
           );
         }
 
-        // Console log the role
+        // Get the admin's role
         const role = results[0].role;
 
         const permissionsJsonByRoleSQL = `SELECT \`json\` FROM \`permissions\` WHERE \`role\` = ?`;
-        pool.query(permissionsJsonByRoleSQL, [role], (err, results) => {
-          connectionRelease(connection);
+        connection.query(permissionsJsonByRoleSQL, [role], (err, results) => {
           if (err) {
+            connectionRelease(connection);
             console.error("Database query error: 30", err);
             return callback(
               { message: "Database query error", error: err },
               null
             );
           }
+
+          connectionRelease(connection);
 
           if (results.length === 0) {
             console.error(`No permissions found for the admin role`);
@@ -228,7 +230,6 @@ const common = {
 
           const permissionsRaw = results[0].json;
 
-          // Check if permissions field is empty or null
           if (!permissionsRaw) {
             console.error("Permissions field is empty");
             return callback({
@@ -237,25 +238,32 @@ const common = {
             });
           }
 
-          // Console log the json
-          const permissionsJson = JSON.parse(permissionsRaw);
-          const permissions =
-            typeof permissionsJson === "string"
-              ? JSON.parse(permissionsJson)
-              : permissionsJson;
+          try {
+            const permissionsJson = JSON.parse(permissionsRaw);
+            const permissions =
+              typeof permissionsJson === "string"
+                ? JSON.parse(permissionsJson)
+                : permissionsJson;
 
-          // Check if the action type exists in the permissions object
-          if (!permissions[action]) {
-            console.error("Action type not found in permissions");
+            if (!permissions[action]) {
+              console.error("Action type not found in permissions");
+              return callback({
+                status: false,
+                message: "Access Denied",
+              });
+            }
+
+            return callback({
+              status: true,
+              message: "Authorization Successful",
+            });
+          } catch (parseErr) {
+            console.error("Error parsing permissions JSON:", parseErr);
             return callback({
               status: false,
               message: "Access Denied",
             });
           }
-          return callback({
-            status: true,
-            message: "Authorization Successful",
-          });
         });
       });
     });
