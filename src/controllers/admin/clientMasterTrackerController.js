@@ -1286,15 +1286,6 @@ exports.generateReport = (req, res) => {
                                                 ? mainJson.is_verify
                                                 : "no";
                                             console.log(`Step 27`);
-                                            console.log(
-                                              `mainJson.overall_status - `,
-                                              mainJson.overall_status
-                                            );
-                                            console.log(
-                                              `mainJson.is_verify - `,
-                                              mainJson.is_verify
-                                            );
-
                                             console.log(`Step 28`);
 
                                             const status =
