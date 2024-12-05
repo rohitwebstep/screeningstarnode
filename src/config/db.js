@@ -33,7 +33,7 @@ const startConnection = (callback) => {
 // Function to release a connection
 const connectionRelease = (connection) => {
   if (connection) {
-    // connection.release();
+    connection.release();
     console.log("Connection released");
   }
 };
