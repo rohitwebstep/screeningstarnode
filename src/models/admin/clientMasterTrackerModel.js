@@ -149,7 +149,7 @@ const Customer = {
                   BranchesCTE b
               INNER JOIN 
                   client_applications ca ON b.branch_id = ca.branch_id
-              /* WHERE ca.status != 'closed' */
+              WHERE ca.is_data_qc = 1
               GROUP BY 
                   b.customer_id
           ) AS application_counts ON customers.id = application_counts.customer_id
