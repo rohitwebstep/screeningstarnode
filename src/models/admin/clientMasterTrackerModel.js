@@ -313,6 +313,7 @@ const Customer = {
           cmt.third_insuff_reopened_date,
           cmt.overall_status,
           cmt.is_verify,
+          cmt.dob,
           cmt.report_date,
           cmt.report_status,
           cmt.report_type,
