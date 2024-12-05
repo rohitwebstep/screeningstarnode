@@ -315,6 +315,74 @@ const Customer = {
     });
   },
 
+  getCustomerById: (id, callback) => {
+    const sql = "SELECT * FROM `customers` WHERE `id` = ?";
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
+      connection.query(sql, [id], (err, results) => {
+        connectionRelease(connection);
+        if (err) {
+          console.error("Database query error: 60", err);
+          return callback(err, null);
+        }
+        if (results.length === 0) {
+          connectionRelease(connection);
+          return callback(null, { message: "No customer data found" });
+        }
+
+        const customerData = results[0];
+
+        let servicesData;
+        try {
+          servicesData = JSON.parse(customerData.services);
+        } catch (parseError) {
+          connectionRelease(connection);
+          return callback(parseError, null);
+        }
+
+        const updateServiceTitles = async () => {
+          try {
+            for (const group of servicesData) {
+              for (const service of group.services) {
+                const serviceSql = `SELECT title FROM services WHERE id = ?`;
+                const [rows] = await new Promise((resolve, reject) => {
+                  connection.query(
+                    serviceSql,
+                    [service.serviceId],
+                    (err, results) => {
+                      if (err) {
+                        console.error("Error querying service title:", err);
+                        return reject(err);
+                      }
+                      resolve(results);
+                    }
+                  );
+                });
+
+                if (rows && rows.title) {
+                  service.serviceTitle = rows.title;
+                }
+              }
+            }
+          } catch (err) {
+            console.error("Error updating service titles:", err);
+          } finally {
+            connectionRelease(connection);
+            customerData.services = JSON.stringify(servicesData);
+            callback(null, customerData);
+          }
+        };
+
+        updateServiceTitles();
+      });
+    });
+  },
+
   getCMTAnnexureByApplicationId: (
     client_application_id,
     db_table,

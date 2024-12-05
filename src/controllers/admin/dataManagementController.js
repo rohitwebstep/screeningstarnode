@@ -617,8 +617,6 @@ exports.submit = (req, res) => {
                     "dob",
                     "gender",
                     "marital_status",
-                    "nationality",
-                    "insuff",
                     "address",
                     "landmark",
                     "residence_mobile_number",
