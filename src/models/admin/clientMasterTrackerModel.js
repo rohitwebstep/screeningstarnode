@@ -311,18 +311,20 @@ const Customer = {
           cmt.third_insufficiency_marks,
           cmt.third_insuff_date,
           cmt.third_insuff_reopened_date,
-          cmt.overall_status,
-          cmt.is_verify,
+          cmt.final_verification_status,
           cmt.dob,
-          cmt.report_date,
-          cmt.report_status,
-          cmt.report_type,
+          cmt.is_verify,
           cmt.qc_done_by,
-          qc_admin.name AS qc_done_by_name,
+          cmt.report_date,
+          cmt.case_upload,
+          cmt.report_type,
           cmt.delay_reason,
+          cmt.report_status,
+          cmt.overall_status,
+          cmt.initiation_date,
           cmt.report_generate_by,
-          report_admin.name AS report_generated_by_name,
-          cmt.case_upload
+          qc_admin.name AS qc_done_by_name,
+          report_admin.name AS report_generated_by_name
         FROM 
           \`client_applications\` ca
         LEFT JOIN 
