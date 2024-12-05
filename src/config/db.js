@@ -33,8 +33,8 @@ const startConnection = (callback) => {
 // Function to release a connection
 const connectionRelease = (connection) => {
   if (connection) {
-    connection.release(); // Release the connection back to the pool
-    console.log("Connection released"); // Optional: Log connection release
+    // connection.release();
+    console.log("Connection released");
   }
 };
 
