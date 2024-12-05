@@ -3,9 +3,6 @@ const {
   startConnection,
   connectionRelease,
 } = require("../../../config/db");
-const {
-  updatePassword,
-} = require("../../../controllers/customer/branch/sub_user/subUserController");
 
 const subUser = {
   create: (data, callback) => {
