@@ -372,7 +372,7 @@ exports.applicationByID = (req, res) => {
           if (!application) {
             return res.status(404).json({
               status: false,
-              message: "Application not found",
+              message: "Application not found 1",
               token: newToken,
             });
           }
@@ -1256,7 +1256,7 @@ exports.generateReport = (req, res) => {
                                     if (!application) {
                                       return res.status(404).json({
                                         status: false,
-                                        message: "Application not found",
+                                        message: "Application not found 2",
                                         token: newToken,
                                       });
                                     }
@@ -2136,10 +2136,10 @@ exports.upload = async (req, res) => {
                       }
 
                       if (!application) {
-                        console.warn("Application not found");
+                        console.warn("Application not found 3");
                         return res.status(404).json({
                           status: false,
-                          message: "Application not found",
+                          message: "Application not found 3",
                           token: newToken,
                           savedImagePaths,
                         });
