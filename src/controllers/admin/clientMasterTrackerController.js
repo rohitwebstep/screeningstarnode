@@ -885,7 +885,7 @@ exports.generateReport = (req, res) => {
     }
 
     recursiveFlatten(jsonObj);
-    return { mainJson: result, annexureRawJson: annexureResult };
+    return { mainJsonRaw: result, annexureRawJson: annexureResult };
   }
 
   const action = "admin_manager";
