@@ -629,6 +629,12 @@ exports.submit = (req, res) => {
                     "permanent_state",
                   ];
 
+                  const requiredKeys = [
+                    "month_year",
+                    "verification_purpose",
+                    "applicant_name"
+                  ];
+
                   const mainJson = Object.keys(mainJsonRaw)
                     .filter((key) => allowedKeys.includes(key))
                     .reduce((obj, key) => {
@@ -636,18 +642,18 @@ exports.submit = (req, res) => {
                       return obj;
                     }, {});
 
-                  const hasEmptyValue = Object.values(mainJson).some(
-                    (value) => value === null || value === ""
+                  // Check if the required keys are all filled
+                  const hasEmptyRequiredFields = requiredKeys.some(
+                    (key) => !mainJson[key] || mainJson[key] === ""
                   );
 
-                  if (hasEmptyValue) {
+                  if (hasEmptyRequiredFields) {
                     return res.status(400).json({
                       status: false,
-                      message: "Please complete all required fields.",
+                      message: "Please ensure required fields are filled.",
                       token: newToken,
                     });
                   }
-
                   const changes = {};
                   let logStatus = "create";
 
