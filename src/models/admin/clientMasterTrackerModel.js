@@ -383,7 +383,7 @@ const Customer = {
 
       // Use a parameterized query to prevent SQL injection
       const sql =
-        "SELECT * FROM `client_applications` WHERE `id` = ? AND `branch_id` = ? AND `is_data_qc` = 1 ORDER BY `created_at` DESC";
+        "SELECT * FROM `client_applications` WHERE `id` = ? AND `branch_id` = ? ORDER BY `created_at` DESC";
 
       connection.query(sql, [application_id, branch_id], (err, results) => {
         connectionRelease(connection); // Release the connection

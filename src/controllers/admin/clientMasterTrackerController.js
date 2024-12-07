@@ -377,6 +377,15 @@ exports.applicationByID = (req, res) => {
             });
           }
 
+          if (application.is_data_qc !== 1) {
+            console.warn("Application Data QC is not done yet 3");
+            return res.status(404).json({
+              status: false,
+              message: "Data QC for application data is pending.",
+              token: newToken,
+            });
+          }
+
           ClientMasterTrackerModel.getCMTApplicationById(
             application_id,
             (err, CMTApplicationData) => {
@@ -975,274 +984,292 @@ exports.generateReport = (req, res) => {
                 });
               }
 
-              ClientMasterTrackerModel.updateDataQC(
-                { application_id, data_qc },
-                (err, result) => {
+              console.log(`Step 5`);
+
+              // Flatten the updated_json object and separate annexure
+              let { mainJsonRaw, annexureRawJson } =
+                flattenJsonWithAnnexure(updated_json);
+              console.log(`Step 6`);
+
+              // Array of keys you want to delete
+              const keysToDelete = [
+                "month_year",
+                "initiation_date",
+                "organization_name",
+                "verification_purpose",
+                "employee_id",
+                "client_code",
+                "applicant_name",
+                "contact_number",
+                "contact_number2",
+                "father_name",
+                "dob",
+                "gender",
+                "marital_status",
+                "address",
+                "landmark",
+                "residence_mobile_number",
+                "state",
+                "permanent_address",
+                "permanent_sender_name",
+                "permanent_receiver_name",
+                "permanent_landmark",
+                "permanent_pin_code",
+                "permanent_state",
+              ];
+
+              // Remove keys in keysToDelete from mainJsonRaw
+              Object.keys(mainJsonRaw).forEach((key) => {
+                if (keysToDelete.includes(key)) {
+                  delete mainJsonRaw[key];
+                }
+              });
+              const mainJson = mainJsonRaw;
+              // Declare changes outside the conditional block
+              const changes = {};
+              let logStatus = "create";
+              if (
+                currentCMTApplication &&
+                Object.keys(currentCMTApplication).length > 0
+              ) {
+                console.log(`Step 7`);
+
+                logStatus = "update";
+                const compareAndAddChanges = (key, newValue) => {
+                  if (currentCMTApplication[key] !== newValue) {
+                    changes[key] = {
+                      old: currentCMTApplication[key],
+                      new: newValue,
+                    };
+                  }
+                };
+                console.log(`Step 8`);
+
+                // Compare and log changes
+                Object.keys(mainJson).forEach((key) =>
+                  compareAndAddChanges(key, mainJson[key])
+                );
+              }
+              console.log(`Step 9`);
+
+              ClientMasterTrackerModel.generateReport(
+                mainJson,
+                application_id,
+                branch_id,
+                customer_id,
+                (err, cmtResult) => {
+                  console.log(`Step 10`);
+
                   if (err) {
-                    console.error("Error updating data QC:", err);
+                    console.error(
+                      "Database error during CMT application update:",
+                      err
+                    );
+                    console.log(`Step 11`);
+                    const logData =
+                      currentCMTApplication &&
+                      Object.keys(currentCMTApplication).length > 0
+                        ? JSON.stringify({ application_id, ...changes }) // changes is defined here
+                        : JSON.stringify(mainJson);
+
+                    AdminCommon.adminActivityLog(
+                      admin_id,
+                      "admin/client-master-tracker",
+                      logStatus,
+                      "0",
+                      logData,
+                      err,
+                      () => {}
+                    );
+                    console.log(`Step 12`);
+
                     return res.status(500).json({
                       status: false,
-                      message:
-                        "An error occurred while updating data QC. Please try again.",
+                      message: err.message,
                       token: newToken,
                     });
                   }
-                  console.log(`Step 5`);
-
-                  // Flatten the updated_json object and separate annexure
-                  let { mainJsonRaw, annexureRawJson } =
-                    flattenJsonWithAnnexure(updated_json);
-                  console.log(`Step 6`);
-
-                  // Array of keys you want to delete
-                  const keysToDelete = [
-                    "month_year",
-                    "initiation_date",
-                    "organization_name",
-                    "verification_purpose",
-                    "employee_id",
-                    "client_code",
-                    "applicant_name",
-                    "contact_number",
-                    "contact_number2",
-                    "father_name",
-                    "dob",
-                    "gender",
-                    "marital_status",
-                    "address",
-                    "landmark",
-                    "residence_mobile_number",
-                    "state",
-                    "permanent_address",
-                    "permanent_sender_name",
-                    "permanent_receiver_name",
-                    "permanent_landmark",
-                    "permanent_pin_code",
-                    "permanent_state",
-                  ];
-
-                  // Remove keys in keysToDelete from mainJsonRaw
-                  Object.keys(mainJsonRaw).forEach((key) => {
-                    if (keysToDelete.includes(key)) {
-                      delete mainJsonRaw[key];
-                    }
-                  });
-                  const mainJson = mainJsonRaw;
-                  // Declare changes outside the conditional block
-                  const changes = {};
-                  let logStatus = "create";
-                  if (
+                  console.log(`Step 13`);
+                  const logDataSuccess =
                     currentCMTApplication &&
                     Object.keys(currentCMTApplication).length > 0
-                  ) {
-                    console.log(`Step 7`);
+                      ? JSON.stringify({ application_id, ...changes }) // changes is defined here
+                      : JSON.stringify(mainJson);
 
-                    logStatus = "update";
-                    const compareAndAddChanges = (key, newValue) => {
-                      if (currentCMTApplication[key] !== newValue) {
-                        changes[key] = {
-                          old: currentCMTApplication[key],
-                          new: newValue,
-                        };
-                      }
-                    };
-                    console.log(`Step 8`);
+                  AdminCommon.adminActivityLog(
+                    admin_id,
+                    "admin/client-master-tracker",
+                    logStatus,
+                    "1",
+                    logDataSuccess,
+                    err,
+                    () => {}
+                  );
+                  console.log(`Step 14`);
+                  if (typeof annexure === "object" && annexure !== null) {
+                    const annexurePromises = [];
+                    console.log(`Step 15`);
+                    for (let key in annexure) {
+                      const db_table = key ?? null;
+                      const modifiedDbTable = db_table
+                        .replace(/-/g, "_")
+                        .toLowerCase();
+                      const subJson = annexure[modifiedDbTable] ?? null;
 
-                    // Compare and log changes
-                    Object.keys(mainJson).forEach((key) =>
-                      compareAndAddChanges(key, mainJson[key])
-                    );
-                  }
-                  console.log(`Step 9`);
+                      const annexurePromise = new Promise((resolve, reject) => {
+                        ClientMasterTrackerModel.getCMTAnnexureByApplicationId(
+                          application_id,
+                          modifiedDbTable,
+                          (err, currentCMTAnnexure) => {
+                            if (err) {
+                              console.error(
+                                "Database error during CMT Annexure retrieval:",
+                                err
+                              );
+                              return reject(err); // Reject the promise on error
+                            }
 
-                  ClientMasterTrackerModel.generateReport(
-                    mainJson,
-                    application_id,
-                    branch_id,
-                    customer_id,
-                    (err, cmtResult) => {
-                      console.log(`Step 10`);
+                            let annexureLogStatus =
+                              currentCMTAnnexure &&
+                              Object.keys(currentCMTAnnexure).length > 0
+                                ? "update"
+                                : "create";
 
-                      if (err) {
-                        console.error(
-                          "Database error during CMT application update:",
-                          err
-                        );
-                        console.log(`Step 11`);
-                        const logData =
-                          currentCMTApplication &&
-                          Object.keys(currentCMTApplication).length > 0
-                            ? JSON.stringify({ application_id, ...changes }) // changes is defined here
-                            : JSON.stringify(mainJson);
+                            if (logStatus == "update") {
+                              cmt_id = currentCMTApplication.id;
+                            } else if (logStatus == "create") {
+                              cmt_id = cmtResult.insertId;
+                            }
 
-                        AdminCommon.adminActivityLog(
-                          admin_id,
-                          "admin/client-master-tracker",
-                          logStatus,
-                          "0",
-                          logData,
-                          err,
-                          () => {}
-                        );
-                        console.log(`Step 12`);
+                            ClientMasterTrackerModel.createOrUpdateAnnexure(
+                              cmt_id,
+                              application_id,
+                              branch_id,
+                              customer_id,
+                              modifiedDbTable,
+                              subJson,
+                              (err, annexureResult) => {
+                                if (err) {
+                                  console.error(
+                                    "Database error during CMT annexure create or update:",
+                                    err
+                                  );
 
-                        return res.status(500).json({
-                          status: false,
-                          message: err.message,
-                          token: newToken,
-                        });
-                      }
-                      console.log(`Step 13`);
-                      const logDataSuccess =
-                        currentCMTApplication &&
-                        Object.keys(currentCMTApplication).length > 0
-                          ? JSON.stringify({ application_id, ...changes }) // changes is defined here
-                          : JSON.stringify(mainJson);
-
-                      AdminCommon.adminActivityLog(
-                        admin_id,
-                        "admin/client-master-tracker",
-                        logStatus,
-                        "1",
-                        logDataSuccess,
-                        err,
-                        () => {}
-                      );
-                      console.log(`Step 14`);
-                      if (typeof annexure === "object" && annexure !== null) {
-                        const annexurePromises = [];
-                        console.log(`Step 15`);
-                        for (let key in annexure) {
-                          const db_table = key ?? null;
-                          const modifiedDbTable = db_table
-                            .replace(/-/g, "_")
-                            .toLowerCase();
-                          const subJson = annexure[modifiedDbTable] ?? null;
-
-                          const annexurePromise = new Promise(
-                            (resolve, reject) => {
-                              ClientMasterTrackerModel.getCMTAnnexureByApplicationId(
-                                application_id,
-                                modifiedDbTable,
-                                (err, currentCMTAnnexure) => {
-                                  if (err) {
-                                    console.error(
-                                      "Database error during CMT Annexure retrieval:",
-                                      err
-                                    );
-                                    return reject(err); // Reject the promise on error
-                                  }
-
-                                  let annexureLogStatus =
+                                  const annexureLogData =
                                     currentCMTAnnexure &&
                                     Object.keys(currentCMTAnnexure).length > 0
-                                      ? "update"
-                                      : "create";
+                                      ? JSON.stringify({
+                                          application_id,
+                                          ...changes,
+                                        })
+                                      : JSON.stringify(mainJson);
 
-                                  if (logStatus == "update") {
-                                    cmt_id = currentCMTApplication.id;
-                                  } else if (logStatus == "create") {
-                                    cmt_id = cmtResult.insertId;
-                                  }
-
-                                  ClientMasterTrackerModel.createOrUpdateAnnexure(
-                                    cmt_id,
-                                    application_id,
-                                    branch_id,
-                                    customer_id,
-                                    modifiedDbTable,
-                                    subJson,
-                                    (err, annexureResult) => {
-                                      if (err) {
-                                        console.error(
-                                          "Database error during CMT annexure create or update:",
-                                          err
-                                        );
-
-                                        const annexureLogData =
-                                          currentCMTAnnexure &&
-                                          Object.keys(currentCMTAnnexure)
-                                            .length > 0
-                                            ? JSON.stringify({
-                                                application_id,
-                                                ...changes,
-                                              })
-                                            : JSON.stringify(mainJson);
-
-                                        AdminCommon.adminActivityLog(
-                                          admin_id,
-                                          "admin/client-master-tracker",
-                                          annexureLogStatus,
-                                          "0",
-                                          annexureLogData,
-                                          err,
-                                          () => {}
-                                        );
-
-                                        return reject(err); // Reject the promise on error
-                                      }
-
-                                      AdminCommon.adminActivityLog(
-                                        admin_id,
-                                        "admin/client-master-tracker",
-                                        annexureLogStatus,
-                                        "1",
-                                        logDataSuccess,
-                                        err,
-                                        () => {}
-                                      );
-
-                                      resolve(); // Resolve the promise when successful
-                                    }
+                                  AdminCommon.adminActivityLog(
+                                    admin_id,
+                                    "admin/client-master-tracker",
+                                    annexureLogStatus,
+                                    "0",
+                                    annexureLogData,
+                                    err,
+                                    () => {}
                                   );
+
+                                  return reject(err); // Reject the promise on error
                                 }
-                              );
-                            }
-                          );
 
-                          annexurePromises.push(annexurePromise); // Add the promise to the array
-                        }
-                        console.log(`Step 16`);
-                        // Wait for all annexure operations to complete
-                        Promise.all(annexurePromises)
-                          .then(() => {
-                            console.log(`Step 17`);
-                            BranchCommon.getBranchandCustomerEmailsForNotification(
+                                AdminCommon.adminActivityLog(
+                                  admin_id,
+                                  "admin/client-master-tracker",
+                                  annexureLogStatus,
+                                  "1",
+                                  logDataSuccess,
+                                  err,
+                                  () => {}
+                                );
+
+                                resolve(); // Resolve the promise when successful
+                              }
+                            );
+                          }
+                        );
+                      });
+
+                      annexurePromises.push(annexurePromise); // Add the promise to the array
+                    }
+                    console.log(`Step 16`);
+                    // Wait for all annexure operations to complete
+                    Promise.all(annexurePromises)
+                      .then(() => {
+                        console.log(`Step 17`);
+                        BranchCommon.getBranchandCustomerEmailsForNotification(
+                          branch_id,
+                          (emailError, emailData) => {
+                            console.log(`Step 18`);
+                            if (emailError) {
+                              console.error(
+                                "Error fetching emails:",
+                                emailError
+                              );
+                              return res.status(500).json({
+                                status: false,
+                                message: "Failed to retrieve email addresses.",
+                                token: newToken,
+                              });
+                            }
+                            console.log(`Step 19`);
+                            const { branch, customer } = emailData;
+                            const company_name = customer.name;
+
+                            // Prepare recipient and CC lists
+                            const toArr = [
+                              { name: branch.name, email: branch.email },
+                            ];
+                            const ccArr = customer.emails
+                              .split(",")
+                              .map((email) => ({
+                                name: customer.name,
+                                email: email.trim(),
+                              }));
+                            console.log(`Step 20`);
+                            ClientMasterTrackerModel.applicationByID(
+                              application_id,
                               branch_id,
-                              (emailError, emailData) => {
-                                console.log(`Step 18`);
-                                if (emailError) {
-                                  console.error(
-                                    "Error fetching emails:",
-                                    emailError
-                                  );
+                              (err, application) => {
+                                console.log(`Step 21`);
+
+                                if (err) {
+                                  console.error("Database error:", err);
                                   return res.status(500).json({
                                     status: false,
-                                    message:
-                                      "Failed to retrieve email addresses.",
+                                    message: err.message,
                                     token: newToken,
                                   });
                                 }
-                                console.log(`Step 19`);
-                                const { branch, customer } = emailData;
-                                const company_name = customer.name;
 
-                                // Prepare recipient and CC lists
-                                const toArr = [
-                                  { name: branch.name, email: branch.email },
-                                ];
-                                const ccArr = customer.emails
-                                  .split(",")
-                                  .map((email) => ({
-                                    name: customer.name,
-                                    email: email.trim(),
-                                  }));
-                                console.log(`Step 20`);
-                                ClientMasterTrackerModel.applicationByID(
+                                if (!application) {
+                                  return res.status(404).json({
+                                    status: false,
+                                    message: "Application not found 2",
+                                    token: newToken,
+                                  });
+                                }
+                                if (application.is_data_qc !== 1) {
+                                  console.warn(
+                                    "Application Data QC is not done yet 3"
+                                  );
+                                  return res.status(404).json({
+                                    status: false,
+                                    message:
+                                      "Data QC for application data is pending.",
+                                    token: newToken,
+                                  });
+                                }
+                                console.log(`Step 22`);
+
+                                ClientMasterTrackerModel.getCMTApplicationById(
                                   application_id,
-                                  branch_id,
-                                  (err, application) => {
-                                    console.log(`Step 21`);
+                                  (err, CMTApplicationData) => {
+                                    console.log(`Step 23`);
 
                                     if (err) {
                                       console.error("Database error:", err);
@@ -1252,60 +1279,46 @@ exports.generateReport = (req, res) => {
                                         token: newToken,
                                       });
                                     }
+                                    console.log(`Step 24`);
 
-                                    if (!application) {
-                                      return res.status(404).json({
-                                        status: false,
-                                        message: "Application not found 2",
-                                        token: newToken,
-                                      });
-                                    }
-                                    console.log(`Step 22`);
-
-                                    ClientMasterTrackerModel.getCMTApplicationById(
+                                    const case_initiated_date =
+                                      CMTApplicationData.initiation_date ||
+                                      "N/A";
+                                    const final_report_date =
+                                      CMTApplicationData.report_date || "N/A";
+                                    const report_type =
+                                      CMTApplicationData.report_type || "N/A";
+                                    ClientMasterTrackerModel.getAttachmentsByClientAppID(
                                       application_id,
-                                      (err, CMTApplicationData) => {
-                                        console.log(`Step 23`);
+                                      (err, attachments) => {
+                                        console.log(`Step 25`);
 
                                         if (err) {
                                           console.error("Database error:", err);
                                           return res.status(500).json({
                                             status: false,
-                                            message: err.message,
-                                            token: newToken,
+                                            message: "Database error occurred",
                                           });
                                         }
-                                        console.log(`Step 24`);
-
-                                        const case_initiated_date =
-                                          CMTApplicationData.initiation_date ||
-                                          "N/A";
-                                        const final_report_date =
-                                          CMTApplicationData.report_date ||
-                                          "N/A";
-                                        const report_type =
-                                          CMTApplicationData.report_type ||
-                                          "N/A";
-                                        ClientMasterTrackerModel.getAttachmentsByClientAppID(
-                                          application_id,
-                                          (err, attachments) => {
-                                            console.log(`Step 25`);
-
-                                            if (err) {
-                                              console.error(
-                                                "Database error:",
-                                                err
-                                              );
-                                              return res.status(500).json({
-                                                status: false,
-                                                message:
-                                                  "Database error occurred",
-                                              });
-                                            }
-                                            if (
-                                              !mainJson.overall_status ||
-                                              !mainJson.is_verify
-                                            ) {
+                                        if (
+                                          !mainJson.overall_status ||
+                                          !mainJson.is_verify
+                                        ) {
+                                          ClientMasterTrackerModel.updateDataQC(
+                                            { application_id, data_qc },
+                                            (err, result) => {
+                                              if (err) {
+                                                console.error(
+                                                  "Error updating data QC:",
+                                                  err
+                                                );
+                                                return res.status(500).json({
+                                                  status: false,
+                                                  message:
+                                                    "An error occurred while updating data QC. Please try again.",
+                                                  token: newToken,
+                                                });
+                                              }
                                               // If there are no annexures, send the response directly
                                               return res.status(200).json({
                                                 status: true,
@@ -1320,21 +1333,39 @@ exports.generateReport = (req, res) => {
                                                 token: newToken,
                                               });
                                             }
+                                          );
+                                        }
 
-                                            ClientApplication.updateStatus(
-                                              mainJson.overall_status,
-                                              application_id,
+                                        ClientApplication.updateStatus(
+                                          mainJson.overall_status,
+                                          application_id,
+                                          (err, result) => {
+                                            console.log(`Step 26`);
+
+                                            if (err) {
+                                              console.error(
+                                                "Database error during client application status update:",
+                                                err
+                                              );
+                                              return res.status(500).json({
+                                                status: false,
+                                                message: err.message,
+                                                token: newToken,
+                                              });
+                                            }
+
+                                            ClientMasterTrackerModel.updateDataQC(
+                                              { application_id, data_qc },
                                               (err, result) => {
-                                                console.log(`Step 26`);
-
                                                 if (err) {
                                                   console.error(
-                                                    "Database error during client application status update:",
+                                                    "Error updating data QC:",
                                                     err
                                                   );
                                                   return res.status(500).json({
                                                     status: false,
-                                                    message: err.message,
+                                                    message:
+                                                      "An error occurred while updating data QC. Please try again.",
                                                     token: newToken,
                                                   });
                                                 }
@@ -1727,15 +1758,29 @@ exports.generateReport = (req, res) => {
                                 );
                               }
                             );
-                          })
-                          .catch((error) => {
-                            return res.status(500).json({
-                              status: false,
-                              message: error,
-                              token: newToken,
-                            });
+                          }
+                        );
+                      })
+                      .catch((error) => {
+                        return res.status(500).json({
+                          status: false,
+                          message: error,
+                          token: newToken,
+                        });
+                      });
+                  } else {
+                    ClientMasterTrackerModel.updateDataQC(
+                      { application_id, data_qc },
+                      (err, result) => {
+                        if (err) {
+                          console.error("Error updating data QC:", err);
+                          return res.status(500).json({
+                            status: false,
+                            message:
+                              "An error occurred while updating data QC. Please try again.",
+                            token: newToken,
                           });
-                      } else {
+                        }
                         // If there are no annexures, send the response directly
                         return res.status(200).json({
                           status: true,
@@ -1748,8 +1793,8 @@ exports.generateReport = (req, res) => {
                           token: newToken,
                         });
                       }
-                    }
-                  );
+                    );
+                  }
                 }
               );
             }
@@ -2140,6 +2185,16 @@ exports.upload = async (req, res) => {
                         return res.status(404).json({
                           status: false,
                           message: "Application not found 3",
+                          token: newToken,
+                          savedImagePaths,
+                        });
+                      }
+
+                      if (application.is_data_qc !== 1) {
+                        console.warn("Application Data QC is not done yet 3");
+                        return res.status(404).json({
+                          status: false,
+                          message: "Data QC for application data is pending.",
                           token: newToken,
                           savedImagePaths,
                         });
