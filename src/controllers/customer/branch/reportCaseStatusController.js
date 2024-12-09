@@ -7,7 +7,7 @@ const Service = require("../../../models/admin/serviceModel");
 const reportCaseStatus = require("../../../models/customer/branch/reportCaseStatusModel");
 
 exports.list = (req, res) => {
-  const { sub_user_id, branch_id, _token } = req.query;
+  const { sub_user_id, branch_id, filter_month, _token } = req.query;
 
   // Validate required fields
   const missingFields = [];
@@ -61,11 +61,10 @@ exports.list = (req, res) => {
 
         // Fetch application data
         let filter_status;
-        let status;
         ClientMasterTrackerModel.applicationListByBranch(
           filter_status || "",
           branch_id,
-          status || "",
+          filter_month || "",
           (err, result) => {
             if (err) {
               console.error("Database error:", err);
@@ -91,7 +90,8 @@ exports.list = (req, res) => {
 };
 
 exports.annexureDataByServiceIds = (req, res) => {
-  const { service_ids, application_id, sub_user_id, branch_id, _token } = req.query;
+  const { service_ids, application_id, sub_user_id, branch_id, _token } =
+    req.query;
   let missingFields = [];
   if (!service_ids || service_ids === "" || service_ids === "undefined") {
     missingFields.push("Service ID");

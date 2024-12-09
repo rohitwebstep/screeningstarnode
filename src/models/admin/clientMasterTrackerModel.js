@@ -289,7 +289,12 @@ const Customer = {
     });
   },
 
-  applicationListByBranch: (filter_status, branch_id, status, callback) => {
+  applicationListByBranch: (
+    filter_status,
+    branch_id,
+    filter_month,
+    callback
+  ) => {
     // Start a connection
     startConnection((err, connection) => {
       if (err) {
@@ -354,10 +359,10 @@ const Customer = {
         params.push(filter_status);
       }
 
-      // Check if status is provided and add the corresponding condition
-      if (typeof status === "string" && status.trim() !== "") {
-        sql += ` AND ca.\`status\` = ?`; // Add filter for status
-        params.push(status);
+      // Check if filter_month is provided
+      if (filter_month && filter_month.trim() !== "") {
+        sql += ` AND ca.\`created_at\` LIKE ?`; // Use LIKE for partial match
+        params.push(`${filter_month}%`); // Append "%" to filter by year-month
       }
 
       sql += ` ORDER BY ca.\`created_at\` DESC;`;
