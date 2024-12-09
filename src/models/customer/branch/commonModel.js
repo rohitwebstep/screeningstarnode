@@ -14,7 +14,7 @@ const getTokenExpiry = () => new Date(Date.now() + 3600000);
 const common = {
   isBranchTokenValid: (_token, sub_user_id, branch_id, callback) => {
     if (typeof callback !== "function") {
-      console.error("Callback is not a function");
+      console.error("Callback is not a function 4");
       return;
     }
     let sql;
@@ -101,7 +101,7 @@ const common = {
 
   branchLoginLog: (branch_id, action, result, error, callback) => {
     if (typeof callback !== "function") {
-      console.error("Callback is not a function");
+      console.error("Callback is not a function 5");
       return;
     }
 
@@ -142,7 +142,7 @@ const common = {
     callback
   ) => {
     if (typeof callback !== "function") {
-      console.error("Callback is not a function");
+      console.error("Callback is not a function 6");
       return;
     }
 
@@ -239,7 +239,7 @@ const common = {
 
   getBranchandCustomerEmailsForNotification: (branch_id, callback) => {
     if (typeof callback !== "function") {
-      console.error("Callback is not a function");
+      console.error("Callback is not a function 7");
       return;
     }
 
@@ -309,7 +309,7 @@ const common = {
 
   getCustomerNameByBranchID: (branch_id, callback) => {
     if (typeof callback !== "function") {
-      console.error("Callback is not a function");
+      console.error("Callback is not a function 8");
       return;
     }
 
