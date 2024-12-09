@@ -71,7 +71,7 @@ exports.create = (req, res) => {
               console.error("Database error:", err);
               Common.adminActivityLog(
                 admin_id,
-                "Billing escalation",
+                "Billing Escalation",
                 "Create",
                 "0",
                 null,
@@ -90,7 +90,7 @@ exports.create = (req, res) => {
 
             Common.adminActivityLog(
               admin_id,
-              "Billing escalation",
+              "Billing Escalation",
               "Create",
               "1",
               `{id: ${result.insertId}}`,
@@ -307,7 +307,7 @@ exports.update = (req, res) => {
                 console.error("Database error:", err);
                 Common.adminActivityLog(
                   admin_id,
-                  "Billing escalation",
+                  "Billing Escalation",
                   "Update",
                   "0",
                   JSON.stringify({ id, ...changes }),
@@ -323,7 +323,7 @@ exports.update = (req, res) => {
 
               Common.adminActivityLog(
                 admin_id,
-                "Billing escalation",
+                "Billing Escalation",
                 "Update",
                 "1",
                 JSON.stringify({ id, ...changes }),
@@ -398,7 +398,7 @@ exports.delete = (req, res) => {
               console.error("Database error:", err);
               Common.adminActivityLog(
                 admin_id,
-                "Billing escalation",
+                "Billing Escalation",
                 "Delete",
                 "0",
                 JSON.stringify({ id, ...currentBillingEscalation }),
@@ -412,7 +412,7 @@ exports.delete = (req, res) => {
 
             Common.adminActivityLog(
               admin_id,
-              "Billing escalation",
+              "Billing Escalation",
               "Delete",
               "1",
               JSON.stringify(currentBillingEscalation),

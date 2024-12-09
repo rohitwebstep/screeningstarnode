@@ -690,7 +690,7 @@ exports.submit = (req, res) => {
 
                       AdminCommon.adminActivityLog(
                         admin_id,
-                        "admin/client-master-tracker",
+                        "Data Management",
                         logStatus,
                         "1",
                         JSON.stringify({ application_id, ...changes }),

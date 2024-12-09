@@ -45,7 +45,7 @@ const AuthorizedDetail = {
               connectionRelease(connection); // Release the connection
 
               if (insertErr) {
-                console.error("Database query error: 46", insertErr);
+                console.error("Database query error: 22", insertErr);
                 return callback(insertErr, null);
               }
               callback(null, results);
@@ -68,7 +68,7 @@ const AuthorizedDetail = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error: 47", queryErr);
+          console.error("Database query error: 23", queryErr);
           return callback(queryErr, null);
         }
 
@@ -91,7 +91,7 @@ const AuthorizedDetail = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error: 47", queryErr);
+          console.error("Database query error: 24", queryErr);
           return callback(queryErr, null);
         }
         callback(null, results);
@@ -111,7 +111,7 @@ const AuthorizedDetail = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error: 49", queryErr);
+          console.error("Database query error: 25", queryErr);
           return callback(queryErr, null);
         }
         callback(null, results[0]);
@@ -158,7 +158,7 @@ const AuthorizedDetail = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error: 51", queryErr);
+          console.error("Database query error: 26", queryErr);
           return callback(queryErr, null);
         }
         callback(null, results);

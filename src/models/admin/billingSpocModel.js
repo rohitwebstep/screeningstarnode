@@ -45,7 +45,7 @@ const BillingSpoc = {
               connectionRelease(connection); // Release the connection
 
               if (insertErr) {
-                console.error("Database query error: 46", insertErr);
+                console.error("Database query error: 32", insertErr);
                 return callback(insertErr, null);
               }
               callback(null, results);
@@ -68,7 +68,7 @@ const BillingSpoc = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error: 47", queryErr);
+          console.error("Database query error: 33", queryErr);
           return callback(queryErr, null);
         }
 
@@ -91,7 +91,7 @@ const BillingSpoc = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error: 47", queryErr);
+          console.error("Database query error: 34", queryErr);
           return callback(queryErr, null);
         }
         callback(null, results);
@@ -111,7 +111,7 @@ const BillingSpoc = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error: 49", queryErr);
+          console.error("Database query error: 35", queryErr);
           return callback(queryErr, null);
         }
         callback(null, results[0]);
@@ -158,7 +158,7 @@ const BillingSpoc = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error: 51", queryErr);
+          console.error("Database query error: 36", queryErr);
           return callback(queryErr, null);
         }
         callback(null, results);

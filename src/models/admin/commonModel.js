@@ -30,7 +30,7 @@ const common = {
       connection.query(sql, [admin_id], (queryErr, results) => {
         if (queryErr) {
           connectionRelease(connection);
-          console.error("Database query error: 28", queryErr);
+          console.error("Database query error: 57", queryErr);
           return callback({ status: false, message: "Database error" }, null);
         }
 
@@ -192,7 +192,7 @@ const common = {
       connection.query(adminSQL, [admin_id], (err, results) => {
         if (err) {
           connectionRelease(connection);
-          console.error("Database query error: 29", err);
+          console.error("Database query error: 58", err);
           return callback(
             { message: "Database query error", error: err },
             null
@@ -214,7 +214,7 @@ const common = {
         connection.query(permissionsJsonByRoleSQL, [role], (err, results) => {
           if (err) {
             connectionRelease(connection);
-            console.error("Database query error: 30", err);
+            console.error("Database query error: 60", err);
             return callback(
               { message: "Database query error", error: err },
               null

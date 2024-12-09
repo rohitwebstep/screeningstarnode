@@ -17,7 +17,7 @@ const Admin = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error: 31", queryErr);
+          console.error("Database query error: 61", queryErr);
           return callback(
             { message: "Database query error", error: queryErr },
             null
@@ -56,7 +56,7 @@ const Admin = {
           connectionRelease(connection); // Release the connection
 
           if (queryErr) {
-            console.error("Database query error: 32", queryErr);
+            console.error("Database query error: 63", queryErr);
             return callback(
               { message: "Database query error", error: queryErr },
               null
@@ -92,7 +92,7 @@ const Admin = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error: 33", queryErr);
+          console.error("Database query error: 64", queryErr);
           return callback(
             { message: "Database update error", error: queryErr },
             null
@@ -130,7 +130,7 @@ const Admin = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error: 34", queryErr);
+          console.error("Database query error: 65", queryErr);
           return callback(
             { message: "Database query error", error: queryErr },
             null
@@ -163,7 +163,7 @@ const Admin = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error: 35", queryErr);
+          console.error("Database query error: 66", queryErr);
           return callback(
             { message: "Database update error", error: queryErr },
             null

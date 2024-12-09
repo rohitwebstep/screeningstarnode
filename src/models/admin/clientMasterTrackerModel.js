@@ -32,7 +32,7 @@ const Customer = {
 
         connection.query(sql, [filter_status], (err, results) => {
           if (err) {
-            console.error("Database query error: 14", err);
+            console.error("Database query error: 37", err);
             connectionRelease(connection);
             return callback(err, null);
           }
@@ -102,7 +102,7 @@ const Customer = {
           connection.query(finalSql, (err, results) => {
             connectionRelease(connection); // Always release the connection
             if (err) {
-              console.error("Database query error: 15", err);
+              console.error("Database query error: 38", err);
               return callback(err, null);
             }
             callback(null, results);
@@ -161,7 +161,7 @@ const Customer = {
         connection.query(finalSql, async (err, results) => {
           connectionRelease(connection); // Always release the connection
           if (err) {
-            console.error("Database query error:16", err);
+            console.error("Database query error: 39", err);
             return callback(err, null);
           }
 
@@ -281,7 +281,7 @@ const Customer = {
       connection.query(sql, queryParams, (err, results) => {
         connectionRelease(connection); // Always release the connection
         if (err) {
-          console.error("Database query error: 17", err);
+          console.error("Database query error: 40", err);
           return callback(err, null);
         }
         callback(null, results);
@@ -366,7 +366,7 @@ const Customer = {
       connection.query(sql, params, (err, results) => {
         connectionRelease(connection); // Release the connection
         if (err) {
-          console.error("Database query error: 18", err);
+          console.error("Database query error: 41", err);
           return callback(err, null);
         }
         callback(null, results);
@@ -388,7 +388,7 @@ const Customer = {
       connection.query(sql, [application_id, branch_id], (err, results) => {
         connectionRelease(connection); // Release the connection
         if (err) {
-          console.error("Database query error: 19", err);
+          console.error("Database query error: 42", err);
           return callback(err, null);
         }
         // Assuming `results` is an array, and we want the first result
@@ -456,7 +456,7 @@ const Customer = {
           connection.query(sql, [client_application_id], (err, results) => {
             connectionRelease(connection); // Release connection
             if (err) {
-              console.error("Database query error: 20", err);
+              console.error("Database query error: 43", err);
               return callback(err, null);
             }
             // Return the first result or null if not found
@@ -482,7 +482,7 @@ const Customer = {
       connection.query(sql, (err, results) => {
         connectionRelease(connection); // Release connection
         if (err) {
-          console.error("Database query error: 21", err);
+          console.error("Database query error: 44", err);
           return callback(err, null);
         }
         callback(null, results);
@@ -506,7 +506,7 @@ const Customer = {
       connection.query(sql, [branch_id], (err, results) => {
         connectionRelease(connection); // Release connection
         if (err) {
-          console.error("Database query error: 22", err);
+          console.error("Database query error: 45", err);
           return callback(err, null);
         }
         callback(null, results);
@@ -526,7 +526,7 @@ const Customer = {
       connection.query(sql, [`${client_application_id}`], (err, results) => {
         connectionRelease(connection); // Release connection
         if (err) {
-          console.error("Database query error: 23", err);
+          console.error("Database query error: 46", err);
           return callback(err, null);
         }
         callback(null, results[0] || null); // Return the first result or null if not found
@@ -554,7 +554,7 @@ const Customer = {
       connection.query(sql, [client_application_id], (err, results) => {
         connectionRelease(connection); // Release connection
         if (err) {
-          console.error("Database query error: 24", err);
+          console.error("Database query error: 47", err);
           return callback(err, null);
         }
 
@@ -657,7 +657,7 @@ const Customer = {
       connection.query(sql, [service_id], (err, results) => {
         connectionRelease(connection); // Release connection
         if (err) {
-          console.error("Database query error: 25", err);
+          console.error("Database query error: 48", err);
           return callback(err, null);
         }
         // Return single application or null if not found
@@ -1118,7 +1118,7 @@ const Customer = {
       const sql = "SELECT `services` FROM `client_applications` WHERE `id` = ?";
       connection.query(sql, [client_application_id], (err, results) => {
         if (err) {
-          console.error("Database query error: 26", err);
+          console.error("Database query error: 49", err);
           connectionRelease(connection);
           return callback(err, null);
         }
@@ -1170,7 +1170,7 @@ const Customer = {
                 const hostSql = `SELECT \`host\` FROM \`app_info\` WHERE \`status\` = 1 AND \`interface_type\` = ? ORDER BY \`updated_at\` DESC LIMIT 1`;
                 connection.query(hostSql, ["backend"], (err, hostResults) => {
                   if (err) {
-                    console.error("Database query error: 27", err);
+                    console.error("Database query error: 50", err);
                     connectionRelease(connection);
                     return callback(err, null);
                   }

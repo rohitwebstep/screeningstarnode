@@ -66,7 +66,7 @@ const ClientSpoc = {
               connectionRelease(connection); // Release the connection
 
               if (insertErr) {
-                console.error("Database query error: 46", insertErr);
+                console.error("Database query error: 52", insertErr);
                 return callback(insertErr, null);
               }
               callback(null, results);
@@ -92,7 +92,7 @@ const ClientSpoc = {
           connectionRelease(connection); // Release the connection
 
           if (queryErr) {
-            console.error("Database query error: 47", queryErr);
+            console.error("Database query error: 53", queryErr);
             return callback(queryErr, null);
           }
 
@@ -116,7 +116,7 @@ const ClientSpoc = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error: 47", queryErr);
+          console.error("Database query error: 54", queryErr);
           return callback(queryErr, null);
         }
         callback(null, results);
@@ -136,7 +136,7 @@ const ClientSpoc = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error: 49", queryErr);
+          console.error("Database query error: 55", queryErr);
           return callback(queryErr, null);
         }
         callback(null, results[0]);
@@ -198,7 +198,7 @@ const ClientSpoc = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error: 51", queryErr);
+          console.error("Database query error: 56", queryErr);
           return callback(queryErr, null);
         }
         callback(null, results);

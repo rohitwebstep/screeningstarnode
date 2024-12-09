@@ -284,7 +284,7 @@ const Service = {
       connection.query(sql, (err, results) => {
         connectionRelease(connection);
         if (err) {
-          console.error("Database query error:", err);
+          console.error("Database query error 532:", err);
           return callback(
             {
               status: false,

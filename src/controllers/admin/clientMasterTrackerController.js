@@ -1074,7 +1074,7 @@ exports.generateReport = (req, res) => {
 
                     AdminCommon.adminActivityLog(
                       admin_id,
-                      "admin/client-master-tracker",
+                      "Client Master Tracker",
                       logStatus,
                       "0",
                       logData,
@@ -1098,7 +1098,7 @@ exports.generateReport = (req, res) => {
 
                   AdminCommon.adminActivityLog(
                     admin_id,
-                    "admin/client-master-tracker",
+                    "Client Master Tracker",
                     logStatus,
                     "1",
                     logDataSuccess,
@@ -1166,7 +1166,7 @@ exports.generateReport = (req, res) => {
 
                                   AdminCommon.adminActivityLog(
                                     admin_id,
-                                    "admin/client-master-tracker",
+                                    "Client Master Tracker",
                                     annexureLogStatus,
                                     "0",
                                     annexureLogData,
@@ -1179,7 +1179,7 @@ exports.generateReport = (req, res) => {
 
                                 AdminCommon.adminActivityLog(
                                   admin_id,
-                                  "admin/client-master-tracker",
+                                  "Client Master Tracker",
                                   annexureLogStatus,
                                   "1",
                                   logDataSuccess,

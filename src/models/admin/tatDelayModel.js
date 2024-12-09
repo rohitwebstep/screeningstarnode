@@ -226,7 +226,7 @@ const tatDelay = {
 
     function handleQueryError(error, connection, callback) {
       connectionRelease(connection); // Ensure the connection is released
-      console.error("Database query error:", error);
+      console.error("Database query error: 533", error);
       callback(error, null);
     }
 

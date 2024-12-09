@@ -45,7 +45,7 @@ const BillingEscalation = {
               connectionRelease(connection); // Release the connection
 
               if (insertErr) {
-                console.error("Database query error: 46", insertErr);
+                console.error("Database query error: 27", insertErr);
                 return callback(insertErr, null);
               }
               callback(null, results);
@@ -68,7 +68,7 @@ const BillingEscalation = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error: 47", queryErr);
+          console.error("Database query error: 28", queryErr);
           return callback(queryErr, null);
         }
 
@@ -91,7 +91,7 @@ const BillingEscalation = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error: 47", queryErr);
+          console.error("Database query error: 29", queryErr);
           return callback(queryErr, null);
         }
         callback(null, results);
@@ -111,7 +111,7 @@ const BillingEscalation = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error: 49", queryErr);
+          console.error("Database query error: 30", queryErr);
           return callback(queryErr, null);
         }
         callback(null, results[0]);
@@ -158,7 +158,7 @@ const BillingEscalation = {
         connectionRelease(connection); // Release the connection
 
         if (queryErr) {
-          console.error("Database query error: 51", queryErr);
+          console.error("Database query error: 31", queryErr);
           return callback(queryErr, null);
         }
         callback(null, results);
