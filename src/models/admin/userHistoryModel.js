@@ -113,14 +113,15 @@ const tatDelay = {
                   nextLoginResults.length
                 );
 
+                let nextLogDatacreated_at = "9999-12-31";
                 // Check if no next login records found
                 if (nextLoginResults.length === 0) {
-                  console.log("No next login records found.");
-                  return callback(null, []);
+                  const nextLogData = nextLoginResults[0];
+                  nextLogDatacreated_at = nextLogData.created_at;
+                  console.log("Next login log data found:", nextLogData);
+                } else {
+                  nextLogDatacreated_at = "9999-12-31";
                 }
-
-                const nextLogData = nextLoginResults[0];
-                console.log("Next login log data found:", nextLogData);
 
                 // SQL query to retrieve admin activity logs within the time range
                 const activityQuery = `SELECT * FROM \`admin_activity_logs\` WHERE \`admin_id\` = ? AND \`created_at\` <= ? AND \`created_at\` >=  ? ORDER BY \`created_at\` DESC`;
@@ -144,7 +145,7 @@ const tatDelay = {
                       activityQuery,
                       [
                         adminId,
-                        nextLogData.created_at,
+                        nextLogDatacreated_at || "9999-12-31",
                         currentLogData.created_at,
                       ],
                       (activityQueryError, activityResults) => {
