@@ -116,11 +116,11 @@ const tatDelay = {
                 let nextLogDatacreated_at = "9999-12-31";
                 // Check if no next login records found
                 if (nextLoginResults.length === 0) {
+                  nextLogDatacreated_at = "9999-12-31";
+                } else {
                   const nextLogData = nextLoginResults[0];
                   nextLogDatacreated_at = nextLogData.created_at;
                   console.log("Next login log data found:", nextLogData);
-                } else {
-                  nextLogDatacreated_at = "9999-12-31";
                 }
 
                 // SQL query to retrieve admin activity logs within the time range
