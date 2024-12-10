@@ -298,7 +298,7 @@ const Branch = {
     });
   },
 
-  delete: (ticket_number, branch_id, callback) => {
+  delete: (ticket_number, callback) => {
     startConnection((err, connection) => {
       if (err) {
         return callback(
@@ -307,76 +307,71 @@ const Branch = {
         );
       }
 
-      const sql = `SELECT id FROM \`tickets\` WHERE \`ticket_number\` = ? AND \`branch_id\` = ? LIMIT 1`;
-      connection.query(
-        sql,
-        [ticket_number, branch_id],
-        (err, ticketResults) => {
-          // Ensure connection is released even if there's an error
-          if (err) {
-            connectionRelease(connection); // Release connection if query fails
-            console.error("Database query error: 84", err);
-            return callback(
-              { message: "Database query error", error: err },
-              null
-            );
-          }
-
-          if (ticketResults.length === 0) {
-            connectionRelease(connection); // Release connection if no ticket found
-            return callback({ message: "Ticket not found" }, null);
-          }
-
-          const ticketQryData = ticketResults[0];
-
-          // Proceed with deletion of ticket conversations
-          const deleteConversationsSql = `DELETE FROM \`ticket_conversations\` WHERE \`ticket_id\` = ?`;
-          connection.query(
-            deleteConversationsSql,
-            [ticketQryData.id],
-            (err, deleteConversationsResults) => {
-              if (err) {
-                connectionRelease(connection); // Release connection on error
-                console.error(
-                  "Database query error: Deleting ticket conversations",
-                  err
-                );
-                return callback(
-                  {
-                    message:
-                      "Database query error deleting ticket conversations",
-                    error: err,
-                  },
-                  null
-                );
-              }
-
-              // Proceed with deletion of the ticket itself
-              const deleteTicketSql = `DELETE FROM \`tickets\` WHERE \`id\` = ?`;
-              connection.query(
-                deleteTicketSql,
-                [ticketQryData.id],
-                (err, deleteTicketResults) => {
-                  connectionRelease(connection); // Release connection after ticket deletion
-
-                  if (err) {
-                    console.error("Database query error: Deleting ticket", err);
-                    return callback(
-                      {
-                        message: "Database query error deleting ticket",
-                        error: err,
-                      },
-                      null
-                    );
-                  }
-
-                  callback(null, deleteTicketResults);
-                }
-              );
-            }
+      const sql = `SELECT id FROM \`tickets\` WHERE \`ticket_number\` = ? LIMIT 1`;
+      connection.query(sql, [ticket_number], (err, ticketResults) => {
+        // Ensure connection is released even if there's an error
+        if (err) {
+          connectionRelease(connection); // Release connection if query fails
+          console.error("Database query error: 84", err);
+          return callback(
+            { message: "Database query error", error: err },
+            null
           );
         }
-      );
+
+        if (ticketResults.length === 0) {
+          connectionRelease(connection); // Release connection if no ticket found
+          return callback({ message: "Ticket not found" }, null);
+        }
+
+        const ticketQryData = ticketResults[0];
+
+        // Proceed with deletion of ticket conversations
+        const deleteConversationsSql = `DELETE FROM \`ticket_conversations\` WHERE \`ticket_id\` = ?`;
+        connection.query(
+          deleteConversationsSql,
+          [ticketQryData.id],
+          (err, deleteConversationsResults) => {
+            if (err) {
+              connectionRelease(connection); // Release connection on error
+              console.error(
+                "Database query error: Deleting ticket conversations",
+                err
+              );
+              return callback(
+                {
+                  message: "Database query error deleting ticket conversations",
+                  error: err,
+                },
+                null
+              );
+            }
+
+            // Proceed with deletion of the ticket itself
+            const deleteTicketSql = `DELETE FROM \`tickets\` WHERE \`id\` = ?`;
+            connection.query(
+              deleteTicketSql,
+              [ticketQryData.id],
+              (err, deleteTicketResults) => {
+                connectionRelease(connection); // Release connection after ticket deletion
+
+                if (err) {
+                  console.error("Database query error: Deleting ticket", err);
+                  return callback(
+                    {
+                      message: "Database query error deleting ticket",
+                      error: err,
+                    },
+                    null
+                  );
+                }
+
+                callback(null, deleteTicketResults);
+              }
+            );
+          }
+        );
+      });
     });
   },
 };

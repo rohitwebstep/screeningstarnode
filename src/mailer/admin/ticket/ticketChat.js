@@ -66,9 +66,9 @@ async function ticketChat(
       .replace(/{{ticket_number}}/g, ticket_number)
       .replace(/{{title}}/g, title)
       .replace(/{{description}}/g, description)
-      .replace(/{{replied_by}}/g, "admin")
-      .replace(/{{reply_message}}/g, message)
-      .replace(/{{reply_date}}/g, reply_date);
+      .replace(/{{admin_name}}/g, "admin")
+      .replace(/{{admin_reply_message}}/g, message)
+      .replace(/{{admin_reply_date}}/g, reply_date);
 
     // Prepare recipient list based on whether the branch is a head branch
     const recipientList = toArr.map(

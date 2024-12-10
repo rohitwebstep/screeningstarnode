@@ -191,8 +191,8 @@ const common = {
 
       connection.query(adminSQL, [admin_id], (err, results) => {
         if (err) {
-          connectionRelease(connection);
           console.error("Database query error: 58", err);
+          connectionRelease(connection); // Ensure connection is released on error
           return callback(
             { message: "Database query error", error: err },
             null
@@ -200,7 +200,8 @@ const common = {
         }
 
         if (results.length === 0) {
-          connectionRelease(connection);
+          console.log("No admin found with the provided ID");
+          connectionRelease(connection); // Ensure connection is released if no admin is found
           return callback(
             { message: "No admin found with the provided ID" },
             null
@@ -213,18 +214,17 @@ const common = {
         const permissionsJsonByRoleSQL = `SELECT \`json\` FROM \`permissions\` WHERE \`role\` = ?`;
         connection.query(permissionsJsonByRoleSQL, [role], (err, results) => {
           if (err) {
-            connectionRelease(connection);
             console.error("Database query error: 60", err);
+            connectionRelease(connection); // Ensure connection is released on error
             return callback(
               { message: "Database query error", error: err },
               null
             );
           }
 
-          connectionRelease(connection);
-
           if (results.length === 0) {
-            console.error(`No permissions found for the admin role`);
+            console.error("No permissions found for the admin role");
+            connectionRelease(connection); // Ensure connection is released if no permissions found
             return callback({ message: "Access Denied" }, null);
           }
 
@@ -232,6 +232,7 @@ const common = {
 
           if (!permissionsRaw) {
             console.error("Permissions field is empty");
+            connectionRelease(connection); // Ensure connection is released if permissions are empty
             return callback({
               status: false,
               message: "Access Denied",
@@ -247,18 +248,22 @@ const common = {
 
             if (!permissions[action]) {
               console.error("Action type not found in permissions");
+              connectionRelease(connection); // Ensure connection is released if action is not found
               return callback({
                 status: false,
                 message: "Access Denied",
               });
             }
-            console.log(`Done 123`);
+
+            console.log(`Authorization successful for action: ${action}`);
+            connectionRelease(connection); // Ensure connection is released after success
             return callback({
               status: true,
               message: "Authorization Successful",
             });
           } catch (parseErr) {
             console.error("Error parsing permissions JSON:", parseErr);
+            connectionRelease(connection); // Ensure connection is released if parsing fails
             return callback({
               status: false,
               message: "Access Denied",

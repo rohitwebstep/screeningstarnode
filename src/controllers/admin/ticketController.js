@@ -235,8 +235,8 @@ exports.chat = (req, res) => {
               createResult.customer_name,
               ticket_number,
               createResult.title,
-              currentAdmin.name,
               createResult.description,
+              currentAdmin.name,
               message,
               createResult.created_at,
               toArr
@@ -341,10 +341,10 @@ exports.upload = (req, res) => {
 };
 
 exports.delete = (req, res) => {
-  const { ticket_number, branch_id, sub_user_id, _token } = req.query;
+  const { ticket_number, admin_id, _token } = req.query;
   // Validate required fields
   const missingFields = [];
-  if (!branch_id) missingFields.push("Branch ID");
+  if (!admin_id) missingFields.push("Admin ID");
   if (!_token) missingFields.push("Token");
   if (!ticket_number) missingFields.push("Ticket Number");
 
@@ -355,125 +355,64 @@ exports.delete = (req, res) => {
     });
   }
 
-  const branchID = Number(branch_id);
-  const subUserID = sub_user_id ? Number(sub_user_id) : null;
+  const adminID = Number(admin_id);
 
-  // Retrieve branch details
-  Branch.getBranchById(branchID, (err, currentBranch) => {
-    if (err) {
-      console.error("Error retrieving branch:", err);
-      return res.status(500).json({
+  const action = "see_more";
+  AdminCommon.isAdminAuthorizedForAction(adminID, action, (result) => {
+    if (!result.status) {
+      return res.status(403).json({
         status: false,
-        message: "Error retrieving branch details. Please try again later.",
+        message: result.message, // Return the message from the authorization function
       });
     }
+    AdminCommon.isAdminTokenValid(_token, adminID, (err, result) => {
+      if (err) {
+        console.error("Error checking token validity:", err);
+        return res.status(500).json(err);
+      }
 
-    if (!currentBranch) {
-      return res.status(404).json({
-        status: false,
-        message: "Branch not found.",
-      });
-    }
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
+      }
 
-    // Retrieve customer details
-    Customer.getCustomerById(
-      parseInt(currentBranch.customer_id),
-      (err, currentCustomer) => {
+      const newToken = result.newToken;
+
+      // Create a new ticket
+      Ticket.delete(ticket_number, (err, result) => {
         if (err) {
-          console.error("Database error during customer retrieval:", err);
+          console.error("Database error during ticket deletion:", err);
+          AdminCommon.adminActivityLog(
+            adminID,
+            "Ticket",
+            "Delete",
+            "0",
+            JSON.stringify({ ticket: ticket_number }),
+            err,
+            () => {}
+          );
           return res.status(500).json({
             status: false,
-            message: "Failed to retrieve Customer. Please try again.",
+            message: "Failed to delete ticket. Please try again.",
+            token: newToken,
           });
         }
 
-        if (!currentCustomer) {
-          return res.status(404).json({
-            status: false,
-            message: "Customer not found.",
-          });
-        }
-
-        // Check branch authorization
-        const action = "client_manager";
-        BranchCommon.isBranchAuthorizedForAction(
-          branchID,
-          action,
-          (authResult) => {
-            if (!authResult.status) {
-              return res.status(403).json({
-                status: false,
-                message: authResult.message,
-              });
-            }
-
-            // Validate branch token
-            BranchCommon.isBranchTokenValid(
-              _token,
-              subUserID || null,
-              branchID,
-              (tokenErr, tokenResult) => {
-                if (tokenErr) {
-                  console.error("Error validating token:", tokenErr);
-                  return res.status(500).json({
-                    status: false,
-                    message: "Token validation error. Please try again later.",
-                  });
-                }
-
-                if (!tokenResult.status) {
-                  return res.status(401).json({
-                    status: false,
-                    message: tokenResult.message,
-                  });
-                }
-
-                const newToken = tokenResult.newToken;
-
-                // Create a new ticket
-                Ticket.delete(ticket_number, branch_id, (err, result) => {
-                  if (err) {
-                    console.error(
-                      "Database error during ticket deletion:",
-                      err
-                    );
-                    BranchCommon.branchActivityLog(
-                      branch_id,
-                      "Ticket",
-                      "Delete",
-                      "0",
-                      JSON.stringify({ ticket: ticket_number }),
-                      err,
-                      () => {}
-                    );
-                    return res.status(500).json({
-                      status: false,
-                      message: "Failed to delete ticket. Please try again.",
-                      token: newToken,
-                    });
-                  }
-
-                  BranchCommon.branchActivityLog(
-                    branch_id,
-                    "Ticket",
-                    "Delete",
-                    "1",
-                    JSON.stringify({ ticket: ticket_number }),
-                    null,
-                    () => {}
-                  );
-
-                  res.status(200).json({
-                    status: true,
-                    message: "Ticket deleted successfully.",
-                    token: newToken,
-                  });
-                });
-              }
-            );
-          }
+        AdminCommon.adminActivityLog(
+          adminID,
+          "Ticket",
+          "Delete",
+          "1",
+          JSON.stringify({ ticket: ticket_number }),
+          null,
+          () => {}
         );
-      }
-    );
+
+        res.status(200).json({
+          status: true,
+          message: "Ticket deleted successfully.",
+          token: newToken,
+        });
+      });
+    });
   });
 };
