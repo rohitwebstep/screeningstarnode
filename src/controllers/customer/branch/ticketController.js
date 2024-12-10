@@ -10,6 +10,10 @@ const {
   ticketRaised,
 } = require("../../../mailer/customer/branch/ticket/ticketRaised");
 
+const {
+  ticketChat,
+} = require("../../../mailer/customer/branch/ticket/ticketChat");
+
 const generatePassword = (companyName) => {
   // Check if companyName is null, undefined, or has a length of 0
   if (!companyName || companyName.length < 1) {
@@ -118,7 +122,7 @@ exports.list = (req, res) => {
 };
 
 exports.view = (req, res) => {
-  const { sub_user_id, branch_id, _token } = req.query;
+  const { ticket_number, branch_id, sub_user_id, _token } = req.query;
 
   // Validate required fields
   const missingFields = [];
@@ -132,66 +136,96 @@ exports.view = (req, res) => {
     });
   }
 
-  // Verify the branch token
-  BranchCommon.isBranchTokenValid(
-    _token,
-    sub_user_id || null,
-    branch_id,
-    (tokenErr, tokenResult) => {
-      if (tokenErr) {
-        console.error("Error checking token validity:", tokenErr);
-        return res.status(500).json({
-          status: false,
-          message: tokenErr,
-        });
-      }
+  const branchID = Number(branch_id);
+  const subUserID = sub_user_id ? Number(sub_user_id) : null;
 
-      if (!tokenResult.status) {
-        return res.status(401).json({
-          status: false,
-          message: tokenResult.message,
-        });
-      }
-
-      const newToken = tokenResult.newToken;
-
-      // Step 3: Fetch client applications from database
-      Branch.index(branch_id, (dbErr, clientApplications) => {
-        if (dbErr) {
-          console.error("Database error:", dbErr);
-          return res.status(500).json({
-            status: false,
-            message: "An error occurred while fetching client applications.",
-            token: newToken,
-          });
-        }
-
-        // Calculate total application count
-        const totalApplicationCount = clientApplications
-          ? Object.values(clientApplications).reduce((total, statusGroup) => {
-              return total + statusGroup.applicationCount;
-            }, 0)
-          : 0;
-
-        return res.status(200).json({
-          status: true,
-          message: "Client applications fetched successfully.",
-          clientApplications,
-          totalApplicationCount,
-          token: newToken,
-        });
+  // Retrieve branch details
+  Branch.getBranchById(branchID, (err, currentBranch) => {
+    if (err) {
+      console.error("Error retrieving branch:", err);
+      return res.status(500).json({
+        status: false,
+        message: "Error retrieving branch details. Please try again later.",
       });
     }
-  );
+
+    if (!currentBranch) {
+      return res.status(404).json({
+        status: false,
+        message: "Branch not found.",
+      });
+    }
+
+    // Check branch authorization
+    const action = "client_manager";
+    BranchCommon.isBranchAuthorizedForAction(branchID, action, (authResult) => {
+      if (!authResult.status) {
+        return res.status(403).json({
+          status: false,
+          message: authResult.message,
+        });
+      }
+
+      // Validate branch token
+      BranchCommon.isBranchTokenValid(
+        _token,
+        subUserID || null,
+        branchID,
+        (tokenErr, tokenResult) => {
+          if (tokenErr) {
+            console.error("Error validating token:", tokenErr);
+            return res.status(500).json({
+              status: false,
+              message: "Token validation error. Please try again later.",
+            });
+          }
+
+          if (!tokenResult.status) {
+            return res.status(401).json({
+              status: false,
+              message: tokenResult.message,
+            });
+          }
+
+          const newToken = tokenResult.newToken;
+
+          Ticket.getTicketDataByTicketNumber(
+            ticket_number,
+            branch_id,
+            (err, result) => {
+              if (err) {
+                console.error("Database error:", err);
+                return res.status(500).json({
+                  status: false,
+                  message: err.message,
+                  token: newToken,
+                });
+              }
+
+              res.json({
+                status: true,
+                message: "Tickets fetched successfully",
+                branches: result,
+                totalResults: result.length,
+                token: newToken,
+              });
+            }
+          );
+        }
+      );
+    });
+  });
 };
 
 exports.chat = (req, res) => {
-  const { sub_user_id, branch_id, _token } = req.query;
+  const { ticket_number, branch_id, sub_user_id, _token, message } = req.body;
 
   // Validate required fields
   const missingFields = [];
   if (!branch_id) missingFields.push("Branch ID");
   if (!_token) missingFields.push("Token");
+  if (!ticket_number) missingFields.push("Ticket Number");
+  if (!message) missingFields.push("Message");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -200,68 +234,198 @@ exports.chat = (req, res) => {
     });
   }
 
-  // Verify the branch token
-  BranchCommon.isBranchTokenValid(
-    _token,
-    sub_user_id || null,
-    branch_id,
-    (tokenErr, tokenResult) => {
-      if (tokenErr) {
-        console.error("Error checking token validity:", tokenErr);
-        return res.status(500).json({
-          status: false,
-          message: tokenErr,
-        });
-      }
+  const branchID = Number(branch_id);
+  const subUserID = sub_user_id ? Number(sub_user_id) : null;
 
-      if (!tokenResult.status) {
-        return res.status(401).json({
-          status: false,
-          message: tokenResult.message,
-        });
-      }
+  // Retrieve branch details
+  Branch.getBranchById(branchID, (err, currentBranch) => {
+    if (err) {
+      console.error("Error retrieving branch:", err);
+      return res.status(500).json({
+        status: false,
+        message: "Error retrieving branch details. Please try again later.",
+      });
+    }
 
-      const newToken = tokenResult.newToken;
+    if (!currentBranch) {
+      return res.status(404).json({
+        status: false,
+        message: "Branch not found.",
+      });
+    }
 
-      // Step 3: Fetch client applications from database
-      Branch.index(branch_id, (dbErr, clientApplications) => {
-        if (dbErr) {
-          console.error("Database error:", dbErr);
+    // Retrieve customer details
+    Customer.getCustomerById(
+      parseInt(currentBranch.customer_id),
+      (err, currentCustomer) => {
+        if (err) {
+          console.error("Database error during customer retrieval:", err);
           return res.status(500).json({
             status: false,
-            message: "An error occurred while fetching client applications.",
-            token: newToken,
+            message: "Failed to retrieve Customer. Please try again.",
           });
         }
 
-        // Calculate total application count
-        const totalApplicationCount = clientApplications
-          ? Object.values(clientApplications).reduce((total, statusGroup) => {
-              return total + statusGroup.applicationCount;
-            }, 0)
-          : 0;
+        if (!currentCustomer) {
+          return res.status(404).json({
+            status: false,
+            message: "Customer not found.",
+          });
+        }
 
-        return res.status(200).json({
-          status: true,
-          message: "Client applications fetched successfully.",
-          clientApplications,
-          totalApplicationCount,
-          token: newToken,
-        });
-      });
-    }
-  );
+        // Check branch authorization
+        const action = "client_manager";
+        BranchCommon.isBranchAuthorizedForAction(
+          branchID,
+          action,
+          (authResult) => {
+            if (!authResult.status) {
+              return res.status(403).json({
+                status: false,
+                message: authResult.message,
+              });
+            }
+
+            // Validate branch token
+            BranchCommon.isBranchTokenValid(
+              _token,
+              subUserID || null,
+              branchID,
+              (tokenErr, tokenResult) => {
+                if (tokenErr) {
+                  console.error("Error validating token:", tokenErr);
+                  return res.status(500).json({
+                    status: false,
+                    message: "Token validation error. Please try again later.",
+                  });
+                }
+
+                if (!tokenResult.status) {
+                  return res.status(401).json({
+                    status: false,
+                    message: tokenResult.message,
+                  });
+                }
+
+                const newToken = tokenResult.newToken;
+
+                // Create a new ticket
+                Ticket.chat(
+                  {
+                    ticket_number,
+                    branch_id: currentBranch.id,
+                    customer_id: currentBranch.customer_id,
+                    message,
+                  },
+                  (createErr, createResult) => {
+                    if (createErr) {
+                      console.error("Error creating ticket:", createErr);
+
+                      // Log the failed activity
+                      BranchCommon.branchActivityLog(
+                        branchID,
+                        "Ticket",
+                        "Create",
+                        "0",
+                        null,
+                        createErr.message,
+                        () => {}
+                      );
+
+                      return res.status(500).json({
+                        status: false,
+                        message:
+                          "Error creating ticket. Please try again later.",
+                        token: newToken,
+                      });
+                    }
+
+                    // Log the successful activity
+                    BranchCommon.branchActivityLog(
+                      branchID,
+                      "Ticket",
+                      "Reply",
+                      "1",
+                      `{ticket: ${ticket_number}}`,
+                      null,
+                      () => {}
+                    );
+
+                    // Retrieve admins and send email
+                    Admin.list((err, adminResult) => {
+                      if (err) {
+                        console.error("Database error:", err);
+                        return res.status(500).json({
+                          status: false,
+                          message: "Error retrieving admin details.",
+                          token: newToken,
+                        });
+                      }
+
+                      // Extract admin emails
+                      const toArr = adminResult.map((admin) => ({
+                        name: admin.name,
+                        email: admin.email,
+                      }));
+
+                      // Notify admins about the raised ticket
+                      ticketChat(
+                        "Ticket",
+                        "branch-chat",
+                        currentBranch.name,
+                        currentCustomer.name,
+                        ticket_number,
+                        createResult.title,
+                        createResult.description,
+                        message,
+                        createResult.created_at,
+                        toArr
+                      )
+                        .then(() => {
+                          return res.status(201).json({
+                            status: true,
+                            message: `Message has been sent for ticket number ${ticket_number}`,
+                            token: newToken,
+                          });
+                        })
+                        .catch((emailError) => {
+                          console.error("Error sending email:", emailError);
+                          BranchCommon.branchActivityLog(
+                            branchID,
+                            "Ticket",
+                            "chat",
+                            "0",
+                            emailError.message || "N/A",
+                            () => {}
+                          );
+                          return res.status(500).json({
+                            status: false,
+                            message:
+                              "Failed to send message for ticket number, but email notification was unsuccessful.",
+                            token: newToken,
+                          });
+                        });
+                    });
+                  }
+                );
+              }
+            );
+          }
+        );
+      }
+    );
+  });
 };
 
 exports.create = (req, res) => {
-  const { branch_id, sub_user_id, _token, title, message } = req.body;
+  const { branch_id, sub_user_id, _token, title, description } = req.body;
 
   // Validate required fields
   const missingFields = [];
   if (!branch_id) missingFields.push("Branch ID");
   if (!_token) missingFields.push("Token");
   if (!title) missingFields.push("Title");
-  if (!message) missingFields.push("Message");
+  if (!description) missingFields.push("Description");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -351,7 +515,7 @@ exports.create = (req, res) => {
                     branch_id: currentBranch.id,
                     customer_id: currentBranch.customer_id,
                     title,
-                    message,
+                    description,
                   },
                   (createErr, createResult) => {
                     if (createErr) {
@@ -382,7 +546,7 @@ exports.create = (req, res) => {
                       "Ticket",
                       "Create",
                       "1",
-                      `{id: ${createResult.insertId}}`,
+                      `{ticket: ${createResult.ticketNumber}}`,
                       null,
                       () => {}
                     );
@@ -412,7 +576,7 @@ exports.create = (req, res) => {
                         currentCustomer.name,
                         createResult.ticketNumber,
                         title,
-                        message,
+                        description,
                         toArr
                       )
                         .then(() => {
@@ -656,13 +820,12 @@ exports.update = (req, res) => {
 };
 
 exports.delete = (req, res) => {
-  const { id, admin_id, _token } = req.query;
-
+  const { ticket_number, branch_id, sub_user_id, _token } = req.query;
   // Validate required fields
   const missingFields = [];
-  if (!id || id === "") missingFields.push("Branch ID");
-  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
-  if (!_token || _token === "") missingFields.push("Token");
+  if (!branch_id) missingFields.push("Branch ID");
+  if (!_token) missingFields.push("Token");
+  if (!ticket_number) missingFields.push("Ticket Number");
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -671,105 +834,124 @@ exports.delete = (req, res) => {
     });
   }
 
-  const action = "client_overview";
+  const branchID = Number(branch_id);
+  const subUserID = sub_user_id ? Number(sub_user_id) : null;
 
-  // Check admin authorization
-  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
-    if (!result.status) {
-      return res.status(403).json({
+  // Retrieve branch details
+  Branch.getBranchById(branchID, (err, currentBranch) => {
+    if (err) {
+      console.error("Error retrieving branch:", err);
+      return res.status(500).json({
         status: false,
-        message: result.message,
+        message: "Error retrieving branch details. Please try again later.",
       });
     }
 
-    // Validate admin token
-    AdminCommon.isAdminTokenValid(
-      _token,
-      admin_id,
-      (err, tokenValidationResult) => {
+    if (!currentBranch) {
+      return res.status(404).json({
+        status: false,
+        message: "Branch not found.",
+      });
+    }
+
+    // Retrieve customer details
+    Customer.getCustomerById(
+      parseInt(currentBranch.customer_id),
+      (err, currentCustomer) => {
         if (err) {
-          console.error("Token validation error:", err);
+          console.error("Database error during customer retrieval:", err);
           return res.status(500).json({
             status: false,
-            message: err.message,
+            message: "Failed to retrieve Customer. Please try again.",
           });
         }
 
-        if (!tokenValidationResult.status) {
-          return res.status(401).json({
+        if (!currentCustomer) {
+          return res.status(404).json({
             status: false,
-            message: tokenValidationResult.message,
+            message: "Customer not found.",
           });
         }
 
-        const newToken = tokenValidationResult.newToken;
-
-        // Fetch the current branch
-        Branch.getBranchById(id, (err, currentBranch) => {
-          if (err) {
-            console.error("Database error during branch retrieval:", err);
-            return res.status(500).json({
-              status: false,
-              message: "Failed to retrieve branch. Please try again.",
-              token: newToken,
-            });
-          }
-
-          if (!currentBranch) {
-            return res.status(404).json({
-              status: false,
-              message: "Branch not found.",
-              token: newToken,
-            });
-          }
-
-          // Check if the branch is the head branch
-          if (currentBranch.is_head == 1) {
-            return res.status(403).json({
-              status: false,
-              message: "Cannot delete the head branch.",
-              token: newToken,
-            });
-          }
-
-          // Delete the branch
-          Branch.delete(id, (err, result) => {
-            if (err) {
-              console.error("Database error during branch deletion:", err);
-              BranchCommon.branchActivityLog(
-                admin_id,
-                "Branch",
-                "Delete",
-                "0",
-                JSON.stringify({ id }),
-                err,
-                () => {}
-              );
-              return res.status(500).json({
+        // Check branch authorization
+        const action = "client_manager";
+        BranchCommon.isBranchAuthorizedForAction(
+          branchID,
+          action,
+          (authResult) => {
+            if (!authResult.status) {
+              return res.status(403).json({
                 status: false,
-                message: "Failed to delete branch. Please try again.",
-                token: newToken,
+                message: authResult.message,
               });
             }
 
-            BranchCommon.branchActivityLog(
-              admin_id,
-              "Branch",
-              "Delete",
-              "1",
-              JSON.stringify({ id }),
-              null,
-              () => {}
-            );
+            // Validate branch token
+            BranchCommon.isBranchTokenValid(
+              _token,
+              subUserID || null,
+              branchID,
+              (tokenErr, tokenResult) => {
+                if (tokenErr) {
+                  console.error("Error validating token:", tokenErr);
+                  return res.status(500).json({
+                    status: false,
+                    message: "Token validation error. Please try again later.",
+                  });
+                }
 
-            res.status(200).json({
-              status: true,
-              message: "Branch deleted successfully.",
-              result,
-              token: newToken,
-            });
-          });
-        });
+                if (!tokenResult.status) {
+                  return res.status(401).json({
+                    status: false,
+                    message: tokenResult.message,
+                  });
+                }
+
+                const newToken = tokenResult.newToken;
+
+                // Create a new ticket
+                Ticket.delete(ticket_number, branch_id, (err, result) => {
+                  if (err) {
+                    console.error(
+                      "Database error during ticket deletion:",
+                      err
+                    );
+                    BranchCommon.branchActivityLog(
+                      branch_id,
+                      "Ticket",
+                      "Delete",
+                      "0",
+                      JSON.stringify({ ticket: ticket_number }),
+                      err,
+                      () => {}
+                    );
+                    return res.status(500).json({
+                      status: false,
+                      message: "Failed to delete ticket. Please try again.",
+                      token: newToken,
+                    });
+                  }
+
+                  BranchCommon.branchActivityLog(
+                    branch_id,
+                    "Ticket",
+                    "Delete",
+                    "1",
+                    JSON.stringify({ ticket: ticket_number }),
+                    null,
+                    () => {}
+                  );
+
+                  res.status(200).json({
+                    status: true,
+                    message: "Ticket deleted successfully.",
+                    token: newToken,
+                  });
+                });
+              }
+            );
+          }
+        );
       }
     );
   });

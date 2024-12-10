@@ -12,74 +12,6 @@ function generateTicketNumber() {
 }
 
 const Branch = {
-  index: (branch_id, callback) => {
-    startConnection((err, connection) => {
-      if (err) {
-        return callback(
-          { message: "Failed to connect to the database", error: err },
-          null
-        );
-      }
-
-      // Optimized query to fetch client applications by status
-      const query = `
-        SELECT 
-            ca.id AS client_application_id, 
-            ca.application_id,
-            ca.employee_id, 
-            ca.name,
-            ca.status,
-            ca.created_at,
-            cmt.id AS cmt_id,
-            cmt.*
-        FROM 
-            client_applications ca
-        LEFT JOIN 
-            cmt_applications cmt ON ca.id = cmt.client_application_id
-        WHERE 
-            ca.branch_id = ?
-        ORDER BY 
-            ca.created_at DESC
-      `;
-
-      // Fetch client applications with related CMT data
-      connection.query(query, [branch_id], (err, results) => {
-        if (err) {
-          connectionRelease(connection);
-          console.error("Error fetching client applications:", err);
-          return callback(err, null);
-        }
-
-        // Group applications by their status and add CMT data
-        const applicationsByStatus = results.reduce((grouped, app) => {
-          if (!grouped[app.status]) {
-            grouped[app.status] = {
-              applicationCount: 0,
-              applications: [],
-            };
-          }
-
-          grouped[app.status].applications.push({
-            client_application_id: app.client_application_id,
-            application_name: app.name,
-            application_id: app.application_id,
-            created_at: app.created_at,
-            cmtApplicationId: app.cmt_id,
-            cmtOtherFields: app.other_fields, // Adjust based on actual field names from cmt
-          });
-
-          grouped[app.status].applicationCount += 1;
-
-          return grouped;
-        }, {});
-
-        // Release connection and return results
-        connectionRelease(connection);
-        return callback(null, applicationsByStatus);
-      });
-    });
-  },
-
   create: (ticketData, callback) => {
     startConnection((err, connection) => {
       if (err) {
@@ -92,14 +24,15 @@ const Branch = {
       const ticketNumber = generateTicketNumber(); // Ensure this function generates a unique ticket number
       const sqlInsertTicket = `
         INSERT INTO \`tickets\` (
-          \`branch_id\`, \`customer_id\`, \`ticket_number\`, \`title\`
-        ) VALUES (?, ?, ?, ?)
+          \`branch_id\`, \`customer_id\`, \`ticket_number\`, \`title\`, \`description\`
+        ) VALUES (?, ?, ?, ?, ?)
       `;
       const ticketValues = [
         ticketData.branch_id,
         ticketData.customer_id,
         ticketNumber,
         ticketData.title,
+        ticketData.description,
       ];
 
       connection.query(sqlInsertTicket, ticketValues, (err, ticketResults) => {
@@ -117,47 +50,11 @@ const Branch = {
         }
 
         const ticketId = ticketResults.insertId;
-
-        const sqlInsertTicketConversation = `
-          INSERT INTO \`ticket_conversations\` (
-            \`branch_id\`, \`customer_id\`, \`ticket_id\`, \`from\`, \`message\`
-          ) VALUES (?, ?, ?, ?, ?)
-        `;
-        const ticketConversationValues = [
-          ticketData.branch_id,
-          ticketData.customer_id,
-          ticketId,
-          "branch",
-          ticketData.message,
-        ];
-
-        connection.query(
-          sqlInsertTicketConversation,
-          ticketConversationValues,
-          (err, conversationResults) => {
-            connectionRelease(connection); // Ensure the connection is properly released
-
-            if (err) {
-              console.error(
-                "Database insertion error for ticket conversation:",
-                err
-              );
-              return callback(
-                {
-                  message: "Database insertion error for ticket conversation",
-                  error: err,
-                },
-                null
-              );
-            }
-
-            const conversationId = conversationResults.insertId;
-            callback(null, { ticketNumber, ticketId });
-          }
-        );
+        callback(null, { ticketNumber, ticketId });
       });
     });
   },
+
   list: (branch_id, callback) => {
     startConnection((err, connection) => {
       if (err) {
@@ -185,7 +82,7 @@ const Branch = {
     });
   },
 
-  update: (id, name, email, password, callback) => {
+  getTicketDataByTicketNumber: (ticketNumber, branchId, callback) => {
     startConnection((err, connection) => {
       if (err) {
         return callback(
@@ -194,24 +91,156 @@ const Branch = {
         );
       }
 
-      const sql = `
-        UPDATE \`branches\`
-        SET \`name\` = ?, \`email\` = ?, \`password\` = ?
-        WHERE \`id\` = ?
-      `;
-      connection.query(sql, [name, email, password, id], (err, results) => {
-        connectionRelease(connection); // Ensure connection is released
+      const sql = `SELECT id, title, created_at FROM \`tickets\` WHERE \`ticket_number\` = ? AND \`branch_id\` = ? LIMIT 1`;
+      console.log(
+        `Executing SQL: ${sql} with ticketNumber: ${ticketNumber} and branchId: ${branchId}`
+      ); // Debug log
+
+      connection.query(sql, [ticketNumber, branchId], (err, ticketResults) => {
+        // Ensure connection is released even if there's an error
+        connectionRelease(connection);
 
         if (err) {
-          console.error("Database query error: 94", err);
-          return callback(err, null);
+          console.error("Database query error: 84", err); // Log the error in the query
+          return callback(
+            { message: "Database query error", error: err },
+            null
+          );
         }
-        callback(null, results);
+
+        if (ticketResults.length === 0) {
+          return callback({ message: "Ticket not found" }, null);
+        }
+
+        const ticketData = ticketResults[0];
+
+        // Get the conversations associated with the ticket
+        const conversationsSql = `SELECT id, \`from\`, message, created_at FROM \`ticket_conversations\` WHERE ticket_id = ? AND branch_id = ?`;
+        console.log(
+          `Executing SQL: ${conversationsSql} with ticketId: ${ticketData.id} and branchId: ${branchId}`
+        ); // Debug log
+
+        connection.query(
+          conversationsSql,
+          [ticketData.id, branchId],
+          (err, conversationResults) => {
+            // Ensure connection is released even if there's an error
+            connectionRelease(connection);
+
+            if (err) {
+              console.error("Database query error: 85", err); // Log the error in the query
+              return callback(
+                { message: "Database query error", error: err },
+                null
+              );
+            }
+
+            // Return both ticket data and conversations
+            callback(null, {
+              ticket: ticketData,
+              conversations: conversationResults,
+            });
+          }
+        );
       });
     });
   },
 
-  delete: (id, callback) => {
+  chat: (ticketData, callback) => {
+    const sql = `SELECT id, title, description, created_at FROM \`tickets\` WHERE \`ticket_number\` = ? AND \`branch_id\` = ? LIMIT 1`;
+    startConnection((err, connection) => {
+      connection.query(
+        sql,
+        [ticketData.ticket_number, ticketData.branch_id],
+        (err, ticketResults) => {
+          // Ensure connection is released even if there's an error
+          connectionRelease(connection);
+
+          if (err) {
+            console.error("Database query error: 84", err); // Log the error in the query
+            return callback(
+              { message: "Database query error", error: err },
+              null
+            );
+          }
+
+          if (ticketResults.length === 0) {
+            return callback({ message: "Ticket not found" }, null);
+          }
+
+          const ticketQryData = ticketResults[0];
+          const sqlInsertTicketConversation = `
+      INSERT INTO \`ticket_conversations\` (
+        \`branch_id\`, \`customer_id\`, \`ticket_id\`, \`from\`, \`message\`
+      ) VALUES (?, ?, ?, ?, ?)
+    `;
+          const ticketConversationValues = [
+            ticketData.branch_id,
+            ticketData.customer_id,
+            ticketQryData.id,
+            "branch",
+            ticketData.message,
+          ];
+
+          connection.query(
+            sqlInsertTicketConversation,
+            ticketConversationValues,
+            (err, conversationResults) => {
+              connectionRelease(connection); // Ensure the connection is properly released
+
+              if (err) {
+                console.error(
+                  "Database insertion error for ticket conversation:",
+                  err
+                );
+                return callback(
+                  {
+                    message: "Database insertion error for ticket conversation",
+                    error: err,
+                  },
+                  null
+                );
+              }
+              const conversationId = conversationResults.insertId;
+
+              // You may need to fetch the `created_at` from the database again after insert
+              const sqlGetCreatedAt = `
+      SELECT \`created_at\`
+      FROM \`ticket_conversations\`
+      WHERE \`id\` = ?
+    `;
+
+              connection.query(
+                sqlGetCreatedAt,
+                [conversationId],
+                (err, result) => {
+                  if (err) {
+                    console.error("Error fetching created_at:", err);
+                    return callback(
+                      {
+                        message: "Error fetching created_at",
+                        error: err,
+                      },
+                      null
+                    );
+                  }
+                  const createdAt = result[0].created_at;
+
+                  callback(null, {
+                    title: ticketQryData.title,
+                    description: ticketQryData.description,
+                    created_at: createdAt,
+                  });
+                }
+              );
+            }
+          );
+        }
+      );
+    });
+  },
+
+  delete: (ticket_number, branch_id, callback) => {
     startConnection((err, connection) => {
       if (err) {
         return callback(
@@ -220,38 +249,76 @@ const Branch = {
         );
       }
 
-      // Check if the branch is a head branch (is_head = 1)
-      const checkSql = `SELECT \`is_head\` FROM \`branches\` WHERE \`id\` = ?`;
-      connection.query(checkSql, [id], (err, results) => {
-        if (err) {
-          connectionRelease(connection); // Ensure connection is released
-          console.error("Database query error: Checking branch status", err);
-          return callback(err, null);
-        }
-
-        if (results.length === 0) {
-          connectionRelease(connection);
-          return callback({ message: "Branch not found" }, null);
-        }
-
-        if (results[0].is_head === 1) {
-          connectionRelease(connection); // Ensure connection is released
-          return callback({ message: "Can't delete head branch" }, null);
-        }
-
-        // Proceed with deletion if not a head branch
-        const deleteSql = `DELETE FROM \`branches\` WHERE \`id\` = ?`;
-        connection.query(deleteSql, [id], (err, deleteResults) => {
-          connectionRelease(connection); // Ensure connection is released
-
+      const sql = `SELECT id FROM \`tickets\` WHERE \`ticket_number\` = ? AND \`branch_id\` = ? LIMIT 1`;
+      connection.query(
+        sql,
+        [ticket_number, branch_id],
+        (err, ticketResults) => {
+          // Ensure connection is released even if there's an error
           if (err) {
-            console.error("Database query error: Deleting branch", err);
-            return callback(err, null);
+            connectionRelease(connection); // Release connection if query fails
+            console.error("Database query error: 84", err);
+            return callback(
+              { message: "Database query error", error: err },
+              null
+            );
           }
 
-          callback(null, deleteResults);
-        });
-      });
+          if (ticketResults.length === 0) {
+            connectionRelease(connection); // Release connection if no ticket found
+            return callback({ message: "Ticket not found" }, null);
+          }
+
+          const ticketQryData = ticketResults[0];
+
+          // Proceed with deletion of ticket conversations
+          const deleteConversationsSql = `DELETE FROM \`ticket_conversations\` WHERE \`ticket_id\` = ?`;
+          connection.query(
+            deleteConversationsSql,
+            [ticketQryData.id],
+            (err, deleteConversationsResults) => {
+              if (err) {
+                connectionRelease(connection); // Release connection on error
+                console.error(
+                  "Database query error: Deleting ticket conversations",
+                  err
+                );
+                return callback(
+                  {
+                    message:
+                      "Database query error deleting ticket conversations",
+                    error: err,
+                  },
+                  null
+                );
+              }
+
+              // Proceed with deletion of the ticket itself
+              const deleteTicketSql = `DELETE FROM \`tickets\` WHERE \`id\` = ?`;
+              connection.query(
+                deleteTicketSql,
+                [ticketQryData.id],
+                (err, deleteTicketResults) => {
+                  connectionRelease(connection); // Release connection after ticket deletion
+
+                  if (err) {
+                    console.error("Database query error: Deleting ticket", err);
+                    return callback(
+                      {
+                        message: "Database query error deleting ticket",
+                        error: err,
+                      },
+                      null
+                    );
+                  }
+
+                  callback(null, deleteTicketResults);
+                }
+              );
+            }
+          );
+        }
+      );
     });
   },
 };

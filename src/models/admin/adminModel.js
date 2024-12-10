@@ -287,15 +287,16 @@ const Admin = {
       }
 
       connection.query(sql, [username, username], (queryErr, results) => {
-        connectionRelease(connection); // Release the connection
-
         if (queryErr) {
           console.error("Database query error: 9", queryErr);
+          connection.release(); // Ensure connection is released after the query fails
           return callback(
             { message: "Database query error", error: queryErr },
             null
           );
         }
+
+        connection.release(); // Ensure connection is released after the query succeeds
 
         if (results.length === 0) {
           return callback(
