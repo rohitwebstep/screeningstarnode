@@ -334,7 +334,7 @@ exports.create = (req, res) => {
                     "0",
                     null,
                     err,
-                    () => {}
+                    () => { }
                   );
                   return res.status(500).json({
                     status: false,
@@ -375,7 +375,7 @@ exports.create = (req, res) => {
                         "0",
                         `{id: ${customerId}}`,
                         err,
-                        () => {}
+                        () => { }
                       );
                       return res.status(500).json({
                         status: false,
@@ -444,7 +444,7 @@ exports.create = (req, res) => {
                               "1",
                               `{id: ${customerId}}`,
                               null,
-                              () => {}
+                              () => { }
                             );
 
                             if (send_mail == 1) {
@@ -465,7 +465,7 @@ exports.create = (req, res) => {
                                       "0",
                                       null,
                                       err,
-                                      () => {}
+                                      () => { }
                                     );
 
                                     return res.status(500).json({
@@ -603,6 +603,8 @@ exports.create = (req, res) => {
                                 status: true,
                                 message:
                                   "Customer and branches created successfully.",
+                                data: { customerId },
+                                password,
                                 token: newToken,
                               });
                             }
@@ -775,7 +777,7 @@ exports.upload = async (req, res) => {
                     "0",
                     null,
                     err,
-                    () => {}
+                    () => { }
                   );
                   return res.status(500).json({
                     status: false,
@@ -802,7 +804,7 @@ exports.upload = async (req, res) => {
                           "0",
                           null,
                           err,
-                          () => {} // Callback after logging the error
+                          () => { } // Callback after logging the error
                         );
 
                         // Return error response
@@ -1607,7 +1609,7 @@ exports.active = (req, res) => {
               "0",
               JSON.stringify({ customer_id, ...changes }),
               err,
-              () => {}
+              () => { }
             );
             return res.status(500).json({
               status: false,
@@ -1623,7 +1625,7 @@ exports.active = (req, res) => {
             "1",
             JSON.stringify({ customer_id, ...changes }),
             null,
-            () => {}
+            () => { }
           );
 
           res.status(200).json({
@@ -1713,7 +1715,7 @@ exports.inactive = (req, res) => {
               "0",
               JSON.stringify({ customer_id, ...changes }),
               err,
-              () => {}
+              () => { }
             );
             return res.status(500).json({
               status: false,
@@ -1729,7 +1731,7 @@ exports.inactive = (req, res) => {
             "1",
             JSON.stringify({ customer_id, ...changes }),
             null,
-            () => {}
+            () => { }
           );
 
           res.status(200).json({
@@ -1822,7 +1824,7 @@ exports.delete = (req, res) => {
                 "0",
                 JSON.stringify({ id }),
                 err,
-                () => {}
+                () => { }
               );
               return res.status(500).json({
                 status: false,
@@ -1838,7 +1840,7 @@ exports.delete = (req, res) => {
               "1",
               JSON.stringify({ id }),
               null,
-              () => {}
+              () => { }
             );
 
             res.status(200).json({
