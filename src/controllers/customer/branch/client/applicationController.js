@@ -1143,7 +1143,7 @@ exports.upload = async (req, res) => {
       });
     }
 
-    const action = JSON.stringify({ client_application: "update" });
+    const action = "client_manager";
     BranchCommon.isBranchAuthorizedForAction(branchId, action, (result) => {
       if (!result.status) {
         return res.status(403).json({
