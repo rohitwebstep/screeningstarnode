@@ -79,27 +79,43 @@ function calculateServiceStats(serviceNames, applications, services) {
 }
 
 // Function to calculate overall costs
-function calculateOverallCosts(serviceStats, percentage) {
+function calculateOverallCosts(serviceStats, cgst_percentage, sgst_percentage, igst_percentage) {
   let overallServiceAmount = 0;
 
+  // Validate percentages (default to 0 if invalid)
+  const cgst = parseFloat(cgst_percentage) || 0;
+  const sgst = parseFloat(sgst_percentage) || 0;
+  const igst = parseFloat(igst_percentage) || 0;
+
+  // Calculate overall service amount
   for (const stat of Object.values(serviceStats)) {
-    overallServiceAmount += stat.totalCost;
+    const totalCost = parseFloat(stat.totalCost) || 0; // Default to 0 if invalid
+    overallServiceAmount += totalCost;
   }
 
-  const cgstAmount = (overallServiceAmount * (percentage / 100)).toFixed(2);
-  const sgstAmount = (overallServiceAmount * (percentage / 100)).toFixed(2);
-  const totalTax = (parseFloat(cgstAmount) + parseFloat(sgstAmount)).toFixed(2);
+  // Calculate tax amounts
+  const cgstAmount = (overallServiceAmount * (cgst / 100)).toFixed(2);
+  const sgstAmount = (overallServiceAmount * (sgst / 100)).toFixed(2);
+  const igstAmount = (overallServiceAmount * (igst / 100)).toFixed(2);
+
+  // Total tax and amount
+  const totalTax = (parseFloat(cgstAmount) + parseFloat(sgstAmount) + parseFloat(igstAmount)).toFixed(2);
   const totalAmount = (overallServiceAmount + parseFloat(totalTax)).toFixed(2);
 
+  // Return results
   return {
     overallServiceAmount: overallServiceAmount.toFixed(2),
     cgst: {
-      percentage: percentage,
+      percentage: cgst,
       tax: cgstAmount,
     },
     sgst: {
-      percentage: percentage,
+      percentage: sgst,
       tax: sgstAmount,
+    },
+    igst: {
+      percentage: igst,
+      tax: igstAmount,
     },
     totalTax,
     totalAmount,
@@ -224,6 +240,10 @@ exports.generateInvoice = async (req, res) => {
             });
           }
 
+          const cgst_percentage = parseInt(companyInfo.cgst_percentage ?? 0, 10);
+          const sgst_percentage = parseInt(companyInfo.sgst_percentage ?? 0, 10);
+          const igst_percentage = parseInt(companyInfo.igst_percentage ?? 0, 10);
+
           // Fetch customer information and applications
           generateInvoiceModel.generateInvoice(
             customer_id,
@@ -254,7 +274,7 @@ exports.generateInvoice = async (req, res) => {
                 calculateServiceStats(serviceNames, applications, services);
 
               // Calculate overall costs with 9% as parameter
-              const overallCosts = calculateOverallCosts(serviceStats, 9);
+              const overallCosts = calculateOverallCosts(serviceStats, cgst_percentage, sgst_percentage, igst_percentage);
 
               // Convert serviceStats to an array for easy access
               const totalCostsArray = Object.values(serviceStats);
