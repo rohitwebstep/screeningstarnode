@@ -80,34 +80,6 @@ function calculateServiceStats(serviceNames, applications, services) {
   return { serviceStats, servicesToAllocate }; // Return servicesToAllocate as well
 }
 
-// Function to calculate overall costs
-function calculateOverallCosts(serviceStats, percentage) {
-  let overallServiceAmount = 0;
-
-  for (const stat of Object.values(serviceStats)) {
-    overallServiceAmount += stat.totalCost;
-  }
-
-  const cgstAmount = (overallServiceAmount * (percentage / 100)).toFixed(2);
-  const sgstAmount = (overallServiceAmount * (percentage / 100)).toFixed(2);
-  const totalTax = (parseFloat(cgstAmount) + parseFloat(sgstAmount)).toFixed(2);
-  const totalAmount = (overallServiceAmount + parseFloat(totalTax)).toFixed(2);
-
-  return {
-    overallServiceAmount: overallServiceAmount.toFixed(2),
-    cgst: {
-      percentage: percentage,
-      tax: cgstAmount,
-    },
-    sgst: {
-      percentage: percentage,
-      tax: sgstAmount,
-    },
-    totalTax,
-    totalAmount,
-  };
-}
-
 async function getServiceNames(serviceIds) {
   // Helper function to fetch a service by ID
   const fetchServiceById = (serviceId) => {
@@ -255,16 +227,12 @@ exports.recordTracker = async (req, res) => {
               const { serviceStats, servicesToAllocate } =
                 calculateServiceStats(serviceNames, applications, services);
 
-              // Calculate overall costs with 9% as parameter
-              const overallCosts = calculateOverallCosts(serviceStats, 9);
-
               // Convert serviceStats to an array for easy access
               const totalCostsArray = Object.values(serviceStats);
 
               // Log the results
               const finalArr = {
-                serviceInfo: totalCostsArray,
-                costInfo: overallCosts,
+                serviceInfo: totalCostsArray
               };
 
               // Respond with the fetched customer data and applications
