@@ -199,7 +199,7 @@ const common = {
         if (err) {
           console.error("Database query error: 5-8", err);
           connectionRelease(connection);
-          return callback({ message: "Database query error", error: err }, null);
+          return callback({ message: "Database query error (5-8)", error: err }, null);
         }
 
         if (results.length === 0) {
@@ -216,7 +216,7 @@ const common = {
           if (err) {
             console.error("Database query error: 60", err);
             connectionRelease(connection);
-            return callback({ message: "Database query error", error: err }, null);
+            return callback({ message: "Database query error (5-9)", error: err }, null);
           }
 
           if (results.length === 0) {
