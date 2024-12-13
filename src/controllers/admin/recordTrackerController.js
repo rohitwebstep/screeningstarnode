@@ -242,7 +242,7 @@ exports.recordTracker = async (req, res) => {
               token: newToken,
             });
           }
-          
+
           const cgst_percentage = parseInt(companyInfo.cgst_percentage ?? 0, 10);
           const sgst_percentage = parseInt(companyInfo.sgst_percentage ?? 0, 10);
           const igst_percentage = parseInt(companyInfo.igst_percentage ?? 0, 10);
@@ -313,11 +313,25 @@ exports.recordTracker = async (req, res) => {
 };
 
 exports.list = (req, res) => {
-  const { admin_id, _token } = req.query;
+  const { admin_id, _token, month, year } = req.query;
 
   let missingFields = [];
-  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
-  if (!_token || _token === "") missingFields.push("Token");
+
+  if (!month || month === "" || month === undefined || month === "undefined") {
+    missingFields.push("Invoice Month");
+  }
+
+  if (!year || year === "" || year === undefined || year === "undefined") {
+    missingFields.push("Invoice Year");
+  }
+
+  if (!admin_id || admin_id === "" || admin_id === undefined || admin_id === "undefined") {
+    missingFields.push("Admin ID");
+  }
+
+  if (!_token || _token === "" || _token === undefined || _token === "undefined") {
+    missingFields.push("Token");
+  }
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -349,7 +363,7 @@ exports.list = (req, res) => {
       const newToken = result.newToken;
       let filter_status;
       // Fetch customer list with filter status
-      CMT.list(filter_status, (err, customerResults) => {
+      recordTrackerModel.list(month, year, (err, customerResults) => {
         if (err) {
           console.error("Database error:", err);
           return res.status(500).json({

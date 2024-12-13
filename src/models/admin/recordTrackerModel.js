@@ -328,6 +328,156 @@ const recordTrackerModel = {
       });
     });
   },
+
+  list: (month, year, callback) => {
+    startConnection((err, connection) => {
+      if (err) {
+        console.error("Connection error:", err);
+        return callback(err, null);
+      }
+
+      // If no filter_status is provided, proceed with the final SQL query without filters
+      const finalSql = `
+          WITH BranchesCTE AS (
+              SELECT 
+                  b.id AS branch_id,
+                  b.customer_id
+              FROM 
+                  branches b
+          )
+          SELECT 
+              customers.client_unique_id,
+              customers.name,
+              customer_metas.client_spoc_id,
+              customer_metas.tat_days,
+              customer_metas.single_point_of_contact,
+              customers.id AS main_id,
+              COALESCE(branch_counts.branch_count, 0) AS branch_count,
+              COALESCE(application_counts.application_count, 0) AS application_count
+          FROM 
+              customers
+          LEFT JOIN 
+              customer_metas ON customers.id = customer_metas.customer_id
+          LEFT JOIN (
+              SELECT 
+                  customer_id, 
+                  COUNT(*) AS branch_count
+              FROM 
+                  branches
+              GROUP BY 
+                  customer_id
+          ) AS branch_counts ON customers.id = branch_counts.customer_id
+          LEFT JOIN (
+              SELECT 
+                  b.customer_id, 
+                  COUNT(ca.id) AS application_count,
+                  MAX(ca.created_at) AS latest_application_date
+              FROM 
+                  BranchesCTE b
+              INNER JOIN 
+                  client_applications ca ON b.branch_id = ca.branch_id
+              WHERE
+                ca.is_data_qc = 1
+                AND ca.status IN ('complete', 'completed', 'closed')
+                AND MONTH(cmt.report_date) = ?
+                AND YEAR(cmt.report_date) = ? 
+              GROUP BY 
+                  b.customer_id
+          ) AS application_counts ON customers.id = application_counts.customer_id
+          WHERE 
+              COALESCE(application_counts.application_count, 0) > 0
+          ORDER BY 
+              application_counts.latest_application_date DESC;
+        `;
+      connection.query(finalSql, [month, year], async (err, results) => {
+        connectionRelease(connection); // Always release the connection
+        if (err) {
+          console.error("Database query error: 39", err);
+          return callback(err, null);
+        }
+
+        console.log(`Initial results - `, results);
+
+        // Process each result to fetch client_spoc names
+        for (const result of results) {
+          const spocIdString = result.client_spoc_id;
+          if (spocIdString) {
+            // Ensure client_spoc_id is treated as a string and split by commas
+            const spocIds = spocIdString
+              .toString()
+              .split(",")
+              .map((id) => id.trim());
+
+            // Query client_spoc table to fetch names for these IDs
+            const spocQuery = `
+                SELECT name 
+                FROM client_spocs
+                WHERE id IN (${spocIds.map(() => "?").join(",")});
+              `;
+
+            try {
+              const spocNames = await new Promise((resolve, reject) => {
+                connection.query(
+                  spocQuery,
+                  spocIds,
+                  (spocErr, spocResults) => {
+                    if (spocErr) {
+                      return reject(spocErr);
+                    }
+                    resolve(spocResults.map((spoc) => spoc.name || "N/A"));
+                  }
+                );
+              });
+
+              // Attach spoc names to the current result
+              result.client_spoc_name = spocNames;
+            } catch (spocErr) {
+              console.error("Error fetching client_spoc names:", spocErr);
+              result.client_spoc_name = null; // Default to null if error occurs
+            }
+          } else {
+            // If client_spoc_id is null or empty
+            result.client_spoc_name = null;
+          }
+
+          if (result.branch_count === 1) {
+            // Query client_spoc table to fetch names for these IDs
+            const headBranchQuery = `SELECT id, is_head FROM \`branches\` WHERE \`customer_id\` = ? AND \`is_head\` = ?`;
+
+            try {
+              const headBranchID = await new Promise((resolve, reject) => {
+                connection.query(
+                  headBranchQuery,
+                  [result.main_id, 1], // Properly pass query parameters as an array
+                  (headBranchErr, headBranchResults) => {
+                    if (headBranchErr) {
+                      return reject(headBranchErr);
+                    }
+                    resolve(
+                      headBranchResults.length > 0
+                        ? headBranchResults[0].id
+                        : null
+                    );
+                  }
+                );
+              });
+
+              // Attach spoc names to the current result
+              result.head_branch_id = headBranchID;
+            } catch (headBranchErr) {
+              console.error("Error fetching head branch id:", headBranchErr);
+              result.head_branch_id = null; // Default to null if an error occurs
+            }
+          }
+        }
+
+        console.log(`Processed results - `, results);
+
+        callback(null, results);
+      });
+
+    });
+  },
 };
 
 module.exports = recordTrackerModel;
