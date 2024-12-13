@@ -345,7 +345,7 @@ exports.list = (req, res) => {
     if (!result.status) {
       return res.status(403).json({
         status: false,
-        message: result.message+' 01', // Return the message from the authorization function
+        message: result.error, // Return the message from the authorization function
       });
     }
 
@@ -353,11 +353,11 @@ exports.list = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message+' 02' });
+        return res.status(500).json({ status: false, message: err.message + ' 02' });
       }
 
       if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message+' 03' });
+        return res.status(401).json({ status: false, message: result.message + ' 03' });
       }
 
       const newToken = result.newToken;
