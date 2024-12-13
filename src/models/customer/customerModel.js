@@ -354,7 +354,7 @@ const Customer = {
       INSERT INTO \`customer_metas\` (
         \`customer_id\`, \`address\`,
         \`client_spoc_id\`, \`escalation_manager_id\`,
-        \`billing_spoc_id\`, \`billing_escalation_id\`,
+        \`billing_spoc_id\`, \`billing_escalation_id\`, \`authorized_detail_id\`,
         \`gst_number\`, \`tat_days\`, 
         \`agreement_date\`, \`agreement_duration\`,
         \`state\`, \`state_code\`, 
@@ -369,6 +369,7 @@ const Customer = {
       metaData.escalation_manager_id,
       metaData.billing_spoc_id,
       metaData.billing_escalation_id,
+      metaData.authorized_detail_id,
       metaData.gst_number,
       metaData.tat_days,
       metaData.agreement_date,
