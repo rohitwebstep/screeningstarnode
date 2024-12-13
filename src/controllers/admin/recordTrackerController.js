@@ -80,6 +80,39 @@ function calculateServiceStats(serviceNames, applications, services) {
   return { serviceStats, servicesToAllocate }; // Return servicesToAllocate as well
 }
 
+// Function to calculate overall costs
+function calculateOverallCosts(serviceStats, cgst_percentage, sgst_percentage, igst_percentage) {
+  let overallServiceAmount = 0;
+
+  for (const stat of Object.values(serviceStats)) {
+    overallServiceAmount += stat.totalCost;
+  }
+
+  const cgstAmount = (overallServiceAmount * (cgst_percentage / 100)).toFixed(2);
+  const sgstAmount = (overallServiceAmount * (sgst_percentage / 100)).toFixed(2);
+  const igstAmount = (overallServiceAmount * (igst_percentage / 100)).toFixed(2);
+  const totalTax = (parseFloat(cgstAmount) + parseFloat(sgstAmount) + parseFloat(igstAmount)).toFixed(2);
+  const totalAmount = (overallServiceAmount + parseFloat(totalTax)).toFixed(2);
+
+  return {
+    overallServiceAmount: overallServiceAmount.toFixed(2),
+    cgst: {
+      percentage: cgst_percentage,
+      tax: cgstAmount,
+    },
+    sgst: {
+      percentage: sgst_percentage,
+      tax: sgstAmount,
+    },
+    igst: {
+      percentage: igst_percentage,
+      tax: igstAmount,
+    },
+    totalTax,
+    totalAmount,
+  };
+}
+
 async function getServiceNames(serviceIds) {
   // Helper function to fetch a service by ID
   const fetchServiceById = (serviceId) => {
@@ -198,6 +231,10 @@ exports.recordTracker = async (req, res) => {
             });
           }
 
+          const cgst_percentage = AppModel.cgst_percentage ?? 0;
+          const sgst_percentage = AppModel.sgst_percentage ?? 0;
+          const igst_percentage = AppModel.igst_percentage ?? 0;
+
           // Fetch customer information and applications
           recordTrackerModel.recordTracker(
             customer_id,
@@ -227,12 +264,16 @@ exports.recordTracker = async (req, res) => {
               const { serviceStats, servicesToAllocate } =
                 calculateServiceStats(serviceNames, applications, services);
 
+              // Calculate overall costs with 9% as parameter
+              const overallCosts = calculateOverallCosts(serviceStats, cgst_percentage, sgst_percentage, igst_percentage);
+
               // Convert serviceStats to an array for easy access
               const totalCostsArray = Object.values(serviceStats);
 
               // Log the results
               const finalArr = {
-                serviceInfo: totalCostsArray
+                serviceInfo: totalCostsArray,
+                costInfo: overallCosts,
               };
 
               // Respond with the fetched customer data and applications
