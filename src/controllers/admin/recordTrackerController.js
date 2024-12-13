@@ -30,6 +30,7 @@ function calculateServiceStats(serviceNames, applications, services) {
 
   applications.forEach((application) => {
     application.applications.forEach((app) => {
+      console.log(`app - `, app);
       const serviceIds = app.services.split(",");
 
       serviceIds.forEach((serviceId) => {
@@ -80,38 +81,49 @@ function calculateServiceStats(serviceNames, applications, services) {
   return { serviceStats, servicesToAllocate }; // Return servicesToAllocate as well
 }
 
-// Function to calculate overall costs
 function calculateOverallCosts(serviceStats, cgst_percentage, sgst_percentage, igst_percentage) {
   let overallServiceAmount = 0;
 
+  // Validate percentages (default to 0 if invalid)
+  const cgst = parseFloat(cgst_percentage) || 0;
+  const sgst = parseFloat(sgst_percentage) || 0;
+  const igst = parseFloat(igst_percentage) || 0;
+
+  // Calculate overall service amount
   for (const stat of Object.values(serviceStats)) {
-    overallServiceAmount += stat.totalCost;
+    const totalCost = parseFloat(stat.totalCost) || 0; // Default to 0 if invalid
+    overallServiceAmount += totalCost;
   }
 
-  const cgstAmount = (overallServiceAmount * (cgst_percentage / 100)).toFixed(2);
-  const sgstAmount = (overallServiceAmount * (sgst_percentage / 100)).toFixed(2);
-  const igstAmount = (overallServiceAmount * (igst_percentage / 100)).toFixed(2);
+  // Calculate tax amounts
+  const cgstAmount = (overallServiceAmount * (cgst / 100)).toFixed(2);
+  const sgstAmount = (overallServiceAmount * (sgst / 100)).toFixed(2);
+  const igstAmount = (overallServiceAmount * (igst / 100)).toFixed(2);
+
+  // Total tax and amount
   const totalTax = (parseFloat(cgstAmount) + parseFloat(sgstAmount) + parseFloat(igstAmount)).toFixed(2);
   const totalAmount = (overallServiceAmount + parseFloat(totalTax)).toFixed(2);
 
+  // Return results
   return {
     overallServiceAmount: overallServiceAmount.toFixed(2),
     cgst: {
-      percentage: cgst_percentage,
+      percentage: cgst,
       tax: cgstAmount,
     },
     sgst: {
-      percentage: sgst_percentage,
+      percentage: sgst,
       tax: sgstAmount,
     },
     igst: {
-      percentage: igst_percentage,
+      percentage: igst,
       tax: igstAmount,
     },
     totalTax,
     totalAmount,
   };
 }
+
 
 async function getServiceNames(serviceIds) {
   // Helper function to fetch a service by ID
@@ -230,10 +242,10 @@ exports.recordTracker = async (req, res) => {
               token: newToken,
             });
           }
-
-          const cgst_percentage = AppModel.cgst_percentage ?? 0;
-          const sgst_percentage = AppModel.sgst_percentage ?? 0;
-          const igst_percentage = AppModel.igst_percentage ?? 0;
+          
+          const cgst_percentage = parseInt(companyInfo.cgst_percentage ?? 0, 10);
+          const sgst_percentage = parseInt(companyInfo.sgst_percentage ?? 0, 10);
+          const igst_percentage = parseInt(companyInfo.igst_percentage ?? 0, 10);
 
           // Fetch customer information and applications
           recordTrackerModel.recordTracker(

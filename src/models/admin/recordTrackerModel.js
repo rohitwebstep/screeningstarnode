@@ -110,7 +110,7 @@ const recordTrackerModel = {
             LEFT JOIN 
               cmt_applications cmt ON cmt.client_application_id = ca.id
             WHERE 
-              (ca.status = 'completed' OR ca.status = 'closed') 
+              ca.status IN ('completed', 'closed', 'complete') 
               AND ca.customer_id = ?
               AND MONTH(cmt.report_date) = ?
               AND YEAR(cmt.report_date) = ? 

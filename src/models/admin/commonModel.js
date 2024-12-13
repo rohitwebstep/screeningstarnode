@@ -189,45 +189,39 @@ const common = {
         return callback({ message: "Connection error", error: err }, null);
       }
 
+      if (!connection) {
+        console.error("Connection is not available");
+        return callback({ message: "Connection is not available" }, null);
+      }
+
       // First query: Get the admin's role
       connection.query(adminSQL, [admin_id], (err, results) => {
         if (err) {
-          console.error("Database query error: 58", err);
-          connectionRelease(connection); // Release connection on error
-          return callback(
-            { message: "Database query error", error: err },
-            null
-          );
+          console.error("Database query error: 5-8", err);
+          connectionRelease(connection);
+          return callback({ message: "Database query error", error: err }, null);
         }
 
         if (results.length === 0) {
           console.log("No admin found with the provided ID");
-          connectionRelease(connection); // Release connection if no admin found
-          return callback(
-            { message: "No admin found with the provided ID" },
-            null
-          );
+          connectionRelease(connection);
+          return callback({ message: "No admin found with the provided ID" }, null);
         }
 
-        // Get the admin's role
         const role = results[0].role;
-
         const permissionsJsonByRoleSQL = `SELECT \`json\` FROM \`permissions\` WHERE \`role\` = ?`;
 
         // Second query: Get permissions for the admin's role
         connection.query(permissionsJsonByRoleSQL, [role], (err, results) => {
           if (err) {
             console.error("Database query error: 60", err);
-            connectionRelease(connection); // Release connection on error
-            return callback(
-              { message: "Database query error", error: err },
-              null
-            );
+            connectionRelease(connection);
+            return callback({ message: "Database query error", error: err }, null);
           }
 
           if (results.length === 0) {
             console.error("No permissions found for the admin role");
-            connectionRelease(connection); // Release connection if no permissions found
+            connectionRelease(connection);
             return callback({ message: "Access Denied" }, null);
           }
 
@@ -235,48 +229,32 @@ const common = {
 
           if (!permissionsRaw) {
             console.error("Permissions field is empty");
-            connectionRelease(connection); // Release connection if permissions field is empty
-            return callback({
-              status: false,
-              message: "Access Denied",
-            });
+            connectionRelease(connection);
+            return callback({ status: false, message: "Access Denied" });
           }
 
           try {
             const permissionsJson = JSON.parse(permissionsRaw);
-            const permissions =
-              typeof permissionsJson === "string"
-                ? JSON.parse(permissionsJson)
-                : permissionsJson;
+            const permissions = typeof permissionsJson === "string" ? JSON.parse(permissionsJson) : permissionsJson;
 
-            // Check if the requested action is present in the permissions
             if (!permissions[action]) {
               console.error("Action type not found in permissions");
-              connectionRelease(connection); // Release connection if action is not found
-              return callback({
-                status: false,
-                message: "Access Denied",
-              });
+              connectionRelease(connection);
+              return callback({ status: false, message: "Access Denied" });
             }
 
             console.log(`Authorization successful for action: ${action}`);
-            connectionRelease(connection); // Release connection after success
-            return callback({
-              status: true,
-              message: "Authorization Successful",
-            });
+            connectionRelease(connection);
+            return callback({ status: true, message: "Authorization Successful" });
           } catch (parseErr) {
             console.error("Error parsing permissions JSON:", parseErr);
-            connectionRelease(connection); // Release connection if JSON parsing fails
-            return callback({
-              status: false,
-              message: "Access Denied",
-            });
+            connectionRelease(connection);
+            return callback({ status: false, message: "Access Denied" });
           }
         });
       });
     });
-  },
+  }
 };
 
 module.exports = common;
