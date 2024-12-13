@@ -15,6 +15,7 @@ const escalationManagerRoutes = require("./routes/admin/escalationManagerRoutes"
 const clientSpocRoutes = require("./routes/admin/clientSpocRoutes");
 const generateInvoiceRoutes = require("./routes/admin/generateInvoiceRoutes");
 const recordTrackerRoutes = require("./routes/admin/recordTrackerRoutes");
+const invoiceMasterRoutes = require("./routes/admin/invoiceMasterRoutes");
 const acknowledgementRoutes = require("./routes/admin/acknowledgementRoutes");
 const externalLoginCredentials = require("./routes/admin/externalLoginCredentialsRoutes");
 const customerRoutes = require("./routes/customer/indexRoutes");
@@ -39,24 +40,39 @@ app.use(bodyParser.json());
 app.use("/uploads", express.static("uploads"));
 
 // Define routes
-app.use("/admin", adminRoutes);
 app.use("/ticket", ticketRoutes);
 app.use("/user-history", userHistoryRoutes);
 app.use("/client-master-tracker", clientMasterTrackerRoutes);
+
+// =====----- EMPLOYEE CREDENTIALS -----=====
+app.use("/admin", adminRoutes);
+
+
+// =====----- CLIENT MASTER DATA -----=====
+app.use("/customer", customerRoutes);
+app.use("/client-spoc", clientSpocRoutes);
+app.use("/escalation-manager", escalationManagerRoutes);
 app.use("/billing-spoc", billingSpocRoutes);
 app.use("/billing-escalation", billingEscalationRoutes);
 app.use("/authorized-detail", authorizedDetailRoutes);
-app.use("/escalation-manager", escalationManagerRoutes);
-app.use("/client-spoc", clientSpocRoutes);
+
+
+// =====----- BILLING DASHBOARD -----=====
 app.use("/generate-invoice", generateInvoiceRoutes);
 app.use("/record-tracker", recordTrackerRoutes);
+app.use("/invoice-master", invoiceMasterRoutes);
+
+
+// =====----- REPORT MASTER -----=====
+app.use("/report-master", reportMasterRoutes);
+
+// =====----- DATA MANAGEMENT -----=====
+app.use("/data-management", dataManagementRoutes);
+
 app.use("/weekly-reports", weeklyReportRoutes);
 app.use("/acknowledgement", acknowledgementRoutes);
 app.use("/external-login-credentials", externalLoginCredentials);
-app.use("/customer", customerRoutes);
 app.use("/branch", branchRoutes);
-app.use("/report-master", reportMasterRoutes);
-app.use("/data-management", dataManagementRoutes);
 app.use("/package", packageRoutes);
 app.use("/service-group", serviceGroupRoutes);
 app.use("/service", serviceRoutes);
