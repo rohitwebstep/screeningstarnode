@@ -353,11 +353,11 @@ exports.list = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res.status(500).json({ status: false, message: err.message });
+        return res.status(500).json({ status: false, message: err.message+' 01' });
       }
 
       if (!result.status) {
-        return res.status(401).json({ status: false, message: result.message });
+        return res.status(401).json({ status: false, message: result.message+' 02' });
       }
 
       const newToken = result.newToken;
