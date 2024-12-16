@@ -47,7 +47,6 @@ app.use("/client-master-tracker", clientMasterTrackerRoutes);
 // =====----- EMPLOYEE CREDENTIALS -----=====
 app.use("/admin", adminRoutes);
 
-
 // =====----- CLIENT MASTER DATA -----=====
 app.use("/customer", customerRoutes);
 app.use("/client-spoc", clientSpocRoutes);
@@ -56,12 +55,10 @@ app.use("/billing-spoc", billingSpocRoutes);
 app.use("/billing-escalation", billingEscalationRoutes);
 app.use("/authorized-detail", authorizedDetailRoutes);
 
-
 // =====----- BILLING DASHBOARD -----=====
 app.use("/generate-invoice", generateInvoiceRoutes);
 app.use("/record-tracker", recordTrackerRoutes);
 app.use("/invoice-master", invoiceMasterRoutes);
-
 
 // =====----- REPORT MASTER -----=====
 app.use("/report-master", reportMasterRoutes);
