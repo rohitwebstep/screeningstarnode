@@ -139,7 +139,7 @@ const Service = {
           \`customer_id\`, \`month\`, \`year\`, \`orgenization_name\`, \`gst_number\`, \`state\`, \`state_code\`,
           \`invoice_date\`, \`invoice_number\`, \`taxable_value\`, \`cgst\`, \`sgst\`, \`igst\`, \`total_gst\`,
           \`invoice_subtotal\`
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
       connection.query(
