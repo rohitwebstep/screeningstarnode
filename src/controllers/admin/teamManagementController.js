@@ -4,6 +4,7 @@ const TeamManagement = require("../../models/admin/teamManagementModel");
 const Customer = require("../../models/customer/customerModel");
 const Branch = require("../../models/customer/branch/branchModel");
 const AdminCommon = require("../../models/admin/commonModel");
+const Admin = require("../../models/admin/adminModel");
 const BranchCommon = require("../../models/customer/branch/commonModel");
 const Permission = require("../../models/admin/permissionModel");
 
@@ -399,30 +400,48 @@ exports.generateReport = (req, res) => {
               token: newToken,
             });
           }
-
-          // Step 5: Fetch Permissions
-          Permission.getPermissionById(admin_id, (err, currentPermission) => {
+          Admin.findById(admin_id, (err, admin) => {
             if (err) {
-              console.error("Permission retrieval error:", err);
-              return res.status(500).json({
-                status: false,
-                message: "Failed to retrieve permissions.",
-                token: newToken,
-              });
+              console.error("Database error:", err);
+              return res
+                .status(500)
+                .json({ status: false, message: "Internal server error 1." });
             }
 
+            // If no admin found, return a 404 response
+            if (!admin) {
+              return res.status(404).json({
+                status: false,
+                message: "Admin not found with the provided ID",
+              });
+            }
             // Step 6: Determine Granted Service IDs
             let grantedServiceIds = [];
             let skippedIds = [];
+            if (admin.role === "team_management") {
+              // Step 5: Fetch Permissions
+              Permission.getPermissionById(
+                admin.role,
+                (err, currentPermission) => {
+                  if (err) {
+                    console.error("Permission retrieval error:", err);
+                    return res.status(500).json({
+                      status: false,
+                      message: "Failed to retrieve permissions.",
+                      token: newToken,
+                    });
+                  }
 
-            if (
-              currentPermission.role === "team_management" &&
-              currentPermission.service_ids
-            ) {
-              grantedServiceIds = currentPermission.service_ids
-                .split(",")
-                .map((id) => Number(id.trim()))
-                .filter((id) => !isNaN(id));
+                  if (currentPermission.role === "team_management") {
+                    if (currentPermission.service_ids) {
+                      grantedServiceIds = currentPermission.service_ids
+                        .split(",")
+                        .map((id) => Number(id.trim()))
+                        .filter((id) => !isNaN(id));
+                    }
+                  }
+                }
+              );
             } else {
               statuses.forEach((statusItem) => {
                 const serviceId = Number(statusItem.service_id);
@@ -437,7 +456,6 @@ exports.generateReport = (req, res) => {
               return new Promise((resolve) => {
                 const serviceId = Number(statusItem.service_id);
                 const status = statusItem.status;
-
                 if (grantedServiceIds.includes(serviceId)) {
                   TeamManagement.updateStatusOfAnnexureByDBTable(
                     application_id,
