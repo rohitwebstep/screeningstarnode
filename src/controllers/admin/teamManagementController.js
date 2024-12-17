@@ -104,7 +104,7 @@ exports.applicationByID = (req, res) => {
           }
 
           if (application.is_data_qc !== 1) {
-            console.warn("Application Data QC is not done yet 3");
+            console.warn("Application Data QC is not done yet");
             return res.status(404).json({
               status: false,
               message: "Data QC for application data is pending.",
@@ -502,15 +502,13 @@ exports.upload = async (req, res) => {
 
     const {
       admin_id: adminId,
-      branch_id: branchId,
       _token: token,
+      branch_id: branchId,
       customer_code: customerCode,
-      application_id: appId,
+      client_application_id: appId,
       application_code: appCode,
       db_table: dbTable,
-      db_column: dbColumn,
       send_mail: sendMail,
-      email_status: emailStatus,
     } = req.body;
 
     // Validate required fields and collect missing ones
@@ -522,10 +520,9 @@ exports.upload = async (req, res) => {
       appCode,
       appId,
       dbTable,
-      dbColumn,
     };
 
-    const cleanDBColumn = dbColumn.replace("[", "").replace("]", "");
+    const cleanDBColumn = "team_management_docs";
     // Check for missing fields
     const missingFields = Object.keys(requiredFields)
       .filter(
@@ -541,14 +538,6 @@ exports.upload = async (req, res) => {
       return res.status(400).json({
         status: false,
         message: `Missing required fields: ${missingFields.join(", ")}`,
-      });
-    }
-
-    if (sendMail == 1 && !emailStatus) {
-      console.warn("Email status required when sending mail");
-      return res.status(400).json({
-        status: false,
-        message: "The field 'emailStatus' is required when sending an email.",
       });
     }
 
@@ -576,7 +565,7 @@ exports.upload = async (req, res) => {
 
         const newToken = result.newToken;
         // Define the target directory for uploads
-        const targetDirectory = `uploads/customer/${customerCode}/application/${appCode}/${dbTable}`;
+        const targetDirectory = `uploads/customer/${customerCode}/application/${appCode}/${dbTable}/team-management`;
         // Create the target directory for uploads
         await fs.promises.mkdir(targetDirectory, { recursive: true });
 
@@ -602,7 +591,7 @@ exports.upload = async (req, res) => {
           .toLowerCase();
 
         // Call the model to upload images
-        ClientMasterTrackerModel.upload(
+        TeamManagement.upload(
           appId,
           modifiedDbTable,
           cleanDBColumnForQry,
@@ -671,7 +660,7 @@ exports.upload = async (req, res) => {
                       }
 
                       if (application.is_data_qc !== 1) {
-                        console.warn("Application Data QC is not done yet 3");
+                        console.warn("Application Data QC is not done yet");
                         return res.status(404).json({
                           status: false,
                           message: "Data QC for application data is pending.",
@@ -680,169 +669,47 @@ exports.upload = async (req, res) => {
                         });
                       }
 
-                      ClientMasterTrackerModel.getAttachmentsByClientAppID(
+                      ClientMasterTrackerModel.getCMTApplicationById(
                         appId,
-                        (err, attachments) => {
+                        (err, CMTApplicationData) => {
                           if (err) {
-                            console.error(
-                              "Database error while fetching attachments:",
-                              err
-                            );
+                            console.error("Database error:", err);
                             return res.status(500).json({
                               status: false,
-                              message: "Database error occurred",
+                              message: err.message,
                               token: newToken,
-                              savedImagePaths,
                             });
                           }
 
-                          ClientMasterTrackerModel.getCMTApplicationById(
-                            appId,
-                            (err, CMTApplicationData) => {
-                              if (err) {
-                                console.error("Database error:", err);
-                                return res.status(500).json({
-                                  status: false,
-                                  message: err.message,
-                                  token: newToken,
-                                });
-                              }
+                          const case_initiated_date =
+                            CMTApplicationData.initiation_date || "N/A";
+                          const final_report_date =
+                            CMTApplicationData.report_date || "N/A";
+                          const report_type =
+                            CMTApplicationData.report_type || "N/A";
+                          const overall_status =
+                            CMTApplicationData.overall_status || "N/A";
 
-                              const case_initiated_date =
-                                CMTApplicationData.initiation_date || "N/A";
-                              const final_report_date =
-                                CMTApplicationData.report_date || "N/A";
-                              const report_type =
-                                CMTApplicationData.report_type || "N/A";
-                              const overall_status =
-                                CMTApplicationData.overall_status || "N/A";
+                          const gender = application.gender?.toLowerCase();
+                          const maritalStatus =
+                            application.marital_status?.toLowerCase();
 
-                              const gender = application.gender?.toLowerCase();
-                              const maritalStatus =
-                                application.marital_status?.toLowerCase();
+                          let genderTitle = "Mr.";
+                          if (gender === "male") {
+                            genderTitle = "Mr.";
+                          } else if (gender === "female") {
+                            genderTitle =
+                              maritalStatus === "married" ? "Mrs." : "Ms.";
+                          }
 
-                              let genderTitle = "Mr.";
-                              if (gender === "male") {
-                                genderTitle = "Mr.";
-                              } else if (gender === "female") {
-                                genderTitle =
-                                  maritalStatus === "married" ? "Mrs." : "Ms.";
-                              }
-
-                              // Prepare and send email based on application status
-                              // Final report email
-                              if (emailStatus == 1) {
-                                finalReportMail(
-                                  "cmt",
-                                  "final",
-                                  companyName,
-                                  genderTitle,
-                                  application.name,
-                                  application.application_id,
-                                  case_initiated_date,
-                                  final_report_date,
-                                  report_type,
-                                  overall_status,
-                                  attachments,
-                                  toArr,
-                                  ccArr
-                                )
-                                  .then(() => {
-                                    return res.status(200).json({
-                                      status: true,
-                                      message: "CMT Final Report mail sent.",
-                                      token: newToken,
-                                      savedImagePaths,
-                                    });
-                                  })
-                                  .catch((emailError) => {
-                                    console.error(
-                                      "Error sending email for final report:",
-                                      emailError
-                                    );
-                                    return res.status(200).json({
-                                      status: true,
-                                      message: "Failed to send CMT mail.",
-                                      token: newToken,
-                                      savedImagePaths,
-                                    });
-                                  });
-                              }
-                              // QC report email
-                              else if (emailStatus == 2) {
-                                qcReportCheckMail(
-                                  "cmt",
-                                  "qc",
-                                  genderTitle,
-                                  application.name,
-                                  application.application_id,
-                                  attachments,
-                                  toArr,
-                                  ccArr
-                                )
-                                  .then(() => {
-                                    return res.status(200).json({
-                                      status: true,
-                                      message:
-                                        "CMT Quality Check Report mail sent.",
-                                      token: newToken,
-                                      savedImagePaths,
-                                    });
-                                  })
-                                  .catch((emailError) => {
-                                    console.error(
-                                      "Error sending email for QC report:",
-                                      emailError
-                                    );
-                                    return res.status(200).json({
-                                      status: true,
-                                      message: "Failed to send CMT mail.",
-                                      token: newToken,
-                                      savedImagePaths,
-                                    });
-                                  });
-                              }
-                              // Handling for other statuses
-                              else if (emailStatus == 3) {
-                                readyForReport(
-                                  "cmt",
-                                  "ready",
-                                  application.application_id,
-                                  toArr,
-                                  ccArr
-                                )
-                                  .then(() => {
-                                    return res.status(200).json({
-                                      status: true,
-                                      message: "Ready for Report mail sent.",
-                                      token: newToken,
-                                      savedImagePaths,
-                                    });
-                                  })
-                                  .catch((emailError) => {
-                                    console.error(
-                                      "Error sending email for report:",
-                                      emailError
-                                    );
-                                    return res.status(200).json({
-                                      status: true,
-                                      message: "Failed to send CMT mail.",
-                                      token: newToken,
-                                      savedImagePaths,
-                                    });
-                                  });
-                              }
-                              // Handle unknown email status
-                              else {
-                                return res.status(200).json({
-                                  status: true,
-                                  message: "Images uploaded successfully.",
-                                  token: newToken,
-                                  savedImagePaths,
-                                });
-                              }
-                            }
-                          );
+                          // Prepare and send email based on application status
+                          // Final report email
+                          return res.status(200).json({
+                            status: true,
+                            message: "Images uploaded successfully.",
+                            token: newToken,
+                            savedImagePaths,
+                          });
                         }
                       );
                     }

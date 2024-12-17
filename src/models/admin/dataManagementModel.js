@@ -413,11 +413,12 @@ const Customer = {
             const createTableSql = `
               CREATE TABLE \`${db_table}\` (
                 \`id\` bigint(20) NOT NULL AUTO_INCREMENT,
-                \`cmt_id\` bigint(20) NOT NULL,
+                \`cmt_id\` bigint(20) DEFAULT NULL,
                 \`client_application_id\` bigint(20) NOT NULL,
                 \`branch_id\` int(11) NOT NULL,
                 \`customer_id\` int(11) NOT NULL,
                 \`status\` VARCHAR(100) NOT NULL,
+                \`team_management_docs\` LONGTEXT NOT NULL,
                 \`created_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
                 \`updated_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 PRIMARY KEY (\`id\`),
@@ -655,11 +656,12 @@ const Customer = {
             const createTableSql = `
               CREATE TABLE \`${db_table}\` (
                 \`id\` bigint(20) NOT NULL AUTO_INCREMENT,
-                \`cmt_id\` bigint(20) NOT NULL,
+                \`cmt_id\` bigint(20) DEFAULT NULL,
                 \`client_application_id\` bigint(20) NOT NULL,
                 \`branch_id\` int(11) NOT NULL,
                 \`customer_id\` int(11) NOT NULL,
                 \`status\` VARCHAR(100) NOT NULL,
+                \`team_management_docs\` LONGTEXT NOT NULL,
                 \`created_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
                 \`updated_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 PRIMARY KEY (\`id\`),

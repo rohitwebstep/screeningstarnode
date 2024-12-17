@@ -60,6 +60,7 @@ const reportCaseStatus = {
               \`branch_id\` int(11) NOT NULL,
               \`customer_id\` int(11) NOT NULL,
               \`status\` VARCHAR(100) NOT NULL,
+              \`team_management_docs\` LONGTEXT NOT NULL,
               \`created_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
               \`updated_at\` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
               PRIMARY KEY (\`id\`),
