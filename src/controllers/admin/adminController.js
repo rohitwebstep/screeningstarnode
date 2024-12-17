@@ -13,7 +13,7 @@ const { createMail } = require("../../mailer/admin/createMail");
 
 const fs = require("fs");
 const path = require("path");
-const { upload, saveImage, saveImages } = require("../../utils/imageSave");
+const { upload, saveImage, saveImages } = require("../../utils/cloudImageSave");
 
 // Controller to list all Billing SPOCs
 exports.list = (req, res) => {

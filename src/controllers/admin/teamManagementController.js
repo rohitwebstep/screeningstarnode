@@ -20,7 +20,7 @@ const {
 
 const fs = require("fs");
 const path = require("path");
-const { upload, saveImage, saveImages } = require("../../utils/imageSave");
+const { upload, saveImage, saveImages } = require("../../utils/cloudImageSave");
 
 // Controller to list all customers
 exports.applicationByID = (req, res) => {

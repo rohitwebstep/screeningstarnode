@@ -23,7 +23,7 @@ const {
   upload,
   saveImage,
   saveImages,
-} = require("../../../../utils/imageSave");
+} = require("../../../../utils/cloudImageSave");
 
 exports.create = (req, res) => {
   const {
