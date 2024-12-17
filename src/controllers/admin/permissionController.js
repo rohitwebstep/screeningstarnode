@@ -110,7 +110,7 @@ exports.list = (req, res) => {
 
 // Controller to update a service
 exports.update = (req, res) => {
-  const { id, role, permission_json, admin_id, _token } = req.body;
+  const { id, permission_json, admin_id, _token, service_ids } = req.body;
 
   // Validate required fields and collect missing ones
   const requiredFields = {
@@ -125,7 +125,7 @@ exports.update = (req, res) => {
       (field) =>
         !requiredFields[field] ||
         requiredFields[field] === "" ||
-        requiredFields[field] == "undefined" ||
+        requiredFields[field] === "undefined" ||
         requiredFields[field] == undefined
     )
     .map((field) => field.replace(/_/g, " "));
@@ -146,6 +146,7 @@ exports.update = (req, res) => {
         message: result.message, // Return the message from the authorization function
       });
     }
+
     Common.isAdminTokenValid(_token, admin_id, (err, result) => {
       if (err) {
         console.error("Error checking token validity:", err);
@@ -169,7 +170,7 @@ exports.update = (req, res) => {
         }
 
         const changes = {};
-        if (currentPermission.json !== permission_json) {
+        if (currentPermission.permission_json !== permission_json) {
           changes.permission_json = {
             old: currentPermission.permission_json,
             new: permission_json,
@@ -198,7 +199,7 @@ exports.update = (req, res) => {
         Permission.update(
           id,
           JSON.stringify(permission_json),
-          service_ids || NULL,
+          service_ids || null, // Fix: Use `null` instead of `NULL`
           (err, result) => {
             if (err) {
               console.error("Database error:", err);

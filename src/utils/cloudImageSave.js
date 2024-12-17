@@ -2,6 +2,37 @@ const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
 const ftp = require("basic-ftp");
+const App = require("../models/appModel");
+
+// Fetch app information (database query) once
+let cloudImageFTPHost,
+  cloudImageFTPUser,
+  cloudImageFTPPassword,
+  cloudImageFTPSecure;
+
+App.appInfo("backend", (err, appInfo) => {
+  if (err) {
+    console.error("Database error:", err);
+    return;
+  }
+  cloudImageFTPHost = appInfo.cloud_image_ftp_host;
+  cloudImageFTPUser = appInfo.cloud_image_ftp_user;
+  cloudImageFTPPassword = appInfo.cloud_image_ftp_password;
+  cloudImageFTPSecure = appInfo.cloud_image_ftp_secure;
+  console.log(`appInfo - `, appInfo);
+  console.log(`cloudImageFTPHost - `, cloudImageFTPHost);
+  console.log(`cloudImageFTPUser - `, cloudImageFTPUser);
+  console.log(`cloudImageFTPPassword - `, cloudImageFTPPassword);
+  console.log(`cloudImageFTPSecure - `, cloudImageFTPSecure);
+  // Check if any FTP details are missing and handle the error
+  if (!cloudImageFTPHost || !cloudImageFTPUser || !cloudImageFTPPassword) {
+    console.error("FTP configuration missing required details.");
+    return;
+  }
+
+  // Set cloudImageFTPSecure based on its value (0 = false, anything else = true)
+  cloudImageFTPSecure = cloudImageFTPSecure === 0 ? false : true;
+});
 
 // Set up multer storage
 const storage = multer.diskStorage({
@@ -56,12 +87,12 @@ const uploadToFtp = async (filePath) => {
   client.ftp.verbose = true; // Enable verbose logging for FTP connection
 
   try {
-    // Connect to FTP server (replace with your actual FTP details)
+    // Connect to FTP server using previously fetched app information
     await client.access({
-      host: "ftp.webstepdev.com", // Replace with your FTP host
-      user: "u510451310.screeningstarnode", // Replace with your FTP username
-      password: "ScreeningStar@123", // Replace with your FTP password
-      secure: false, // Set to true if using FTPS
+      host: cloudImageFTPHost,
+      user: cloudImageFTPUser,
+      password: cloudImageFTPPassword,
+      secure: cloudImageFTPSecure,
     });
 
     const targetDir = path.dirname(filePath); // Get the directory path (e.g., "uploads/rohit")
