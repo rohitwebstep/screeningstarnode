@@ -427,7 +427,7 @@ const Customer = {
           const createTableSql = `
             CREATE TABLE \`${db_table}\` (
               \`id\` bigint(20) NOT NULL AUTO_INCREMENT,
-              \`cmt_id\` bigint(20) NOT NULL,
+              \`cmt_id\` bigint(20) DEFAULT NULL,
               \`client_application_id\` bigint(20) NOT NULL,
               \`branch_id\` int(11) NOT NULL,
               \`customer_id\` int(11) NOT NULL,
@@ -601,7 +601,7 @@ const Customer = {
             const createTableSql = `
               CREATE TABLE \`${db_table}\` (
                 \`id\` bigint(20) NOT NULL AUTO_INCREMENT,
-                \`cmt_id\` bigint(20) NOT NULL,
+                \`cmt_id\` bigint(20) DEFAULT NULL,
                 \`client_application_id\` bigint(20) NOT NULL,
                 \`branch_id\` int(11) NOT NULL,
                 \`customer_id\` int(11) NOT NULL,
@@ -836,7 +836,7 @@ const Customer = {
             const createTableSql = `
               CREATE TABLE \`${db_table}\` (
                 \`id\` bigint(20) NOT NULL AUTO_INCREMENT,
-                \`cmt_id\` bigint(20) NOT NULL,
+                \`cmt_id\` bigint(20) DEFAULT NULL,
                 \`client_application_id\` bigint(20) NOT NULL,
                 \`branch_id\` int(11) NOT NULL,
                 \`customer_id\` int(11) NOT NULL,
@@ -1011,7 +1011,7 @@ const Customer = {
           const createTableSql = `
             CREATE TABLE \`${db_table}\` (
               \`id\` bigint(20) NOT NULL AUTO_INCREMENT,
-              \`cmt_id\` bigint(20) NOT NULL,
+              \`cmt_id\` bigint(20) DEFAULT NULL,
               \`client_application_id\` bigint(20) NOT NULL,
               \`branch_id\` int(11) NOT NULL,
               \`customer_id\` int(11) NOT NULL,
