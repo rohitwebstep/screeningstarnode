@@ -635,168 +635,191 @@ exports.upload = async (req, res) => {
         }
 
         const newToken = result.newToken;
-        // Define the target directory for uploads
-        const targetDirectory = `uploads/customer/${customerCode}/application/${appCode}/${dbTable}/team-management`;
-        // Create the target directory for uploads
-        await fs.promises.mkdir(targetDirectory, { recursive: true });
 
-        let savedImagePaths = [];
+        App.appInfo("backend", async (err, appInfo) => {
+          if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({
+              status: false,
+              err,
+              message: err.message,
+              token: newToken,
+            });
+          }
 
-        // Check for multiple files under the "images" field
-        if (req.files.images) {
-          savedImagePaths = await saveImages(req.files.images, targetDirectory);
-        }
+          let imageHost = "www.example.in";
 
-        // Check for a single file under the "image" field
-        if (req.files.image && req.files.image.length > 0) {
-          const savedImagePath = await saveImage(
-            req.files.image[0],
-            targetDirectory
-          );
-          savedImagePaths.push(savedImagePath);
-        }
+          if (appInfo) {
+            imageHost = appInfo.cloud_image_host || "www.example.in";
+          }
+          // Define the target directory for uploads
+          const targetDirectory = `uploads/customer/${customerCode}/application/${appCode}/${dbTable}/team-management`;
+          // Create the target directory for uploads
+          await fs.promises.mkdir(targetDirectory, { recursive: true });
 
-        const modifiedDbTable = dbTable.replace(/-/g, "_").toLowerCase();
-        const cleanDBColumnForQry = cleanDBColumn
-          .replace(/-/g, "_")
-          .toLowerCase();
+          let savedImagePaths = [];
 
-        // Call the model to upload images
-        TeamManagement.upload(
-          appId,
-          modifiedDbTable,
-          cleanDBColumnForQry,
-          savedImagePaths,
-          (success, result) => {
-            if (!success) {
-              console.error(
-                "Upload failed:",
-                result || "An error occurred while saving the image."
-              );
-              return res.status(500).json({
-                status: false,
-                message: result || "An error occurred while saving the image.",
-                token: newToken,
-                savedImagePaths,
-              });
-            }
+          if (req.files.images && req.files.images.length > 0) {
+            const uploadedImages = await saveImages(
+              req.files.images,
+              targetDirectory
+            );
+            uploadedImages.forEach((imagePath) => {
+              savedImagePaths.push(`${imageHost}/${imagePath}`);
+            });
+          }
 
-            // Handle sending email notifications if required
-            if (sendMail == 1) {
-              BranchCommon.getBranchandCustomerEmailsForNotification(
-                branchId,
-                (emailError, emailData) => {
-                  if (emailError) {
-                    console.error("Error fetching emails:", emailError);
-                    return res.status(500).json({
-                      status: false,
-                      message: "Failed to retrieve email addresses.",
-                      token: newToken,
-                      savedImagePaths,
-                    });
-                  }
+          // Process single file upload
+          if (req.files.image && req.files.image.length > 0) {
+            const uploadedImage = await saveImage(
+              req.files.image[0],
+              targetDirectory
+            );
+            savedImagePaths.push(`${imageHost}/${uploadedImage}`);
+          }
+          const modifiedDbTable = dbTable.replace(/-/g, "_").toLowerCase();
+          const cleanDBColumnForQry = cleanDBColumn
+            .replace(/-/g, "_")
+            .toLowerCase();
 
-                  const { branch, customer } = emailData;
-                  const companyName = customer.name;
+          // Call the model to upload images
+          TeamManagement.upload(
+            appId,
+            modifiedDbTable,
+            cleanDBColumnForQry,
+            savedImagePaths,
+            (success, result) => {
+              if (!success) {
+                console.error(
+                  "Upload failed:",
+                  result || "An error occurred while saving the image."
+                );
+                return res.status(500).json({
+                  status: false,
+                  message:
+                    result || "An error occurred while saving the image.",
+                  token: newToken,
+                  savedImagePaths,
+                });
+              }
 
-                  // Prepare recipient and CC lists
-                  const toArr = [{ name: branch.name, email: branch.email }];
-                  const ccArr = JSON.parse(customer.emails).map((email) => ({
-                    name: customer.name,
-                    email: email.trim(),
-                  }));
+              // Handle sending email notifications if required
+              if (sendMail == 1) {
+                BranchCommon.getBranchandCustomerEmailsForNotification(
+                  branchId,
+                  (emailError, emailData) => {
+                    if (emailError) {
+                      console.error("Error fetching emails:", emailError);
+                      return res.status(500).json({
+                        status: false,
+                        message: "Failed to retrieve email addresses.",
+                        token: newToken,
+                        savedImagePaths,
+                      });
+                    }
 
-                  ClientMasterTrackerModel.applicationByID(
-                    appId,
-                    branchId,
-                    (err, application) => {
-                      if (err) {
-                        console.error("Database error:", err);
-                        return res.status(500).json({
-                          status: false,
-                          message: err.message,
-                          token: newToken,
-                          savedImagePaths,
-                        });
-                      }
+                    const { branch, customer } = emailData;
+                    const companyName = customer.name;
 
-                      if (!application) {
-                        console.warn("Application not found");
-                        return res.status(404).json({
-                          status: false,
-                          message: "Application not found",
-                          token: newToken,
-                          savedImagePaths,
-                        });
-                      }
+                    // Prepare recipient and CC lists
+                    const toArr = [{ name: branch.name, email: branch.email }];
+                    const ccArr = JSON.parse(customer.emails).map((email) => ({
+                      name: customer.name,
+                      email: email.trim(),
+                    }));
 
-                      if (application.is_data_qc !== 1) {
-                        console.warn("Application Data QC is not done yet");
-                        return res.status(404).json({
-                          status: false,
-                          message: "Data QC for application data is pending.",
-                          token: newToken,
-                          savedImagePaths,
-                        });
-                      }
-
-                      ClientMasterTrackerModel.getCMTApplicationById(
-                        appId,
-                        (err, CMTApplicationData) => {
-                          if (err) {
-                            console.error("Database error:", err);
-                            return res.status(500).json({
-                              status: false,
-                              message: err.message,
-                              token: newToken,
-                            });
-                          }
-
-                          const case_initiated_date =
-                            CMTApplicationData.initiation_date || "N/A";
-                          const final_report_date =
-                            CMTApplicationData.report_date || "N/A";
-                          const report_type =
-                            CMTApplicationData.report_type || "N/A";
-                          const overall_status =
-                            CMTApplicationData.overall_status || "N/A";
-
-                          const gender = application.gender?.toLowerCase();
-                          const maritalStatus =
-                            application.marital_status?.toLowerCase();
-
-                          let genderTitle = "Mr.";
-                          if (gender === "male") {
-                            genderTitle = "Mr.";
-                          } else if (gender === "female") {
-                            genderTitle =
-                              maritalStatus === "married" ? "Mrs." : "Ms.";
-                          }
-
-                          // Prepare and send email based on application status
-                          // Final report email
-                          return res.status(200).json({
-                            status: true,
-                            message: "Images uploaded successfully.",
+                    ClientMasterTrackerModel.applicationByID(
+                      appId,
+                      branchId,
+                      (err, application) => {
+                        if (err) {
+                          console.error("Database error:", err);
+                          return res.status(500).json({
+                            status: false,
+                            message: err.message,
                             token: newToken,
                             savedImagePaths,
                           });
                         }
-                      );
-                    }
-                  );
-                }
-              );
-            } else {
-              return res.status(200).json({
-                status: true,
-                message: "Images uploaded successfully.",
-                token: newToken,
-                savedImagePaths,
-              });
+
+                        if (!application) {
+                          console.warn("Application not found");
+                          return res.status(404).json({
+                            status: false,
+                            message: "Application not found",
+                            token: newToken,
+                            savedImagePaths,
+                          });
+                        }
+
+                        if (application.is_data_qc !== 1) {
+                          console.warn("Application Data QC is not done yet");
+                          return res.status(404).json({
+                            status: false,
+                            message: "Data QC for application data is pending.",
+                            token: newToken,
+                            savedImagePaths,
+                          });
+                        }
+
+                        ClientMasterTrackerModel.getCMTApplicationById(
+                          appId,
+                          (err, CMTApplicationData) => {
+                            if (err) {
+                              console.error("Database error:", err);
+                              return res.status(500).json({
+                                status: false,
+                                message: err.message,
+                                token: newToken,
+                              });
+                            }
+
+                            const case_initiated_date =
+                              CMTApplicationData.initiation_date || "N/A";
+                            const final_report_date =
+                              CMTApplicationData.report_date || "N/A";
+                            const report_type =
+                              CMTApplicationData.report_type || "N/A";
+                            const overall_status =
+                              CMTApplicationData.overall_status || "N/A";
+
+                            const gender = application.gender?.toLowerCase();
+                            const maritalStatus =
+                              application.marital_status?.toLowerCase();
+
+                            let genderTitle = "Mr.";
+                            if (gender === "male") {
+                              genderTitle = "Mr.";
+                            } else if (gender === "female") {
+                              genderTitle =
+                                maritalStatus === "married" ? "Mrs." : "Ms.";
+                            }
+
+                            // Prepare and send email based on application status
+                            // Final report email
+                            return res.status(200).json({
+                              status: true,
+                              message: "Images uploaded successfully.",
+                              token: newToken,
+                              savedImagePaths,
+                            });
+                          }
+                        );
+                      }
+                    );
+                  }
+                );
+              } else {
+                return res.status(200).json({
+                  status: true,
+                  message: "Images uploaded successfully.",
+                  token: newToken,
+                  savedImagePaths,
+                });
+              }
             }
-          }
-        );
+          );
+        });
       });
     });
   });

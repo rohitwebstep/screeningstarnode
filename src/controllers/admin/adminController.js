@@ -727,13 +727,11 @@ exports.upload = async (req, res) => {
                 }
 
                 if (!tokenResult.status) {
-                  return res
-                    .status(401)
-                    .json({
-                      status: false,
-                      err: tokenResult,
-                      message: tokenResult.message,
-                    });
+                  return res.status(401).json({
+                    status: false,
+                    err: tokenResult,
+                    message: tokenResult.message,
+                  });
                 }
 
                 const newToken = tokenResult.newToken;
@@ -742,53 +740,60 @@ exports.upload = async (req, res) => {
                 // Create directory for uploads
                 await fs.promises.mkdir(targetDirectory, { recursive: true });
 
-                const savedImagePaths = [];
-
-                // Process multiple or single file uploads
-                if (req.files.images) {
-                  savedImagePaths.push(
-                    ...(await saveImages(req.files.images, targetDirectory))
-                  );
-                }
-
-                if (req.files.image && req.files.image.length > 0) {
-                  savedImagePaths.push(
-                    await saveImage(req.files.image[0], targetDirectory)
-                  );
-                }
-
-                // Save images and update Admin
-                Admin.upload(id, savedImagePaths, (success, result) => {
-                  if (!success) {
+                App.appInfo("backend", async (err, appInfo) => {
+                  if (err) {
+                    console.error("Database error:", err);
                     return res.status(500).json({
                       status: false,
-                      message: result || "Error occurred while saving images.",
+                      err,
+                      message: err.message,
                       token: newToken,
-                      savedImagePaths,
                     });
                   }
-                  if (result && result.affectedRows > 0) {
-                    if (send_mail == 1) {
-                      App.appInfo("backend", (err, appInfo) => {
-                        if (err) {
-                          console.error("Database error:", err);
-                          return res.status(500).json({
-                            status: false,
-                            err,
-                            message: err.message,
-                            token: newToken,
-                            savedImagePaths,
-                          });
-                        }
 
-                        let appHost = "www.screeningstar.in";
+                  let imageHost = "www.example.in";
 
-                        if (appInfo) {
-                          appHost = appInfo.host || "www.screeningstar.in";
-                        }
+                  if (appInfo) {
+                    imageHost = appInfo.cloud_image_host || "www.example.in";
+                  }
 
+                  const savedImagePaths = [];
+
+                  // Process multiple file uploads
+                  if (req.files.images && req.files.images.length > 0) {
+                    const uploadedImages = await saveImages(
+                      req.files.images,
+                      targetDirectory
+                    );
+                    uploadedImages.forEach((imagePath) => {
+                      savedImagePaths.push(`${imageHost}/${imagePath}`);
+                    });
+                  }
+
+                  // Process single file upload
+                  if (req.files.image && req.files.image.length > 0) {
+                    const uploadedImage = await saveImage(
+                      req.files.image[0],
+                      targetDirectory
+                    );
+                    savedImagePaths.push(`${imageHost}/${uploadedImage}`);
+                  }
+
+                  // Save images and update Admin
+                  Admin.upload(id, savedImagePaths, (success, result) => {
+                    if (!success) {
+                      return res.status(500).json({
+                        status: false,
+                        message:
+                          result || "Error occurred while saving images.",
+                        token: newToken,
+                        savedImagePaths,
+                      });
+                    }
+                    if (result && result.affectedRows > 0) {
+                      if (send_mail == 1) {
                         const newAttachedDocsString = savedImagePaths
-                          .map((doc) => `${appHost}/${doc.trim()}`)
+                          .map((doc) => `${imageHost}/${doc.trim()}`)
                           .join("");
 
                         const toArr = [
@@ -829,22 +834,23 @@ exports.upload = async (req, res) => {
                               token: newToken,
                             });
                           });
-                      });
+                      } else {
+                        return res.status(201).json({
+                          status: true,
+                          message:
+                            "Admin profile picture uploaded successfully.",
+                          token: newToken,
+                          savedImagePaths,
+                        });
+                      }
                     } else {
-                      return res.status(201).json({
-                        status: true,
-                        message: "Admin profile picture uploaded successfully.",
+                      return res.status(400).json({
+                        status: false,
+                        message: "No changes were made. Check Admin ID.",
                         token: newToken,
-                        savedImagePaths,
                       });
                     }
-                  } else {
-                    return res.status(400).json({
-                      status: false,
-                      message: "No changes were made. Check Admin ID.",
-                      token: newToken,
-                    });
-                  }
+                  });
                 });
               }
             );
