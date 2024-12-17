@@ -47,11 +47,10 @@ const storage = multer.diskStorage({
   },
 });
 
-// Create multer upload instance
 const upload = multer({ storage: storage });
 
-// Function to save a single image
-const saveImage = (file, targetDir) => {
+// Function to save a single image and upload it to FTP
+const saveImage = async (file, targetDir) => {
   return new Promise((resolve, reject) => {
     if (file) {
       const originalPath = path.join("uploads", file.filename); // Original file path
@@ -63,12 +62,20 @@ const saveImage = (file, targetDir) => {
       }
 
       // Move the file to the new directory
-      fs.rename(originalPath, newPath, (err) => {
+      fs.rename(originalPath, newPath, async (err) => {
         if (err) {
           console.error("Error renaming file:", err);
           return reject(err); // Reject on error
         }
-        resolve(newPath); // Return the new file path
+
+        // Upload the image to FTP after saving locally
+        try {
+          await uploadToFtp(newPath); // FTP upload after saving locally
+          resolve(newPath); // Return the new file path
+        } catch (err) {
+          console.error("Error uploading to FTP:", err);
+          reject(err); // Reject if FTP upload fails
+        }
       });
     } else {
       reject(new Error("No file provided for saving."));
@@ -102,20 +109,18 @@ const uploadToFtp = async (filePath) => {
     await client.uploadFrom(filePath, filename);
   } catch (err) {
     console.error("FTP upload failed:", err);
+    throw err; // Rethrow the error
   } finally {
     client.close(); // Close the FTP connection
   }
 };
 
-// Function to save multiple images
+// Function to save multiple images and upload them to FTP
 const saveImages = async (files, targetDir) => {
   const savedImagePaths = [];
   for (const file of files) {
-    const savedImagePath = await saveImage(file, targetDir); // Save each file
+    const savedImagePath = await saveImage(file, targetDir); // Save and upload each file
     savedImagePaths.push(savedImagePath);
-
-    // Upload the saved image to Hostinger via FTP
-    await uploadToFtp(savedImagePath); // FTP upload after saving locally
   }
   return savedImagePaths; // Return an array of saved image paths
 };
