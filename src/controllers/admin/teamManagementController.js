@@ -183,6 +183,13 @@ exports.applicationByID = (req, res) => {
                           message: "Admin not found with the provided ID",
                         });
                       }
+
+                      const service_ids = application.services;
+                      // Split service_id into an array
+                      const serviceIds = service_ids
+                        .split(",")
+                        .map((id) => id.trim());
+
                       // Step 6: Determine Granted Service IDs
                       let grantedServiceIds = [];
                       if (admin.role === "team_management") {
@@ -211,19 +218,9 @@ exports.applicationByID = (req, res) => {
                           }
                         );
                       } else {
-                        statuses.forEach((statusItem) => {
-                          const serviceId = Number(statusItem.service_id);
-                          if (!isNaN(serviceId)) {
-                            grantedServiceIds.push(serviceId);
-                          }
-                        });
+                        grantedServiceIds = serviceIds;
                       }
 
-                      const service_ids = application.services;
-                      // Split service_id into an array
-                      const serviceIds = service_ids
-                        .split(",")
-                        .map((id) => id.trim());
                       const annexureResults = [];
                       let pendingRequests = serviceIds.length;
 
