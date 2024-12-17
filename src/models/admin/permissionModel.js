@@ -73,10 +73,10 @@ const Permission = {
     });
   },
 
-  update: (id, permission_json, callback) => {
+  update: (id, permission_json, service_ids, callback) => {
     const sql = `
       UPDATE \`permissions\`
-      SET \`json\` = ?
+      SET \`json\` = ?, \`service_ids\` = ?
       WHERE \`id\` = ?
     `;
 
@@ -85,15 +85,19 @@ const Permission = {
         return callback(err, null);
       }
 
-      connection.query(sql, [permission_json, id], (queryErr, results) => {
-        connectionRelease(connection); // Release the connection
+      connection.query(
+        sql,
+        [permission_json, service_ids, id],
+        (queryErr, results) => {
+          connectionRelease(connection); // Release the connection
 
-        if (queryErr) {
-          console.error(" 51", queryErr);
-          return callback(queryErr, null);
+          if (queryErr) {
+            console.error(" 51", queryErr);
+            return callback(queryErr, null);
+          }
+          callback(null, results);
         }
-        callback(null, results);
-      });
+      );
     });
   },
 };

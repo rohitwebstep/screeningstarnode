@@ -110,14 +110,25 @@ exports.list = (req, res) => {
 
 // Controller to update a service
 exports.update = (req, res) => {
-  const { id, permission_json, admin_id, _token } = req.body;
+  const { id, role, permission_json, admin_id, _token } = req.body;
 
-  let missingFields = [];
-  if (!id || id === "") missingFields.push("Service ID");
-  if (!permission_json || permission_json === "")
-    missingFields.push("Permission JSON");
-  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
-  if (!_token || _token === "") missingFields.push("Token");
+  // Validate required fields and collect missing ones
+  const requiredFields = {
+    id,
+    permission_json,
+    admin_id,
+  };
+
+  // Check for missing fields
+  const missingFields = Object.keys(requiredFields)
+    .filter(
+      (field) =>
+        !requiredFields[field] ||
+        requiredFields[field] === "" ||
+        requiredFields[field] == "undefined" ||
+        requiredFields[field] == undefined
+    )
+    .map((field) => field.replace(/_/g, " "));
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -125,6 +136,7 @@ exports.update = (req, res) => {
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
+
   const action = "employee_credentials";
   Common.isAdminAuthorizedForAction(admin_id, action, (result) => {
     if (!result.status) {
@@ -163,39 +175,64 @@ exports.update = (req, res) => {
             new: permission_json,
           };
         }
-        Permission.update(id, JSON.stringify(permission_json), (err, result) => {
-          if (err) {
-            console.error("Database error:", err);
+
+        if (currentPermission.role === "team_management") {
+          if (!service_ids || service_ids.trim() === "") {
+            return res.status(400).json({
+              status: false,
+              message: `At least one service must be granted`,
+            });
+          }
+
+          // Optionally, you can validate that service_ids is a comma-separated list of valid numbers
+          const serviceIdsArray = service_ids.split(",").map((id) => id.trim());
+
+          if (serviceIdsArray.some((id) => isNaN(id) || id === "")) {
+            return res.status(400).json({
+              status: false,
+              message: `Service IDs must be valid numbers`,
+            });
+          }
+        }
+
+        Permission.update(
+          id,
+          JSON.stringify(permission_json),
+          service_ids || NULL,
+          (err, result) => {
+            if (err) {
+              console.error("Database error:", err);
+              Common.adminActivityLog(
+                admin_id,
+                "Permission",
+                "Update",
+                "0",
+                JSON.stringify({ id, ...changes }),
+                err,
+                () => {}
+              );
+              return res
+                .status(500)
+                .json({ status: false, message: err.message, token: newToken });
+            }
+
             Common.adminActivityLog(
               admin_id,
               "Permission",
               "Update",
-              "0",
+              "1",
               JSON.stringify({ id, ...changes }),
-              err,
+              null,
               () => {}
             );
-            return res
-              .status(500)
-              .json({ status: false, message: err.message, token: newToken });
+
+            res.json({
+              status: true,
+              message: "Permission updated successfully",
+              token: newToken,
+            });
           }
-
-          Common.adminActivityLog(
-            admin_id,
-            "Permission",
-            "Update",
-            "1",
-            JSON.stringify({ id, ...changes }),
-            null,
-            () => {}
-          );
-
-          res.json({
-            status: true,
-            message: "Permission updated successfully",
-            token: newToken,
-          });
-        });
+        );
       });
     });
   });
