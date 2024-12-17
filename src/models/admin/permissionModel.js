@@ -31,7 +31,8 @@ const Permission = {
       SELECT 
         id,
         role,
-        json
+        json,
+        service_ids
       FROM \`permissions\`
     `;
 

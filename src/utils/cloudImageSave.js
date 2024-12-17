@@ -19,11 +19,6 @@ App.appInfo("backend", (err, appInfo) => {
   cloudImageFTPUser = appInfo.cloud_image_ftp_user;
   cloudImageFTPPassword = appInfo.cloud_image_ftp_password;
   cloudImageFTPSecure = appInfo.cloud_image_ftp_secure;
-  console.log(`appInfo - `, appInfo);
-  console.log(`cloudImageFTPHost - `, cloudImageFTPHost);
-  console.log(`cloudImageFTPUser - `, cloudImageFTPUser);
-  console.log(`cloudImageFTPPassword - `, cloudImageFTPPassword);
-  console.log(`cloudImageFTPSecure - `, cloudImageFTPSecure);
   // Check if any FTP details are missing and handle the error
   if (!cloudImageFTPHost || !cloudImageFTPUser || !cloudImageFTPPassword) {
     console.error("FTP configuration missing required details.");
