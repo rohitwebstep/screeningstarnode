@@ -5,6 +5,7 @@ const Customer = require("../../models/customer/customerModel");
 const Branch = require("../../models/customer/branch/branchModel");
 const AdminCommon = require("../../models/admin/commonModel");
 const Admin = require("../../models/admin/adminModel");
+const App = require("../../models/appModel");
 const BranchCommon = require("../../models/customer/branch/commonModel");
 const Permission = require("../../models/admin/permissionModel");
 

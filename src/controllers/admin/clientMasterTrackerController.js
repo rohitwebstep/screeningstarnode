@@ -4,6 +4,7 @@ const Customer = require("../../models/customer/customerModel");
 const ClientApplication = require("../../models/customer/branch/clientApplicationModel");
 const Branch = require("../../models/customer/branch/branchModel");
 const AdminCommon = require("../../models/admin/commonModel");
+const App = require("../../models/appModel");
 const BranchCommon = require("../../models/customer/branch/commonModel");
 const {
   finalReportMail,
