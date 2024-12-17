@@ -74,6 +74,26 @@ const Permission = {
     });
   },
 
+  getPermissionByRole: (role, callback) => {
+    const sql = `SELECT * FROM \`permissions\` WHERE \`role\` = ?`;
+
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(err, null);
+      }
+
+      connection.query(sql, [role], (queryErr, results) => {
+        connectionRelease(connection); // Release the connection
+
+        if (queryErr) {
+          console.error("Database query error: 4923", queryErr);
+          return callback(queryErr, null);
+        }
+        callback(null, results[0]);
+      });
+    });
+  },
+
   update: (id, permission_json, service_ids, callback) => {
     const sql = `
       UPDATE \`permissions\`
