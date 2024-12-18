@@ -1224,7 +1224,7 @@ const Customer = {
 
                             // Split and concatenate the URL with each attachment
                             attachments.split(",").forEach((attachment) => {
-                              finalAttachments.push(`${host}/${attachment}`);
+                              finalAttachments.push(`${attachment}`);
                             });
                           });
                         }

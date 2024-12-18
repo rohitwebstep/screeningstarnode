@@ -18,6 +18,7 @@ const {
 
 const fs = require("fs");
 const path = require("path");
+const { generatePDF } = require("../../utils/finalReportPdf");
 const { upload, saveImage, saveImages } = require("../../utils/cloudImageSave");
 
 // Controller to list all customers
@@ -92,25 +93,47 @@ exports.list = (req, res) => {
   });
 };
 
-exports.test = (req, res) => {
-  // Replace 1 with the appropriate client application ID you need to pass
-  ClientMasterTrackerModel.getAttachmentsByClientAppID(2, (err, result) => {
-    if (err) {
-      console.error("Database error:", err);
-      return res.status(500).json({
-        status: false,
-        message: "Database error occurred",
-      });
-    }
+exports.test = async (req, res) => {
+  try {
+    const clietn_application_id = 1;
+    const client_unique_id = "GQ-INDV";
+    const application_id = "GQ-INDV-1";
+    const branch_id = "1";
+    const name = "Rohit Sisodia";
 
+    const today = new Date();
+    const formattedDate = `${today.getFullYear()}-${String(
+      today.getMonth() + 1
+    ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+    // Generate the PDF
+    const pdfTargetDirectory = `uploads/customers/${client_unique_id}/client-applications/${application_id}/final-reports`;
+
+    const pdfFileName = `${name}_${formattedDate}.pdf`
+      .replace(/\s+/g, "-")
+      .toLowerCase();
+    const pdfPath = await generatePDF(
+      clietn_application_id,
+      branch_id,
+      pdfFileName,
+      pdfTargetDirectory
+    );
     // If successful, return the result
     res.json({
       status: true,
-      message: "Attachments fetched successfully",
-      attachments: result,
-      totalResults: result.length,
+      message: "PDF generated successfully",
+      pdfPath, // Include the path to the generated PDF in the response
     });
-  });
+  } catch (error) {
+    console.error("Error:", error.message);
+
+    // Return error response
+    res.status(500).json({
+      status: false,
+      message: "Failed to generate PDF",
+      error: error.message,
+    });
+  }
 };
 
 exports.listByCustomerId = (req, res) => {
@@ -1357,7 +1380,7 @@ exports.generateReport = (req, res) => {
 
                                             ClientMasterTrackerModel.updateDataQC(
                                               { application_id, data_qc },
-                                              (err, result) => {
+                                              async (err, result) => {
                                                 if (err) {
                                                   console.error(
                                                     "Error updating data QC:",
@@ -1429,6 +1452,31 @@ exports.generateReport = (req, res) => {
                                                           token: newToken,
                                                         });
                                                     }
+
+                                                    const today = new Date();
+                                                    const formattedDate = `${today.getFullYear()}-${String(
+                                                      today.getMonth() + 1
+                                                    ).padStart(
+                                                      2,
+                                                      "0"
+                                                    )}-${String(
+                                                      today.getDate()
+                                                    ).padStart(2, "0")}`;
+                                                    const pdfTargetDirectory = `uploads/customers/${currentCustomer.client_unique_id}/client-applications/${application.application_id}/final-reports`;
+                                                    const pdfFileName =
+                                                      `${application.name}_${formattedDate}.pdf`
+                                                        .replace(/\s+/g, "-")
+                                                        .toLowerCase();
+                                                    const pdfPath =
+                                                      await generatePDF(
+                                                        application_id,
+                                                        branch_id,
+                                                        pdfFileName,
+                                                        pdfTargetDirectory
+                                                      );
+                                                    attachments +=
+                                                      (attachments ? "," : "") +
+                                                      `${imageHost}/${pdfPath}`;
 
                                                     // Send email notification
                                                     finalReportMail(
@@ -2241,7 +2289,7 @@ exports.upload = async (req, res) => {
 
                             ClientMasterTrackerModel.getCMTApplicationById(
                               appId,
-                              (err, CMTApplicationData) => {
+                              async (err, CMTApplicationData) => {
                                 if (err) {
                                   console.error("Database error:", err);
                                   return res.status(500).json({
@@ -2274,6 +2322,27 @@ exports.upload = async (req, res) => {
                                       ? "Mrs."
                                       : "Ms.";
                                 }
+
+                                const today = new Date();
+                                const formattedDate = `${today.getFullYear()}-${String(
+                                  today.getMonth() + 1
+                                ).padStart(2, "0")}-${String(
+                                  today.getDate()
+                                ).padStart(2, "0")}`;
+                                const pdfTargetDirectory = `uploads/customers/${customerCode}/client-applications/${application.application_id}/final-reports`;
+                                const pdfFileName =
+                                  `${application.name}_${formattedDate}.pdf`
+                                    .replace(/\s+/g, "-")
+                                    .toLowerCase();
+                                const pdfPath = await generatePDF(
+                                  appId,
+                                  branchId,
+                                  pdfFileName,
+                                  pdfTargetDirectory
+                                );
+                                attachments +=
+                                  (attachments ? "," : "") +
+                                  `${imageHost}/${pdfPath}`;
 
                                 // Prepare and send email based on application status
                                 // Final report email
