@@ -768,7 +768,7 @@ exports.upload = async (req, res) => {
               if (req.files.images && req.files.images.length > 0) {
                 const uploadedImages = await saveImages(
                   req.files.images,
-                  targetDirectory
+                  targetDir
                 );
                 uploadedImages.forEach((imagePath) => {
                   savedImagePaths.push(`${imageHost}/${imagePath}`);
@@ -779,7 +779,7 @@ exports.upload = async (req, res) => {
               if (req.files.image && req.files.image.length > 0) {
                 const uploadedImage = await saveImage(
                   req.files.image[0],
-                  targetDirectory
+                  targetDir
                 );
                 savedImagePaths.push(`${imageHost}/${uploadedImage}`);
               }
