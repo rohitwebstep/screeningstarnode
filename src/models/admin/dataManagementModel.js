@@ -71,8 +71,6 @@ const Customer = {
           return callback(err, null);
         }
 
-        console.log(`Initial results - `, results);
-
         // Process each result to fetch client_spoc names
         for (const result of results) {
           const spocIdString = result.client_spoc_id;
@@ -141,8 +139,6 @@ const Customer = {
             }
           }
         }
-
-        console.log(`Processed results - `, results);
 
         callback(null, results);
       });

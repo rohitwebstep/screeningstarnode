@@ -800,10 +800,6 @@ exports.upload = async (req, res) => {
                             email: currentAdmin.email,
                           },
                         ];
-                        console.log(
-                          `newAttachedDocsString - `,
-                          newAttachedDocsString
-                        );
                         // Send an email notification
                         createMail(
                           "Admin",

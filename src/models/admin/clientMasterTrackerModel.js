@@ -164,9 +164,6 @@ const Customer = {
             console.error("Database query error: 39", err);
             return callback(err, null);
           }
-
-          console.log(`Initial results - `, results);
-
           // Process each result to fetch client_spoc names
           for (const result of results) {
             const spocIdString = result.client_spoc_id;
@@ -239,9 +236,6 @@ const Customer = {
               }
             }
           }
-
-          console.log(`Processed results - `, results);
-
           callback(null, results);
         });
       }
@@ -1085,7 +1079,7 @@ const Customer = {
               .then(() => {
                 const insertSql = `UPDATE \`${db_table}\` SET \`${db_column}\` = ? WHERE \`client_application_id\` = ?`;
                 const joinedPaths = savedImagePaths.join(", ");
-                console.log(insertSql, [joinedPaths, client_application_id]);
+                // console.log(insertSql, [joinedPaths, client_application_id]);
                 connection.query(
                   insertSql,
                   [joinedPaths, client_application_id],

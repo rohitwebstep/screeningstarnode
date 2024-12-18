@@ -30,7 +30,6 @@ function calculateServiceStats(serviceNames, applications, services) {
 
   applications.forEach((application) => {
     application.applications.forEach((app) => {
-      console.log(`app - `, app);
       const serviceIds = app.services.split(",");
 
       serviceIds.forEach((serviceId) => {

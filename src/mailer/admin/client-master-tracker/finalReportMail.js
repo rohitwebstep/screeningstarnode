@@ -21,7 +21,6 @@ const createAttachments = async (attachments_url) => {
 
   for (const url of urls) {
     const trimmedUrl = url.trim();
-    console.log(`trimmedUrl - `, trimmedUrl);
     if (trimmedUrl) {
       const exists = await checkFileExists(trimmedUrl);
       if (exists) {

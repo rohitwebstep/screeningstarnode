@@ -68,7 +68,6 @@ const Service = {
           return callback(createTableErr, null);
         }
 
-        console.log("Table 'invoice_masters' created successfully.");
         proceedWithInsertOrUpdate(connection, callback); // Proceed after table creation
       });
     }
