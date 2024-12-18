@@ -1452,88 +1452,129 @@ exports.generateReport = (req, res) => {
                                                           token: newToken,
                                                         });
                                                     }
+                                                    App.appInfo(
+                                                      "backend",
+                                                      async (err, appInfo) => {
+                                                        if (err) {
+                                                          console.error(
+                                                            "Database error:",
+                                                            err
+                                                          );
+                                                          return res
+                                                            .status(500)
+                                                            .json({
+                                                              status: false,
+                                                              err,
+                                                              message:
+                                                                err.message,
+                                                              token: newToken,
+                                                            });
+                                                        }
 
-                                                    const today = new Date();
-                                                    const formattedDate = `${today.getFullYear()}-${String(
-                                                      today.getMonth() + 1
-                                                    ).padStart(
-                                                      2,
-                                                      "0"
-                                                    )}-${String(
-                                                      today.getDate()
-                                                    ).padStart(2, "0")}`;
-                                                    const pdfTargetDirectory = `uploads/customers/${currentCustomer.client_unique_id}/client-applications/${application.application_id}/final-reports`;
-                                                    const pdfFileName =
-                                                      `${application.name}_${formattedDate}.pdf`
-                                                        .replace(/\s+/g, "-")
-                                                        .toLowerCase();
-                                                    const pdfPath =
-                                                      await generatePDF(
-                                                        application_id,
-                                                        branch_id,
-                                                        pdfFileName,
-                                                        pdfTargetDirectory
-                                                      );
-                                                    attachments +=
-                                                      (attachments ? "," : "") +
-                                                      `${imageHost}/${pdfPath}`;
+                                                        let imageHost =
+                                                          "www.example.in";
 
-                                                    // Send email notification
-                                                    finalReportMail(
-                                                      "cmt",
-                                                      "final",
-                                                      company_name,
-                                                      gender_title,
-                                                      application.name,
-                                                      application.application_id,
-                                                      case_initiated_date,
-                                                      final_report_date,
-                                                      report_type,
-                                                      mainJson.overall_status,
-                                                      attachments,
-                                                      toArr,
-                                                      ccArr
-                                                    )
-                                                      .then(() => {
-                                                        console.log(`Step 32`);
+                                                        if (appInfo) {
+                                                          imageHost =
+                                                            appInfo.cloud_host ||
+                                                            "www.example.in";
+                                                        }
+                                                        const today =
+                                                          new Date();
+                                                        const formattedDate = `${today.getFullYear()}-${String(
+                                                          today.getMonth() + 1
+                                                        ).padStart(
+                                                          2,
+                                                          "0"
+                                                        )}-${String(
+                                                          today.getDate()
+                                                        ).padStart(2, "0")}`;
+                                                        const pdfTargetDirectory = `uploads/customers/${currentCustomer.client_unique_id}/client-applications/${application.application_id}/final-reports`;
+                                                        const pdfFileName =
+                                                          `${application.name}_${formattedDate}.pdf`
+                                                            .replace(
+                                                              /\s+/g,
+                                                              "-"
+                                                            )
+                                                            .toLowerCase();
+                                                        const pdfPath =
+                                                          await generatePDF(
+                                                            application_id,
+                                                            branch_id,
+                                                            pdfFileName,
+                                                            pdfTargetDirectory
+                                                          );
+                                                        attachments +=
+                                                          (attachments
+                                                            ? ","
+                                                            : "") +
+                                                          `${imageHost}/${pdfPath}`;
 
-                                                        return res
-                                                          .status(200)
-                                                          .json({
-                                                            status: true,
-                                                            message: `CMT Application ${
-                                                              currentCMTApplication &&
-                                                              Object.keys(
-                                                                currentCMTApplication
-                                                              ).length > 0
-                                                                ? "updated"
-                                                                : "created"
-                                                            } successfully and mail sent.`,
-                                                            token: newToken,
-                                                          });
-                                                      })
-                                                      .catch((emailError) => {
-                                                        console.error(
-                                                          "Error sending email:",
-                                                          emailError
-                                                        );
-                                                        console.log(`Step 33`);
+                                                        // Send email notification
+                                                        finalReportMail(
+                                                          "cmt",
+                                                          "final",
+                                                          company_name,
+                                                          gender_title,
+                                                          application.name,
+                                                          application.application_id,
+                                                          case_initiated_date,
+                                                          final_report_date,
+                                                          report_type,
+                                                          mainJson.overall_status,
+                                                          attachments,
+                                                          toArr,
+                                                          ccArr
+                                                        )
+                                                          .then(() => {
+                                                            console.log(
+                                                              `Step 32`
+                                                            );
 
-                                                        return res
-                                                          .status(200)
-                                                          .json({
-                                                            status: true,
-                                                            message: `CMT Application ${
-                                                              currentCMTApplication &&
-                                                              Object.keys(
-                                                                currentCMTApplication
-                                                              ).length > 0
-                                                                ? "updated"
-                                                                : "created"
-                                                            } successfully but failed to send mail.`,
-                                                            token: newToken,
-                                                          });
-                                                      });
+                                                            return res
+                                                              .status(200)
+                                                              .json({
+                                                                status: true,
+                                                                message: `CMT Application ${
+                                                                  currentCMTApplication &&
+                                                                  Object.keys(
+                                                                    currentCMTApplication
+                                                                  ).length > 0
+                                                                    ? "updated"
+                                                                    : "created"
+                                                                } successfully and mail sent.`,
+                                                                token: newToken,
+                                                              });
+                                                          })
+                                                          .catch(
+                                                            (emailError) => {
+                                                              console.error(
+                                                                "Error sending email:",
+                                                                emailError
+                                                              );
+                                                              console.log(
+                                                                `Step 33`
+                                                              );
+
+                                                              return res
+                                                                .status(200)
+                                                                .json({
+                                                                  status: true,
+                                                                  message: `CMT Application ${
+                                                                    currentCMTApplication &&
+                                                                    Object.keys(
+                                                                      currentCMTApplication
+                                                                    ).length > 0
+                                                                      ? "updated"
+                                                                      : "created"
+                                                                  } successfully but failed to send mail.`,
+                                                                  token:
+                                                                    newToken,
+                                                                });
+                                                            }
+                                                          );
+                                                      }
+                                                    );
                                                   } else if (
                                                     verified === "no"
                                                   ) {
