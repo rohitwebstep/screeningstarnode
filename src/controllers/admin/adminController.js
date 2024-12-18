@@ -682,7 +682,6 @@ exports.upload = async (req, res) => {
           return res.status(500).json({
             status: false,
             message: "Database error.",
-            token: newToken,
           });
         }
 
@@ -690,7 +689,6 @@ exports.upload = async (req, res) => {
           return res.status(404).json({
             status: false,
             message: "Admin not found.",
-            token: newToken,
           });
         }
         const action = "employee_credentials";
@@ -754,7 +752,7 @@ exports.upload = async (req, res) => {
                   let imageHost = "www.example.in";
 
                   if (appInfo) {
-                    imageHost = appInfo.cloud_image_host || "www.example.in";
+                    imageHost = appInfo.cloud_host || "www.example.in";
                   }
 
                   const savedImagePaths = [];
@@ -793,8 +791,8 @@ exports.upload = async (req, res) => {
                     if (result && result.affectedRows > 0) {
                       if (send_mail == 1) {
                         const newAttachedDocsString = savedImagePaths
-                          .map((doc) => `${imageHost}/${doc.trim()}`)
-                          .join("");
+                          .map((doc) => `${doc.trim()}`)
+                          .join(",");
 
                         const toArr = [
                           {
@@ -802,7 +800,10 @@ exports.upload = async (req, res) => {
                             email: currentAdmin.email,
                           },
                         ];
-
+                        console.log(
+                          `newAttachedDocsString - `,
+                          newAttachedDocsString
+                        );
                         // Send an email notification
                         createMail(
                           "Admin",

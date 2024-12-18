@@ -15,10 +15,10 @@ App.appInfo("backend", (err, appInfo) => {
     console.error("Database error:", err);
     return;
   }
-  cloudImageFTPHost = appInfo.cloud_image_ftp_host;
-  cloudImageFTPUser = appInfo.cloud_image_ftp_user;
-  cloudImageFTPPassword = appInfo.cloud_image_ftp_password;
-  cloudImageFTPSecure = appInfo.cloud_image_ftp_secure;
+  cloudImageFTPHost = appInfo.cloud_ftp_host;
+  cloudImageFTPUser = appInfo.cloud_ftp_user;
+  cloudImageFTPPassword = appInfo.cloud_ftp_password;
+  cloudImageFTPSecure = appInfo.cloud_ftp_secure;
   // Check if any FTP details are missing and handle the error
   if (!cloudImageFTPHost || !cloudImageFTPUser || !cloudImageFTPPassword) {
     console.error("FTP configuration missing required details.");
@@ -125,6 +125,46 @@ const saveImages = async (files, targetDir) => {
   return savedImagePaths; // Return an array of saved image paths
 };
 
+const savePdf = async (doc, pdfFileName, targetDir) => {
+  // Create the target directory on the FTP server first
+  const dirs = targetDir.split(path.sep); // Split targetDir into directory parts
+  const client = new ftp.Client();
+  client.ftp.verbose = true; // Enable verbose logging for FTP connection
+
+  try {
+    // Connect to FTP server using previously fetched app information
+    await client.access({
+      host: cloudImageFTPHost,
+      user: cloudImageFTPUser,
+      password: cloudImageFTPPassword,
+      secure: cloudImageFTPSecure,
+    });
+
+    // Ensure the directories exist on the FTP server
+    for (const dir of dirs) {
+      await client.ensureDir(dir); // Ensure each directory exists on FTP
+    }
+
+    // Create a temporary path to save the PDF file locally
+    const pdfPath = path.join(targetDir, pdfFileName);
+
+    // Save the document (PDF) to a temporary local path
+    await doc.save(pdfPath); // You can adjust this to directly generate the file
+
+    // Upload the file directly to the FTP server
+    await client.uploadFrom(pdfPath, pdfFileName);
+
+    // After successful upload, remove the local file
+    fs.unlinkSync(pdfPath); // Delete the temporary local file
+    return pdfPath;
+  } catch (err) {
+    console.error("Error during FTP upload:", err);
+    throw err; // Rethrow the error if upload fails
+  } finally {
+    client.close(); // Close the FTP connection
+  }
+};
+
 // Exporting the upload middleware and saving functions
 module.exports = {
   upload: upload.fields([
@@ -133,4 +173,5 @@ module.exports = {
   ]),
   saveImage,
   saveImages,
+  savePdf,
 };

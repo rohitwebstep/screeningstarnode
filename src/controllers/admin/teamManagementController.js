@@ -651,7 +651,7 @@ exports.upload = async (req, res) => {
           let imageHost = "www.example.in";
 
           if (appInfo) {
-            imageHost = appInfo.cloud_image_host || "www.example.in";
+            imageHost = appInfo.cloud_host || "www.example.in";
           }
           // Define the target directory for uploads
           const targetDirectory = `uploads/customer/${customerCode}/application/${appCode}/${dbTable}/team-management`;

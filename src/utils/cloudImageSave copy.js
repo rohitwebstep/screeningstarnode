@@ -15,10 +15,10 @@ App.appInfo("backend", (err, appInfo) => {
     console.error("Database error:", err);
     return;
   }
-  cloudImageFTPHost = appInfo.cloud_image_ftp_host;
-  cloudImageFTPUser = appInfo.cloud_image_ftp_user;
-  cloudImageFTPPassword = appInfo.cloud_image_ftp_password;
-  cloudImageFTPSecure = appInfo.cloud_image_ftp_secure;
+  cloudImageFTPHost = appInfo.cloud_ftp_host;
+  cloudImageFTPUser = appInfo.cloud_ftp_user;
+  cloudImageFTPPassword = appInfo.cloud_ftp_password;
+  cloudImageFTPSecure = appInfo.cloud_ftp_secure;
   // Check if any FTP details are missing and handle the error
   if (!cloudImageFTPHost || !cloudImageFTPUser || !cloudImageFTPPassword) {
     console.error("FTP configuration missing required details.");
