@@ -15,31 +15,6 @@ const fs = require("fs");
 const path = require("path");
 const { upload, saveImage, saveImages } = require("../../utils/cloudImageSave");
 
-const sanitizeInput = (value) => {
-  if (typeof value !== "string") return value;
-
-  // Escape common HTML special characters
-  return value
-    .replace(/&/g, "&amp;") // Escape ampersands
-    .replace(/</g, "&lt;") // Escape less than
-    .replace(/>/g, "&gt;") // Escape greater than
-    .replace(/"/g, "&quot;") // Escape double quotes
-    .replace(/'/g, "&#039;") // Escape single quotes
-    .replace(/`/g, "&#x60;") // Escape backticks
-    .replace(/\//g, "&#x2F;") // Escape slashes
-    .replace(/\\/g, "&#x5C;") // Escape backslashes
-    .replace(/\(/g, "&#x28;") // Escape opening parentheses
-    .replace(/\)/g, "&#x29;") // Escape closing parentheses
-    .replace(/\{/g, "&#x7B;") // Escape opening curly brace
-    .replace(/\}/g, "&#x7D;") // Escape closing curly brace
-    .replace(/\[/g, "&#x5B;") // Escape opening square bracket
-    .replace(/\]/g, "&#x5D;") // Escape closing square bracket
-    .replace(/%/g, "&#x25;") // Escape percentage symbol
-    .replace(/;/g, "&#x3B;") // Escape semicolon
-    .replace(/\n/g, "<br>") // Replace newlines with <br>
-    .replace(/\r/g, ""); // Remove carriage returns
-};
-
 // Controller to list all Billing SPOCs
 exports.list = (req, res) => {
   const { admin_id, _token } = req.query;
@@ -239,11 +214,6 @@ exports.addClientListings = (req, res) => {
 };
 
 exports.create = (req, res) => {
-  // Extract and sanitize fields dynamically
-  const sanitizedFields = {};
-  Object.keys(req.body).forEach((key) => {
-    sanitizedFields[key] = sanitizeInput(req.body[key] || "");
-  });
   const {
     admin_id,
     _token,
@@ -256,7 +226,7 @@ exports.create = (req, res) => {
     employee_id,
     date_of_joining,
     send_mail,
-  } = sanitizedFields;
+  } = req.body;
 
   // Define required fields for creating a new admin
   const requiredFields = {
@@ -408,11 +378,6 @@ exports.create = (req, res) => {
 };
 
 exports.update = (req, res) => {
-  // Extract and sanitize fields dynamically
-  const sanitizedFields = {};
-  Object.keys(req.body).forEach((key) => {
-    sanitizedFields[key] = sanitizeInput(req.body[key] || "");
-  });
   const {
     admin_id,
     _token,
@@ -425,7 +390,7 @@ exports.update = (req, res) => {
     designation,
     employee_id,
     date_of_joining,
-  } = sanitizedFields;
+  } = req.body;
 
   // Define required fields for creating a new admin
   const requiredFields = {
@@ -682,11 +647,6 @@ exports.upload = async (req, res) => {
           .json({ status: false, message: "Error uploading file." });
       }
 
-      const sanitizedFields = {};
-      Object.keys(req.body).forEach((key) => {
-        sanitizedFields[key] = sanitizeInput(req.body[key] || "");
-      });
-
       // Destructure required fields from request body
       const {
         admin_id: adminId,
@@ -694,7 +654,7 @@ exports.upload = async (req, res) => {
         id,
         password,
         send_mail,
-      } = sanitizedFields;
+      } = req.body;
 
       // Validate required fields
       const requiredFields = { adminId, token, id, send_mail };
