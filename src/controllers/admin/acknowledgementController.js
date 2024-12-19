@@ -101,7 +101,12 @@ exports.list = (req, res) => {
 };
 
 exports.sendNotification = async (req, res) => {
-  const { admin_id, _token, customer_id } = req.body;
+  // Extract and sanitize fields dynamically
+  const sanitizedFields = {};
+  Object.keys(req.body).forEach((key) => {
+    sanitizedFields[key] = sanitizeInput(req.body[key] || "");
+  });
+  const { admin_id, _token, customer_id } = sanitizedFields;
 
   // Check for missing fields
   const requiredFields = { admin_id, _token, customer_id };
