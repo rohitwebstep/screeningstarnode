@@ -206,7 +206,6 @@ module.exports = {
     pdfFileName,
     targetDirectory
   ) => {
-    console.log(`targetDirectory - 1 - `, targetDirectory);
     return new Promise((resolve, reject) => {
       // Fetch application data
       ClientMasterTrackerModel.applicationByID(
@@ -327,7 +326,6 @@ module.exports = {
               async function finalizeRequest() {
                 pendingRequests -= 1;
                 if (pendingRequests === 0) {
-                  console.log(`targetDirectory - `, targetDirectory);
                   // Define the directory where the PDF will be saved
                   const directoryPath = path.join(targetDirectory);
                   const pdfPath = path.join(directoryPath, pdfFileName);
@@ -335,9 +333,7 @@ module.exports = {
                   // Check if directory exists, and create it if not
                   if (!fs.existsSync(directoryPath)) {
                     fs.mkdirSync(directoryPath, { recursive: true });
-                    console.log(`Directory created: ${directoryPath}`);
                   }
-                  console.log(`Step - 1`);
                   try {
                     const filteredResults = annexureResults.filter(
                       (item) => item != null
@@ -346,7 +342,6 @@ module.exports = {
                     const doc = new jsPDF();
                     const pageWidth = doc.internal.pageSize.getWidth();
                     let yPosition = 10;
-                    console.log(`Step - 2`);
 
                     const sideMargin = 10;
 
@@ -360,7 +355,6 @@ module.exports = {
                       50,
                       20
                     );
-                    console.log(`Step - 3`);
 
                     doc.setFont("helvetica");
                     doc.setFontSize(12);
@@ -369,7 +363,6 @@ module.exports = {
                     doc.text("No 93/9, Varthur Main Road", 10, 40);
                     doc.text("Marathahalli, Bangalore, Karnataka,", 10, 45);
                     doc.text("India, Pin Code - 560037", 10, 50);
-                    console.log(`Step - 4`);
 
                     const imgBoxX = pageWidth - 40;
                     doc.setFont("helvetica", "bold");
@@ -401,7 +394,6 @@ module.exports = {
                     // Set font and size for the title
                     doc.setFont("helvetica", "bold");
                     doc.setFontSize(10);
-                    console.log(`Step - 5`);
 
                     // Calculate text height to align it vertically in the rectangle
                     const textHeight = doc.getTextDimensions(mainTitle).h;
@@ -448,7 +440,6 @@ module.exports = {
                         CMTApplicationData.report_status || "N/A",
                       ],
                     ];
-                    console.log(`Step - 6`);
 
                     doc.autoTable({
                       body: headerTableData,
@@ -479,7 +470,6 @@ module.exports = {
                       },
                     });
                     addFooter(doc);
-                    console.log(`Step - 7`);
 
                     addFooter(doc);
 
@@ -525,7 +515,6 @@ module.exports = {
                     const marginTop = 5;
                     const nextContentYPosition =
                       ysPosition + rectHeight + marginTop;
-                    console.log(`Step - 8`);
 
                     doc.autoTable({
                       head: [
@@ -660,7 +649,6 @@ module.exports = {
                         3: { cellWidth: "auto", halign: "center" }, // Align content to center
                       },
                     });
-                    console.log(`Step - 10`);
 
                     addFooter(doc);
 
@@ -889,7 +877,6 @@ module.exports = {
                         }
                       },
                     });
-                    console.log(`Step - 11`);
 
                     addFooter(doc);
 
@@ -951,13 +938,16 @@ module.exports = {
                           values: valuesObj,
                         });
                       });
-                      console.log(`Step - 12`);
 
                       // Build table data
                       const tableData = serviceData
                         .map((data) => {
-                          if (!data || !data.values) return null;
-
+                          if (!data || !data.values) {
+                            console.log(
+                              "Skipping invalid data (empty values)."
+                            );
+                            return null;
+                          }
                           const name = data.values.name;
                           if (!name || name.startsWith("annexure")) return null;
 
@@ -980,7 +970,6 @@ module.exports = {
                           "No valid data found for table rendering."
                         );
                       }
-                      console.log(`Step - 13`);
 
                       const pageWidth = doc.internal.pageSize.width;
 
@@ -1000,7 +989,6 @@ module.exports = {
                         rectHeight,
                         "FD"
                       );
-                      console.log(`Step - 14`);
 
                       doc.setFontSize(12);
                       doc.setFont("helvetica", "bold");
@@ -1013,7 +1001,6 @@ module.exports = {
                       doc.text(headingText, pageWidth / 2, verticalCenter, {
                         align: "center",
                       });
-                      console.log(`Step - 15`);
 
                       yPosition += rectHeight + 0; // Adjust yPosition for the next section
                       // Adjust yPosition after heading
@@ -1077,7 +1064,6 @@ module.exports = {
                         tableLineWidth: 0.5,
                         margin: { horizontal: 10 },
                       });
-                      console.log(`Step - 16`);
 
                       yPosition = doc.lastAutoTable.finalY + 10; // Update Y position for next section
 
@@ -1183,7 +1169,6 @@ module.exports = {
                             }
                           }
                         }
-                        console.log(`Step - 17`);
                       } else {
                         doc.setFont("helvetica", "italic");
                         doc.setFontSize(10);
@@ -1199,7 +1184,6 @@ module.exports = {
                       annexureIndex++;
                       yPosition += 30;
                     }
-                    console.log(`Step - 18`);
 
                     // Add disclaimer after all services
                     doc.addPage();
@@ -1235,7 +1219,6 @@ module.exports = {
                       disclaimerTextPart2,
                       disclaimerButtonWidth
                     );
-                    console.log(`Step - 19`);
 
                     // Adjusted Y position for disclaimer text
                     const lineHeight = 7; // Increased line height for better readability
@@ -1263,7 +1246,6 @@ module.exports = {
                       addFooter(doc);
                       disclaimerY = 20; // Start from the top of the new page if space is insufficient
                     }
-                    console.log(`Step - 20`);
 
                     // Draw Disclaimer Button (centered horizontally)
                     const disclaimerButtonXPosition =
@@ -1317,7 +1299,6 @@ module.exports = {
                       disclaimerY +
                       adjustedDisclaimerButtonHeight +
                       disclaimerTextTopMargin;
-                    console.log(`Step - 21`);
 
                     // Draw Part 1 of the Disclaimer (Black Text)
                     doc.setFont("helvetica", "normal");
@@ -1340,7 +1321,6 @@ module.exports = {
                         url: "mailto:compliance@screeningstar.com",
                       }
                     );
-                    console.log(`Step - 22`);
 
                     // Draw Part 2 of the Disclaimer (Black Text)
                     doc.setTextColor(0, 0, 0);
@@ -1360,7 +1340,6 @@ module.exports = {
                       doc.addPage();
                       endOfDetailY = 20; // Start from the top of the new page
                     }
-                    console.log(`Step - 23`);
 
                     // Draw "END OF DETAIL REPORT" Button (centered horizontally)
                     const endButtonXPosition =
@@ -1402,7 +1381,6 @@ module.exports = {
                       disclaimerButtonHeight / 2 +
                       endButtonTextHeight / 4 -
                       1;
-                    console.log(`Step - 24`);
 
                     // Add 'END OF DETAIL REPORT' text to the button, centered both horizontally and vertically
                     doc.text(
