@@ -181,6 +181,7 @@ exports.create = async (req, res) => {
                             "An error occurred while saving the image.", // Use detailed error message if available
                           token: newToken,
                           savedZipPaths,
+                          success,
                           // details: result.details,
                           // query: result.query,
                           // params: result.params,
