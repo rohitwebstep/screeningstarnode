@@ -161,7 +161,7 @@ const subUser = {
 
       // SQL query to fetch sub-user details for a specific branch
       const sqlClient = `
-          SELECT id, client_spoc_id, zip, remarks
+          SELECT id, client_spoc_id, zip, remarks, created_at
           FROM branch_bulk_uploads
           WHERE branch_id = ?
         `;
