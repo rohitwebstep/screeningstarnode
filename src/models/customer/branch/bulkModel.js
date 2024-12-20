@@ -177,15 +177,6 @@ const subUser = {
             null
           );
         }
-
-        // If no results are found, return an empty array
-        if (bulkResults.length === 0) {
-          return callback(null, {
-            message: "No bulk entries found for this branch.",
-            data: [],
-          });
-        }
-
         // Return the list of bulk entries
         return callback(null, bulkResults);
       });

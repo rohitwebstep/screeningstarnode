@@ -1,4 +1,3 @@
-const ClientApplication = require("../../../models/customer/branch/clientApplicationModel");
 const BranchCommon = require("../../../models/customer/branch/commonModel");
 const Branch = require("../../../models/customer/branch/branchModel");
 const Bulk = require("../../../models/customer/branch/bulkModel");
@@ -48,9 +47,6 @@ exports.create = async (req, res) => {
       remarks,
       send_mail,
     };
-
-    if (send_mail == 1) {
-    }
 
     // Check for missing fields
     const missingFields = Object.keys(requiredFields)
