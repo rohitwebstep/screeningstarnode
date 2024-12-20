@@ -276,7 +276,7 @@ const Admin = {
 
   findByEmailOrMobile: (username, callback) => {
     const sql = `
-      SELECT \`id\`, \`emp_id\`, \`name\`, \`profile_picture\`, \`email\`, \`mobile\`, \`status\`, \`login_token\`, \`token_expiry\`, \`date_of_joining\`
+      SELECT \`id\`, \`emp_id\`, \`name\`, \`profile_picture\`, \`email\`, \`mobile\`, \`role\`, \`designation\`, \`status\`, \`login_token\`, \`token_expiry\`, \`date_of_joining\`
       FROM \`admins\`
       WHERE \`email\` = ? OR \`mobile\` = ?
     `;
