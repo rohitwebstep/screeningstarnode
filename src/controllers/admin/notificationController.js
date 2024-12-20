@@ -25,47 +25,62 @@ exports.index = async (req, res) => {
 
     const tatDelayAction = "admin_manager";
     const newApplicationsAction = "admin_manager";
+    console.log(`adminId - `, adminId);
 
     // Wrap authorization checks in promises
     const isAuthorized = (adminId, action) =>
-      new Promise((resolve) => {
-        Common.isAdminAuthorizedForAction(adminId, action, (authResult) =>
-          resolve(authResult.status)
-        );
-      });
-
-    // Perform both authorization checks concurrently
-    const [newApplicationStatus, tatDelayStatus] = await Promise.all([
-      isAuthorized(adminId, newApplicationsAction),
-      isAuthorized(adminId, tatDelayAction),
-    ]);
-
-    // Fetch TAT delay list
-    NotificationModel.index((notificationErr, notificationResult) => {
-      if (notificationErr) {
-        console.error("TAT Delay List Error:", notificationErr);
-        return res.status(500).json({
-          status: false,
-          err: notificationErr,
-          message: "Error fetching TAT delay list.",
+      new Promise((resolve, reject) => {
+        Common.isAdminAuthorizedForAction(adminId, action, (authResult) => {
+          if (!authResult.status) {
+            console.log("authResult (False) - ", authResult);
+            reject(new Error(authResult.message || "Unauthorized action")); // Reject the promise with an error
+          } else {
+            console.log(`True`);
+            resolve(authResult.status); // Resolve the promise with the status
+          }
         });
-      }
-
-      if (!tatDelayStatus) {
-        notificationResult.tatDelayList = [];
-      }
-
-      if (!newApplicationStatus) {
-        notificationResult.newApplications = [];
-      }
-
-      return res.status(200).json({
-        status: true,
-        message: "Data fetched successfully.",
-        data: notificationResult,
-        totalNotifications: notificationResult.length,
       });
-    });
+
+    try {
+      // Perform both authorization checks concurrently
+      const [newApplicationStatus, tatDelayStatus] = await Promise.all([
+        isAuthorized(adminId, newApplicationsAction),
+        isAuthorized(adminId, tatDelayAction),
+      ]);
+
+      // Fetch TAT delay list
+      NotificationModel.index((notificationErr, notificationResult) => {
+        if (notificationErr) {
+          console.error("TAT Delay List Error:", notificationErr);
+          return res.status(500).json({
+            status: false,
+            err: notificationErr,
+            message: "Error fetching TAT delay list.",
+          });
+        }
+
+        if (!tatDelayStatus) {
+          notificationResult.tatDelayList = [];
+        }
+
+        if (!newApplicationStatus) {
+          notificationResult.newApplications = [];
+        }
+
+        return res.status(200).json({
+          status: true,
+          message: "Data fetched successfully.",
+          data: notificationResult,
+          totalNotifications: notificationResult.length,
+        });
+      });
+    } catch (error) {
+      console.error("Authorization Error:", error);
+      return res.status(403).json({
+        status: false,
+        message: "Unauthorized action.",
+      });
+    }
   } catch (error) {
     console.error("Unexpected Error:", error);
     res.status(500).json({

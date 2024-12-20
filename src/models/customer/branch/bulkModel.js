@@ -53,6 +53,7 @@ const subUser = {
               \`client_spoc_id\` INT NOT NULL,
               \`zip\` VARCHAR(255) NOT NULL,
               \`remarks\` TEXT DEFAULT NULL,
+              \`is_notification_read\` TINYINT(1) DEFAULT 0
               \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
               \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
               KEY \`branch_id\` (\`branch_id\`),
@@ -117,11 +118,10 @@ const subUser = {
             console.error("Database query error: 109", err);
             return callback(err, null);
           }
-
           // Assuming you want to send the `new_application_id` back, you should extract it from `results.insertId`
           const bulk_inserted_id = results.insertId;
 
-          return callback(null, { results, bulk_inserted_id });
+          return callback(null, results);
         });
       };
     });

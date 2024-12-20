@@ -186,12 +186,12 @@ const common = {
     startConnection((err, connection) => {
       if (err) {
         console.error("Connection error:", err);
-        return callback({ message: "Connection error", error: err }, null);
+        return callback({ status: false, message: "Connection error", error: err }, null);
       }
 
       if (!connection) {
         console.error("Connection is not available");
-        return callback({ message: "Connection is not available" }, null);
+        return callback({ status: false, message: "Connection is not available" }, null);
       }
 
       // First query: Get the admin's role
@@ -199,13 +199,13 @@ const common = {
         if (err) {
           console.error("Database query error: 5-8", err);
           connectionRelease(connection);
-          return callback({ message: "Database query error (5-8)", error: err }, null);
+          return callback({ status: false, message: "Database query error (5-8)", error: err }, null);
         }
 
         if (results.length === 0) {
           console.log("No admin found with the provided ID");
           connectionRelease(connection);
-          return callback({ message: "No admin found with the provided ID" }, null);
+          return callback({ status: false, message: "No admin found with the provided ID" }, null);
         }
 
         const role = results[0].role;
@@ -216,13 +216,13 @@ const common = {
           if (err) {
             console.error("Database query error: 60", err);
             connectionRelease(connection);
-            return callback({ message: "Database query error (5-9)", error: err }, null);
+            return callback({ status: false, message: "Database query error (5-9)", error: err }, null);
           }
 
           if (results.length === 0) {
             console.error("No permissions found for the admin role");
             connectionRelease(connection);
-            return callback({ message: "Access Denied" }, null);
+            return callback({ status: false, message: "Access Denied" }, null);
           }
 
           const permissionsRaw = results[0].json;

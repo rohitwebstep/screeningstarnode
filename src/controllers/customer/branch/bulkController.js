@@ -4,6 +4,7 @@ const Branch = require("../../../models/customer/branch/branchModel");
 const Bulk = require("../../../models/customer/branch/bulkModel");
 const Customer = require("../../../models/customer/customerModel");
 const AppModel = require("../../../models/appModel");
+const Admin = require("../../../models/admin/adminModel");
 const ClientSpoc = require("../../../models/admin/clientSpocModel");
 const {
   createMail,
@@ -194,16 +195,82 @@ exports.create = async (req, res) => {
                       if (result && result.affectedRows > 0) {
                         // Return success response if there are affected rows
                         if (send_mail == 1) {
-                          return res.status(201).json({
-                            status: true,
-                            message: "Client application created successfully.",
-                            token: newToken,
-                            savedZipPaths,
-                          });
+                          ClientSpoc.getClientSpocById(
+                            clientSpocId,
+                            (err, currentClientSpoc) => {
+                              if (err) {
+                                console.error(
+                                  "Database error during client spoc retrieval:",
+                                  err
+                                );
+                                return res.status(500).json({
+                                  status: false,
+                                  message:
+                                    "Failed to retrieve Client SPOC. Please try again.",
+                                });
+                              }
+
+                              if (!currentClientSpoc) {
+                                return res.status(404).json({
+                                  status: false,
+                                  message: "Client SPOC not found.",
+                                });
+                              }
+                              // Retrieve admins and send email
+                              Admin.list((err, adminResult) => {
+                                if (err) {
+                                  console.error("Database error:", err);
+                                  return res.status(500).json({
+                                    status: false,
+                                    message: "Error retrieving admin details.",
+                                    token: newToken,
+                                  });
+                                }
+
+                                // Extract admin emails
+                                const toArr = adminResult.map((admin) => ({
+                                  name: admin.name,
+                                  email: admin.email,
+                                }));
+
+                                createMail(
+                                  "Bulk",
+                                  "branch-create",
+                                  currentCustomer.name,
+                                  currentClientSpoc.name,
+                                  [],
+                                  toArr || [],
+                                  []
+                                )
+                                  .then(() => {
+                                    return res.status(201).json({
+                                      status: true,
+                                      message:
+                                        "Bulk files created successfully and email sent.",
+                                      token: newToken,
+                                      savedZipPaths,
+                                    });
+                                  })
+                                  .catch((emailError) => {
+                                    console.error(
+                                      "Error sending email:",
+                                      emailError
+                                    );
+                                    return res.status(201).json({
+                                      status: true,
+                                      message:
+                                        "Bulk files created successfully, but failed to send email.",
+                                      token: newToken,
+                                      savedZipPaths,
+                                    });
+                                  });
+                              });
+                            }
+                          );
                         } else {
                           return res.status(201).json({
                             status: true,
-                            message: "Client application created successfully.",
+                            message: "Bulk files uploaded successfully.",
                             token: newToken,
                             savedZipPaths,
                           });

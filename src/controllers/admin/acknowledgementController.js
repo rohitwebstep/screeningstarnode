@@ -53,7 +53,7 @@ exports.list = (req, res) => {
       return res.status(403).json({
         status: false,
         err: authResult,
-        message: authResult.message, // Return the message from the authorization function
+        message: authResult.message,
       });
     }
 

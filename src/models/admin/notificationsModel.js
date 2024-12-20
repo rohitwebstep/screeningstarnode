@@ -280,13 +280,109 @@ const notification = {
                         branches: Object.values(customer.branches),
                       })
                     );
-                    // Callback with both the application hierarchy and holidays array
-                    callback(null, {
-                      tatDelayList: applicationHierarchyArray,
-                      newApplications: formattedHierarchy,
-                      // holidays: holidaysArray,
-                    });
-                    connectionRelease(connection);
+
+                    const sqlBulkUpload = `
+                    SELECT 
+                        bbu.customer_id, 
+                        bbu.branch_id, 
+                        bbu.client_spoc_id, 
+                        bbu.zip,
+                        c.name AS customer_name, 
+                        c.client_unique_id AS customer_unique_id, 
+                        br.name AS branch_name,
+                        cs.name AS client_spoc_name,
+                        bbu.created_at
+                    FROM 
+                        \`branch_bulk_uploads\` AS bbu
+                    LEFT JOIN 
+                        \`client_spocs\` AS cs 
+                        ON bbu.client_spoc_id = cs.id
+                    LEFT JOIN 
+                        \`customers\` AS c 
+                        ON bbu.customer_id = c.id
+                    LEFT JOIN 
+                        \`branches\` AS br 
+                        ON bbu.branch_id = br.id
+                    WHERE 
+                        bbu.is_notification_read = 0
+                    ORDER BY 
+                        bbu.created_at DESC;
+                  `;
+
+                    connection.query(
+                      sqlBulkUpload,
+                      (queryErr, bulkUploadResults) => {
+                        if (queryErr) {
+                          console.error("Database query error: 110", queryErr);
+                          connectionRelease(connection);
+                          return callback(
+                            {
+                              message: "Error executing query",
+                              error: queryErr,
+                            },
+                            null
+                          );
+                        }
+                        const bulkHierarchy = bulkUploadResults.reduce(
+                          (acc, row) => {
+                            const {
+                              customer_id,
+                              customer_name,
+                              customer_unique_id,
+                              branch_id,
+                              branch_name,
+                              client_spoc_name,
+                              zip,
+                              created_at,
+                            } = row;
+
+                            // Initialize customer object if not already present
+                            if (!acc[customer_id]) {
+                              acc[customer_id] = {
+                                customer_id,
+                                customer_name,
+                                customer_unique_id,
+                                branches: {},
+                              };
+                            }
+
+                            // Initialize branch object if not already present under the customer
+                            if (!acc[customer_id].branches[branch_id]) {
+                              acc[customer_id].branches[branch_id] = {
+                                branch_id,
+                                branch_name,
+                                bulks: [],
+                              };
+                            }
+
+                            // Add the application under the branch
+                            acc[customer_id].branches[branch_id].bulks.push({
+                              zip,
+                              client_spoc_name,
+                              created_at,
+                            });
+
+                            return acc;
+                          },
+                          {}
+                        );
+
+                        // Convert hierarchical object to an array format
+                        const formattedBulkHierarchy = Object.values(
+                          bulkHierarchy
+                        ).map((customer) => ({
+                          ...customer,
+                          branches: Object.values(customer.branches),
+                        }));
+                        // Callback with both the application hierarchy and holidays array
+                        callback(null, {
+                          tatDelayList: applicationHierarchyArray,
+                          newApplications: formattedHierarchy,
+                          newBulkUploads: formattedBulkHierarchy,
+                        });
+                        connectionRelease(connection);
+                      }
+                    );
                   });
                 });
               }

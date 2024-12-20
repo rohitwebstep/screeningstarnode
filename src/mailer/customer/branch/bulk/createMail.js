@@ -1,62 +1,72 @@
 const nodemailer = require("nodemailer");
+const path = require("path");
 const { startConnection, connectionRelease } = require("../../../../config/db"); // Import the existing MySQL connection
 
-// Function to generate HTML table from service details
-const generateTable = (services) => {
-  if (!Array.isArray(services) || services.length === 0) {
-    return `No services available.`;
+// Function to check if a file exists
+const checkFileExists = async (url) => {
+  try {
+    const response = await fetch(url, { method: "HEAD" });
+    return response.ok; // Returns true if the status is in the range 200-299
+  } catch {
+    return false; // Return false if there was an error (e.g., network issue)
   }
-
-  let rows = services.map((service) => service).join(", "); // Join services with a comma separator
-  return `${rows}`;
 };
 
-const generateDocs = (docs) => {
-  // Split the input string into an array of document names
-  const docsArr = docs.split(",").map((doc) => doc.trim());
+// Function to create attachments from URLs
+const createAttachments = async (attachments_url) => {
+  const urls = Array.isArray(attachments_url)
+    ? attachments_url
+    : typeof attachments_url === "string"
+    ? attachments_url.split(",")
+    : [];
 
-  // Check if the docsArr array is valid
-  if (!Array.isArray(docsArr) || docsArr.length === 0) {
-    return "<p>No documents available</p>";
+  const attachments = [];
+
+  for (const url of urls) {
+    const trimmedUrl = url.trim();
+    if (trimmedUrl) {
+      const exists = await checkFileExists(trimmedUrl);
+      if (exists) {
+        const trimmedSenitizedUrl = trimmedUrl.replace(/\\/g, "/");
+        const filename = path.basename(trimmedUrl); // Extract the filename from the URL
+        attachments.push({
+          filename: filename,
+          path: trimmedSenitizedUrl,
+        });
+      } else {
+        console.warn(`File does not exist: ${trimmedUrl}`); // Log warning for missing file
+      }
+    } else {
+      console.warn(`Empty or invalid URL: ${url}`); // Log warning for invalid URL
+    }
   }
 
-  let links = "";
-
-  // Generate <a> tags for each document
-  docsArr.forEach((doc, index) => {
-    links += `<a href="${doc}"><span>Doc ${index + 1}</span></a> `;
-  });
-
-  return links.trim(); // Remove any trailing spaces
+  return attachments;
 };
 
 // Function to send email
 async function createMail(
   module,
   action,
-  name,
-  application_id,
-  company_name,
-  client_code,
-  services,
-  docs,
+  organisation_name,
+  client_spoc_name,
+  attachments_url,
   toArr,
   ccArr
 ) {
-  const connection = await new Promise((resolve, reject) => {
-    startConnection((err, conn) => {
-      if (err) {
-        console.error("Failed to connect to the database:", err);
-        return reject({
-          message: "Failed to connect to the database",
-          error: err,
-        });
-      }
-      resolve(conn);
-    });
-  });
+  let connection;
 
   try {
+    // Establish database connection
+    connection = await new Promise((resolve, reject) => {
+      startConnection((err, conn) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(conn);
+      });
+    });
+
     // Fetch email template
     const [emailRows] = await connection
       .promise()
@@ -88,29 +98,16 @@ async function createMail(
       },
     });
 
-    // Generate the HTML table from service details
-    const table = generateTable(services);
-    let docsHTML = "";
-    if (docs && docs.length > 0) {
-      docsHTML = generateDocs(docs);
+    // Create attachments
+    const attachments = await createAttachments(attachments_url);
+    if (attachments.length === 0) {
+      console.warn("No valid attachments to send.");
     }
 
     // Replace placeholders in the email template
-    let template = email.template;
-    template = template
-      .replace(/{{company_name}}/g, company_name)
-      .replace(/{{client_name}}/g, name)
-      .replace(/{{application_id}}/g, application_id)
-      .replace(/{{client_code}}/g, client_code)
-      .replace(/{{services}}/g, table);
-
-    // If docsHTML has content, replace its placeholder
-    if (docsHTML) {
-      template = template.replace(/{{docs}}/g, docsHTML);
-    } else {
-      // If there are no documents, remove the placeholder from the template
-      template = template.replace(/{{docs}}/g, "");
-    }
+    let template = email.template
+      .replace(/{{organisation_name}}/g, organisation_name)
+      .replace(/{{client_spoc_name}}/g, client_spoc_name);
 
     // Prepare CC list
     const ccList = ccArr
@@ -120,11 +117,12 @@ async function createMail(
           if (Array.isArray(entry.email)) {
             emails = entry.email;
           } else if (typeof entry.email === "string") {
-            let cleanedEmail = entry.email
+            const cleanedEmail = entry.email
               .trim()
               .replace(/\\"/g, '"')
               .replace(/^"|"$/g, "");
 
+            // Parse JSON if it's an array-like string
             if (cleanedEmail.startsWith("[") && cleanedEmail.endsWith("]")) {
               emails = JSON.parse(cleanedEmail);
             } else {
@@ -154,24 +152,24 @@ async function createMail(
       .map((email) => `"${email.name}" <${email.email}>`)
       .join(", ");
 
-    // Debugging: Log the email lists
-    console.log("Recipient List:", toList);
-    console.log("CC List:", ccList);
-
     // Send email
-    const info = await transporter.sendMail({
+    const mailOptions = {
       from: `"${smtp.title}" <${smtp.username}>`,
-      to: toList, // Main recipient list
-      cc: ccList, // CC recipient list
+      to: toList,
+      cc: ccList,
       subject: email.title,
       html: template,
-    });
+      ...(attachments.length > 0 && { attachments }), // Only include attachments if present
+    };
 
+    const info = await transporter.sendMail(mailOptions);
     console.log("Email sent:", info.response);
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error("Error sending email:", error.message);
   } finally {
-    connectionRelease(connection); // Ensure the connection is released
+    if (connection) {
+      connectionRelease(connection); // Ensure the connection is released
+    }
   }
 }
 
