@@ -47,8 +47,40 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage: storage });
+const fileFilter = (req, file, cb) => {
+  const allowedFileTypes = [
+    "application/pdf",
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/bmp",
+    "image/tiff",
+    "image/webp",
+    "image/svg+xml",
+    "image/x-icon",
+    "image/heic",
+    "image/heif",
+    "image/apng",
+    "application/zip",
+  ];
 
+  if (allowedFileTypes.includes(file.mimetype)) {
+    cb(null, true); // Accept file
+  } else {
+    cb(
+      new Error(
+        "Invalid file type. Only PDF, images, and zip files are allowed."
+      )
+    );
+  }
+};
+
+// Multer setup
+const upload = multer({
+  storage,
+  limits: { fileSize: 512 * 1024 * 1024 }, // 512 MB limit
+  fileFilter,
+});
 // Function to save a single image and upload it to FTP
 const saveImage = async (file, targetDir) => {
   return new Promise((resolve, reject) => {
@@ -71,6 +103,41 @@ const saveImage = async (file, targetDir) => {
         // Upload the image to FTP after saving locally
         try {
           await uploadToFtp(newPath); // FTP upload after saving locally
+          fs.unlinkSync(newPath);
+          resolve(newPath); // Return the new file path
+        } catch (err) {
+          console.error("Error uploading to FTP:", err);
+          reject(err); // Reject if FTP upload fails
+        }
+      });
+    } else {
+      reject(new Error("No file provided for saving."));
+    }
+  });
+};
+
+const saveZip = async (file, targetDir) => {
+  return new Promise((resolve, reject) => {
+    if (file) {
+      const originalPath = path.join("uploads", file.filename); // Original file path
+      const newPath = path.join(targetDir, file.filename); // New file path
+
+      // Ensure target directory exists
+      if (!fs.existsSync(targetDir)) {
+        fs.mkdirSync(targetDir, { recursive: true }); // Create directory if it doesn't exist
+      }
+
+      // Move the file to the new directory
+      fs.rename(originalPath, newPath, async (err) => {
+        if (err) {
+          console.error("Error renaming file:", err);
+          return reject(err); // Reject on error
+        }
+
+        // Upload the image to FTP after saving locally
+        try {
+          await uploadToFtp(newPath); // FTP upload after saving locally
+          fs.unlinkSync(newPath);
           resolve(newPath); // Return the new file path
         } catch (err) {
           console.error("Error uploading to FTP:", err);
@@ -168,9 +235,11 @@ const savePdf = async (doc, pdfFileName, targetDir) => {
 // Exporting the upload middleware and saving functions
 module.exports = {
   upload: upload.fields([
+    { name: "pdf", maxCount: 5 },
     { name: "images", maxCount: 10 },
-    { name: "image", maxCount: 1 },
+    { name: "zip", maxCount: 1 },
   ]),
+  saveZip,
   saveImage,
   saveImages,
   savePdf,

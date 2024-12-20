@@ -1262,7 +1262,7 @@ exports.upload = async (req, res) => {
                   dbColumn,
                   savedImagePaths,
                   (success, result) => {
-                    if (!success) {
+                    if (success) {
                       // If an error occurred, return the error details in the response
                       return res.status(500).json({
                         status: false,
