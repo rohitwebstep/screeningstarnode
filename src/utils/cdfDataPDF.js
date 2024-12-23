@@ -115,7 +115,7 @@ function addFooter(doc) {
 
   // Footer text and page number
   const footerText =
-    "No 293/154/172, 4th Floor, Outer Ring Road, Kadubeesanahalli, Marathahalli, Bangalore-560103 | www.goldquestglobal.in";
+    "Plot No. 19/4 2, IndiQube Alpha, 1st Floor, Outer Ring Road, Panathur Junction, Kadubeesanahalli, Marathahalli, Bangalore-560103 | www.screeningstar.com";
   doc.setFont("helvetica", "normal");
   doc.setTextColor(0, 0, 0);
   doc.setFontSize(7);
@@ -506,7 +506,7 @@ module.exports = {
                   doc.autoTable({
                     body: [
                       [
-                        "I hereby authorize GoldQuest Global HR Services Pvt Ltd and its representative to verify information provided in my application for employment and this employee background verification form, and to conduct enquiries as may be necessary, at the company’s discretion. I authorize all persons who may have information relevant to this enquiry to disclose it to GoldQuest Global HR Services Pvt Ltd or its representative. I release all persons from liability on account of such disclosure.\n\n\nI confirm that the above information is correct to the best of my knowledge. I agree that in the event of my obtaining employment, my probationary appointment, confirmation as well as continued employment in the services of the company are subject to clearance of medical test and background verification check done by the company . .",
+                        "I hereby authorize SreeningStar (Tool) and its representative to verify information provided in my application for employment and this employee background verification form, and to conduct enquiries as may be necessary, at the company’s discretion. I authorize all persons who may have information relevant to this enquiry to disclose it to ScreeningStar (Tool) or its representative. I release all persons from liability on account of such disclosure.\n\n\nI confirm that the above information is correct to the best of my knowledge. I agree that in the event of my obtaining employment, my probationary appointment, confirmation as well as continued employment in the services of the company are subject to clearance of medical test and background verification check done by the company . .",
                       ],
                     ],
                     startY: doc.autoTable.previous.finalY,

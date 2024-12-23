@@ -96,7 +96,7 @@ function addFooter(doc) {
 
   // Insert text into the center column (centered)
   const footerText =
-    "No 293/154/172, 4th Floor, Outer Ring Road, Kadubeesanahalli, Marathahalli, Bangalore-560103 | www.goldquestglobal.in";
+    "Plot No. 19/4 2, IndiQube Alpha, 1st Floor, Outer Ring Road, Panathur Junction, Kadubeesanahalli, Marathahalli, Bangalore-560103 | www.screeningstar.com";
   doc.setFont("helvetica", "normal");
   doc.setTextColor(0, 0, 0); // Set text color to black (RGB: 0, 0, 0)
   doc.setFontSize(7);
