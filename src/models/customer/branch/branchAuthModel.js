@@ -381,7 +381,7 @@ const Branch = {
     });
   },
 
-  findById: (id, callback) => {
+  findById: (sub_user_id, branch_id, callback) => {
     startConnection((err, connection) => {
       if (err) {
         return callback(
@@ -390,26 +390,45 @@ const Branch = {
         );
       }
 
-      const sql = `
-        SELECT \`id\`, \`customer_id\`, \`name\`, \`email\`, \`status\`, \`login_token\`, \`token_expiry\`
-        FROM \`branches\`
-        WHERE \`id\` = ?
-      `;
+      let sql = "";
+      let queryParams = [];
 
-      connection.query(sql, [id], (err, results) => {
+      // Build SQL query based on the presence of sub_user_id
+      if (sub_user_id && sub_user_id.trim() !== "") {
+        sql = `
+          SELECT \`id\`, \`customer_id\`, \`email\`, \`status\`, \`login_token\`, \`token_expiry\`
+          FROM \`branch_sub_users\`
+          WHERE \`branch_id\` = ? AND \`id\` = ?
+        `;
+        queryParams = [branch_id, sub_user_id];
+      } else {
+        sql = `
+          SELECT \`id\`, \`customer_id\`, \`name\`, \`email\`, \`status\`, \`login_token\`, \`token_expiry\`
+          FROM \`branches\`
+          WHERE \`id\` = ?
+        `;
+        queryParams = [branch_id];
+      }
+
+      // Execute the query
+      connection.query(sql, queryParams, (err, results) => {
         connectionRelease(connection); // Ensure connection is released
 
         if (err) {
-          console.error("Database query error: 81", err);
+          console.error("Database query error:", err);
           return callback(
             { message: "Database query error", error: err },
             null
           );
         }
+
+        // Handle case where no records are found
         if (results.length === 0) {
-          return callback({ message: "Branch not found" }, null);
+          return callback({ message: "Branch or sub_user not found" }, null);
         }
-        callback(null, results[0]); // Return the first result (should be one result if ID is unique)
+
+        // Return the first result (should be one result if ID is unique)
+        callback(null, results[0]);
       });
     });
   },

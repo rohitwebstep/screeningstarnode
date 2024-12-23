@@ -439,7 +439,7 @@ exports.validateLogin = (req, res) => {
   }
 
   // Fetch branch by ID
-  BranchAuth.findById(branch_id, (err, branch) => {
+  BranchAuth.findById(sub_user_id || null,branch_id, (err, branch) => {
     if (err) {
       console.error("Database error:", err);
       return res.status(500).json({ status: false, message: err });
