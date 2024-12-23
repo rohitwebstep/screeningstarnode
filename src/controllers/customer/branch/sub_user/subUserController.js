@@ -44,7 +44,8 @@ exports.create = (req, res) => {
           console.error("Error validating token:", err);
           return res.status(500).json({
             status: false,
-            message: `An error occurred while validating the token. Please try again later.`,
+            err,
+            message: err.message,
           });
         }
 
