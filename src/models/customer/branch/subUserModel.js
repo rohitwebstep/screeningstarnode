@@ -47,7 +47,7 @@ const subUser = {
             \`customer_id\`,
             \`email\`,
             \`password\`
-          ) VALUES (?, ?, ?, ?)
+          ) VALUES (?, ?, ?, md5(?))
         `;
 
         const values = [branch_id, customer_id, email, password];
