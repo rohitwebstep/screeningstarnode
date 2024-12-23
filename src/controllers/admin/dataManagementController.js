@@ -627,12 +627,30 @@ exports.submit = (req, res) => {
                     "permanent_landmark",
                     "permanent_pin_code",
                     "permanent_state",
+                    "spouse_name",
+                    "Nationality",
+                    "QC_Date",
+                    "QC_Analyst_Name",
+                    "Data_Entry_Analyst_Name",
+                    "Date_of_Data",
+                    "insuff",
+                    "house_no",
+                    "floor",
+                    "cross",
+                    "street",
+                    "main",
+                    "area",
+                    "locality",
+                    "city",
+                    "taluk",
+                    "district",
+                    "pin_code"
                   ];
 
                   const requiredKeys = [
                     "month_year",
                     "verification_purpose",
-                    "applicant_name"
+                    "applicant_name",
                   ];
 
                   const mainJson = Object.keys(mainJsonRaw)
@@ -642,6 +660,7 @@ exports.submit = (req, res) => {
                       return obj;
                     }, {});
 
+                  console.log(`mainJson - `, mainJson);
                   // Check if the required keys are all filled
                   const hasEmptyRequiredFields = requiredKeys.some(
                     (key) => !mainJson[key] || mainJson[key] === ""

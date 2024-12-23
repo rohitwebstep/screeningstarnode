@@ -524,7 +524,7 @@ const Customer = {
         const addMissingColumns = () => {
           if (missingColumns.length > 0) {
             const alterQueries = missingColumns.map((column) => {
-              return `ALTER TABLE cmt_applications ADD COLUMN ${column} LONGTEXT`;
+              return `ALTER TABLE cmt_applications ADD COLUMN \`${column}\` LONGTEXT`;
             });
 
             // Run all ALTER statements sequentially
