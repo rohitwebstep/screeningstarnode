@@ -1101,6 +1101,7 @@ exports.upload = async (req, res) => {
 
     const {
       branch_id: branchId,
+      sub_user_id: subUserId,
       _token: token,
       customer_code: customerCode,
       client_application_id: clientAppId,
@@ -1153,10 +1154,9 @@ exports.upload = async (req, res) => {
           message: result.message,
         });
       }
-      let sub_user_id;
       BranchCommon.isBranchTokenValid(
         token,
-        sub_user_id || null,
+        subUserId || null,
         branchId,
         async (err, result) => {
           if (err) {
