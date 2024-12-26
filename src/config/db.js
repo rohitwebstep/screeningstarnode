@@ -1,7 +1,20 @@
 require("dotenv").config();
 const mysql = require("mysql2");
 
-// Log environment variables for debugging
+// Validate critical environment variables
+if (
+  !process.env.DB_HOST ||
+  !process.env.DB_USER ||
+  !process.env.DB_NAME ||
+  !process.env.DB_PASSWORD
+) {
+  console.error(
+    "Missing critical environment variables. Please check your .env file."
+  );
+  process.exit(1);
+}
+
+// Log environment variables for debugging (optional, avoid in production)
 console.log("DB_HOST:", process.env.DB_HOST);
 console.log("DB_USER:", process.env.DB_USER);
 console.log("DB_NAME:", process.env.DB_NAME);
@@ -18,24 +31,53 @@ const pool = mysql.createPool({
   connectTimeout: 120000, // 2 minutes for individual connection attempts
 });
 
-// Function to start a connection
-const startConnection = (callback) => {
-  pool.getConnection((err, connection) => {
-    if (err) {
-      console.error("Error getting connection from pool:", err); // Log error for debugging
-      return callback(err, null); // Return error via callback
-    }
-    console.log("Connection established"); // Optional: Log successful connection
-    callback(null, connection); // Pass the connection to the callback
-  });
+// Function to start a connection with retry mechanism
+const startConnection = (callback, retries = 20) => {
+  if (typeof callback !== "function") {
+    throw new Error("Callback must be a function");
+  }
+
+  const attemptConnection = (retriesLeft) => {
+    pool.getConnection((err, connection) => {
+      if (err) {
+        console.error(`Error getting connection from pool: ${err.message}`);
+        if (retriesLeft > 0) {
+          console.log(
+            `Connection attempt failed. Retrying... (${retriesLeft} attempts left)`
+          );
+          setTimeout(() => attemptConnection(retriesLeft - 1), 500);
+        } else {
+          callback(err, null); // Return error after retries are exhausted
+        }
+      } else {
+        console.log("Connection established"); // Log successful connection
+        callback(null, connection); // Pass the connection to the callback
+      }
+    });
+  };
+
+  attemptConnection(retries); // Initial connection attempt
 };
 
 // Function to release a connection
 const connectionRelease = (connection) => {
+  // console.log("connectionRelease called"); // Log function entry
+
   if (connection) {
-    connection.release();
-    console.log("Connection released");
+    // console.log("Valid connection found, attempting to release...");
+
+    try {
+      connection.release(); // Release the connection back to the pool
+      // console.log("Connection successfully released back to the pool");
+    } catch (err) {
+      console.error("Error releasing connection:", err.message);
+      console.debug("Error details:", err); // Log full error details for debugging
+    }
+  } else {
+    console.warn("No valid connection to release");
   }
+
+  // console.log("connectionRelease function execution completed");
 };
 
 module.exports = { pool, startConnection, connectionRelease };

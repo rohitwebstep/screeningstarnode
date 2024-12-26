@@ -37,7 +37,7 @@ const tatDelay = {
       JOIN branches AS br ON br.id = ca.branch_id
       LEFT JOIN customer_metas AS cm ON cm.customer_id = cust.id
       LEFT JOIN cmt_applications AS cmt ON ca.id = cmt.client_application_id
-      WHERE cmt.overall_status != 'completed';
+      WHERE cmt.overall_status != 'completed' AND ca.tat_delete != 1;
     `;
 
     // SQL query to fetch holidays
@@ -284,6 +284,38 @@ const tatDelay = {
       }
       return count; // Return total days out of TAT
     }
+  },
+
+  delete: (customer_id, callback) => {
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
+
+      const sql = `
+        UPDATE \`client_applications\`
+        SET \`tat_delete\` = ?
+        WHERE \`customer_id\` = ?
+      `;
+
+      connection.query(sql, ["1", customer_id], (queryErr, results) => {
+        // Ensure the connection is released in both success and error cases
+        connectionRelease(connection);
+
+        if (queryErr) {
+          console.error("Database query error:", queryErr);
+          return callback(
+            { message: "Error executing the database query", error: queryErr },
+            null
+          );
+        }
+
+        callback(null, results);
+      });
+    });
   },
 };
 
