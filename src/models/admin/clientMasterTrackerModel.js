@@ -299,7 +299,8 @@ const Customer = {
       let sql = `
         SELECT 
           ca.*, 
-          ca.id AS main_id, 
+          ca.id AS main_id,
+          ca.is_highlight, 
           cs.name AS client_spoc_name,
           cmt.first_insufficiency_marks,
           cmt.first_insuff_date,
@@ -359,7 +360,7 @@ const Customer = {
         params.push(`${filter_month}%`); // Append "%" to filter by year-month
       }
 
-      sql += ` ORDER BY ca.\`created_at\` DESC;`;
+      sql += ` ORDER BY ca.\`created_at\` DESC, ca.\`is_highlight\` DESC;`;
 
       // Execute the query using the connection
       connection.query(sql, params, (err, results) => {
