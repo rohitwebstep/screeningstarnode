@@ -610,11 +610,10 @@ exports.applicationDelete = (req, res) => {
 };
 
 exports.applicationHighlight = (req, res) => {
-  const { application_id, admin_id, _token } = req.query;
+  const { application_id, highlight, admin_id, _token } = req.query;
 
   // Validate required fields
-  // Check for missing fields
-  const requiredFields = { application_id, admin_id, _token };
+  const requiredFields = { application_id, highlight, admin_id, _token };
   const missingFields = Object.keys(requiredFields)
     .filter((field) => !requiredFields[field])
     .map((field) => field.replace(/_/g, " "));
@@ -623,6 +622,14 @@ exports.applicationHighlight = (req, res) => {
     return res.status(400).json({
       status: false,
       message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  // Validate highlight field (must be 0 or 1)
+  if (highlight !== "0" && highlight !== "1") {
+    return res.status(400).json({
+      status: false,
+      message: "Invalid highlight value. It must be '0' or '1'.",
     });
   }
 
@@ -668,51 +675,63 @@ exports.applicationHighlight = (req, res) => {
           if (!currentClientApplication) {
             return res.status(404).json({
               status: false,
-              message: "Client Aplication not found.",
+              message: "Client Application not found.",
               token: newToken,
             });
           }
 
-          // Delete the clientApplication
-          ClientApplication.highlight(application_id, (err, result) => {
-            if (err) {
-              console.error(
-                "Database error during clientApplication highlighting:",
-                err
-              );
+          // Highlight or un-highlight the clientApplication
+          ClientApplication.highlight(
+            application_id,
+            highlight,
+            (err, result) => {
+              if (err) {
+                console.error(
+                  "Database error during clientApplication highlighting:",
+                  err
+                );
+                AdminCommon.adminActivityLog(
+                  admin_id,
+                  "Client Application",
+                  "highlight",
+                  "0",
+                  JSON.stringify({ application_id }),
+                  `Failed to update highlight status: ${err.message}`,
+                  () => {}
+                );
+                return res.status(500).json({
+                  status: false,
+                  message:
+                    "Failed to update highlighting of ClientApplication. Please try again.",
+                  token: newToken,
+                });
+              }
+
+              const actionMessage =
+                highlight === "1"
+                  ? "Highlighted the Client Application."
+                  : "Un-highlighted the Client Application.";
+
+              // Log the specific action in the activity log
               AdminCommon.adminActivityLog(
                 admin_id,
                 "Client Application",
-                "highlight",
-                "0",
+                actionMessage,
+                "1",
                 JSON.stringify({ application_id }),
-                err,
+                null,
                 () => {}
               );
-              return res.status(500).json({
-                status: false,
-                message:
-                  "Failed to highlighting ClientApplication. Please try again.",
+
+              res.status(200).json({
+                status: true,
+                message: `Client Application ${
+                  highlight === "1" ? "highlighted" : "un-highlighted"
+                } successfully.`,
                 token: newToken,
               });
             }
-
-            AdminCommon.adminActivityLog(
-              admin_id,
-              "Client Application",
-              "highlight",
-              "1",
-              JSON.stringify({ application_id }),
-              null,
-              () => {}
-            );
-
-            res.status(200).json({
-              status: true,
-              message: "Client Application highlighted successfully.",
-              token: newToken,
-            });
-          });
+          );
         }
       );
     });

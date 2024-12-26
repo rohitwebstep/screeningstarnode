@@ -657,7 +657,7 @@ const clientApplication = {
     });
   },
 
-  highlight: (id, callback) => {
+  highlight: (id, highlight, callback) => {
     startConnection((err, connection) => {
       if (err) {
         return callback(
@@ -672,7 +672,7 @@ const clientApplication = {
         WHERE \`id\` = ?
       `;
 
-      connection.query(sql, ["1", id], (queryErr, results) => {
+      connection.query(sql, [highlight, id], (queryErr, results) => {
         // Ensure the connection is released in both success and error cases
         connectionRelease(connection);
 
