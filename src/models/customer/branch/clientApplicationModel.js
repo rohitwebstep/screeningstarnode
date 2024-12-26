@@ -656,6 +656,38 @@ const clientApplication = {
       });
     });
   },
+
+  highlight: (id, callback) => {
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
+
+      const sql = `
+        UPDATE \`client_applications\`
+        SET \`is_highlight\` = ?
+        WHERE \`id\` = ?
+      `;
+
+      connection.query(sql, ["1", id], (queryErr, results) => {
+        // Ensure the connection is released in both success and error cases
+        connectionRelease(connection);
+
+        if (queryErr) {
+          console.error("Database query error:", queryErr);
+          return callback(
+            { message: "Error executing the database query", error: queryErr },
+            null
+          );
+        }
+
+        callback(null, results);
+      });
+    });
+  },
 };
 
 module.exports = clientApplication;

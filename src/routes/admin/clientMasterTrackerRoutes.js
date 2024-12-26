@@ -40,6 +40,9 @@ router.get(
   "/application-service",
   clientMasterTrackerController.annexureDataByServiceIdofApplication
 );
+router.delete("/application-delete", clientMasterTrackerController.applicationDelete);
+router.get("/application-highlight", clientMasterTrackerController.applicationHighlight);
+
 router.post("/upload", clientMasterTrackerController.upload);
 
 module.exports = router;

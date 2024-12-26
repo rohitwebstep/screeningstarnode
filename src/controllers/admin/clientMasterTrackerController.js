@@ -329,29 +329,33 @@ exports.applicationByID = (req, res) => {
     application_id === "" ||
     application_id === undefined ||
     application_id === "undefined"
-  )
+  ) {
     missingFields.push("Application ID");
+  }
   if (
     !branch_id ||
     branch_id === "" ||
     branch_id === undefined ||
     branch_id === "undefined"
-  )
+  ) {
     missingFields.push("Branch ID");
+  }
   if (
     !admin_id ||
     admin_id === "" ||
     admin_id === undefined ||
     admin_id === "undefined"
-  )
+  ) {
     missingFields.push("Admin ID");
+  }
   if (
     !_token ||
     _token === "" ||
     _token === undefined ||
     _token === "undefined"
-  )
+  ) {
     missingFields.push("Token");
+  }
 
   if (missingFields.length > 0) {
     return res.status(400).json({
@@ -489,6 +493,226 @@ exports.applicationByID = (req, res) => {
               });
             }
           );
+        }
+      );
+    });
+  });
+};
+
+exports.applicationDelete = (req, res) => {
+  const { application_id, admin_id, _token } = req.query;
+
+  // Validate required fields
+  // Check for missing fields
+  const requiredFields = { application_id, admin_id, _token };
+  const missingFields = Object.keys(requiredFields)
+    .filter((field) => !requiredFields[field])
+    .map((field) => field.replace(/_/g, " "));
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  // Check branch authorization
+  const action = "admin_manager";
+  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
+    if (!result.status) {
+      return res.status(403).json({
+        status: false,
+        message: result.message, // Return the message from the authorization function
+      });
+    }
+
+    // Verify admin token
+    AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
+      if (err) {
+        console.error("Error checking token validity:", err);
+        return res.status(500).json({ status: false, message: err.message });
+      }
+
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
+      }
+
+      const newToken = result.newToken;
+      // Fetch the current clientApplication
+      ClientApplication.getClientApplicationById(
+        application_id,
+        (err, currentClientApplication) => {
+          if (err) {
+            console.error(
+              "Database error during clientApplication retrieval:",
+              err
+            );
+            return res.status(500).json({
+              status: false,
+              message:
+                "Failed to retrieve ClientApplication. Please try again.",
+              token: newToken,
+            });
+          }
+
+          if (!currentClientApplication) {
+            return res.status(404).json({
+              status: false,
+              message: "Client Aplication not found.",
+              token: newToken,
+            });
+          }
+
+          // Delete the clientApplication
+          ClientApplication.delete(application_id, (err, result) => {
+            if (err) {
+              console.error(
+                "Database error during clientApplication deletion:",
+                err
+              );
+              AdminCommon.adminActivityLog(
+                admin_id,
+                "Client Application",
+                "Delete",
+                "0",
+                JSON.stringify({ application_id }),
+                err,
+                () => {}
+              );
+              return res.status(500).json({
+                status: false,
+                message:
+                  "Failed to delete ClientApplication. Please try again.",
+                token: newToken,
+              });
+            }
+
+            AdminCommon.adminActivityLog(
+              admin_id,
+              "Client Application",
+              "Delete",
+              "1",
+              JSON.stringify({ application_id }),
+              null,
+              () => {}
+            );
+
+            res.status(200).json({
+              status: true,
+              message: "Client Application deleted successfully.",
+              token: newToken,
+            });
+          });
+        }
+      );
+    });
+  });
+};
+
+exports.applicationHighlight = (req, res) => {
+  const { application_id, admin_id, _token } = req.query;
+
+  // Validate required fields
+  // Check for missing fields
+  const requiredFields = { application_id, admin_id, _token };
+  const missingFields = Object.keys(requiredFields)
+    .filter((field) => !requiredFields[field])
+    .map((field) => field.replace(/_/g, " "));
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+
+  // Check branch authorization
+  const action = "admin_manager";
+  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
+    if (!result.status) {
+      return res.status(403).json({
+        status: false,
+        message: result.message, // Return the message from the authorization function
+      });
+    }
+
+    // Verify admin token
+    AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
+      if (err) {
+        console.error("Error checking token validity:", err);
+        return res.status(500).json({ status: false, message: err.message });
+      }
+
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
+      }
+
+      const newToken = result.newToken;
+      // Fetch the current clientApplication
+      ClientApplication.getClientApplicationById(
+        application_id,
+        (err, currentClientApplication) => {
+          if (err) {
+            console.error(
+              "Database error during clientApplication retrieval:",
+              err
+            );
+            return res.status(500).json({
+              status: false,
+              message:
+                "Failed to retrieve ClientApplication. Please try again.",
+              token: newToken,
+            });
+          }
+
+          if (!currentClientApplication) {
+            return res.status(404).json({
+              status: false,
+              message: "Client Aplication not found.",
+              token: newToken,
+            });
+          }
+
+          // Delete the clientApplication
+          ClientApplication.highlight(application_id, (err, result) => {
+            if (err) {
+              console.error(
+                "Database error during clientApplication highlighting:",
+                err
+              );
+              AdminCommon.adminActivityLog(
+                admin_id,
+                "Client Application",
+                "highlight",
+                "0",
+                JSON.stringify({ application_id }),
+                err,
+                () => {}
+              );
+              return res.status(500).json({
+                status: false,
+                message:
+                  "Failed to highlighting ClientApplication. Please try again.",
+                token: newToken,
+              });
+            }
+
+            AdminCommon.adminActivityLog(
+              admin_id,
+              "Client Application",
+              "highlight",
+              "1",
+              JSON.stringify({ application_id }),
+              null,
+              () => {}
+            );
+
+            res.status(200).json({
+              status: true,
+              message: "Client Application highlighted successfully.",
+              token: newToken,
+            });
+          });
         }
       );
     });

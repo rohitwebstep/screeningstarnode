@@ -22,18 +22,23 @@ const common = {
     let queryParams;
     let currentRole;
 
-    // If sub_user_id is provided, query the `branch_sub_users` table
-    if (sub_user_id != null && sub_user_id.trim() !== "") {
-      sql = `SELECT \`login_token\`, \`token_expiry\` FROM \`branch_sub_users\` WHERE \`id\` = ?`;
-      queryParams = [sub_user_id]; // Querying by sub_user_id
-      currentRole = "Sub User";
-    } else {
-      // If no sub_user_id, query the `branches` table
-      sql = `SELECT \`login_token\`, \`token_expiry\` FROM \`branches\` WHERE \`id\` = ?`;
-      queryParams = [branch_id]; // Querying by branch_id
-      currentRole = "Branch";
+    if (sub_user_id != null) {
+      if (typeof sub_user_id === "string" && sub_user_id.trim() !== "") {
+        sql = `SELECT \`login_token\`, \`token_expiry\` FROM \`branch_sub_users\` WHERE \`id\` = ?`;
+        queryParams = [sub_user_id]; // Querying by sub_user_id
+        currentRole = "Sub User";
+      } else if (typeof sub_user_id === "number" && sub_user_id > 0) {
+        sql = `SELECT \`login_token\`, \`token_expiry\` FROM \`branch_sub_users\` WHERE \`id\` = ?`;
+        queryParams = [sub_user_id]; // Querying by sub_user_id
+        currentRole = "Sub User";
+      } else {
+        // If no sub_user_id, query the `branches` table
+        sql = `SELECT \`login_token\`, \`token_expiry\` FROM \`branches\` WHERE \`id\` = ?`;
+        queryParams = [branch_id]; // Querying by branch_id
+        currentRole = "Branch";
+      }
     }
-
+    
     startConnection((err, connection) => {
       if (err) {
         console.error("Connection error:", err);
