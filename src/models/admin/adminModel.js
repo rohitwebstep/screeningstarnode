@@ -24,15 +24,14 @@ const Admin = {
   create: (data, callback) => {
     const {
       name,
-      mobile,
       email,
-      employee_id,
+      emp_id,
       date_of_joining,
       role,
       password,
       designation,
     } = data;
-
+    const mobile = parseInt(data.mobile, 10);
     // SQL query to check if any field already exists in the admins table
     const checkExistingQuery = `
       SELECT * FROM \`admins\` WHERE \`email\` = ? OR \`mobile\` = ? OR \`emp_id\` = ?
@@ -46,29 +45,42 @@ const Admin = {
       // Check if any field already exists in the admins table
       connection.query(
         checkExistingQuery,
-        [email, mobile, employee_id],
+        [email, mobile, emp_id],
         (checkErr, results) => {
           if (checkErr) {
             connectionRelease(connection); // Release connection on error
             return callback(checkErr, null);
           }
-
           // If results are found, check which fields are already in use
           if (results.length > 0) {
-            const existingAdmin = results[0];
+            const fieldMapping = {
+              email: "email",
+              mobile: "mobile",
+              emp_id: "Employee ID",
+            };
+
             const usedFields = [];
 
-            if (existingAdmin.email === email) usedFields.push("email");
-            if (existingAdmin.mobile === mobile) usedFields.push("mobile");
-            if (existingAdmin.emp_id === employee_id)
-              usedFields.push("Employee ID");
+            // Loop through each result
+            for (const existingAdmin of results) {
+              console.log(`existingAdmin - `, existingAdmin);
+              for (const [key, label] of Object.entries(fieldMapping)) {
+                console.log(`key - `, key);
+                console.log(`label - `, label);
+                console.log(`existingAdmin[key] - `, existingAdmin[key]);
+
+                if (existingAdmin[key] === eval(key)) {
+                  usedFields.push(label);
+                }
+              }
+            }
 
             if (usedFields.length > 0) {
               connectionRelease(connection); // Release connection if duplicates found
               return callback(
-                `Another admin is registered with the following ${usedFields.join(
-                  " and "
-                )}.`,
+                `Another admin is registered with the following ${[
+                  ...new Set(usedFields),
+                ].join(" and ")}.`,
                 null
               );
             }
@@ -83,7 +95,7 @@ const Admin = {
             sql,
             [
               name,
-              employee_id,
+              emp_id,
               mobile,
               email,
               date_of_joining,
@@ -111,14 +123,15 @@ const Admin = {
     const {
       id,
       name,
-      mobile,
       email,
-      employee_id,
+      emp_id,
       date_of_joining,
       role,
       status,
       designation,
     } = data;
+
+    const mobile = parseInt(data.mobile, 10);
 
     // SQL query to check if any field already exists in the admins table
     const checkExistingQuery = `
@@ -134,7 +147,7 @@ const Admin = {
       // Check if any field already exists in the admins table
       connection.query(
         checkExistingQuery,
-        [email, mobile, employee_id, id],
+        [email, mobile, emp_id, id],
         (checkErr, results) => {
           if (checkErr) {
             connectionRelease(connection); // Release connection on error
@@ -143,20 +156,34 @@ const Admin = {
 
           // If results are found, check which fields are already in use
           if (results.length > 0) {
-            const existingAdmin = results[0];
+            const fieldMapping = {
+              email: "email",
+              mobile: "mobile",
+              emp_id: "Employee ID",
+            };
+
             const usedFields = [];
 
-            if (existingAdmin.email === email) usedFields.push("email");
-            if (existingAdmin.mobile === mobile) usedFields.push("mobile");
-            if (existingAdmin.emp_id === employee_id)
-              usedFields.push("Employee ID");
+            // Loop through each result
+            for (const existingAdmin of results) {
+              console.log(`existingAdmin - `, existingAdmin);
+              for (const [key, label] of Object.entries(fieldMapping)) {
+                console.log(`key - `, key);
+                console.log(`label - `, label);
+                console.log(`existingAdmin[key] - `, existingAdmin[key]);
+
+                if (existingAdmin[key] === eval(key)) {
+                  usedFields.push(label);
+                }
+              }
+            }
 
             if (usedFields.length > 0) {
               connectionRelease(connection); // Release connection if duplicates found
               return callback(
-                `Another admin is registered with the following ${usedFields.join(
-                  " and "
-                )}.`,
+                `Another admin is registered with the following ${[
+                  ...new Set(usedFields),
+                ].join(" and ")}.`,
                 null
               );
             }
@@ -181,7 +208,7 @@ const Admin = {
             sql,
             [
               name,
-              employee_id,
+              emp_id,
               mobile,
               email,
               date_of_joining,

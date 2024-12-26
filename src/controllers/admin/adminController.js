@@ -288,7 +288,7 @@ exports.create = (req, res) => {
         {
           name,
           email,
-          employee_id,
+          emp_id: employee_id,
           mobile,
           date_of_joining,
           role: role.toLowerCase(),
@@ -477,7 +477,7 @@ exports.update = (req, res) => {
             id,
             name,
             email,
-            employee_id,
+            emp_id: employee_id,
             mobile,
             date_of_joining,
             role: role.toLowerCase(),
