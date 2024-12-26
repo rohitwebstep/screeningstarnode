@@ -1262,14 +1262,14 @@ exports.upload = async (req, res) => {
                   dbColumn,
                   savedImagePaths,
                   (success, result) => {
-                    if (success) {
+                    if (!success) {
                       // If an error occurred, return the error details in the response
                       return res.status(500).json({
                         status: false,
                         message:
-                          result || "An error occurred while saving the image.", // Use detailed error message if available
+                          result.message ||
+                          "An error occurred while saving the image.", // Use detailed error message if available
                         token: newToken,
-                        savedImagePaths,
                         // details: result.details,
                         // query: result.query,
                         // params: result.params,
@@ -1293,7 +1293,6 @@ exports.upload = async (req, res) => {
                                 message:
                                   "Failed to retrieve ClientApplication. Please try again.",
                                 token: newToken,
-                                savedImagePaths,
                               });
                             }
 
@@ -1302,7 +1301,6 @@ exports.upload = async (req, res) => {
                                 status: false,
                                 message: "Client Aplication not found.",
                                 token: newToken,
-                                savedImagePaths,
                               });
                             }
 
@@ -1336,7 +1334,6 @@ exports.upload = async (req, res) => {
                                     message:
                                       "Failed to retrieve email addresses.",
                                     token: newToken,
-                                    savedImagePaths,
                                   });
                                 }
 
@@ -1365,7 +1362,6 @@ exports.upload = async (req, res) => {
                                         status: false,
                                         message: err.message,
                                         token: newToken,
-                                        savedImagePaths,
                                       });
                                     }
 
@@ -1375,7 +1371,6 @@ exports.upload = async (req, res) => {
                                         status: false,
                                         message: `Customer Unique ID not Found`,
                                         token: newToken,
-                                        savedImagePaths,
                                       });
                                     }
                                     Branch.getClientNameByBranchId(
@@ -1390,7 +1385,6 @@ exports.upload = async (req, res) => {
                                             status: false,
                                             message: err.message,
                                             token: newToken,
-                                            savedImagePaths,
                                           });
                                         }
 
@@ -1401,7 +1395,6 @@ exports.upload = async (req, res) => {
                                             message:
                                               "Customer Unique ID not found",
                                             token: newToken,
-                                            savedImagePaths,
                                           });
                                         }
 
@@ -1439,7 +1432,6 @@ exports.upload = async (req, res) => {
                                                   message:
                                                     "Client application created successfully and email sent.",
                                                   token: newToken,
-                                                  savedImagePaths,
                                                 });
                                               })
                                               .catch((emailError) => {
@@ -1453,7 +1445,6 @@ exports.upload = async (req, res) => {
                                                     "Client application created successfully, but failed to send email.",
                                                   client: result,
                                                   token: newToken,
-                                                  savedImagePaths,
                                                 });
                                               });
                                             return;
@@ -1473,7 +1464,6 @@ exports.upload = async (req, res) => {
                                                   status: false,
                                                   message: err.message,
                                                   token: newToken,
-                                                  savedImagePaths,
                                                 });
                                               }
 
@@ -1513,7 +1503,6 @@ exports.upload = async (req, res) => {
                           status: true,
                           message: "Client application created successfully.",
                           token: newToken,
-                          savedImagePaths,
                         });
                       }
                     } else {
@@ -1524,7 +1513,6 @@ exports.upload = async (req, res) => {
                           "No changes were made. Please check the client application ID.",
                         token: newToken,
                         result,
-                        savedImagePaths,
                       });
                     }
                   }

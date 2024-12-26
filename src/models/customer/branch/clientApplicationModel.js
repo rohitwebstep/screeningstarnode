@@ -414,6 +414,7 @@ const clientApplication = {
       SET ${db_column} = ?
       WHERE id = ?
     `;
+      console.log(`sqlUpdateCustomer - `, sqlUpdateCustomer);
       const joinedPaths = savedImagePaths.join(", ");
       // Prepare the parameters for the query
       const queryParams = [joinedPaths, client_application_id];
@@ -435,9 +436,8 @@ const clientApplication = {
         if (results.affectedRows > 0) {
           return callback(true, results); // Success with results
         } else {
-          // No rows updated, return a specific message along with the query details
           return callback(false, {
-            error: "No rows updated. Please check the client application ID.",
+            message: "No rows updated. Please check the client application ID.",
             details: results,
             query: sqlUpdateCustomer,
             params: queryParams, // Return the parameters used in the query
