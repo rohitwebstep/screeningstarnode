@@ -3,7 +3,7 @@ const moment = require("moment"); // Ensure you have moment.js installed
 
 const tatDelay = {
   list: (callback) => {
-    // SQL query to retrieve applications, customers, branches, and tat_days
+    -- SQL query to retrieve applications, customers, branches, and tat_days
     const applicationsQuery = `
       SELECT 
         ca.branch_id, 
@@ -37,9 +37,10 @@ const tatDelay = {
       JOIN branches AS br ON br.id = ca.branch_id
       LEFT JOIN customer_metas AS cm ON cm.customer_id = cust.id
       LEFT JOIN cmt_applications AS cmt ON ca.id = cmt.client_application_id
-      WHERE cmt.overall_status != 'completed' AND ca.tat_delete != 1;
+      WHERE (cmt.id IS NULL OR cmt.overall_status != 'completed') 
+        AND ca.tat_delete != 1;
     `;
-
+    
     // SQL query to fetch holidays
     const holidaysQuery = `SELECT id AS holiday_id, title AS holiday_title, date AS holiday_date FROM holidays;`;
 
