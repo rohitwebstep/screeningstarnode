@@ -301,7 +301,7 @@ const tatDelay = {
         WHERE \`customer_id\` = ?
       `;
 
-      connection.query(sql, ["1", customer_id], (queryErr, results) => {
+      connection.query(sql, [1, customer_id], (queryErr, results) => {
         // Ensure the connection is released in both success and error cases
         connectionRelease(connection);
 
@@ -335,7 +335,7 @@ const tatDelay = {
 
       connection.query(
         sql,
-        ["1", customer_id, application_id],
+        [1, customer_id, application_id],
         (queryErr, results) => {
           // Ensure the connection is released in both success and error cases
           connectionRelease(connection);
