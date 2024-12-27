@@ -1373,7 +1373,7 @@ exports.generateReport = (req, res) => {
                     () => {}
                   );
                   console.log(`Step 14`);
-                  if (typeof annexure === "object" && annexure !== null) {
+                  if (annexure && typeof annexure === "object" && Object.keys(annexure).length > 0) {
                     const annexurePromises = [];
                     console.log(`Step 15`);
                     for (let key in annexure) {
