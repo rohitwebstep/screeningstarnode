@@ -32,12 +32,22 @@ const tatDelay = {
         br.name AS branch_name, 
         br.email AS branch_email, 
         br.mobile_number AS branch_mobile
-      FROM client_applications AS ca
-      JOIN customers AS cust ON cust.id = ca.customer_id
-      JOIN branches AS br ON br.id = ca.branch_id
-      LEFT JOIN customer_metas AS cm ON cm.customer_id = cust.id
-      LEFT JOIN cmt_applications AS cmt ON ca.id = cmt.client_application_id
-      WHERE (cmt.id IS NULL OR cmt.overall_status != 'completed') 
+    FROM 
+        client_applications AS ca
+    JOIN 
+        customers AS cust ON cust.id = ca.customer_id
+    JOIN 
+        branches AS br ON br.id = ca.branch_id
+    LEFT JOIN 
+        customer_metas AS cm ON cm.customer_id = cust.id
+    LEFT JOIN 
+        cmt_applications AS cmt ON ca.id = cmt.client_application_id
+    WHERE 
+        ( 
+            (cmt.id IS NULL) 
+            OR 
+            (cmt.id IS NOT NULL AND (cmt.overall_status != 'completed' OR cmt.overall_status IS NULL))
+        )
         AND ca.tat_delete != 1;
     `;
 
