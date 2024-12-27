@@ -3,7 +3,6 @@ const moment = require("moment"); // Ensure you have moment.js installed
 
 const tatDelay = {
   list: (callback) => {
-    -- SQL query to retrieve applications, customers, branches, and tat_days
     const applicationsQuery = `
       SELECT 
         ca.branch_id, 
