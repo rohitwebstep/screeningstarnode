@@ -207,3 +207,97 @@ exports.delete = (req, res) => {
     });
   });
 };
+
+exports.deleteApplication = (req, res) => {
+  const { application_id, customer_id, admin_id, _token } = req.query;
+
+  // Validate required fields
+  const requiredFields = { application_id, customer_id, admin_id, _token };
+  const missingFields = Object.keys(requiredFields)
+    .filter((field) => !requiredFields[field])
+    .map((field) => field.replace(/_/g, " "));
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `The following required fields are missing: ${missingFields.join(
+        ", "
+      )}.`,
+    });
+  }
+
+  // Check branch authorization
+  const action = "admin_manager";
+  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
+    if (!result.status) {
+      return res.status(403).json({
+        status: false,
+        message: `Authorization failed: ${result.message}`,
+      });
+    }
+
+    // Verify admin token
+    AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
+      if (err) {
+        console.error("Error verifying admin token:", err);
+        return res.status(500).json({
+          status: false,
+          message:
+            "An error occurred while verifying the admin token. Please try again later.",
+        });
+      }
+
+      if (!result.status) {
+        return res.status(401).json({
+          status: false,
+          message: `Token validation failed: ${result.message}`,
+        });
+      }
+
+      const newToken = result.newToken;
+
+      // Delete the customer from the TAT delay list
+      tatDelay.deleteApplication(application_id, customer_id, (err, result) => {
+        if (err) {
+          console.error(
+            "Database error during deletion from the TAT delay list:",
+            err
+          );
+          AdminCommon.adminActivityLog(
+            admin_id,
+            "TAT Delay",
+            "Delete",
+            "0",
+            JSON.stringify({ customer_id }),
+            err.message,
+            () => {}
+          );
+          return res.status(500).json({
+            status: false,
+            message:
+              "An error occurred while removing the customer from the TAT delay list. Please try again.",
+            token: newToken,
+          });
+        }
+
+        // Log successful deletion
+        AdminCommon.adminActivityLog(
+          admin_id,
+          "TAT Delay",
+          "Delete",
+          "1",
+          JSON.stringify({ customer_id }),
+          null,
+          () => {}
+        );
+
+        res.status(200).json({
+          status: true,
+          message:
+            "All applications linked to this customer have been removed. New TAT will apply for any future applications.",
+          token: newToken,
+        });
+      });
+    });
+  });
+};

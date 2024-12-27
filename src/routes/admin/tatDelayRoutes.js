@@ -6,5 +6,6 @@ const tatDelayController = require("../../controllers/admin/tatDelayController")
 router.get("/list", tatDelayController.list);
 router.get("/lists", tatDelayController.listWithoutAuth);
 router.delete("/delete", tatDelayController.delete);
+router.delete("/delete-application", tatDelayController.deleteApplication);
 
 module.exports = router;

@@ -39,7 +39,7 @@ const tatDelay = {
       WHERE (cmt.id IS NULL OR cmt.overall_status != 'completed') 
         AND ca.tat_delete != 1;
     `;
-    
+
     // SQL query to fetch holidays
     const holidaysQuery = `SELECT id AS holiday_id, title AS holiday_title, date AS holiday_date FROM holidays;`;
 
@@ -315,6 +315,45 @@ const tatDelay = {
 
         callback(null, results);
       });
+    });
+  },
+
+  deleteApplication: (application_id, customer_id, callback) => {
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
+
+      const sql = `
+        UPDATE \`client_applications\`
+        SET \`tat_delete\` = ?
+        WHERE \`customer_id\` = ? AND \`id\` = ?
+      `;
+
+      connection.query(
+        sql,
+        ["1", customer_id, application_id],
+        (queryErr, results) => {
+          // Ensure the connection is released in both success and error cases
+          connectionRelease(connection);
+
+          if (queryErr) {
+            console.error("Database query error:", queryErr);
+            return callback(
+              {
+                message: "Error executing the database query",
+                error: queryErr,
+              },
+              null
+            );
+          }
+
+          callback(null, results);
+        }
+      );
     });
   },
 };
