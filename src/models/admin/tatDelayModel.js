@@ -12,6 +12,7 @@ const tatDelay = {
         ca.name AS application_name, 
         ca.id AS client_application_id, 
         ca.created_at AS application_created_at, 
+        ca.is_data_qc,
         cmt.report_date, 
         cmt.first_insufficiency_marks,
         cmt.first_insuff_date,
@@ -106,6 +107,7 @@ const tatDelay = {
                       branch_email,
                       branch_mobile,
                       client_application_id,
+                      is_data_qc,
                       application_id,
                       application_name,
                       is_priority,
@@ -170,6 +172,7 @@ const tatDelay = {
                         branch_id
                       ].applications.push({
                         client_application_id,
+                        is_data_qc,
                         application_id,
                         application_name,
                         is_priority,
