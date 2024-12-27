@@ -39,7 +39,7 @@ exports.list = (req, res) => {
     // Verify branch token
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || null,
+      sub_user_id || '',
       branch_id,
       (tokenErr, tokenResult) => {
         if (tokenErr) {
@@ -129,7 +129,7 @@ exports.annexureDataByServiceIds = (req, res) => {
 
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || null,
+      sub_user_id || '',
       branch_id,
       (tokenErr, tokenResult) => {
         if (tokenErr) {

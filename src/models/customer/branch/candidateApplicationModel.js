@@ -72,7 +72,7 @@ const candidateApplication = {
 
     const values = [
       branch_id,
-      sub_user_id || null,
+      sub_user_id || '',
       name,
       employee_id,
       mobile_number,

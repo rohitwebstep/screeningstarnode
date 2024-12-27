@@ -80,7 +80,7 @@ exports.create = (req, res) => {
 
       BranchCommon.isBranchTokenValid(
         _token,
-        sub_user_id || null,
+        sub_user_id || '',
         branch_id,
         (err, result) => {
           if (err) {
@@ -391,7 +391,7 @@ exports.bulkCreate = (req, res) => {
     // Validate branch token
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || null,
+      sub_user_id || '',
       branch_id,
       (err, result) => {
         if (err) {
@@ -911,7 +911,7 @@ exports.list = (req, res) => {
     // Verify branch token
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || null,
+      sub_user_id || '',
       branch_id,
       (err, result) => {
         if (err) {
@@ -999,7 +999,7 @@ exports.update = (req, res) => {
 
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || null,
+      sub_user_id || '',
       branch_id,
       (err, result) => {
         if (err) {
@@ -1198,7 +1198,7 @@ exports.delete = (req, res) => {
     // Validate branch token
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || null,
+      sub_user_id || '',
       branch_id,
       (err, tokenValidationResult) => {
         if (err) {
@@ -1316,7 +1316,7 @@ exports.createCandidateAppListings = (req, res) => {
 
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || null,
+      sub_user_id || '',
       branch_id,
       async (err, result) => {
         if (err) {

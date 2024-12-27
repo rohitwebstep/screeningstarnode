@@ -37,7 +37,7 @@ exports.create = (req, res) => {
     // Validate the token for the branch
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || null,
+      sub_user_id || '',
       branch_id,
       async (err, result) => {
         if (err) {
@@ -147,7 +147,7 @@ exports.list = (req, res) => {
     // Validate the token for the branch
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || null,
+      sub_user_id || '',
       branch_id,
       async (err, result) => {
         if (err) {
@@ -236,7 +236,7 @@ exports.updateEmail = (req, res) => {
     // Validate the token for the branch
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || null,
+      sub_user_id || '',
       branch_id,
       async (err, result) => {
         if (err) {
@@ -366,7 +366,7 @@ exports.updatePassword = (req, res) => {
     // Validate the token for the branch
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || null,
+      sub_user_id || '',
       branch_id,
       async (err, result) => {
         if (err) {
@@ -492,7 +492,7 @@ exports.delete = (req, res) => {
     // Validate the token for the branch
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || null,
+      sub_user_id || '',
       branch_id,
       async (err, result) => {
         if (err) {

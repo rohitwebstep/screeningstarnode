@@ -312,7 +312,7 @@ exports.updatePassword = (req, res) => {
   // Validate branch token
   Common.isBranchTokenValid(
     _token,
-    sub_user_id || null,
+    sub_user_id || '',
     branch_id,
     (err, result) => {
       if (err) {
@@ -386,7 +386,7 @@ exports.logout = (req, res) => {
   // Validate the branch token
   Common.isBranchTokenValid(
     _token,
-    sub_user_id || null,
+    sub_user_id || '',
     branch_id,
     (err, result) => {
       if (err) {
@@ -439,7 +439,7 @@ exports.validateLogin = (req, res) => {
   }
 
   // Fetch branch by ID
-  BranchAuth.findById(sub_user_id || null,branch_id, (err, branch) => {
+  BranchAuth.findById(sub_user_id || '',branch_id, (err, branch) => {
     if (err) {
       console.error("Database error:", err);
       return res.status(500).json({ status: false, message: err });
@@ -494,7 +494,7 @@ exports.validateLogin = (req, res) => {
     // Check if the existing token is still valid
     Common.isBranchTokenValid(
       _token,
-      sub_user_id || null,
+      sub_user_id || '',
       branch_id,
       (err, result) => {
         if (err) {

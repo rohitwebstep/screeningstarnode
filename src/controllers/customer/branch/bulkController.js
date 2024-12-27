@@ -326,7 +326,7 @@ exports.delete = (req, res) => {
     // Validate branch token
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || null,
+      sub_user_id || '',
       branch_id,
       (err, tokenValidationResult) => {
         if (err) {
@@ -434,7 +434,7 @@ exports.list = (req, res) => {
 
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || null,
+      sub_user_id || '',
       branch_id,
       async (err, result) => {
         if (err) {

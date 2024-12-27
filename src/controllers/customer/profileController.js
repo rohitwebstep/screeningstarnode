@@ -1904,7 +1904,7 @@ exports.customerBasicInfoWithBranchAuth = (req, res) => {
   // Verify admin token
   BranchCommon.isBranchTokenValid(
     branch_token,
-    sub_user_id || null,
+    sub_user_id || '',
     branch_id,
     (err, result) => {
       if (err) {

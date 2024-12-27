@@ -342,7 +342,7 @@ exports.listByBranchAuth = (req, res) => {
     // Validate branch token
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || null,
+      sub_user_id || '',
       branch_id,
       (err, result) => {
         if (err) {
