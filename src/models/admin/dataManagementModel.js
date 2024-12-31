@@ -60,7 +60,8 @@ const Customer = {
                   b.customer_id
           ) AS application_counts ON customers.id = application_counts.customer_id
           WHERE 
-              COALESCE(application_counts.application_count, 0) > 0
+              customers.status = 1
+              AND COALESCE(application_counts.application_count, 0) > 0
           ORDER BY 
               application_counts.latest_application_date DESC;
         `;
