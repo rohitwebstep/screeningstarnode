@@ -56,23 +56,20 @@ const candidateApplication = {
       customer_id,
     } = data;
 
-    const sql = `
-        INSERT INTO \`candidate_applications\` (
-          \`branch_id\`,
-          \`sub_user_id\`,
-          \`name\`,
-          \`employee_id\`,
-          \`mobile_number\`,
-          \`email\`,
-          \`services\`,
-          \`package\`,
-          \`customer_id\`
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `;
+    let sql = `
+      INSERT INTO \`candidate_applications\` (
+        \`branch_id\`,
+        \`name\`,
+        \`employee_id\`,
+        \`mobile_number\`,
+        \`email\`,
+        \`services\`,
+        \`package\`,
+        \`customer_id\`
+  `;
 
-    const values = [
+    let values = [
       branch_id,
-      sub_user_id || '',
       name,
       employee_id,
       mobile_number,
@@ -81,6 +78,14 @@ const candidateApplication = {
       package || "",
       customer_id,
     ];
+
+    // Conditionally add sub_user_id to the SQL query and values array
+    if (sub_user_id != null) {
+      sql += `, \`sub_user_id\``;
+      values.push(sub_user_id);
+    }
+
+    sql += `) VALUES (${new Array(values.length).fill('?').join(', ')})`;
 
     startConnection((err, connection) => {
       if (err) {
@@ -101,6 +106,7 @@ const candidateApplication = {
       });
     });
   },
+
 
   list: (branch_id, callback) => {
     const sql =
