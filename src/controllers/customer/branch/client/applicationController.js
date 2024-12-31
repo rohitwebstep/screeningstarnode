@@ -177,7 +177,7 @@ exports.create = (req, res) => {
                       "0",
                       null,
                       err,
-                      () => {}
+                      () => { }
                     );
                     return res.status(500).json({
                       status: false,
@@ -195,7 +195,7 @@ exports.create = (req, res) => {
                     "1",
                     `{id: ${result.insertId}}`,
                     null,
-                    () => {}
+                    () => { }
                   );
 
                   if (send_mail == 0) {
@@ -279,7 +279,7 @@ exports.create = (req, res) => {
 
                               const serviceIds =
                                 typeof services === "string" &&
-                                services.trim() !== ""
+                                  services.trim() !== ""
                                   ? services.split(",").map((id) => id.trim())
                                   : [];
 
@@ -501,8 +501,7 @@ exports.bulkCreate = (req, res) => {
 
             if (missingFields.length > 0) {
               emptyValues.push(
-                `${
-                  app.applicant_full_name || "Unnamed applicant"
+                `${app.applicant_full_name || "Unnamed applicant"
                 } (missing fields: ${missingFields.join(", ")})`
               );
               return false; // Exclude applications with missing fields
@@ -517,8 +516,7 @@ exports.bulkCreate = (req, res) => {
 
             if (emptyFields.length > 0) {
               emptyValues.push(
-                `${
-                  app.applicant_full_name || "Unnamed applicant"
+                `${app.applicant_full_name || "Unnamed applicant"
                 } (empty fields: ${emptyFields.join(", ")})`
               );
             }
@@ -601,7 +599,7 @@ exports.bulkCreate = (req, res) => {
                           "1",
                           `{id: ${result.insertId}}`,
                           null,
-                          () => {}
+                          () => { }
                         );
 
                         // Assign the new application ID to the corresponding app object
@@ -1053,7 +1051,7 @@ exports.update = (req, res) => {
                         "0",
                         JSON.stringify({ client_application_id, ...changes }),
                         err,
-                        () => {}
+                        () => { }
                       );
                       return res.status(500).json({
                         status: false,
@@ -1069,7 +1067,7 @@ exports.update = (req, res) => {
                       "1",
                       JSON.stringify({ client_application_id, ...changes }),
                       null,
-                      () => {}
+                      () => { }
                     );
 
                     res.status(200).json({
@@ -1090,6 +1088,7 @@ exports.update = (req, res) => {
 };
 
 exports.upload = async (req, res) => {
+  console.log(`Step - 1`);
   // Use multer to handle the upload
   upload(req, res, async (err) => {
     if (err) {
@@ -1098,6 +1097,7 @@ exports.upload = async (req, res) => {
         message: "Error uploading file.",
       });
     }
+    console.log(`Step - 2`);
 
     const {
       branch_id: branchId,
@@ -1111,6 +1111,7 @@ exports.upload = async (req, res) => {
       client_application_name,
       client_application_generated_id,
     } = req.body;
+    console.log(`Step - 3`);
 
     // Validate required fields and collect missing ones
     const requiredFields = {
@@ -1120,6 +1121,7 @@ exports.upload = async (req, res) => {
       clientAppId,
       uploadCat,
     };
+    console.log(`Step - 4`);
 
     if (send_mail == 1) {
       requiredFields.services = services;
@@ -1127,6 +1129,7 @@ exports.upload = async (req, res) => {
       requiredFields.client_application_generated_id =
         client_application_generated_id;
     }
+    console.log(`Step - 5`);
 
     // Check for missing fields
     const missingFields = Object.keys(requiredFields)
@@ -1138,6 +1141,7 @@ exports.upload = async (req, res) => {
           requiredFields[field] == undefined
       )
       .map((field) => field.replace(/_/g, " "));
+    console.log(`Step - 6`);
 
     if (missingFields.length > 0) {
       return res.status(400).json({
@@ -1145,20 +1149,25 @@ exports.upload = async (req, res) => {
         message: `Missing required fields: ${missingFields.join(", ")}`,
       });
     }
+    console.log(`Step - 7`);
 
     const action = "client_manager";
+    console.log(`Step - 8`);
     BranchCommon.isBranchAuthorizedForAction(branchId, action, (result) => {
+      console.log(`Step - 9`);
       if (!result.status) {
         return res.status(403).json({
           status: false,
           message: result.message,
         });
       }
+      console.log(`Step - 10`);
       BranchCommon.isBranchTokenValid(
         token,
         subUserId || null,
         branchId,
         async (err, result) => {
+          console.log(`Step - 11`);
           if (err) {
             console.error("Error checking token validity:", err);
             return res
@@ -1308,7 +1317,7 @@ exports.upload = async (req, res) => {
                             if (
                               currentClientApplication.attach_documents &&
                               currentClientApplication.attach_documents.trim() !==
-                                ""
+                              ""
                             ) {
                               const documentsArray =
                                 currentClientApplication.attach_documents
@@ -1400,10 +1409,10 @@ exports.upload = async (req, res) => {
 
                                         const serviceIds =
                                           typeof services === "string" &&
-                                          services.trim() !== ""
+                                            services.trim() !== ""
                                             ? services
-                                                .split(",")
-                                                .map((id) => id.trim())
+                                              .split(",")
+                                              .map((id) => id.trim())
                                             : [];
 
                                         const serviceNames = [];
@@ -1616,7 +1625,7 @@ exports.delete = (req, res) => {
                   "0",
                   JSON.stringify({ id }),
                   err,
-                  () => {}
+                  () => { }
                 );
                 return res.status(500).json({
                   status: false,
@@ -1633,7 +1642,7 @@ exports.delete = (req, res) => {
                 "1",
                 JSON.stringify({ id }),
                 null,
-                () => {}
+                () => { }
               );
 
               res.status(200).json({

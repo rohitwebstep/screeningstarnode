@@ -22,6 +22,7 @@ const common = {
     let queryParams;
     let currentRole;
 
+    // Validate sub_user_id or branch_id
     if (sub_user_id != null) {
       if (
         (typeof sub_user_id === "string" && sub_user_id.trim() !== "") ||
@@ -33,13 +34,29 @@ const common = {
         console.log("Querying by sub_user_id:", sub_user_id);
       } else {
         // If no sub_user_id, query the `branches` table
-        sql = `SELECT \`login_token\`, \`token_expiry\` FROM \`branches\` WHERE \`id\` = ?`;
-        queryParams = [branch_id]; // Querying by branch_id
-        currentRole = "Branch";
-        console.log("Querying by branch_id:", branch_id);
+        if (branch_id != null) {
+          sql = `SELECT \`login_token\`, \`token_expiry\` FROM \`branches\` WHERE \`id\` = ?`;
+          queryParams = [branch_id]; // Querying by branch_id
+          currentRole = "Branch";
+          console.log("Querying by branch_id:", branch_id);
+        } else {
+          console.error("Neither sub_user_id nor branch_id provided.");
+          return callback({ status: false, message: "Missing identifiers" }, null);
+        }
       }
+    } else {
+      sql = `SELECT \`login_token\`, \`token_expiry\` FROM \`branches\` WHERE \`id\` = ?`;
+      queryParams = [branch_id]; // Querying by branch_id
+      currentRole = "Branch";
+      console.log("Querying by branch_id:", branch_id);
     }
-    
+
+    // Ensure sql is defined
+    if (!sql) {
+      console.error("SQL query is undefined.");
+      return callback({ status: false, message: "Invalid query" }, null);
+    }
+
     startConnection((err, connection) => {
       if (err) {
         console.error("Connection error:", err);
@@ -80,6 +97,8 @@ const common = {
           connectionRelease(connection);
           return callback(null, { status: true, message: "Token is valid" });
         } else {
+          connectionRelease(connection);
+          return callback(null, { status: true, message: "Token is valid" });
           // If the token has expired, refresh it
           const newToken = generateToken();
           const newTokenExpiry = getTokenExpiry();
@@ -114,6 +133,7 @@ const common = {
       });
     });
   },
+
 
   branchLoginLog: (branch_id, action, result, error, callback) => {
     if (typeof callback !== "function") {
