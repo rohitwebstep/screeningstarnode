@@ -352,6 +352,7 @@ exports.submit = (req, res) => {
                             customer_id,
                             currentCustomer.client_unique_id,
                             currentCustomer.name,
+                            is_submit,
                             res
                           );
                         } else {
@@ -412,6 +413,7 @@ const sendNotificationEmails = (
   customer_id,
   client_unique_id,
   customer_name,
+  is_submit,
   res
 ) => {
   BranchCommon.getBranchandCustomerEmailsForNotification(
@@ -489,7 +491,7 @@ const sendNotificationEmails = (
             )
               .then(() => {
                 CEF.updateSubmitStatus(
-                  { candidateAppId, status: 1 },
+                  { candidateAppId, status: is_submit },
                   (err, result) => {
                     if (err) {
                       console.error("Error updating submit status:", err);
@@ -544,6 +546,7 @@ exports.upload = async (req, res) => {
       db_table: dbTable,
       db_column: dbColumn,
       send_mail,
+      is_submit,
     } = req.body;
 
     // Validate required fields and collect missing ones
@@ -709,6 +712,7 @@ exports.upload = async (req, res) => {
                           customerID,
                           currentCustomer.client_unique_id,
                           currentCustomer.name,
+                          is_submit,
                           res
                         );
                       } else {
