@@ -97,6 +97,7 @@ exports.isApplicationExist = (req, res) => {
         return res.status(500).json({
           status: false,
           message: "An error occurred while checking application existence.",
+          err
         });
       }
 
