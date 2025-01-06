@@ -38,13 +38,11 @@ exports.list = (req, res) => {
     });
   }
 
-  // Action for admin authorization
   const action = "admin_manager";
   AdminCommon.isAdminAuthorizedForAction(admin_id, action, (authResult) => {
     if (!authResult.status) {
       return res.status(403).json({
         status: false,
-        err: authResult,
         message: authResult.message, // Return the message from the authorization function
       });
     }
@@ -53,39 +51,45 @@ exports.list = (req, res) => {
     AdminCommon.isAdminTokenValid(_token, admin_id, (err, tokenResult) => {
       if (err) {
         console.error("Error checking token validity:", err);
-        return res
-          .status(500)
-          .json({ status: false, err, message: err.message });
+        return res.status(500).json({ status: false, message: err.message });
       }
 
       if (!tokenResult.status) {
-        return res.status(401).json({
-          status: false,
-          err: tokenResult,
-          message: tokenResult.message,
-        });
+        return res
+          .status(401)
+          .json({ status: false, message: tokenResult.message });
       }
 
       const newToken = tokenResult.newToken;
 
-      // Fetch customer list with filter status
-      ClientMasterTrackerModel.list(filter_status, (err, customerResults) => {
-        if (err) {
-          console.error("Database error:", err);
-          return res.status(500).json({
-            status: false,
-            err,
-            message: err.message,
-            token: newToken,
-          });
-        }
+      // Fetch all required data
+      const dataPromises = [
+        new Promise((resolve) =>
+          ClientMasterTrackerModel.list(filter_status, (err, result) => {
+            if (err) return resolve([]);
+            resolve(result);
+          })
+        ),
+        new Promise((resolve) =>
+          ClientMasterTrackerModel.filterOptions((err, result) => {
+            if (err) return resolve([]);
+            resolve(result);
+          })
+        ),
+      ];
 
-        // Respond with the fetched customer data
-        return res.json({
+      Promise.all(dataPromises).then(([customers, filterOptions]) => {
+        res.json({
           status: true,
           message: "Customers fetched successfully",
-          customers: customerResults,
-          totalResults: customerResults.length,
+          data: {
+            customers,
+            filterOptions,
+          },
+          totalResults: {
+            customers: customers.length,
+            filterOptions: filterOptions.length,
+          },
           token: newToken,
         });
       });
@@ -1373,7 +1377,11 @@ exports.generateReport = (req, res) => {
                     () => {}
                   );
                   console.log(`Step 14`);
-                  if (annexure && typeof annexure === "object" && Object.keys(annexure).length > 0) {
+                  if (
+                    annexure &&
+                    typeof annexure === "object" &&
+                    Object.keys(annexure).length > 0
+                  ) {
                     const annexurePromises = [];
                     console.log(`Step 15`);
                     for (let key in annexure) {
