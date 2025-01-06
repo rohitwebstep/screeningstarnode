@@ -130,9 +130,13 @@ exports.isApplicationExist = (req, res) => {
             }
             */
 
-            const service_ids = Array.isArray(currentCandidateApplication.services)
+            const service_ids = Array.isArray(
+              currentCandidateApplication.services
+            )
               ? currentCandidateApplication.services
-              : currentCandidateApplication.services.split(",").map((item) => item.trim());
+              : currentCandidateApplication.services
+                  .split(",")
+                  .map((item) => item.trim());
             CEF.formJsonWithData(
               service_ids,
               candidate_application_id,
@@ -341,6 +345,7 @@ exports.submit = (req, res) => {
                                 );
                               }
 
+                              /*
                               if (
                                 currentCMEFormData &&
                                 Object.keys(currentCMEFormData).length > 0
@@ -349,6 +354,7 @@ exports.submit = (req, res) => {
                                   "Annexure has already been filed."
                                 );
                               }
+                              */
 
                               CEF.createOrUpdateAnnexure(
                                 cefResult.insertId,
@@ -379,7 +385,7 @@ exports.submit = (req, res) => {
                     // Process all annexure promises
                     Promise.all(annexurePromises)
                       .then(() => {
-                        if (parseInt(send_mail) === 1) {
+                        if (parseInt(send_mail) === 1 && submitStatus == 1) {
                           sendNotificationEmails(
                             application_id,
                             cefResult.insertId,
@@ -392,12 +398,18 @@ exports.submit = (req, res) => {
                             res
                           );
                         } else {
+                          return res.status(200).json({
+                            status: true,
+                            message: "CEF Application submitted successfully.",
+                          });
+                          /*
                           return res.status(500).json({
                             status: false,
                             message:
                               "An error occurred while updating submit status. Please try again.",
                             token: newToken,
                           });
+                          */
                         }
                       })
                       .catch((error) => {
@@ -420,7 +432,6 @@ exports.submit = (req, res) => {
                             status: false,
                             message:
                               "An error occurred while updating submit status. Please try again.",
-                            token: newToken,
                           });
                         }
                         // No annexures to handle, finalize submission
@@ -536,7 +547,6 @@ const sendNotificationEmails = (
                         status: false,
                         message:
                           "An error occurred while updating submit status. Please try again.",
-                        token: newToken,
                       });
                     }
                     return res.status(201).json({
