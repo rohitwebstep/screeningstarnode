@@ -268,58 +268,81 @@ exports.applicationListByBranch = (req, res) => {
           message: "Branch not found.",
         });
       }
-      // Verify admin token
-      AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
-        if (err) {
-          console.error("Error checking token validity:", err);
-          return res
-            .status(500)
-            .json({ status: false, err, message: err.message });
-        }
 
-        if (!result.status) {
-          return res
-            .status(401)
-            .json({ status: false, err: result, message: result.message });
-        }
-
-        const newToken = result.newToken;
-
-        if (
-          !status ||
-          status === "" ||
-          status === undefined ||
-          status === "undefined"
-        ) {
-          let status = null;
-        }
-
-        ClientMasterTrackerModel.applicationListByBranch(
-          filter_status,
-          branch_id,
-          status,
-          (err, result) => {
-            if (err) {
-              console.error("Database error:", err);
-              return res.status(500).json({
-                status: false,
-                err,
-                message: err.message,
-                token: newToken,
-              });
-            }
-
-            res.json({
-              status: true,
-              message: "Branches tracker fetched successfully",
-              parentName: currentBranch.name,
-              customers: result,
-              totalResults: result.length,
+      Customer.getCustomerById(
+        parseInt(currentBranch.customer_id),
+        (err, currentCustomer) => {
+          if (err) {
+            console.error("Database error during customer retrieval:", err);
+            return res.status(500).json({
+              status: false,
+              message: "Failed to retrieve Customer. Please try again.",
               token: newToken,
             });
           }
-        );
-      });
+
+          if (!currentCustomer) {
+            return res.status(404).json({
+              status: false,
+              message: "Customer not found.",
+              token: newToken,
+            });
+          }
+          // Verify admin token
+          AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
+            if (err) {
+              console.error("Error checking token validity:", err);
+              return res
+                .status(500)
+                .json({ status: false, err, message: err.message });
+            }
+
+            if (!result.status) {
+              return res
+                .status(401)
+                .json({ status: false, err: result, message: result.message });
+            }
+
+            const newToken = result.newToken;
+
+            if (
+              !status ||
+              status === "" ||
+              status === undefined ||
+              status === "undefined"
+            ) {
+              let status = null;
+            }
+
+            ClientMasterTrackerModel.applicationListByBranch(
+              filter_status,
+              branch_id,
+              status,
+              (err, result) => {
+                if (err) {
+                  console.error("Database error:", err);
+                  return res.status(500).json({
+                    status: false,
+                    err,
+                    message: err.message,
+                    token: newToken,
+                  });
+                }
+
+                res.json({
+                  status: true,
+                  message: "Branches tracker fetched successfully",
+                  branchName: currentBranch.name,
+                  customerName: currentCustomer.name,
+                  customers: result,
+                  totalResults: result.length,
+                  token: newToken,
+                });
+              }
+            );
+          });
+        }
+      );
     });
   });
 };
