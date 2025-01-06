@@ -754,7 +754,7 @@ exports.upload = async (req, res) => {
                         });
                       }
 
-                      if (parseInt(send_mail) === 1) {
+                      if (parseInt(send_mail) === 1 && submitStatus == 1) {
                         sendNotificationEmails(
                           candidateAppId,
                           CefID,
