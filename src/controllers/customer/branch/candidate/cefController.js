@@ -155,8 +155,9 @@ exports.submit = (req, res) => {
     is_submit,
   } = req.body;
 
-  if (is_submit == 1) {
-    // Define required fields and check for missing values
+  let submitStatus = is_submit; // Use a local variable to avoid direct modification
+
+  if (submitStatus === 1) {
     const requiredFields = {
       branch_id,
       customer_id,
@@ -173,6 +174,8 @@ exports.submit = (req, res) => {
         message: `Missing required fields: ${missingFields.join(", ")}`,
       });
     }
+  } else {
+    submitStatus = 0;
   }
 
   // Check if the application exists
@@ -352,7 +355,7 @@ exports.submit = (req, res) => {
                             customer_id,
                             currentCustomer.client_unique_id,
                             currentCustomer.name,
-                            is_submit,
+                            submitStatus,
                             res
                           );
                         } else {
@@ -374,7 +377,7 @@ exports.submit = (req, res) => {
                     CEF.updateSubmitStatus(
                       {
                         candidateAppId: application_id,
-                        status: is_submit,
+                        status: submitStatus,
                       },
                       (err, result) => {
                         if (err) {
@@ -413,7 +416,7 @@ const sendNotificationEmails = (
   customer_id,
   client_unique_id,
   customer_name,
-  is_submit,
+  submitStatus,
   res
 ) => {
   BranchCommon.getBranchandCustomerEmailsForNotification(
@@ -491,7 +494,7 @@ const sendNotificationEmails = (
             )
               .then(() => {
                 CEF.updateSubmitStatus(
-                  { candidateAppId, status: is_submit },
+                  { candidateAppId, status: submitStatus },
                   (err, result) => {
                     if (err) {
                       console.error("Error updating submit status:", err);
@@ -548,7 +551,11 @@ exports.upload = async (req, res) => {
       send_mail,
       is_submit,
     } = req.body;
+    let submitStatus = is_submit; // Use a local variable to avoid direct modification
 
+    if (submitStatus !== 1) {
+      submitStatus = 0;
+    }
     // Validate required fields and collect missing ones
     const requiredFields = {
       branchId,
@@ -712,7 +719,7 @@ exports.upload = async (req, res) => {
                           customerID,
                           currentCustomer.client_unique_id,
                           currentCustomer.name,
-                          is_submit,
+                          submitStatus,
                           res
                         );
                       } else {
