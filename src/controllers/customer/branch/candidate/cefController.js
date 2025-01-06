@@ -152,24 +152,27 @@ exports.submit = (req, res) => {
     application_id,
     personal_information,
     annexure,
+    is_submit,
   } = req.body;
 
-  // Define required fields and check for missing values
-  const requiredFields = {
-    branch_id,
-    customer_id,
-    application_id,
-    personal_information,
-  };
-  const missingFields = Object.keys(requiredFields)
-    .filter((field) => !requiredFields[field] || requiredFields[field] === "")
-    .map((field) => field.replace(/_/g, " "));
+  if (is_submit == 1) {
+    // Define required fields and check for missing values
+    const requiredFields = {
+      branch_id,
+      customer_id,
+      application_id,
+      personal_information,
+    };
+    const missingFields = Object.keys(requiredFields)
+      .filter((field) => !requiredFields[field] || requiredFields[field] === "")
+      .map((field) => field.replace(/_/g, " "));
 
-  if (missingFields.length > 0) {
-    return res.status(400).json({
-      status: false,
-      message: `Missing required fields: ${missingFields.join(", ")}`,
-    });
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        status: false,
+        message: `Missing required fields: ${missingFields.join(", ")}`,
+      });
+    }
   }
 
   // Check if the application exists
@@ -352,10 +355,11 @@ exports.submit = (req, res) => {
                             res
                           );
                         } else {
-                          return res.status(200).json({
-                            status: true,
-                            cef_id: cefResult.insertId,
-                            message: "CEF Application submitted successfully.",
+                          return res.status(500).json({
+                            status: false,
+                            message:
+                              "An error occurred while updating submit status. Please try again.",
+                            token: newToken,
                           });
                         }
                       })
@@ -366,11 +370,28 @@ exports.submit = (req, res) => {
                         });
                       });
                   } else {
-                    // No annexures to handle, finalize submission
-                    return res.status(200).json({
-                      status: true,
-                      message: "CEF Application submitted successfully.",
-                    });
+                    CEF.updateSubmitStatus(
+                      {
+                        candidateAppId: application_id,
+                        status: is_submit,
+                      },
+                      (err, result) => {
+                        if (err) {
+                          console.error("Error updating submit status:", err);
+                          return res.status(500).json({
+                            status: false,
+                            message:
+                              "An error occurred while updating submit status. Please try again.",
+                            token: newToken,
+                          });
+                        }
+                        // No annexures to handle, finalize submission
+                        return res.status(200).json({
+                          status: true,
+                          message: "CEF Application submitted successfully.",
+                        });
+                      }
+                    );
                   }
                 }
               );
@@ -467,11 +488,25 @@ const sendNotificationEmails = (
               ccArr || []
             )
               .then(() => {
-                return res.status(201).json({
-                  status: true,
-                  message:
-                    "CEF Application submitted successfully and notifications sent.",
-                });
+                CEF.updateSubmitStatus(
+                  { candidateAppId, status: 1 },
+                  (err, result) => {
+                    if (err) {
+                      console.error("Error updating submit status:", err);
+                      return res.status(500).json({
+                        status: false,
+                        message:
+                          "An error occurred while updating submit status. Please try again.",
+                        token: newToken,
+                      });
+                    }
+                    return res.status(201).json({
+                      status: true,
+                      message:
+                        "CEF Application submitted successfully and notifications sent.",
+                    });
+                  }
+                );
               })
               .catch((emailError) => {
                 console.error(

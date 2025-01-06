@@ -85,7 +85,7 @@ const candidateApplication = {
       values.push(sub_user_id);
     }
 
-    sql += `) VALUES (${new Array(values.length).fill('?').join(', ')})`;
+    sql += `) VALUES (${new Array(values.length).fill("?").join(", ")})`;
 
     startConnection((err, connection) => {
       if (err) {
@@ -106,7 +106,6 @@ const candidateApplication = {
       });
     });
   },
-
 
   list: (branch_id, callback) => {
     const sql =
@@ -346,7 +345,7 @@ const candidateApplication = {
 
   isApplicationExist: (app_id, branch_id, customer_id, callback) => {
     const sql =
-      "SELECT * FROM `candidate_applications` WHERE `id` = ? AND `branch_id` = ? AND `customer_id` = ?";
+      "SELECT * FROM `candidate_applications` WHERE `id` = ? AND `branch_id` = ? AND `customer_id` = ? AND `is submitted` = 0";
 
     startConnection((err, connection) => {
       if (err) {
