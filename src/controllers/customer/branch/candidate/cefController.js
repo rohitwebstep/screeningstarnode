@@ -118,6 +118,7 @@ exports.isApplicationExist = (req, res) => {
               });
             }
 
+            /*
             if (
               currentCEFApplication &&
               Object.keys(currentCEFApplication).length > 0
@@ -127,6 +128,7 @@ exports.isApplicationExist = (req, res) => {
                 message: "An application has already been submitted.",
               });
             }
+            */
 
             return res.status(200).json({
               status: true,
