@@ -158,7 +158,7 @@ exports.submit = (req, res) => {
   } = req.body;
 
   let submitStatus = is_submit; // Use a local variable to avoid direct modification
-
+  console.log(`submitStatus - `, submitStatus);
   if (submitStatus === 1) {
     const requiredFields = {
       branch_id,
@@ -237,6 +237,7 @@ exports.submit = (req, res) => {
               message: "Customer not found.",
             });
           }
+          console.log(`Step - 1`);
 
           // Check if CEF application exists
           CEF.getCEFApplicationById(
@@ -286,9 +287,11 @@ exports.submit = (req, res) => {
                         "An error occurred while submitting the application.",
                     });
                   }
-
+                  console.log(`Step - 2`);
+                  console.log(`annexure - `, annexure);
                   // Handle annexures if provided
-                  if (typeof annexure === "object" && annexure !== null) {
+                  if (typeof annexure === "object" && annexure !== null && Object.keys(annexure).length > 0) {
+                    console.log(`Step - 3`);
                     const annexurePromises = Object.keys(annexure).map(
                       (key) => {
                         const modifiedDbTable = `${key.replace(/-/g, "_")}`;
@@ -378,6 +381,7 @@ exports.submit = (req, res) => {
                         });
                       });
                   } else {
+                    console.log(`Step - 10`);
                     CEF.updateSubmitStatus(
                       {
                         candidateAppId: application_id,
