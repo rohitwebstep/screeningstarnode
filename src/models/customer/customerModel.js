@@ -897,7 +897,7 @@ const Customer = {
   },
 
   getCustomerById: (id, callback) => {
-    const sql = "SELECT * FROM `customers` WHERE `id` = ?";
+    const sql = "SELECT C.*, CM.tat_days FROM `customers` C INNER JOIN `customer_metas` CM ON CM.customer_id = C.id WHERE C.`id` = ?";
     startConnection((err, connection) => {
       if (err) {
         return callback(

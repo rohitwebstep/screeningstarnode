@@ -334,6 +334,7 @@ exports.applicationListByBranch = (req, res) => {
                   message: "Branches tracker fetched successfully",
                   branchName: currentBranch.name,
                   customerName: currentCustomer.name,
+                  tatDays: currentCustomer.tat_days,
                   customers: result,
                   totalResults: result.length,
                   token: newToken,
