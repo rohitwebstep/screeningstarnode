@@ -345,7 +345,7 @@ const candidateApplication = {
 
   isApplicationExist: (app_id, branch_id, customer_id, callback) => {
     const sql =
-      "SELECT * FROM `candidate_applications` WHERE `id` = ? AND `branch_id` = ? AND `customer_id` = ? AND `is submitted` = 0";
+      "SELECT * FROM `candidate_applications` WHERE `id` = ? AND `branch_id` = ? AND `customer_id` = ? AND `is_submitted` = 0";
 
     startConnection((err, connection) => {
       if (err) {
