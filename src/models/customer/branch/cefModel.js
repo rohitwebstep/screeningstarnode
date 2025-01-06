@@ -26,6 +26,90 @@ const cef = {
     });
   },
 
+  formJsonWithData: (services, candidate_application_id, callback) => {
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
+
+      let completedQueries = 0;
+      const serviceData = {}; // Initialize an object to store data for each service.
+
+      // Helper function to check completion
+      const checkCompletion = () => {
+        if (completedQueries === services.length) {
+          connectionRelease(connection);
+          callback(null, serviceData);
+        }
+      };
+
+      // Step 1: Loop through each service and perform actions
+      services.forEach((service) => {
+        const query =
+          "SELECT `json` FROM `cef_service_forms` WHERE `service_id` = ?";
+
+        connection.query(query, [service], (err, result) => {
+          if (err) {
+            console.error("Error fetching JSON for service:", service, err);
+          } else if (result.length > 0) {
+            try {
+              // Parse the JSON data
+              const rawJson = result[0].json;
+              const sanitizedJson = rawJson
+                .replace(/\\"/g, '"')
+                .replace(/\\'/g, "'");
+              const jsonData = JSON.parse(sanitizedJson);
+              const dbTable = jsonData.db_table;
+
+              const sql = `SELECT * FROM \`cef_${dbTable}\` WHERE \`candidate_application_id\` = ?`;
+
+              connection.query(
+                sql,
+                [candidate_application_id],
+                (queryErr, dbTableResults) => {
+                  if (queryErr) {
+                    if (queryErr.code === "ER_NO_SUCH_TABLE") {
+                      console.warn(
+                        `Table "${dbTable}" does not exist. Skipping.`
+                      );
+                      serviceData[service] = { jsonData, data: null };
+                    } else {
+                      console.error("Error executing query:", queryErr);
+                    }
+                  } else {
+                    const dbTableResult =
+                      dbTableResults.length > 0 ? dbTableResults[0] : null;
+                    serviceData[service] = {
+                      jsonData,
+                      data: dbTableResult,
+                    };
+                  }
+                  completedQueries++;
+                  checkCompletion();
+                }
+              );
+            } catch (parseErr) {
+              console.error(
+                "Error parsing JSON for service:",
+                service,
+                parseErr
+              );
+              completedQueries++;
+              checkCompletion();
+            }
+          } else {
+            console.warn(`No JSON found for service: ${service}`);
+            completedQueries++;
+            checkCompletion();
+          }
+        });
+      });
+    });
+  },
+
   getCMEFormDataByApplicationId: (
     candidate_application_id,
     db_table,
@@ -558,7 +642,11 @@ const cef = {
               } else if (result.length > 0) {
                 try {
                   // Parse the JSON data
-                  const jsonData = JSON.parse(result[0].json);
+                  const rawJson = result[0].json;
+                  const sanitizedJson = rawJson
+                    .replace(/\\"/g, '"')
+                    .replace(/\\'/g, "'");
+                  const jsonData = JSON.parse(sanitizedJson);
                   const dbTable = jsonData.db_table;
                   // Initialize an array for the dbTable if not already present
                   if (!dbTableFileInputs[dbTable]) {

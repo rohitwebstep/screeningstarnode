@@ -129,12 +129,30 @@ exports.isApplicationExist = (req, res) => {
               });
             }
             */
-
-            return res.status(200).json({
-              status: true,
-              data: currentCandidateApplication,
-              message: "Application exists.",
-            });
+            CEF.formJsonWithData(
+              service_ids,
+              application_id,
+              (err, serviceData) => {
+                if (err) {
+                  console.error("Database error:", err);
+                  return res.status(500).json({
+                    status: false,
+                    message:
+                      "An error occurred while fetching service form json.",
+                    token: newToken,
+                  });
+                }
+                return res.status(200).json({
+                  status: true,
+                  data: {
+                    application: currentCandidateApplication,
+                    cefApplication: currentCEFApplication,
+                    serviceData,
+                  },
+                  message: "Application exists.",
+                });
+              }
+            );
           }
         );
       } else {
@@ -290,7 +308,11 @@ exports.submit = (req, res) => {
                   console.log(`Step - 2`);
                   console.log(`annexure - `, annexure);
                   // Handle annexures if provided
-                  if (typeof annexure === "object" && annexure !== null && Object.keys(annexure).length > 0) {
+                  if (
+                    typeof annexure === "object" &&
+                    annexure !== null &&
+                    Object.keys(annexure).length > 0
+                  ) {
                     console.log(`Step - 3`);
                     const annexurePromises = Object.keys(annexure).map(
                       (key) => {
