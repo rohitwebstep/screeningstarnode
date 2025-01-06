@@ -343,7 +343,9 @@ const cef = {
                   console.error("Error updating application:", updateErr);
                   return callback(updateErr, null);
                 }
-                callback(null, updateResult);
+                // Return the id (primary key) of the updated row
+                const updatedId = entryResults[0].id; // Get the existing `id` from the SELECT result
+                callback(null, { insertId: updatedId, result: updateResult });
               }
             );
           } else {
@@ -534,7 +536,7 @@ const cef = {
                       candidate_application_id,
                       branch_id,
                       customer_id,
-                      cef_id, // Include cef_id in the insert statement
+                      cef_id,
                     },
                     (insertErr, insertResult) => {
                       connectionRelease(connection); // Ensure the connection is released

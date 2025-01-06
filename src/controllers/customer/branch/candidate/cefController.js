@@ -181,6 +181,7 @@ exports.submit = (req, res) => {
     personal_information,
     annexure,
     is_submit,
+    send_mail,
   } = req.body;
 
   let submitStatus = is_submit; // Use a local variable to avoid direct modification
@@ -321,6 +322,7 @@ exports.submit = (req, res) => {
                     annexure !== null &&
                     Object.keys(annexure).length > 0
                   ) {
+                    console.log(`cefResult - `, cefResult);
                     console.log(`Step - 3`);
                     const annexurePromises = Object.keys(annexure).map(
                       (key) => {
@@ -381,11 +383,16 @@ exports.submit = (req, res) => {
                         });
                       }
                     );
+                    console.log(`Step - 4`);
 
                     // Process all annexure promises
                     Promise.all(annexurePromises)
                       .then(() => {
+                        console.log(`submitStatus - `, submitStatus);
+                        console.log(`send_mail - `, send_mail);
+
                         if (parseInt(send_mail) === 1 && submitStatus == 1) {
+                          console.log("Sending notification emails...");
                           sendNotificationEmails(
                             application_id,
                             cefResult.insertId,
@@ -398,21 +405,20 @@ exports.submit = (req, res) => {
                             res
                           );
                         } else {
+                          console.log(
+                            "Entering else block: submitStatus:",
+                            submitStatus,
+                            "send_mail:",
+                            send_mail
+                          );
                           return res.status(200).json({
                             status: true,
                             message: "CEF Application submitted successfully.",
                           });
-                          /*
-                          return res.status(500).json({
-                            status: false,
-                            message:
-                              "An error occurred while updating submit status. Please try again.",
-                            token: newToken,
-                          });
-                          */
                         }
                       })
                       .catch((error) => {
+                        console.error("Error in Promise.all:", error);
                         return res.status(400).json({
                           status: false,
                           message: error,
