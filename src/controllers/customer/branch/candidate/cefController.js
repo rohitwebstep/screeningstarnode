@@ -256,6 +256,7 @@ exports.submit = (req, res) => {
                 });
               }
 
+              /*
               if (
                 currentCEFApplication &&
                 Object.keys(currentCEFApplication).length > 0
@@ -265,6 +266,7 @@ exports.submit = (req, res) => {
                   message: "An application has already been submitted.",
                 });
               }
+              */
 
               // Create new CEF application
               CEF.create(
