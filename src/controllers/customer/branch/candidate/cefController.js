@@ -129,9 +129,13 @@ exports.isApplicationExist = (req, res) => {
               });
             }
             */
+
+            const service_ids = Array.isArray(currentCandidateApplication.services)
+              ? currentCandidateApplication.services
+              : currentCandidateApplication.services.split(",").map((item) => item.trim());
             CEF.formJsonWithData(
               service_ids,
-              application_id,
+              candidate_application_id,
               (err, serviceData) => {
                 if (err) {
                   console.error("Database error:", err);
