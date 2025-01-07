@@ -1,8 +1,11 @@
 const EscalationManager = require("../../models/admin/escalationManagerModel");
 const Common = require("../../models/admin/commonModel");
+const { getClientIpAddress } = require("../../utils/ipAddress");
 
 // Controller to create a new Escalation Manager
 exports.create = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { name, designation, phone, email, admin_id, _token } = req.body;
 
   let missingFields = [];
@@ -67,6 +70,8 @@ exports.create = (req, res) => {
             if (err) {
               console.error("Database error:", err);
               Common.adminActivityLog(
+                ipAddress,
+                ipType,
                 admin_id,
                 "Escalation Manager",
                 "Create",
@@ -81,6 +86,8 @@ exports.create = (req, res) => {
             }
 
             Common.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Escalation Manager",
               "Create",
@@ -224,6 +231,8 @@ exports.getEscalationManagerById = (req, res) => {
 
 // Controller to name a Escalation Manager
 exports.update = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { id, name, designation, phone, email, admin_id, _token } = req.body;
 
   let missingFields = [];
@@ -298,6 +307,8 @@ exports.update = (req, res) => {
               if (err) {
                 console.error("Database error:", err);
                 Common.adminActivityLog(
+                  ipAddress,
+                  ipType,
                   admin_id,
                   "Escalation Manager",
                   "Update",
@@ -314,6 +325,8 @@ exports.update = (req, res) => {
               }
 
               Common.adminActivityLog(
+                ipAddress,
+                ipType,
                 admin_id,
                 "Escalation Manager",
                 "Update",
@@ -339,6 +352,8 @@ exports.update = (req, res) => {
 
 // Controller to delete a Escalation Manager
 exports.delete = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { id, admin_id, _token } = req.query;
 
   let missingFields = [];
@@ -389,6 +404,8 @@ exports.delete = (req, res) => {
             if (err) {
               console.error("Database error:", err);
               Common.adminActivityLog(
+                ipAddress,
+                ipType,
                 admin_id,
                 "Escalation Manager",
                 "Delete",
@@ -403,6 +420,8 @@ exports.delete = (req, res) => {
             }
 
             Common.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Escalation Manager",
               "Delete",

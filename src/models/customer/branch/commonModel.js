@@ -41,7 +41,10 @@ const common = {
           console.log("Querying by branch_id:", branch_id);
         } else {
           console.error("Neither sub_user_id nor branch_id provided.");
-          return callback({ status: false, message: "Missing identifiers" }, null);
+          return callback(
+            { status: false, message: "Missing identifiers" },
+            null
+          );
         }
       }
     } else {
@@ -134,16 +137,23 @@ const common = {
     });
   },
 
-
-  branchLoginLog: (branch_id, action, result, error, callback) => {
+  branchLoginLog: (
+    ipAddress,
+    ipType,
+    branch_id,
+    action,
+    result,
+    error,
+    callback
+  ) => {
     if (typeof callback !== "function") {
       console.error("Callback is not a function 5");
       return;
     }
 
     const insertSql = `
-      INSERT INTO \`branch_login_logs\` (\`branch_id\`, \`action\`, \`result\`, \`error\`, \`created_at\`)
-      VALUES (?, ?, ?, ?, NOW())
+      INSERT INTO \`branch_login_logs\` (\`branch_id\`, \`action\`, \`result\`, \`error\`, \`client_ip\`, \`client_ip_type\`, \`created_at\`)
+      VALUES (?, ?, ?, ?, ?, ?, NOW())
     `;
 
     startConnection((err, connection) => {
@@ -152,23 +162,29 @@ const common = {
         return callback({ status: false, message: "Connection error" }, null);
       }
 
-      connection.query(insertSql, [branch_id, action, result, error], (err) => {
-        connectionRelease(connection); // Release connection
+      connection.query(
+        insertSql,
+        [branch_id, action, result, error, ipAddress, ipType],
+        (err) => {
+          connectionRelease(connection); // Release connection
 
-        if (err) {
-          console.error("Database insertion error:", err);
-          return callback({ status: false, message: "Database error" }, null);
+          if (err) {
+            console.error("Database insertion error:", err);
+            return callback({ status: false, message: "Database error" }, null);
+          }
+
+          callback(null, {
+            status: true,
+            message: "Branch login log entry added successfully",
+          });
         }
-
-        callback(null, {
-          status: true,
-          message: "Branch login log entry added successfully",
-        });
-      });
+      );
     });
   },
 
   branchActivityLog: (
+    ipAddress,
+    ipType,
     branch_id,
     module,
     action,
@@ -183,8 +199,8 @@ const common = {
     }
 
     const insertSql = `
-      INSERT INTO \`branch_activity_logs\` (\`branch_id\`, \`module\`, \`action\`, \`result\`, \`update\`, \`error\`, \`created_at\`)
-      VALUES (?, ?, ?, ?, ?, ?, NOW())
+      INSERT INTO \`branch_activity_logs\` (\`branch_id\`, \`module\`, \`action\`, \`result\`, \`update\`, \`error\`, \`client_ip\`, \`client_ip_type\`, \`created_at\`)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
     `;
 
     startConnection((err, connection) => {
@@ -195,7 +211,7 @@ const common = {
 
       connection.query(
         insertSql,
-        [branch_id, module, action, result, update, error],
+        [branch_id, module, action, result, update, error, ipAddress, ipType],
         (err) => {
           connectionRelease(connection); // Release connection
 

@@ -17,6 +17,7 @@ const {
   saveImage,
   saveImages,
 } = require("../../../utils/cloudImageSave");
+const { getClientIpAddress } = require("../../../utils/ipAddress");
 
 exports.create = async (req, res) => {
   // Use multer to handle the upload
@@ -296,6 +297,8 @@ exports.create = async (req, res) => {
 };
 
 exports.delete = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { id, sub_user_id, branch_id, _token } = req.query;
 
   // Validate required fields
@@ -326,7 +329,7 @@ exports.delete = (req, res) => {
     // Validate branch token
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || '',
+      sub_user_id || "",
       branch_id,
       (err, tokenValidationResult) => {
         if (err) {
@@ -370,6 +373,8 @@ exports.delete = (req, res) => {
             if (err) {
               console.error("Database error during bulk entry deletion:", err);
               BranchCommon.branchActivityLog(
+                ipAddress,
+                ipType,
                 branch_id,
                 "Client Application",
                 "Delete",
@@ -386,6 +391,8 @@ exports.delete = (req, res) => {
             }
 
             BranchCommon.branchActivityLog(
+              ipAddress,
+              ipType,
               branch_id,
               "Bulk",
               "Delete",
@@ -434,7 +441,7 @@ exports.list = (req, res) => {
 
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || '',
+      sub_user_id || "",
       branch_id,
       async (err, result) => {
         if (err) {

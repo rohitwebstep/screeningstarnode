@@ -16,6 +16,7 @@ const {
 const {
   bulkCreateMail,
 } = require("../../../../mailer/customer/branch/client/bulkCreateMail");
+const { getClientIpAddress } = require("../../../../utils/ipAddress");
 
 const fs = require("fs");
 const path = require("path");
@@ -26,6 +27,8 @@ const {
 } = require("../../../../utils/cloudImageSave");
 
 exports.create = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const {
     sub_user_id,
     branch_id,
@@ -82,7 +85,7 @@ exports.create = (req, res) => {
     // Validate branch token
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || '',
+      sub_user_id || "",
       branch_id,
       (err, result) => {
         if (err) {
@@ -171,13 +174,15 @@ exports.create = (req, res) => {
                       err
                     );
                     BranchCommon.branchActivityLog(
+                      ipAddress,
+                      ipType,
                       branch_id,
                       "Client Application",
                       "Create",
                       "0",
                       null,
                       err,
-                      () => { }
+                      () => {}
                     );
                     return res.status(500).json({
                       status: false,
@@ -189,13 +194,15 @@ exports.create = (req, res) => {
                   }
 
                   BranchCommon.branchActivityLog(
+                    ipAddress,
+                    ipType,
                     branch_id,
                     "Client Application",
                     "Create",
                     "1",
                     `{id: ${result.insertId}}`,
                     null,
-                    () => { }
+                    () => {}
                   );
 
                   if (send_mail == 0) {
@@ -279,7 +286,7 @@ exports.create = (req, res) => {
 
                               const serviceIds =
                                 typeof services === "string" &&
-                                  services.trim() !== ""
+                                services.trim() !== ""
                                   ? services.split(",").map((id) => id.trim())
                                   : [];
 
@@ -408,6 +415,8 @@ exports.create = (req, res) => {
 };
 
 exports.bulkCreate = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const {
     sub_user_id,
     branch_id,
@@ -447,7 +456,7 @@ exports.bulkCreate = (req, res) => {
     // Validate branch token
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || '',
+      sub_user_id || "",
       branch_id,
       (err, result) => {
         if (err) {
@@ -501,7 +510,8 @@ exports.bulkCreate = (req, res) => {
 
             if (missingFields.length > 0) {
               emptyValues.push(
-                `${app.applicant_full_name || "Unnamed applicant"
+                `${
+                  app.applicant_full_name || "Unnamed applicant"
                 } (missing fields: ${missingFields.join(", ")})`
               );
               return false; // Exclude applications with missing fields
@@ -516,7 +526,8 @@ exports.bulkCreate = (req, res) => {
 
             if (emptyFields.length > 0) {
               emptyValues.push(
-                `${app.applicant_full_name || "Unnamed applicant"
+                `${
+                  app.applicant_full_name || "Unnamed applicant"
                 } (empty fields: ${emptyFields.join(", ")})`
               );
             }
@@ -593,13 +604,15 @@ exports.bulkCreate = (req, res) => {
                       } else {
                         // Log the activity
                         BranchCommon.branchActivityLog(
+                          ipAddress,
+                          ipType,
                           branch_id,
                           "Client Application",
                           "Create",
                           "1",
                           `{id: ${result.insertId}}`,
                           null,
-                          () => { }
+                          () => {}
                         );
 
                         // Assign the new application ID to the corresponding app object
@@ -835,7 +848,7 @@ exports.list = (req, res) => {
     // Verify branch token
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || '',
+      sub_user_id || "",
       branch_id,
       (err, tokenResult) => {
         if (err) {
@@ -876,6 +889,8 @@ exports.list = (req, res) => {
 };
 
 exports.update = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const {
     sub_user_id,
     branch_id,
@@ -923,7 +938,7 @@ exports.update = (req, res) => {
 
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || '',
+      sub_user_id || "",
       branch_id,
       (err, result) => {
         if (err) {
@@ -1045,13 +1060,15 @@ exports.update = (req, res) => {
                         err
                       );
                       BranchCommon.branchActivityLog(
+                        ipAddress,
+                        ipType,
                         branch_id,
                         "Client Application",
                         "Update",
                         "0",
                         JSON.stringify({ client_application_id, ...changes }),
                         err,
-                        () => { }
+                        () => {}
                       );
                       return res.status(500).json({
                         status: false,
@@ -1061,13 +1078,15 @@ exports.update = (req, res) => {
                     }
 
                     BranchCommon.branchActivityLog(
+                      ipAddress,
+                      ipType,
                       branch_id,
                       "Client Application",
                       "Update",
                       "1",
                       JSON.stringify({ client_application_id, ...changes }),
                       null,
-                      () => { }
+                      () => {}
                     );
 
                     res.status(200).json({
@@ -1317,7 +1336,7 @@ exports.upload = async (req, res) => {
                             if (
                               currentClientApplication.attach_documents &&
                               currentClientApplication.attach_documents.trim() !==
-                              ""
+                                ""
                             ) {
                               const documentsArray =
                                 currentClientApplication.attach_documents
@@ -1409,10 +1428,10 @@ exports.upload = async (req, res) => {
 
                                         const serviceIds =
                                           typeof services === "string" &&
-                                            services.trim() !== ""
+                                          services.trim() !== ""
                                             ? services
-                                              .split(",")
-                                              .map((id) => id.trim())
+                                                .split(",")
+                                                .map((id) => id.trim())
                                             : [];
 
                                         const serviceNames = [];
@@ -1536,6 +1555,8 @@ exports.upload = async (req, res) => {
 };
 
 exports.delete = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { id, sub_user_id, branch_id, _token } = req.query;
 
   // Validate required fields
@@ -1566,7 +1587,7 @@ exports.delete = (req, res) => {
     // Validate branch token
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || '',
+      sub_user_id || "",
       branch_id,
       (err, tokenValidationResult) => {
         if (err) {
@@ -1619,13 +1640,15 @@ exports.delete = (req, res) => {
                   err
                 );
                 BranchCommon.branchActivityLog(
+                  ipAddress,
+                  ipType,
                   branch_id,
                   "Client Application",
                   "Delete",
                   "0",
                   JSON.stringify({ id }),
                   err,
-                  () => { }
+                  () => {}
                 );
                 return res.status(500).json({
                   status: false,
@@ -1636,13 +1659,15 @@ exports.delete = (req, res) => {
               }
 
               BranchCommon.branchActivityLog(
+                ipAddress,
+                ipType,
                 branch_id,
                 "Client Application",
                 "Delete",
                 "1",
                 JSON.stringify({ id }),
                 null,
-                () => { }
+                () => {}
               );
 
               res.status(200).json({
@@ -1685,7 +1710,7 @@ exports.createClientAppListings = (req, res) => {
 
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || '',
+      sub_user_id || "",
       branch_id,
       async (err, result) => {
         if (err) {

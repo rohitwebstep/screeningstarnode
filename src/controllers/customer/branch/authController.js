@@ -17,9 +17,11 @@ const getTokenExpiry = () => {
 const {
   forgetPassword,
 } = require("../../../mailer/customer/branch/auth/forgetPassword");
+const { getClientIpAddress } = require("../../../utils/ipAddress");
 
 // Branch login handler
 exports.login = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
   const { username, password } = req.body;
   const missingFields = [];
 
@@ -125,6 +127,8 @@ exports.login = (req, res) => {
                 if (err) {
                   console.error("Database error:", err);
                   Common.branchLoginLog(
+                    ipAddress,
+                    ipType,
                     record.branch_id,
                     "Sub User login",
                     "0",
@@ -139,6 +143,8 @@ exports.login = (req, res) => {
                 // If the password is incorrect, log the attempt and return a 401 response
                 if (!isValid) {
                   Common.branchLoginLog(
+                    ipAddress,
+                    ipType,
                     record.branch_id,
                     "Sub User login",
                     "0",
@@ -152,6 +158,8 @@ exports.login = (req, res) => {
 
                 if (record.status == 0) {
                   Common.branchLoginLog(
+                    ipAddress,
+                    ipType,
                     record.branch_id,
                     "login",
                     "0",
@@ -170,6 +178,8 @@ exports.login = (req, res) => {
 
                 if (record.status == 2) {
                   Common.branchLoginLog(
+                    ipAddress,
+                    ipType,
                     record.branch_id,
                     "login",
                     "0",
@@ -193,7 +203,7 @@ exports.login = (req, res) => {
                 /*
                 // Check if the existing token is still valid
                 if (record.login_token && tokenExpiry > currentTime) {
-                  Common.branchLoginLog(
+                  Common.branchLoginLog( ipAddress, ipType,
                     record.branch_id,
                     "login",
                     "0",
@@ -225,6 +235,8 @@ exports.login = (req, res) => {
                     if (err) {
                       console.error("Database error:", err);
                       Common.branchLoginLog(
+                        ipAddress,
+                        ipType,
                         record.branch_id,
                         "Sub User Login",
                         "0",
@@ -239,6 +251,8 @@ exports.login = (req, res) => {
 
                     // Log successful login and return the response
                     Common.branchLoginLog(
+                      ipAddress,
+                      ipType,
                       record.branch_id,
                       "Sub User Login",
                       "1",
@@ -269,6 +283,8 @@ exports.login = (req, res) => {
 };
 
 exports.updatePassword = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { new_password, sub_user_id, branch_id, _token } = req.body;
 
   // Validate required fields
@@ -312,7 +328,7 @@ exports.updatePassword = (req, res) => {
   // Validate branch token
   Common.isBranchTokenValid(
     _token,
-    sub_user_id || '',
+    sub_user_id || "",
     branch_id,
     (err, result) => {
       if (err) {
@@ -331,6 +347,8 @@ exports.updatePassword = (req, res) => {
         if (err) {
           console.error("Database error during password update:", err);
           Common.branchActivityLog(
+            ipAddress,
+            ipType,
             branch_id,
             "Password",
             "Update",
@@ -347,6 +365,8 @@ exports.updatePassword = (req, res) => {
         }
 
         Common.branchActivityLog(
+          ipAddress,
+          ipType,
           branch_id,
           "Password",
           "Update",
@@ -386,7 +406,7 @@ exports.logout = (req, res) => {
   // Validate the branch token
   Common.isBranchTokenValid(
     _token,
-    sub_user_id || '',
+    sub_user_id || "",
     branch_id,
     (err, result) => {
       if (err) {
@@ -419,6 +439,8 @@ exports.logout = (req, res) => {
 
 // Branch login validation handler
 exports.validateLogin = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { sub_user_id, branch_id, _token } = req.body;
   const missingFields = [];
   // Validate required fields
@@ -439,7 +461,7 @@ exports.validateLogin = (req, res) => {
   }
 
   // Fetch branch by ID
-  BranchAuth.findById(sub_user_id || '',branch_id, (err, branch) => {
+  BranchAuth.findById(sub_user_id || "", branch_id, (err, branch) => {
     if (err) {
       console.error("Database error:", err);
       return res.status(500).json({ status: false, message: err });
@@ -463,6 +485,8 @@ exports.validateLogin = (req, res) => {
     // Check branch status
     if (branch.status === 0) {
       Common.branchLoginLog(
+        ipAddress,
+        ipType,
         branch.id,
         "login",
         "0",
@@ -478,6 +502,8 @@ exports.validateLogin = (req, res) => {
 
     if (branch.status === 2) {
       Common.branchLoginLog(
+        ipAddress,
+        ipType,
         branch.id,
         "login",
         "0",
@@ -494,7 +520,7 @@ exports.validateLogin = (req, res) => {
     // Check if the existing token is still valid
     Common.isBranchTokenValid(
       _token,
-      sub_user_id || '',
+      sub_user_id || "",
       branch_id,
       (err, result) => {
         if (err) {
@@ -522,6 +548,8 @@ exports.validateLogin = (req, res) => {
 };
 
 exports.forgotPasswordRequest = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { email } = req.body;
 
   // Validate the input email
@@ -576,6 +604,8 @@ exports.forgotPasswordRequest = (req, res) => {
             if (err) {
               console.error("Error updating reset password token:", err);
               Common.branchLoginLog(
+                ipAddress,
+                ipType,
                 branch.id,
                 "forgot-password",
                 "0",
@@ -604,6 +634,8 @@ exports.forgotPasswordRequest = (req, res) => {
             )
               .then(() => {
                 Common.branchLoginLog(
+                  ipAddress,
+                  ipType,
                   branch.id,
                   "forgot-password",
                   "1",
@@ -621,6 +653,8 @@ exports.forgotPasswordRequest = (req, res) => {
                   emailError
                 );
                 Common.branchLoginLog(
+                  ipAddress,
+                  ipType,
                   branch.id,
                   "forgot-password",
                   "0",
@@ -646,6 +680,8 @@ exports.forgotPasswordRequest = (req, res) => {
 };
 
 exports.forgotPassword = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { new_password, email, password_token } = req.body;
   const missingFields = [];
 
@@ -710,6 +746,8 @@ exports.forgotPassword = (req, res) => {
       if (err) {
         console.error("Database error during password update:", err);
         Common.branchActivityLog(
+          ipAddress,
+          ipType,
           branch.id,
           "Password",
           "Update",
@@ -726,6 +764,8 @@ exports.forgotPassword = (req, res) => {
 
       // Log successful password update
       Common.branchActivityLog(
+        ipAddress,
+        ipType,
         branch.id,
         "Password",
         "Update",

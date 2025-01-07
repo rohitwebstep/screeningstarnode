@@ -147,6 +147,8 @@ const common = {
    * @param {function} callback - Callback function
    */
   adminActivityLog: (
+    ipAddress,
+    ipType,
     admin_id,
     module,
     action,
@@ -156,8 +158,8 @@ const common = {
     callback
   ) => {
     const insertSql = `
-      INSERT INTO \`admin_activity_logs\` (\`admin_id\`, \`module\`, \`action\`, \`result\`, \`update\`, \`error\`, \`created_at\`)
-      VALUES (?, ?, ?, ?, ?, ?, NOW())
+      INSERT INTO \`admin_activity_logs\` (\`admin_id\`, \`module\`, \`action\`, \`result\`, \`update\`, \`error\`, \`client_ip\`, \`client_ip_type\`, \`created_at\`)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
     `;
 
     startConnection((err, connection) => {
@@ -168,7 +170,7 @@ const common = {
 
       connection.query(
         insertSql,
-        [admin_id, module, action, result, update, error],
+        [admin_id, module, action, result, update, error, ipAddress, ipType],
         (err) => {
           connectionRelease(connection); // Release the connection
 

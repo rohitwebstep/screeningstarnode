@@ -299,6 +299,8 @@ exports.create = (req, res) => {
           if (err) {
             console.error("Database error during admin creation:", err);
             Common.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Admin",
               "Create",
@@ -317,6 +319,8 @@ exports.create = (req, res) => {
 
           // Log the successful creation of the Admin
           Common.adminActivityLog(
+            ipAddress,
+            ipType,
             admin_id,
             "Admin",
             "Create",
@@ -488,6 +492,8 @@ exports.update = (req, res) => {
             if (err) {
               console.error("Database error during admin updation:", err);
               Common.adminActivityLog(
+                ipAddress,
+                ipType,
                 admin_id,
                 "Admin",
                 "Update",
@@ -506,6 +512,8 @@ exports.update = (req, res) => {
 
             // Log the successful creation of the Admin
             Common.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Admin",
               "Update",
@@ -601,6 +609,8 @@ exports.delete = (req, res) => {
           if (err) {
             console.error("Database error during Admin deletion:", err);
             Common.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Admin",
               "Delete",
@@ -617,6 +627,8 @@ exports.delete = (req, res) => {
           }
 
           Common.adminActivityLog(
+            ipAddress,
+            ipType,
             admin_id,
             "Admin",
             "Delete",

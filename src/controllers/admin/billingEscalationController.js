@@ -70,6 +70,8 @@ exports.create = (req, res) => {
             if (err) {
               console.error("Database error:", err);
               Common.adminActivityLog(
+                ipAddress,
+                ipType,
                 admin_id,
                 "Billing Escalation",
                 "Create",
@@ -78,17 +80,17 @@ exports.create = (req, res) => {
                 err,
                 () => {}
               );
-              return res
-                .status(500)
-                .json({
-                  status: false,
-                  err,
-                  message: err.message,
-                  token: newToken,
-                });
+              return res.status(500).json({
+                status: false,
+                err,
+                message: err.message,
+                token: newToken,
+              });
             }
 
             Common.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Billing Escalation",
               "Create",
@@ -306,6 +308,8 @@ exports.update = (req, res) => {
               if (err) {
                 console.error("Database error:", err);
                 Common.adminActivityLog(
+                  ipAddress,
+                  ipType,
                   admin_id,
                   "Billing Escalation",
                   "Update",
@@ -322,6 +326,8 @@ exports.update = (req, res) => {
               }
 
               Common.adminActivityLog(
+                ipAddress,
+                ipType,
                 admin_id,
                 "Billing Escalation",
                 "Update",
@@ -397,6 +403,8 @@ exports.delete = (req, res) => {
             if (err) {
               console.error("Database error:", err);
               Common.adminActivityLog(
+                ipAddress,
+                ipType,
                 admin_id,
                 "Billing Escalation",
                 "Delete",
@@ -411,6 +419,8 @@ exports.delete = (req, res) => {
             }
 
             Common.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Billing Escalation",
               "Delete",

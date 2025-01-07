@@ -15,6 +15,7 @@ const {
 const {
   readyForReport,
 } = require("../../mailer/admin/client-master-tracker/readyForReport");
+const { getClientIpAddress } = require("../../utils/ipAddress");
 
 // Controller to list all customers
 exports.list = (req, res) => {
@@ -438,6 +439,8 @@ exports.applicationByID = (req, res) => {
 };
 
 exports.submit = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const {
     admin_id,
     _token,
@@ -723,6 +726,8 @@ exports.submit = (req, res) => {
                       }
 
                       AdminCommon.adminActivityLog(
+                        ipAddress,
+                        ipType,
                         admin_id,
                         "Data Management",
                         logStatus,

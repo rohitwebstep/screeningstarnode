@@ -1,8 +1,11 @@
 const invoiceMaster = require("../../models/admin/invoiceMasterModel");
 const Common = require("../../models/admin/commonModel");
+const { getClientIpAddress } = require("../../utils/ipAddress");
 
 // Controller to create a new service
 exports.sendData = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const {
     admin_id,
     _token,
@@ -20,7 +23,7 @@ exports.sendData = (req, res) => {
     sgst,
     igst,
     total_gst,
-    invoice_subtotal
+    invoice_subtotal,
   } = req.body;
 
   // Define required fields for creating a new admin
@@ -49,7 +52,7 @@ exports.sendData = (req, res) => {
     .filter((field) => {
       const value = requiredFields[field];
       // Exclude 0 values for cgst, sgst, igst
-      return (value === null || value === undefined || value === "");
+      return value === null || value === undefined || value === "";
     })
     .map((field) => field.replace(/_/g, " "));
 
@@ -102,13 +105,15 @@ exports.sendData = (req, res) => {
           if (err) {
             console.error("Database error:", err);
             Common.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Service",
               "Create/Update",
               "0",
               null,
               err,
-              () => { }
+              () => {}
             );
             return res
               .status(500)
@@ -116,13 +121,15 @@ exports.sendData = (req, res) => {
           }
 
           Common.adminActivityLog(
+            ipAddress,
+            ipType,
             admin_id,
             "Invoice Master",
             result.type,
             "1",
             `{id: ${result.insertId}}`,
             null,
-            () => { }
+            () => {}
           );
 
           res.json({
@@ -140,11 +147,21 @@ exports.list = (req, res) => {
   const { admin_id, _token } = req.query;
 
   let missingFields = [];
-  if (!admin_id || admin_id === "" || admin_id === undefined || admin_id === "undefined") {
+  if (
+    !admin_id ||
+    admin_id === "" ||
+    admin_id === undefined ||
+    admin_id === "undefined"
+  ) {
     missingFields.push("Admin ID");
   }
 
-  if (!_token || _token === "" || _token === undefined || _token === "undefined") {
+  if (
+    !_token ||
+    _token === "" ||
+    _token === undefined ||
+    _token === "undefined"
+  ) {
     missingFields.push("Token");
   }
 
@@ -202,6 +219,8 @@ exports.list = (req, res) => {
 };
 
 exports.update = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const {
     admin_id,
     _token,
@@ -242,7 +261,7 @@ exports.update = (req, res) => {
     .filter((field) => {
       const value = requiredFields[field];
       // Exclude 0 values for cgst, sgst, igst
-      return (value === null || value === undefined || value === "");
+      return value === null || value === undefined || value === "";
     })
     .map((field) => field.replace(/_/g, " "));
 
@@ -292,13 +311,15 @@ exports.update = (req, res) => {
           if (err) {
             console.error("Database error:", err);
             Common.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Invoice Master",
               "Update",
               "0",
               null,
               err,
-              () => { }
+              () => {}
             );
             return res
               .status(500)
@@ -306,13 +327,15 @@ exports.update = (req, res) => {
           }
 
           Common.adminActivityLog(
+            ipAddress,
+            ipType,
             admin_id,
             "Invoice Master",
             "update",
             "1",
             `{id: ${result.insertId}}`,
             null,
-            () => { }
+            () => {}
           );
 
           res.json({

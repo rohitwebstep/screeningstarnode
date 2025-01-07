@@ -1,8 +1,11 @@
 const Package = require("../../models/admin/packageModel");
 const Common = require("../../models/admin/commonModel");
+const { getClientIpAddress } = require("../../utils/ipAddress");
 
 // Controller to create a new package
 exports.create = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { title, description, admin_id, _token } = req.body;
 
   // Validate required fields
@@ -55,6 +58,8 @@ exports.create = (req, res) => {
         if (err) {
           console.error("Database error during package creation:", err);
           Common.adminActivityLog(
+            ipAddress,
+            ipType,
             admin_id,
             "Package",
             "Create",
@@ -71,6 +76,8 @@ exports.create = (req, res) => {
         }
 
         Common.adminActivityLog(
+          ipAddress,
+          ipType,
           admin_id,
           "Package",
           "Create",
@@ -210,6 +217,8 @@ exports.getPackageById = (req, res) => {
 
 // Controller to update a package
 exports.update = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { id, title, description, admin_id, _token } = req.body;
 
   // Validate required fields
@@ -292,6 +301,8 @@ exports.update = (req, res) => {
           if (err) {
             console.error("Database error during package update:", err);
             Common.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Package",
               "Update",
@@ -308,6 +319,8 @@ exports.update = (req, res) => {
           }
 
           Common.adminActivityLog(
+            ipAddress,
+            ipType,
             admin_id,
             "Package",
             "Update",
@@ -331,6 +344,8 @@ exports.update = (req, res) => {
 
 // Controller to delete a package
 exports.delete = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { id, admin_id, _token } = req.query;
 
   // Validate required fields
@@ -401,6 +416,8 @@ exports.delete = (req, res) => {
           if (err) {
             console.error("Database error during package deletion:", err);
             Common.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Package",
               "Delete",
@@ -417,6 +434,8 @@ exports.delete = (req, res) => {
           }
 
           Common.adminActivityLog(
+            ipAddress,
+            ipType,
             admin_id,
             "Package",
             "Delete",

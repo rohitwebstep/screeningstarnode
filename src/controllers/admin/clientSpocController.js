@@ -1,6 +1,7 @@
 const ClientSpoc = require("../../models/admin/clientSpocModel");
-const BranchCommon = require("../../../src/models/customer/branch/commonModel");
+const BranchCommon = require("../../models/customer/branch/commonModel");
 const Common = require("../../models/admin/commonModel");
+const { getClientIpAddress } = require("../../utils/ipAddress");
 
 const areEmailsUsed = (emails) => {
   return new Promise((resolve, reject) => {
@@ -63,6 +64,8 @@ const areEmailsUsed = (emails) => {
 
 // Controller to create a new Client SPOC
 exports.create = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const {
     name,
     designation,
@@ -215,6 +218,8 @@ exports.create = (req, res) => {
                 if (err) {
                   console.error("Database error:", err);
                   Common.adminActivityLog(
+                    ipAddress,
+                    ipType,
                     admin_id,
                     "Client SPOC",
                     "Create",
@@ -231,6 +236,8 @@ exports.create = (req, res) => {
                 }
 
                 Common.adminActivityLog(
+                  ipAddress,
+                  ipType,
                   admin_id,
                   "Client SPOC",
                   "Create",
@@ -342,7 +349,7 @@ exports.listByBranchAuth = (req, res) => {
     // Validate branch token
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || '',
+      sub_user_id || "",
       branch_id,
       (err, result) => {
         if (err) {
@@ -443,6 +450,8 @@ exports.getClientSpocById = (req, res) => {
 
 // Controller to name a Client SPOC
 exports.update = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const {
     id,
     name,
@@ -559,6 +568,8 @@ exports.update = (req, res) => {
             if (err) {
               console.error("Database update error:", err);
               Common.adminActivityLog(
+                ipAddress,
+                ipType,
                 admin_id,
                 "Client SPOC",
                 "Update",
@@ -576,6 +587,8 @@ exports.update = (req, res) => {
 
             // Log admin activity
             Common.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Client SPOC",
               "Update",
@@ -600,6 +613,8 @@ exports.update = (req, res) => {
 
 // Controller to delete a Client SPOC
 exports.delete = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { id, admin_id, _token } = req.query;
 
   let missingFields = [];
@@ -648,6 +663,8 @@ exports.delete = (req, res) => {
           if (err) {
             console.error("Database error:", err);
             Common.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Client SPOC",
               "Delete",
@@ -662,6 +679,8 @@ exports.delete = (req, res) => {
           }
 
           Common.adminActivityLog(
+            ipAddress,
+            ipType,
             admin_id,
             "Client SPOC",
             "Delete",

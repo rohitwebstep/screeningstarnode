@@ -1,8 +1,10 @@
 const AuthorizedDetail = require("../../models/admin/authorizedDetailModel");
 const Common = require("../../models/admin/commonModel");
+const { getClientIpAddress } = require("../../utils/ipAddress");
 
 // Controller to create a new Authorized Detail
 exports.create = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
   const { name, designation, phone, email, admin_id, _token } = req.body;
 
   let missingFields = [];
@@ -70,6 +72,8 @@ exports.create = (req, res) => {
             if (err) {
               console.error("Database error:", err);
               Common.adminActivityLog(
+                ipAddress,
+                ipType,
                 admin_id,
                 "Authorized Detail",
                 "Create",
@@ -87,6 +91,8 @@ exports.create = (req, res) => {
             }
 
             Common.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Authorized Detail",
               "Create",
@@ -240,6 +246,7 @@ exports.getAuthorizedDetailById = (req, res) => {
 
 // Controller to update a Authorized Detail
 exports.update = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
   const { id, name, designation, phone, email, admin_id, _token } = req.body;
 
   let missingFields = [];
@@ -318,6 +325,8 @@ exports.update = (req, res) => {
               if (err) {
                 console.error("Database error:", err);
                 Common.adminActivityLog(
+                  ipAddress,
+                  ipType,
                   admin_id,
                   "Authorized Detail",
                   "Update",
@@ -335,6 +344,8 @@ exports.update = (req, res) => {
               }
 
               Common.adminActivityLog(
+                ipAddress,
+                ipType,
                 admin_id,
                 "Authorized Detail",
                 "Update",
@@ -360,6 +371,8 @@ exports.update = (req, res) => {
 
 // Controller to delete a Authorized Detail
 exports.delete = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { id, admin_id, _token } = req.query;
 
   let missingFields = [];
@@ -414,6 +427,8 @@ exports.delete = (req, res) => {
             if (err) {
               console.error("Database error:", err);
               Common.adminActivityLog(
+                ipAddress,
+                ipType,
                 admin_id,
                 "Authorized Detail",
                 "Delete",
@@ -422,17 +437,17 @@ exports.delete = (req, res) => {
                 err,
                 () => {}
               );
-              return res
-                .status(500)
-                .json({
-                  status: false,
-                  err,
-                  message: err.message,
-                  token: newToken,
-                });
+              return res.status(500).json({
+                status: false,
+                err,
+                message: err.message,
+                token: newToken,
+              });
             }
 
             Common.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Authorized Detail",
               "Delete",

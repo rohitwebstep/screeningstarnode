@@ -4,6 +4,7 @@ const Branch = require("../../../../models/customer/branch/branchModel");
 const Service = require("../../../../models/admin/serviceModel");
 const Customer = require("../../../../models/customer/customerModel");
 const AppModel = require("../../../../models/appModel");
+const { getClientIpAddress } = require("../../../../utils/ipAddress");
 
 const {
   createMail,
@@ -18,6 +19,8 @@ const {
 } = require("../../../../mailer/customer/branch/candidate/davMail");
 
 exports.create = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const {
     sub_user_id,
     branch_id,
@@ -80,7 +83,7 @@ exports.create = (req, res) => {
 
       BranchCommon.isBranchTokenValid(
         _token,
-        sub_user_id || '',
+        sub_user_id || "",
         branch_id,
         (err, result) => {
           if (err) {
@@ -133,6 +136,8 @@ exports.create = (req, res) => {
                     err
                   );
                   BranchCommon.branchActivityLog(
+                    ipAddress,
+                    ipType,
                     branch_id,
                     "Candidate Application",
                     "Create",
@@ -149,6 +154,8 @@ exports.create = (req, res) => {
                 }
 
                 BranchCommon.branchActivityLog(
+                  ipAddress,
+                  ipType,
                   branch_id,
                   "Candidate Application",
                   "Create",
@@ -352,6 +359,8 @@ exports.create = (req, res) => {
 };
 
 exports.bulkCreate = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const {
     sub_user_id,
     branch_id,
@@ -391,7 +400,7 @@ exports.bulkCreate = (req, res) => {
     // Validate branch token
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || '',
+      sub_user_id || "",
       branch_id,
       (err, result) => {
         if (err) {
@@ -557,6 +566,8 @@ exports.bulkCreate = (req, res) => {
                     } else {
                       // Log the activity
                       BranchCommon.branchActivityLog(
+                        ipAddress,
+                        ipType,
                         branch_id,
                         "Candidate Application",
                         "Create",
@@ -911,7 +922,7 @@ exports.list = (req, res) => {
     // Verify branch token
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || '',
+      sub_user_id || "",
       branch_id,
       (err, result) => {
         if (err) {
@@ -952,6 +963,8 @@ exports.list = (req, res) => {
 };
 
 exports.update = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const {
     sub_user_id,
     branch_id,
@@ -999,7 +1012,7 @@ exports.update = (req, res) => {
 
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || '',
+      sub_user_id || "",
       branch_id,
       (err, result) => {
         if (err) {
@@ -1123,6 +1136,8 @@ exports.update = (req, res) => {
                         err
                       );
                       BranchCommon.branchActivityLog(
+                        ipAddress,
+                        ipType,
                         branch_id,
                         "Candidate Application",
                         "Update",
@@ -1142,6 +1157,8 @@ exports.update = (req, res) => {
                     }
 
                     BranchCommon.branchActivityLog(
+                      ipAddress,
+                      ipType,
                       branch_id,
                       "Candidate Application",
                       "Update",
@@ -1169,6 +1186,8 @@ exports.update = (req, res) => {
 };
 
 exports.delete = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { id, sub_user_id, branch_id, _token } = req.query;
 
   // Validate required fields
@@ -1198,7 +1217,7 @@ exports.delete = (req, res) => {
     // Validate branch token
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || '',
+      sub_user_id || "",
       branch_id,
       (err, tokenValidationResult) => {
         if (err) {
@@ -1250,6 +1269,8 @@ exports.delete = (req, res) => {
                   err
                 );
                 BranchCommon.branchActivityLog(
+                  ipAddress,
+                  ipType,
                   branch_id,
                   "Candidate Application",
                   "Delete",
@@ -1266,6 +1287,8 @@ exports.delete = (req, res) => {
               }
 
               BranchCommon.branchActivityLog(
+                ipAddress,
+                ipType,
                 branch_id,
                 "Candidate Application",
                 "Delete",
@@ -1316,7 +1339,7 @@ exports.createCandidateAppListings = (req, res) => {
 
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || '',
+      sub_user_id || "",
       branch_id,
       async (err, result) => {
         if (err) {

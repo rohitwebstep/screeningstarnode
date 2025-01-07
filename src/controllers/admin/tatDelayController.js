@@ -1,6 +1,7 @@
 const tatDelay = require("../../models/admin/tatDelayModel");
 const Common = require("../../models/admin/commonModel");
 const AdminCommon = require("../../models/admin/commonModel");
+const { getClientIpAddress } = require("../../utils/ipAddress");
 
 // Controller to list all tatDelays
 exports.list = (req, res) => {
@@ -115,6 +116,8 @@ exports.listWithoutAuth = (req, res) => {
 };
 
 exports.delete = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { customer_id, admin_id, _token } = req.query;
 
   // Validate required fields
@@ -170,6 +173,8 @@ exports.delete = (req, res) => {
             err
           );
           AdminCommon.adminActivityLog(
+            ipAddress,
+            ipType,
             admin_id,
             "TAT Delay",
             "Delete",
@@ -188,6 +193,8 @@ exports.delete = (req, res) => {
 
         // Log successful deletion
         AdminCommon.adminActivityLog(
+          ipAddress,
+          ipType,
           admin_id,
           "TAT Delay",
           "Delete",
@@ -209,6 +216,8 @@ exports.delete = (req, res) => {
 };
 
 exports.deleteApplication = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { application_id, customer_id, admin_id, _token } = req.query;
 
   // Validate required fields
@@ -264,6 +273,8 @@ exports.deleteApplication = (req, res) => {
             err
           );
           AdminCommon.adminActivityLog(
+            ipAddress,
+            ipType,
             admin_id,
             "TAT Delay",
             "Delete",
@@ -282,6 +293,8 @@ exports.deleteApplication = (req, res) => {
 
         // Log successful deletion
         AdminCommon.adminActivityLog(
+          ipAddress,
+          ipType,
           admin_id,
           "TAT Delay",
           "Delete",

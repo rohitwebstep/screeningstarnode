@@ -1,8 +1,11 @@
 const Service = require("../../models/admin/serviceModel");
 const Common = require("../../models/admin/commonModel");
+const { getClientIpAddress } = require("../../utils/ipAddress");
 
 // Controller to create a new service
 exports.create = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const {
     title,
     description,
@@ -62,6 +65,8 @@ exports.create = (req, res) => {
           if (err) {
             console.error("Database error:", err);
             Common.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Service",
               "Create",
@@ -76,6 +81,8 @@ exports.create = (req, res) => {
           }
 
           Common.adminActivityLog(
+            ipAddress,
+            ipType,
             admin_id,
             "Service",
             "Create",
@@ -294,6 +301,8 @@ exports.getServiceById = (req, res) => {
 
 // Controller to update a service
 exports.update = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const {
     id,
     title,
@@ -377,6 +386,8 @@ exports.update = (req, res) => {
             if (err) {
               console.error("Database error:", err);
               Common.adminActivityLog(
+                ipAddress,
+                ipType,
                 admin_id,
                 "Service",
                 "Update",
@@ -391,6 +402,8 @@ exports.update = (req, res) => {
             }
 
             Common.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Service",
               "Update",
@@ -415,6 +428,8 @@ exports.update = (req, res) => {
 
 // Controller to delete a service
 exports.delete = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { id, admin_id, _token } = req.query;
 
   let missingFields = [];
@@ -463,6 +478,8 @@ exports.delete = (req, res) => {
           if (err) {
             console.error("Database error:", err);
             Common.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Service",
               "Delete",
@@ -477,6 +494,8 @@ exports.delete = (req, res) => {
           }
 
           Common.adminActivityLog(
+            ipAddress,
+            ipType,
             admin_id,
             "Service",
             "Delete",

@@ -1,8 +1,11 @@
 const ServiceGroup = require("../../models/admin/serviceGroupModel");
 const Common = require("../../models/admin/commonModel");
+const { getClientIpAddress } = require("../../utils/ipAddress");
 
 // Controller to create a new service
 exports.create = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { title, symbol, admin_id, _token } = req.body;
 
   let missingFields = [];
@@ -44,6 +47,8 @@ exports.create = (req, res) => {
         if (err) {
           console.error("Database error:", err);
           Common.adminActivityLog(
+            ipAddress,
+            ipType,
             admin_id,
             "Service Group",
             "Create",
@@ -58,6 +63,8 @@ exports.create = (req, res) => {
         }
 
         Common.adminActivityLog(
+          ipAddress,
+          ipType,
           admin_id,
           "Service Group",
           "Create",
@@ -196,6 +203,8 @@ exports.getServiceGroupById = (req, res) => {
 
 // Controller to update a service
 exports.update = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { id, title, symbol, admin_id, _token } = req.body;
 
   let missingFields = [];
@@ -260,6 +269,8 @@ exports.update = (req, res) => {
           if (err) {
             console.error("Database error:", err);
             Common.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Service Group",
               "Update",
@@ -274,6 +285,8 @@ exports.update = (req, res) => {
           }
 
           Common.adminActivityLog(
+            ipAddress,
+            ipType,
             admin_id,
             "Service Group",
             "Update",
@@ -296,6 +309,8 @@ exports.update = (req, res) => {
 
 // Controller to delete a service
 exports.delete = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { id, admin_id, _token } = req.query;
 
   let missingFields = [];
@@ -344,6 +359,8 @@ exports.delete = (req, res) => {
           if (err) {
             console.error("Database error:", err);
             Common.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Service Group",
               "Delete",
@@ -358,6 +375,8 @@ exports.delete = (req, res) => {
           }
 
           Common.adminActivityLog(
+            ipAddress,
+            ipType,
             admin_id,
             "Service Group",
             "Delete",

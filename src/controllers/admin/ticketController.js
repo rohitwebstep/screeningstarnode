@@ -11,6 +11,7 @@ const {
 } = require("../../mailer/customer/branch/ticket/ticketRaised");
 
 const { ticketChat } = require("../../mailer/admin/ticket/ticketChat");
+const { getClientIpAddress } = require("../../utils/ipAddress");
 
 exports.list = (req, res) => {
   const { admin_id, _token } = req.query;
@@ -132,6 +133,8 @@ exports.view = (req, res) => {
 };
 
 exports.chat = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { ticket_number, admin_id, _token, message } = req.body;
 
   // Validate required fields
@@ -195,6 +198,8 @@ exports.chat = (req, res) => {
             if (createErr) {
               console.error("Error creating ticket:", createErr);
               AdminCommon.adminActivityLog(
+                ipAddress,
+                ipType,
                 adminID,
                 "Ticket",
                 "Create",
@@ -212,6 +217,8 @@ exports.chat = (req, res) => {
 
             // Log successful activity
             AdminCommon.adminActivityLog(
+              ipAddress,
+              ipType,
               adminID,
               "Ticket",
               "Create",
@@ -251,6 +258,8 @@ exports.chat = (req, res) => {
               .catch((emailError) => {
                 console.error("Error sending email:", emailError);
                 AdminCommon.adminActivityLog(
+                  ipAddress,
+                  ipType,
                   adminID,
                   "Ticket",
                   "Create",
@@ -290,7 +299,7 @@ exports.upload = (req, res) => {
   // Verify the branch token
   BranchCommon.isBranchTokenValid(
     _token,
-    sub_user_id || '',
+    sub_user_id || "",
     branch_id,
     (tokenErr, tokenResult) => {
       if (tokenErr) {
@@ -341,6 +350,8 @@ exports.upload = (req, res) => {
 };
 
 exports.delete = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { ticket_number, admin_id, _token } = req.query;
   // Validate required fields
   const missingFields = [];
@@ -382,6 +393,8 @@ exports.delete = (req, res) => {
         if (err) {
           console.error("Database error during ticket deletion:", err);
           AdminCommon.adminActivityLog(
+            ipAddress,
+            ipType,
             adminID,
             "Ticket",
             "Delete",
@@ -398,6 +411,8 @@ exports.delete = (req, res) => {
         }
 
         AdminCommon.adminActivityLog(
+          ipAddress,
+          ipType,
           adminID,
           "Ticket",
           "Delete",

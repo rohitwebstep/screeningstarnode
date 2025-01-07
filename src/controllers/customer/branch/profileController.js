@@ -5,6 +5,7 @@ const BranchCommon = require("../../../models/customer/branch/commonModel");
 const AdminCommon = require("../../../models/admin/commonModel");
 const Service = require("../../../models/admin/serviceModel");
 const clientMasterTracker = require("../../../models/admin/clientMasterTrackerModel");
+const { getClientIpAddress } = require("../../../utils/ipAddress");
 
 const generatePassword = (companyName) => {
   // Check if companyName is null, undefined, or has a length of 0
@@ -39,7 +40,7 @@ exports.index = (req, res) => {
   // Verify the branch token
   BranchCommon.isBranchTokenValid(
     _token,
-    sub_user_id || '',
+    sub_user_id || "",
     branch_id,
     (tokenErr, tokenResult) => {
       if (tokenErr) {
@@ -164,7 +165,7 @@ exports.getClientSpocById = (req, res) => {
   // Step 1: Verify the branch token
   BranchCommon.isBranchTokenValid(
     _token,
-    sub_user_id || '',
+    sub_user_id || "",
     branch_id,
     (tokenErr, tokenResult) => {
       if (tokenErr) {
@@ -343,7 +344,7 @@ exports.filterOptionsForClientApplications = (req, res) => {
   // Verify the branch token
   BranchCommon.isBranchTokenValid(
     _token,
-    sub_user_id || '',
+    sub_user_id || "",
     branch_id,
     (tokenErr, tokenResult) => {
       if (tokenErr) {
@@ -426,7 +427,7 @@ exports.filterOptionsForCandidateApplications = (req, res) => {
   // Step 2: Verify the branch token
   BranchCommon.isBranchTokenValid(
     _token,
-    sub_user_id || '',
+    sub_user_id || "",
     branch_id,
     (tokenErr, tokenResult) => {
       if (tokenErr) {
@@ -479,6 +480,8 @@ exports.filterOptionsForCandidateApplications = (req, res) => {
 
 // Controller to update a branch
 exports.update = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { id, name, email, admin_id, _token } = req.body;
 
   // Validate required fields
@@ -575,6 +578,8 @@ exports.update = (req, res) => {
             if (err) {
               console.error("Database error during branch update:", err);
               AdminCommon.adminActivityLog(
+                ipAddress,
+                ipType,
                 admin_id,
                 "Branch",
                 "Update",
@@ -591,6 +596,8 @@ exports.update = (req, res) => {
             }
 
             AdminCommon.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Branch",
               "Update",
@@ -614,6 +621,8 @@ exports.update = (req, res) => {
 };
 
 exports.active = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { branch_id, admin_id, _token } = req.query;
 
   // Validate required fields
@@ -701,6 +710,8 @@ exports.active = (req, res) => {
             if (err) {
               console.error("Database error during branch status update:", err);
               AdminCommon.adminActivityLog(
+                ipAddress,
+                ipType,
                 admin_id,
                 "Branch",
                 "status",
@@ -717,6 +728,8 @@ exports.active = (req, res) => {
             }
 
             AdminCommon.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Branch",
               "status",
@@ -740,6 +753,8 @@ exports.active = (req, res) => {
 };
 
 exports.inactive = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { branch_id, admin_id, _token } = req.query;
 
   // Validate required fields
@@ -827,6 +842,8 @@ exports.inactive = (req, res) => {
             if (err) {
               console.error("Database error during branch status update:", err);
               AdminCommon.adminActivityLog(
+                ipAddress,
+                ipType,
                 admin_id,
                 "Branch",
                 "status",
@@ -843,6 +860,8 @@ exports.inactive = (req, res) => {
             }
 
             AdminCommon.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Branch",
               "status",
@@ -866,6 +885,8 @@ exports.inactive = (req, res) => {
 };
 
 exports.delete = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { id, admin_id, _token } = req.query;
 
   // Validate required fields
@@ -947,6 +968,8 @@ exports.delete = (req, res) => {
             if (err) {
               console.error("Database error during branch deletion:", err);
               AdminCommon.adminActivityLog(
+                ipAddress,
+                ipType,
                 admin_id,
                 "Branch",
                 "Delete",
@@ -963,6 +986,8 @@ exports.delete = (req, res) => {
             }
 
             AdminCommon.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Branch",
               "Delete",
@@ -1000,7 +1025,7 @@ exports.getServiceById = (req, res) => {
   }
   BranchCommon.isBranchTokenValid(
     _token,
-    sub_user_id || '',
+    sub_user_id || "",
     branch_id,
     (tokenErr, tokenResult) => {
       if (tokenErr) {
@@ -1050,7 +1075,8 @@ exports.getServiceById = (req, res) => {
 };
 
 exports.annexureDataByServiceId = (req, res) => {
-  const { service_id, application_id, sub_user_id, branch_id, _token } = req.query;
+  const { service_id, application_id, sub_user_id, branch_id, _token } =
+    req.query;
 
   let missingFields = [];
   if (
@@ -1097,7 +1123,7 @@ exports.annexureDataByServiceId = (req, res) => {
 
   BranchCommon.isBranchTokenValid(
     _token,
-    sub_user_id || '',
+    sub_user_id || "",
     branch_id,
     (tokenErr, tokenResult) => {
       if (tokenErr) {

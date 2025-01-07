@@ -389,6 +389,8 @@ exports.validateLogin = (req, res) => {
 };
 
 exports.updatePassword = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { new_password, admin_id, _token } = req.body;
 
   // Validate required fields
@@ -454,6 +456,8 @@ exports.updatePassword = (req, res) => {
       if (err) {
         console.error("Database error during password update:", err);
         Common.adminActivityLog(
+          ipAddress,
+          ipType,
           admin_id,
           "Password",
           "Update",
@@ -471,6 +475,8 @@ exports.updatePassword = (req, res) => {
 
       // Log the successful password update
       Common.adminActivityLog(
+        ipAddress,
+        ipType,
         admin_id,
         "Password",
         "Update",
@@ -617,6 +623,8 @@ exports.forgotPasswordRequest = (req, res) => {
 };
 
 exports.forgotPassword = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { new_password, email, password_token } = req.body;
   const missingFields = [];
 
@@ -681,6 +689,8 @@ exports.forgotPassword = (req, res) => {
       if (err) {
         console.error("Database error during password update:", err);
         Common.adminActivityLog(
+          ipAddress,
+          ipType,
           admin.id,
           "Password",
           "Update",
@@ -697,6 +707,8 @@ exports.forgotPassword = (req, res) => {
 
       // Log successful password update
       Common.adminActivityLog(
+        ipAddress,
+        ipType,
         admin.id,
         "Password",
         "Update",

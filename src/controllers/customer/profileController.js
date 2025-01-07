@@ -9,6 +9,7 @@ const { createMail } = require("../../mailer/customer/createMail");
 const fs = require("fs");
 const path = require("path");
 const { upload, saveImage, saveImages } = require("../../utils/cloudImageSave");
+const { getClientIpAddress } = require("../../utils/ipAddress");
 
 // Helper function to generate a password
 const generatePassword = (companyName) => {
@@ -151,6 +152,8 @@ exports.servicesPackagesData = (req, res) => {
 };
 
 exports.create = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const {
     admin_id,
     _token,
@@ -328,6 +331,8 @@ exports.create = (req, res) => {
                 if (err) {
                   console.error("Database error while creating customer:", err);
                   AdminCommon.adminActivityLog(
+                    ipAddress,
+                    ipType,
                     admin_id,
                     "Customer",
                     "Create",
@@ -369,6 +374,8 @@ exports.create = (req, res) => {
                         err
                       );
                       AdminCommon.adminActivityLog(
+                        ipAddress,
+                        ipType,
                         admin_id,
                         "Customer Meta",
                         "Create",
@@ -438,6 +445,8 @@ exports.create = (req, res) => {
                         Promise.all(branchCreationPromises)
                           .then((branchResults) => {
                             AdminCommon.adminActivityLog(
+                              ipAddress,
+                              ipType,
                               admin_id,
                               "Customer",
                               "Create",
@@ -459,6 +468,8 @@ exports.create = (req, res) => {
 
                                     // Log the error using your admin activity log function
                                     AdminCommon.adminActivityLog(
+                                      ipAddress,
+                                      ipType,
                                       admin_id,
                                       "Branch",
                                       "Fetch",
@@ -637,6 +648,8 @@ exports.create = (req, res) => {
 };
 
 exports.upload = async (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   // Use multer to handle the upload
   upload(req, res, async (err) => {
     if (err) {
@@ -795,6 +808,8 @@ exports.upload = async (req, res) => {
                       err
                     );
                     AdminCommon.adminActivityLog(
+                      ipAddress,
+                      ipType,
                       admin_id,
                       "Customer",
                       "Create",
@@ -822,6 +837,8 @@ exports.upload = async (req, res) => {
 
                           // Log the error using your admin activity log function
                           AdminCommon.adminActivityLog(
+                            ipAddress,
+                            ipType,
                             admin_id, // Assuming admin_id is defined in your context
                             "Branch",
                             "Fetch",
@@ -887,7 +904,7 @@ exports.upload = async (req, res) => {
                                     name: customerName,
                                     email: email,
                                   }));
-                                  
+
                                 // Send email with all formatted branches
                                 const emailPromise = createMail(
                                   "customer",
@@ -1159,6 +1176,8 @@ exports.listWithBasicInfo = (req, res) => {
 };
 
 exports.update = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const {
     admin_id,
     _token,
@@ -1562,6 +1581,8 @@ exports.fetchBranchPassword = (req, res) => {
 };
 
 exports.active = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { customer_id, admin_id, _token } = req.query;
 
   // Define required fields
@@ -1632,6 +1653,8 @@ exports.active = (req, res) => {
           if (err) {
             console.error("Database error during customer status update:", err);
             AdminCommon.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Customer",
               "status",
@@ -1648,6 +1671,8 @@ exports.active = (req, res) => {
           }
 
           AdminCommon.adminActivityLog(
+            ipAddress,
+            ipType,
             admin_id,
             "Customer",
             "status",
@@ -1669,6 +1694,8 @@ exports.active = (req, res) => {
 };
 
 exports.inactive = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { customer_id, admin_id, _token } = req.query;
 
   // Define required fields
@@ -1738,6 +1765,8 @@ exports.inactive = (req, res) => {
           if (err) {
             console.error("Database error during customer status update:", err);
             AdminCommon.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Customer",
               "status",
@@ -1754,6 +1783,8 @@ exports.inactive = (req, res) => {
           }
 
           AdminCommon.adminActivityLog(
+            ipAddress,
+            ipType,
             admin_id,
             "Customer",
             "status",
@@ -1776,6 +1807,8 @@ exports.inactive = (req, res) => {
 };
 
 exports.delete = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { id, admin_id, _token } = req.query;
 
   // Validate required fields
@@ -1848,6 +1881,8 @@ exports.delete = (req, res) => {
             if (err) {
               console.error("Database error during customer deletion:", err);
               AdminCommon.adminActivityLog(
+                ipAddress,
+                ipType,
                 admin_id,
                 "Customer",
                 "Delete",
@@ -1864,6 +1899,8 @@ exports.delete = (req, res) => {
             }
 
             AdminCommon.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Customer",
               "Delete",
@@ -1904,7 +1941,7 @@ exports.customerBasicInfoWithBranchAuth = (req, res) => {
   // Verify admin token
   BranchCommon.isBranchTokenValid(
     branch_token,
-    sub_user_id || '',
+    sub_user_id || "",
     branch_id,
     (err, result) => {
       if (err) {

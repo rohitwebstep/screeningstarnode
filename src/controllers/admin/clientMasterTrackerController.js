@@ -599,6 +599,8 @@ exports.applicationDelete = (req, res) => {
                 err
               );
               AdminCommon.adminActivityLog(
+                ipAddress,
+                ipType,
                 admin_id,
                 "Client Application",
                 "Delete",
@@ -616,6 +618,8 @@ exports.applicationDelete = (req, res) => {
             }
 
             AdminCommon.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Client Application",
               "Delete",
@@ -719,6 +723,8 @@ exports.applicationHighlight = (req, res) => {
                   err
                 );
                 AdminCommon.adminActivityLog(
+                  ipAddress,
+                  ipType,
                   admin_id,
                   "Client Application",
                   "highlight",
@@ -742,6 +748,8 @@ exports.applicationHighlight = (req, res) => {
 
               // Log the specific action in the activity log
               AdminCommon.adminActivityLog(
+                ipAddress,
+                ipType,
                 admin_id,
                 "Client Application",
                 actionMessage,
@@ -1368,6 +1376,8 @@ exports.generateReport = (req, res) => {
                         : JSON.stringify(mainJson);
 
                     AdminCommon.adminActivityLog(
+                      ipAddress,
+                      ipType,
                       admin_id,
                       "Client Master Tracker",
                       logStatus,
@@ -1392,6 +1402,8 @@ exports.generateReport = (req, res) => {
                       : JSON.stringify(mainJson);
 
                   AdminCommon.adminActivityLog(
+                    ipAddress,
+                    ipType,
                     admin_id,
                     "Client Master Tracker",
                     logStatus,
@@ -1464,6 +1476,8 @@ exports.generateReport = (req, res) => {
                                       : JSON.stringify(mainJson);
 
                                   AdminCommon.adminActivityLog(
+                                    ipAddress,
+                                    ipType,
                                     admin_id,
                                     "Client Master Tracker",
                                     annexureLogStatus,
@@ -1477,6 +1491,8 @@ exports.generateReport = (req, res) => {
                                 }
 
                                 AdminCommon.adminActivityLog(
+                                  ipAddress,
+                                  ipType,
                                   admin_id,
                                   "Client Master Tracker",
                                   annexureLogStatus,

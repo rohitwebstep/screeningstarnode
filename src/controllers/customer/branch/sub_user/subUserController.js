@@ -1,9 +1,12 @@
 const SubUser = require("../../../../models/customer/branch/subUserModel");
 const BranchCommon = require("../../../../models/customer/branch/commonModel");
 const Branch = require("../../../../models/customer/branch/branchModel");
+const { getClientIpAddress } = require("../../../../utils/ipAddress");
 
 // Controller to create a new service
 exports.create = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { email, password, sub_user_id, branch_id, _token } = req.body;
 
   // Validate missing fields
@@ -37,7 +40,7 @@ exports.create = (req, res) => {
     // Validate the token for the branch
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || '',
+      sub_user_id || "",
       branch_id,
       async (err, result) => {
         if (err) {
@@ -78,6 +81,8 @@ exports.create = (req, res) => {
               if (err) {
                 console.error("Database error creating sub-user:", err);
                 BranchCommon.branchActivityLog(
+                  ipAddress,
+                  ipType,
                   branch_id,
                   "Sub User",
                   "Create",
@@ -95,6 +100,8 @@ exports.create = (req, res) => {
 
               // Log the activity
               BranchCommon.branchActivityLog(
+                ipAddress,
+                ipType,
                 branch_id,
                 "Sub User",
                 "Create",
@@ -147,7 +154,7 @@ exports.list = (req, res) => {
     // Validate the token for the branch
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || '',
+      sub_user_id || "",
       branch_id,
       async (err, result) => {
         if (err) {
@@ -204,6 +211,8 @@ exports.list = (req, res) => {
 
 // Controller to update a service
 exports.updateEmail = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { id, email, sub_user_id, branch_id, _token } = req.body;
   // Validate missing fields
   let missingFields = [];
@@ -236,7 +245,7 @@ exports.updateEmail = (req, res) => {
     // Validate the token for the branch
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || '',
+      sub_user_id || "",
       branch_id,
       async (err, result) => {
         if (err) {
@@ -292,6 +301,8 @@ exports.updateEmail = (req, res) => {
                 if (err) {
                   console.error("Database error creating sub-user:", err);
                   BranchCommon.branchActivityLog(
+                    ipAddress,
+                    ipType,
                     branch_id,
                     "Sub User",
                     "Update",
@@ -309,6 +320,8 @@ exports.updateEmail = (req, res) => {
 
                 // Log the activity
                 BranchCommon.branchActivityLog(
+                  ipAddress,
+                  ipType,
                   branch_id,
                   "Sub User",
                   "Update",
@@ -334,6 +347,8 @@ exports.updateEmail = (req, res) => {
 
 // Controller to update a service
 exports.updatePassword = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { id, password, sub_user_id, branch_id, _token } = req.body;
   // Validate missing fields
   let missingFields = [];
@@ -366,7 +381,7 @@ exports.updatePassword = (req, res) => {
     // Validate the token for the branch
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || '',
+      sub_user_id || "",
       branch_id,
       async (err, result) => {
         if (err) {
@@ -422,6 +437,8 @@ exports.updatePassword = (req, res) => {
                 if (err) {
                   console.error("Database error creating sub-user:", err);
                   BranchCommon.branchActivityLog(
+                    ipAddress,
+                    ipType,
                     branch_id,
                     "Sub User",
                     "Update",
@@ -439,6 +456,8 @@ exports.updatePassword = (req, res) => {
 
                 // Log the activity
                 BranchCommon.branchActivityLog(
+                  ipAddress,
+                  ipType,
                   branch_id,
                   "Sub User",
                   "Update",
@@ -464,6 +483,8 @@ exports.updatePassword = (req, res) => {
 
 // Controller to delete a service
 exports.delete = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { id, sub_user_id, branch_id, _token } = req.query;
 
   let missingFields = [];
@@ -492,7 +513,7 @@ exports.delete = (req, res) => {
     // Validate the token for the branch
     BranchCommon.isBranchTokenValid(
       _token,
-      sub_user_id || '',
+      sub_user_id || "",
       branch_id,
       async (err, result) => {
         if (err) {
@@ -535,6 +556,8 @@ exports.delete = (req, res) => {
             if (err) {
               console.error("Database error during deletion:", err);
               BranchCommon.branchActivityLog(
+                ipAddress,
+                ipType,
                 branch_id,
                 "Sub User",
                 "Delete",
@@ -552,6 +575,8 @@ exports.delete = (req, res) => {
 
             // Log the successful deletion
             BranchCommon.branchActivityLog(
+              ipAddress,
+              ipType,
               branch_id,
               "Sub User",
               "Delete",

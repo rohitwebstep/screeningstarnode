@@ -5,6 +5,7 @@ const AdminCommon = require("../../../models/admin/commonModel");
 const Admin = require("../../../models/admin/adminModel");
 const Customer = require("../../../models/customer/customerModel");
 const Ticket = require("../../../models/customer/branch/ticketModel");
+const { getClientIpAddress } = require("../../../utils/ipAddress");
 
 const {
   ticketRaised,
@@ -203,6 +204,8 @@ exports.view = (req, res) => {
 };
 
 exports.chat = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { ticket_number, branch_id, sub_user_id, _token, message } = req.body;
 
   // Validate required fields
@@ -308,6 +311,8 @@ exports.chat = (req, res) => {
 
                       // Log the failed activity
                       BranchCommon.branchActivityLog(
+                        ipAddress,
+                        ipType,
                         branchID,
                         "Ticket",
                         "Create",
@@ -327,6 +332,8 @@ exports.chat = (req, res) => {
 
                     // Log the successful activity
                     BranchCommon.branchActivityLog(
+                      ipAddress,
+                      ipType,
                       branchID,
                       "Ticket",
                       "Reply",
@@ -376,6 +383,8 @@ exports.chat = (req, res) => {
                         .catch((emailError) => {
                           console.error("Error sending email:", emailError);
                           BranchCommon.branchActivityLog(
+                            ipAddress,
+                            ipType,
                             branchID,
                             "Ticket",
                             "chat",
@@ -403,6 +412,8 @@ exports.chat = (req, res) => {
 };
 
 exports.create = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { branch_id, sub_user_id, _token, title, description } = req.body;
 
   // Validate required fields
@@ -508,6 +519,8 @@ exports.create = (req, res) => {
 
                       // Log the failed activity
                       BranchCommon.branchActivityLog(
+                        ipAddress,
+                        ipType,
                         branchID,
                         "Ticket",
                         "Create",
@@ -527,6 +540,8 @@ exports.create = (req, res) => {
 
                     // Log the successful activity
                     BranchCommon.branchActivityLog(
+                      ipAddress,
+                      ipType,
                       branchID,
                       "Ticket",
                       "Create",
@@ -574,6 +589,8 @@ exports.create = (req, res) => {
                         .catch((emailError) => {
                           console.error("Error sending email:", emailError);
                           BranchCommon.branchActivityLog(
+                            ipAddress,
+                            ipType,
                             branchID,
                             "Ticket",
                             "Create",
@@ -618,7 +635,7 @@ exports.upload = (req, res) => {
   // Verify the branch token
   BranchCommon.isBranchTokenValid(
     _token,
-    sub_user_id || '',
+    sub_user_id || "",
     branch_id,
     (tokenErr, tokenResult) => {
       if (tokenErr) {
@@ -669,6 +686,8 @@ exports.upload = (req, res) => {
 };
 
 exports.delete = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { ticket_number, branch_id, sub_user_id, _token } = req.query;
   // Validate required fields
   const missingFields = [];
@@ -766,6 +785,8 @@ exports.delete = (req, res) => {
                       err
                     );
                     BranchCommon.branchActivityLog(
+                      ipAddress,
+                      ipType,
                       branch_id,
                       "Ticket",
                       "Delete",
@@ -782,6 +803,8 @@ exports.delete = (req, res) => {
                   }
 
                   BranchCommon.branchActivityLog(
+                    ipAddress,
+                    ipType,
                     branch_id,
                     "Ticket",
                     "Delete",

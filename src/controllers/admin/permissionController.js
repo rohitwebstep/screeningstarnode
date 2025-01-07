@@ -1,5 +1,6 @@
 const Permission = require("../../models/admin/permissionModel");
 const Common = require("../../models/admin/commonModel");
+const { getClientIpAddress } = require("../../utils/ipAddress");
 
 // Controller to list all services
 exports.rolesList = (req, res) => {
@@ -204,6 +205,8 @@ exports.update = (req, res) => {
             if (err) {
               console.error("Database error:", err);
               Common.adminActivityLog(
+                ipAddress,
+                ipType,
                 admin_id,
                 "Permission",
                 "Update",
@@ -218,6 +221,8 @@ exports.update = (req, res) => {
             }
 
             Common.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Permission",
               "Update",

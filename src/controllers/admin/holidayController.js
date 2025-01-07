@@ -1,8 +1,11 @@
 const Holiday = require("../../models/admin/holidayModel");
 const Common = require("../../models/admin/commonModel");
+const { getClientIpAddress } = require("../../utils/ipAddress");
 
 // Controller to create a new holiday
 exports.create = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { title, date, admin_id, _token } = req.body;
 
   let missingFields = [];
@@ -44,6 +47,8 @@ exports.create = (req, res) => {
         if (err) {
           console.error("Database error:", err);
           Common.adminActivityLog(
+            ipAddress,
+            ipType,
             admin_id,
             "Holiday",
             "Create",
@@ -58,6 +63,8 @@ exports.create = (req, res) => {
         }
 
         Common.adminActivityLog(
+          ipAddress,
+          ipType,
           admin_id,
           "Holiday",
           "Create",
@@ -196,6 +203,8 @@ exports.getHolidayById = (req, res) => {
 
 // Controller to update a holiday
 exports.update = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { id, title, date, admin_id, _token } = req.body;
 
   let missingFields = [];
@@ -260,6 +269,8 @@ exports.update = (req, res) => {
           if (err) {
             console.error("Database error:", err);
             Common.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Holiday",
               "Update",
@@ -274,6 +285,8 @@ exports.update = (req, res) => {
           }
 
           Common.adminActivityLog(
+            ipAddress,
+            ipType,
             admin_id,
             "Holiday",
             "Update",
@@ -297,6 +310,8 @@ exports.update = (req, res) => {
 
 // Controller to delete a holiday
 exports.delete = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { id, admin_id, _token } = req.query;
 
   let missingFields = [];
@@ -345,6 +360,8 @@ exports.delete = (req, res) => {
           if (err) {
             console.error("Database error:", err);
             Common.adminActivityLog(
+              ipAddress,
+              ipType,
               admin_id,
               "Holiday",
               "Delete",
@@ -359,6 +376,8 @@ exports.delete = (req, res) => {
           }
 
           Common.adminActivityLog(
+            ipAddress,
+            ipType,
             admin_id,
             "Holiday",
             "Delete",
