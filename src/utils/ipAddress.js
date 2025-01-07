@@ -1,7 +1,9 @@
+const net = require("net");
+
 /**
- * Utility function to extract the client's IP address
+ * Utility function to extract the client's IP address and its type
  * @param {object} req - The Express request object
- * @returns {string} - The client's IP address
+ * @returns {object} - An object containing the IP address and its type
  */
 const getClientIpAddress = (req) => {
   let ipAddress =
@@ -17,7 +19,17 @@ const getClientIpAddress = (req) => {
     ipAddress = ipAddress.slice(7); // Remove "::ffff:"
   }
 
-  return ipAddress ? ipAddress.trim() : "Unknown IP";
+  // Determine the type of the IP address
+  const ipType = net.isIPv4(ipAddress)
+    ? "IPv4"
+    : net.isIPv6(ipAddress)
+    ? "IPv6"
+    : "Unknown";
+
+  return {
+    ipAddress: ipAddress ? ipAddress.trim() : "Unknown IP",
+    ipType: ipType,
+  };
 };
 
 module.exports = {

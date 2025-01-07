@@ -35,7 +35,7 @@ const getServiceNames = async (serviceIds) => {
 
 // Controller to list all customers
 exports.list = (req, res) => {
-  const ipAddress = getClientIpAddress(req);
+  const { ipAddress, ipType } = getClientIpAddress(req);
   const { admin_id, _token } = req.query;
 
   let missingFields = [];
@@ -46,6 +46,7 @@ exports.list = (req, res) => {
     return res.status(400).json({
       status: false,
       ipAddress,
+      ipType,
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
