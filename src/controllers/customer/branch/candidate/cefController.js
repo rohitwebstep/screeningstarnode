@@ -413,6 +413,7 @@ exports.submit = (req, res) => {
                           );
                           return res.status(200).json({
                             status: true,
+                            cef_id: cefResult.insertId,
                             message: "CEF Application submitted successfully.",
                           });
                         }
