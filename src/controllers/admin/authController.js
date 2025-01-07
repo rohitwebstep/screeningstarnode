@@ -15,10 +15,12 @@ const getTokenExpiry = () => {
 };
 
 const { forgetPassword } = require("../../mailer/admin/auth/forgetPassword");
+const { getClientIpAddress } = require("../../utils/ipAddress");
 
 // Admin login handler
 exports.login = (req, res) => {
   const { username, password } = req.body;
+  const { ipAddress, ipType } = getClientIpAddress(req);
   const missingFields = [];
 
   // Validate required fields
@@ -61,7 +63,15 @@ exports.login = (req, res) => {
           "Step 8: Database error during password validation:",
           err
         );
-        Common.adminLoginLog(admin.id, "login", "0", err.message, () => {});
+        Common.adminLoginLog(
+          ipAddress,
+          ipType,
+          admin.id,
+          "login",
+          "0",
+          err.message,
+          () => {}
+        );
         return res
           .status(500)
           .json({ status: false, err, message: err.message });
@@ -70,6 +80,8 @@ exports.login = (req, res) => {
       // If the password is incorrect, log the attempt and return a 401 response
       if (!isValid) {
         Common.adminLoginLog(
+          ipAddress,
+          ipType,
           admin.id,
           "login",
           "0",
@@ -84,6 +96,8 @@ exports.login = (req, res) => {
       // Check admin account status
       if (admin.status == 0) {
         Common.adminLoginLog(
+          ipAddress,
+          ipType,
           admin.id,
           "login",
           "0",
@@ -99,6 +113,8 @@ exports.login = (req, res) => {
 
       if (admin.status == 2) {
         Common.adminLoginLog(
+          ipAddress,
+          ipType,
           admin.id,
           "login",
           "0",
@@ -119,7 +135,7 @@ exports.login = (req, res) => {
       /*
         // Check if the existing token is still valid
         if (admin.login_token && tokenExpiry > currentTime) {
-          Common.adminLoginLog(
+          Common.adminLoginLog(ipAddress, ipType, 
             admin.id,
             "login",
             "0",
@@ -140,6 +156,8 @@ exports.login = (req, res) => {
         new Date(admin.date_of_joining) > currentTime
       ) {
         Common.adminLoginLog(
+          ipAddress,
+          ipType,
           admin.id,
           "login",
           "0",
@@ -163,6 +181,8 @@ exports.login = (req, res) => {
         if (err) {
           console.error("Step 15: Database error while updating token:", err);
           Common.adminLoginLog(
+            ipAddress,
+            ipType,
             admin.id,
             "login",
             "0",
@@ -174,7 +194,15 @@ exports.login = (req, res) => {
             message: `Error updating token: ${err}`,
           });
         }
-        Common.adminLoginLog(admin.id, "login", "1", null, () => {});
+        Common.adminLoginLog(
+          ipAddress,
+          ipType,
+          admin.id,
+          "login",
+          "1",
+          null,
+          () => {}
+        );
         const { login_token, token_expiry, ...adminDataWithoutToken } = admin;
 
         res.json({
@@ -252,6 +280,7 @@ exports.logout = (req, res) => {
 
 // Admin login validation handler
 exports.validateLogin = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
   const { admin_id, _token } = req.body;
   const missingFields = [];
 
@@ -298,6 +327,8 @@ exports.validateLogin = (req, res) => {
     // Check admin status
     if (admin.status === 0) {
       Common.adminLoginLog(
+        ipAddress,
+        ipType,
         admin.id,
         "login",
         "0",
@@ -313,6 +344,8 @@ exports.validateLogin = (req, res) => {
 
     if (admin.status === 2) {
       Common.adminLoginLog(
+        ipAddress,
+        ipType,
         admin.id,
         "login",
         "0",
@@ -459,7 +492,7 @@ exports.updatePassword = (req, res) => {
 
 exports.forgotPasswordRequest = (req, res) => {
   const { email } = req.body;
-
+  const { ipAddress, ipType } = getClientIpAddress(req);
   // Validate the input email
   if (!email || email.trim() === "") {
     return res.status(400).json({
@@ -511,6 +544,8 @@ exports.forgotPasswordRequest = (req, res) => {
           if (err) {
             console.error("Error updating reset password token:", err);
             Common.adminLoginLog(
+              ipAddress,
+              ipType,
               admin.id,
               "forgot-password",
               "0",
@@ -539,6 +574,8 @@ exports.forgotPasswordRequest = (req, res) => {
           )
             .then(() => {
               Common.adminLoginLog(
+                ipAddress,
+                ipType,
                 admin.id,
                 "forgot-password",
                 "1",
@@ -553,6 +590,8 @@ exports.forgotPasswordRequest = (req, res) => {
             .catch((emailError) => {
               console.error("Error sending password reset email:", emailError);
               Common.adminLoginLog(
+                ipAddress,
+                ipType,
                 admin.id,
                 "forgot-password",
                 "0",

@@ -96,10 +96,18 @@ const common = {
    * @param {string} error - Error message if any
    * @param {function} callback - Callback function
    */
-  adminLoginLog: (admin_id, action, result, error, callback) => {
+  adminLoginLog: (
+    ipAddress,
+    ipType,
+    admin_id,
+    action,
+    result,
+    error,
+    callback
+  ) => {
     const insertSql = `
-      INSERT INTO \`admin_login_logs\` (\`admin_id\`, \`action\`, \`result\`, \`error\`, \`created_at\`)
-      VALUES (?, ?, ?, ?, NOW())
+      INSERT INTO \`admin_login_logs\` (\`admin_id\`, \`action\`, \`result\`, \`error\`, \`client_ip\`, \`client_ip_type\`, \`created_at\`)
+      VALUES (?, ?, ?, ?, ?, ?, NOW())
     `;
 
     startConnection((err, connection) => {
@@ -108,19 +116,23 @@ const common = {
         return callback({ status: false, message: "Connection error" }, null);
       }
 
-      connection.query(insertSql, [admin_id, action, result, error], (err) => {
-        connectionRelease(connection); // Release the connection
+      connection.query(
+        insertSql,
+        [admin_id, action, result, error, ipAddress, ipType],
+        (err) => {
+          connectionRelease(connection); // Release the connection
 
-        if (err) {
-          console.error("Database insertion error:", err);
-          return callback({ status: false, message: "Database error" }, null);
+          if (err) {
+            console.error("Database insertion error:", err);
+            return callback({ status: false, message: "Database error" }, null);
+          }
+
+          callback(null, {
+            status: true,
+            message: "Admin login log entry added successfully",
+          });
         }
-
-        callback(null, {
-          status: true,
-          message: "Admin login log entry added successfully",
-        });
-      });
+      );
     });
   },
 
@@ -186,12 +198,18 @@ const common = {
     startConnection((err, connection) => {
       if (err) {
         console.error("Connection error:", err);
-        return callback({ status: false, message: "Connection error", error: err }, null);
+        return callback(
+          { status: false, message: "Connection error", error: err },
+          null
+        );
       }
 
       if (!connection) {
         console.error("Connection is not available");
-        return callback({ status: false, message: "Connection is not available" }, null);
+        return callback(
+          { status: false, message: "Connection is not available" },
+          null
+        );
       }
 
       // First query: Get the admin's role
@@ -199,13 +217,23 @@ const common = {
         if (err) {
           console.error("Database query error: 5-8", err);
           connectionRelease(connection);
-          return callback({ status: false, message: "Database query error (5-8)", error: err }, null);
+          return callback(
+            {
+              status: false,
+              message: "Database query error (5-8)",
+              error: err,
+            },
+            null
+          );
         }
 
         if (results.length === 0) {
           console.log("No admin found with the provided ID");
           connectionRelease(connection);
-          return callback({ status: false, message: "No admin found with the provided ID" }, null);
+          return callback(
+            { status: false, message: "No admin found with the provided ID" },
+            null
+          );
         }
 
         const role = results[0].role;
@@ -216,7 +244,14 @@ const common = {
           if (err) {
             console.error("Database query error: 60", err);
             connectionRelease(connection);
-            return callback({ status: false, message: "Database query error (5-9)", error: err }, null);
+            return callback(
+              {
+                status: false,
+                message: "Database query error (5-9)",
+                error: err,
+              },
+              null
+            );
           }
 
           if (results.length === 0) {
@@ -235,7 +270,10 @@ const common = {
 
           try {
             const permissionsJson = JSON.parse(permissionsRaw);
-            const permissions = typeof permissionsJson === "string" ? JSON.parse(permissionsJson) : permissionsJson;
+            const permissions =
+              typeof permissionsJson === "string"
+                ? JSON.parse(permissionsJson)
+                : permissionsJson;
 
             if (!permissions[action]) {
               console.error("Action type not found in permissions");
@@ -245,7 +283,10 @@ const common = {
 
             console.log(`Authorization successful for action: ${action}`);
             connectionRelease(connection);
-            return callback({ status: true, message: "Authorization Successful" });
+            return callback({
+              status: true,
+              message: "Authorization Successful",
+            });
           } catch (parseErr) {
             console.error("Error parsing permissions JSON:", parseErr);
             connectionRelease(connection);
@@ -254,7 +295,7 @@ const common = {
         });
       });
     });
-  }
+  },
 };
 
 module.exports = common;
