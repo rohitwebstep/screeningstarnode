@@ -8,6 +8,7 @@ const {
   acknowledgementMail,
 } = require("../../mailer/customer/acknowledgementMail");
 
+const { getClientIpAddress } = require("../../utils/ipAddress");
 // Helper function to fetch service names in series
 const getServiceNames = async (serviceIds) => {
   let serviceNames = [];
@@ -34,6 +35,7 @@ const getServiceNames = async (serviceIds) => {
 
 // Controller to list all customers
 exports.list = (req, res) => {
+  const ipAddress = getClientIpAddress(req);
   const { admin_id, _token } = req.query;
 
   let missingFields = [];
@@ -43,6 +45,7 @@ exports.list = (req, res) => {
   if (missingFields.length > 0) {
     return res.status(400).json({
       status: false,
+      ipAddress,
       message: `Missing required fields: ${missingFields.join(", ")}`,
     });
   }
