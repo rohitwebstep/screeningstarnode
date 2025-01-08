@@ -15,29 +15,26 @@ const Customer = {
         return callback(err, null);
       }
 
-      if (
-        filter_status &&
-        filter_status.trim().toLowerCase() &&
-        (filter_status.trim().toLowerCase() === "submitted" ||
-          filter_status.trim().toLowerCase() === "unsubmitted")
-      ) {
+      if (filter_status && filter_status !== null && filter_status !== "") {
         // Query when `filter_status` exists
         const sql = `
-          SELECT b.customer_id, 
-                 b.id AS branch_id, 
-                 b.name AS branch_name, 
-                 COUNT(ca.id) AS application_count,
-                 MAX(ca.created_at) AS latest_application_date
-          FROM candiate_applications ca
-          INNER JOIN branches b ON ca.branch_id = b.id
-          WHERE ca.status = ?
-          GROUP BY b.customer_id, b.id, b.name
-          ORDER BY latest_application_date DESC;
-        `;
+        SELECT b.customer_id, 
+               b.id AS branch_id, 
+               b.name AS branch_name, 
+               COUNT(ca.id) AS application_count,
+               MAX(ca.created_at) AS latest_application_date
+        FROM candiate_applications ca
+        INNER JOIN branches b ON ca.branch_id = b.id
+        INNER JOIN customers c ON ca.customer_id = c.id
+        WHERE ca.status = ? 
+          AND c.status = 1
+        GROUP BY b.customer_id, b.id, b.name
+        ORDER BY latest_application_date DESC;
+      `;
 
         connection.query(sql, [filter_status], (err, results) => {
           if (err) {
-            console.error("Database query error: 14", err);
+            console.error("Database query error: 37", err);
             connectionRelease(connection);
             return callback(err, null);
           }
@@ -56,70 +53,59 @@ const Customer = {
 
           const finalSql = `
             WITH BranchesCTE AS (
-                    SELECT 
-                        b.id AS branch_id,
-                        b.customer_id
-                    FROM 
-                        branches b
-                    WHERE 
-                        EXISTS (
-                            SELECT 1 
-                            FROM candidate_applications ca 
-                            WHERE ca.branch_id = b.id
-                        )
-                ),
-                ApplicationCounts AS (
-                    SELECT 
-                        b.customer_id, 
-                        COUNT(ca.id) AS application_count,
-                        MAX(ca.created_at) AS latest_application_date
-                    FROM 
-                        BranchesCTE b
-                    INNER JOIN 
-                        candidate_applications ca ON b.branch_id = ca.branch_id
-                    GROUP BY 
-                        b.customer_id
-                )
                 SELECT 
-                    customers.client_unique_id,
-                    customers.name,
-                    customer_metas.tat_days,
-                    customer_metas.single_point_of_contact,
-                    customers.id AS main_id,
-                    COALESCE(branch_counts.branch_count, 0) AS branch_count,
-                    COALESCE(application_counts.application_count, 0) AS application_count
+                    b.id AS branch_id,
+                    b.customer_id
                 FROM 
-                    customers
-                LEFT JOIN 
-                    customer_metas ON customers.id = customer_metas.customer_id
-                LEFT JOIN (
-                    SELECT 
-                        b.customer_id, 
-                        COUNT(*) AS branch_count
-                    FROM 
-                        branches b
-                    WHERE 
-                        EXISTS (
-                            SELECT 1 
-                            FROM candidate_applications ca 
-                            WHERE ca.branch_id = b.id
-                        )
-                    GROUP BY 
-                        b.customer_id
-                ) AS branch_counts ON customers.id = branch_counts.customer_id
-                LEFT JOIN 
-                    ApplicationCounts application_counts ON customers.id = application_counts.customer_id
-                WHERE 
-                    COALESCE(application_counts.application_count, 0) > 0
+                    branches b
+            )
+            SELECT 
+                customers.client_unique_id,
+                customers.name,
+                customer_metas.client_spoc_id,
+                customer_metas.tat_days,
+                customer_metas.single_point_of_contact,
+                customers.id AS main_id,
+                COALESCE(branch_counts.branch_count, 0) AS branch_count,
+                COALESCE(application_counts.application_count, 0) AS application_count
+            FROM 
+                customers
+            LEFT JOIN 
+                customer_metas ON customers.id = customer_metas.customer_id
+            LEFT JOIN (
+                SELECT 
+                    customer_id, 
+                    COUNT(*) AS branch_count
+                FROM 
+                    branches
+                GROUP BY 
+                    customer_id
+            ) AS branch_counts ON customers.id = branch_counts.customer_id
+            LEFT JOIN (
+                SELECT 
+                    b.customer_id, 
+                    COUNT(ca.id) AS application_count,
+                    MAX(ca.created_at) AS latest_application_date
+                FROM 
+                    BranchesCTE b
+                INNER JOIN 
+                    candiate_applications ca ON b.branch_id = ca.branch_id
+                WHERE ca.is_data_qc = 1
+                GROUP BY 
+                    b.customer_id
+            ) AS application_counts ON customers.id = application_counts.customer_id
+            WHERE 
+                customers.status = 1
+                AND COALESCE(application_counts.application_count, 0) > 0
                 ${customersIDConditionString}
             ORDER BY 
-                    application_counts.latest_application_date DESC;
+                application_counts.latest_application_date DESC;
           `;
 
           connection.query(finalSql, (err, results) => {
             connectionRelease(connection); // Always release the connection
             if (err) {
-              console.error("Database query error: 15", err);
+              console.error("Database query error: 38", err);
               return callback(err, null);
             }
             callback(null, results);
@@ -128,71 +114,131 @@ const Customer = {
       } else {
         // If no filter_status is provided, proceed with the final SQL query without filters
         const finalSql = `
-                          WITH BranchesCTE AS (
-                    SELECT 
-                        b.id AS branch_id,
-                        b.customer_id
-                    FROM 
-                        branches b
-                    WHERE 
-                        EXISTS (
-                            SELECT 1 
-                            FROM candidate_applications ca 
-                            WHERE ca.branch_id = b.id
-                        )
-                ),
-                ApplicationCounts AS (
-                    SELECT 
-                        b.customer_id, 
-                        COUNT(ca.id) AS application_count,
-                        MAX(ca.created_at) AS latest_application_date
-                    FROM 
-                        BranchesCTE b
-                    INNER JOIN 
-                        candidate_applications ca ON b.branch_id = ca.branch_id
-                    GROUP BY 
-                        b.customer_id
-                )
-                SELECT 
-                    customers.client_unique_id,
-                    customers.name,
-                    customer_metas.tat_days,
-                    customer_metas.single_point_of_contact,
-                    customers.id AS main_id,
-                    COALESCE(branch_counts.branch_count, 0) AS branch_count,
-                    COALESCE(application_counts.application_count, 0) AS application_count
-                FROM 
-                    customers
-                LEFT JOIN 
-                    customer_metas ON customers.id = customer_metas.customer_id
-                LEFT JOIN (
-                    SELECT 
-                        b.customer_id, 
-                        COUNT(*) AS branch_count
-                    FROM 
-                        branches b
-                    WHERE 
-                        EXISTS (
-                            SELECT 1 
-                            FROM candidate_applications ca 
-                            WHERE ca.branch_id = b.id
-                        )
-                    GROUP BY 
-                        b.customer_id
-                ) AS branch_counts ON customers.id = branch_counts.customer_id
-                LEFT JOIN 
-                    ApplicationCounts application_counts ON customers.id = application_counts.customer_id
-                WHERE 
-                    COALESCE(application_counts.application_count, 0) > 0
-                ORDER BY 
-                    application_counts.latest_application_date DESC;
+          WITH BranchesCTE AS (
+              SELECT 
+                  b.id AS branch_id,
+                  b.customer_id
+              FROM 
+                  branches b
+          )
+          SELECT 
+              customers.client_unique_id,
+              customers.name,
+              customer_metas.client_spoc_id,
+              customer_metas.tat_days,
+              customer_metas.single_point_of_contact,
+              customers.id AS main_id,
+              COALESCE(branch_counts.branch_count, 0) AS branch_count,
+              COALESCE(application_counts.application_count, 0) AS application_count
+          FROM 
+              customers
+          LEFT JOIN 
+              customer_metas ON customers.id = customer_metas.customer_id
+          LEFT JOIN (
+              SELECT 
+                  customer_id, 
+                  COUNT(*) AS branch_count
+              FROM 
+                  branches
+              GROUP BY 
+                  customer_id
+          ) AS branch_counts ON customers.id = branch_counts.customer_id
+          LEFT JOIN (
+              SELECT 
+                  b.customer_id, 
+                  COUNT(ca.id) AS application_count,
+                  MAX(ca.created_at) AS latest_application_date
+              FROM 
+                  BranchesCTE b
+              INNER JOIN 
+                  candiate_applications ca ON b.branch_id = ca.branch_id
+              WHERE ca.is_data_qc = 1
+              GROUP BY 
+                  b.customer_id
+          ) AS application_counts ON customers.id = application_counts.customer_id
+          WHERE 
+              customers.status = 1
+              AND COALESCE(application_counts.application_count, 0) > 0
+          ORDER BY 
+              application_counts.latest_application_date DESC;
         `;
-
-        connection.query(finalSql, (err, results) => {
+        connection.query(finalSql, async (err, results) => {
           connectionRelease(connection); // Always release the connection
           if (err) {
-            console.error("Database query error:16", err);
+            console.error("Database query error: 39", err);
             return callback(err, null);
+          }
+          // Process each result to fetch client_spoc names
+          for (const result of results) {
+            const spocIdString = result.client_spoc_id;
+            if (spocIdString) {
+              // Ensure client_spoc_id is treated as a string and split by commas
+              const spocIds = spocIdString
+                .toString()
+                .split(",")
+                .map((id) => id.trim());
+
+              // Query client_spoc table to fetch names for these IDs
+              const spocQuery = `
+                SELECT name 
+                FROM client_spocs
+                WHERE id IN (${spocIds.map(() => "?").join(",")});
+              `;
+
+              try {
+                const spocNames = await new Promise((resolve, reject) => {
+                  connection.query(
+                    spocQuery,
+                    spocIds,
+                    (spocErr, spocResults) => {
+                      if (spocErr) {
+                        return reject(spocErr);
+                      }
+                      resolve(spocResults.map((spoc) => spoc.name || "N/A"));
+                    }
+                  );
+                });
+
+                // Attach spoc names to the current result
+                result.client_spoc_name = spocNames;
+              } catch (spocErr) {
+                console.error("Error fetching client_spoc names:", spocErr);
+                result.client_spoc_name = null; // Default to null if error occurs
+              }
+            } else {
+              // If client_spoc_id is null or empty
+              result.client_spoc_name = null;
+            }
+
+            if (result.branch_count === 1) {
+              // Query client_spoc table to fetch names for these IDs
+              const headBranchQuery = `SELECT id, is_head FROM \`branches\` WHERE \`customer_id\` = ? AND \`is_head\` = ?`;
+
+              try {
+                const headBranchID = await new Promise((resolve, reject) => {
+                  connection.query(
+                    headBranchQuery,
+                    [result.main_id, 1], // Properly pass query parameters as an array
+                    (headBranchErr, headBranchResults) => {
+                      if (headBranchErr) {
+                        return reject(headBranchErr);
+                      }
+                      resolve(
+                        headBranchResults.length > 0
+                          ? headBranchResults[0].id
+                          : null
+                      );
+                    }
+                  );
+                });
+
+                // Attach spoc names to the current result
+                result.head_branch_id = headBranchID;
+              } catch (headBranchErr) {
+                console.error("Error fetching head branch id:", headBranchErr);
+                result.head_branch_id = null; // Default to null if an error occurs
+              }
+            }
           }
           callback(null, results);
         });
@@ -321,19 +367,29 @@ const Customer = {
               serviceNames.push({ ...candidateApp, serviceNames: "" });
             } else {
               // Query for service titles
-              const servicesQuery = "SELECT title FROM `services` WHERE id IN (?)";
+              const servicesQuery =
+                "SELECT title FROM `services` WHERE id IN (?)";
               try {
                 const servicesResults = await new Promise((resolve, reject) => {
-                  connection.query(servicesQuery, [servicesIds], (err, results) => {
-                    if (err) {
-                      console.error("Database query error for services:", err);
-                      return reject(err);
+                  connection.query(
+                    servicesQuery,
+                    [servicesIds],
+                    (err, results) => {
+                      if (err) {
+                        console.error(
+                          "Database query error for services:",
+                          err
+                        );
+                        return reject(err);
+                      }
+                      resolve(results);
                     }
-                    resolve(results);
-                  });
+                  );
                 });
 
-                const servicesTitles = servicesResults.map((service) => service.title);
+                const servicesTitles = servicesResults.map(
+                  (service) => service.title
+                );
                 candidateApp.serviceNames = servicesTitles;
               } catch (error) {
                 console.error("Error fetching service titles:", error);
@@ -353,13 +409,17 @@ const Customer = {
 
               try {
                 const davResults = await new Promise((resolve, reject) => {
-                  connection.query(checkDavSql, [candidateApp.main_id], (queryErr, results) => {
-                    if (queryErr) {
-                      console.error("Error querying DAV details:", queryErr);
-                      return reject(queryErr);
+                  connection.query(
+                    checkDavSql,
+                    [candidateApp.main_id],
+                    (queryErr, results) => {
+                      if (queryErr) {
+                        console.error("Error querying DAV details:", queryErr);
+                        return reject(queryErr);
+                      }
+                      resolve(results);
                     }
-                    resolve(results);
-                  });
+                  );
                 });
 
                 if (davResults.length > 0) {
@@ -396,13 +456,17 @@ const Customer = {
 
               try {
                 const cefResults = await new Promise((resolve, reject) => {
-                  connection.query(checkCefSql, [candidateApp.main_id], (queryErr, results) => {
-                    if (queryErr) {
-                      console.error("Error querying CEF details:", queryErr);
-                      return reject(queryErr);
+                  connection.query(
+                    checkCefSql,
+                    [candidateApp.main_id],
+                    (queryErr, results) => {
+                      if (queryErr) {
+                        console.error("Error querying CEF details:", queryErr);
+                        return reject(queryErr);
+                      }
+                      resolve(results);
                     }
-                    resolve(results);
-                  });
+                  );
                 });
 
                 if (cefResults.length > 0) {
@@ -419,12 +483,15 @@ const Customer = {
                   cefResults.forEach((cefResult) => {
                     Object.entries(mappings).forEach(([key, label]) => {
                       if (cefResult[key]) {
-                        candidateBasicAttachments.push({ [label]: cefResult[key] });
+                        candidateBasicAttachments.push({
+                          [label]: cefResult[key],
+                        });
                       }
                     });
                   });
 
-                  servicesResult.cef["Candidate Basic Attachments"] = candidateBasicAttachments;
+                  servicesResult.cef["Candidate Basic Attachments"] =
+                    candidateBasicAttachments;
                   candidateApp.service_data = servicesResult;
                 }
               } catch (error) {
@@ -491,87 +558,110 @@ const Customer = {
                 }
 
                 await Promise.all(
-                  Object.entries(dbTableFileInputs).map(async ([dbTable, fileInputNames]) => {
-                    if (fileInputNames.length > 0) {
-                      try {
-                        // Fetch the column names of the table
-                        const existingColumns = await new Promise((resolve, reject) => {
-                          const describeQuery = `DESCRIBE cef_${dbTable}`;
-                          connection.query(describeQuery, (err, results) => {
-                            if (err) {
-                              console.error("Error describing table:", dbTable, err);
-                              return reject(err);
-                            }
-                            resolve(results.map((col) => col.Field)); // Extract column names
-                          });
-                        });
-
-                        // Get only the columns that exist in the table
-                        const validColumns = fileInputNames.filter((col) =>
-                          existingColumns.includes(col)
-                        );
-
-                        if (validColumns.length > 0) {
-                          // Create and execute the SELECT query
-                          const selectQuery = `SELECT ${validColumns.join(", ")} FROM cef_${dbTable} WHERE candidate_application_id = ?`;
-                          const rows = await new Promise((resolve, reject) => {
-                            connection.query(
-                              selectQuery,
-                              [candidateApp.main_id],
-                              (err, rows) => {
-                                if (err) {
-                                  console.error(
-                                    "Error querying database for table:",
-                                    dbTable,
-                                    err
-                                  );
-                                  return reject(err);
+                  Object.entries(dbTableFileInputs).map(
+                    async ([dbTable, fileInputNames]) => {
+                      if (fileInputNames.length > 0) {
+                        try {
+                          // Fetch the column names of the table
+                          const existingColumns = await new Promise(
+                            (resolve, reject) => {
+                              const describeQuery = `DESCRIBE cef_${dbTable}`;
+                              connection.query(
+                                describeQuery,
+                                (err, results) => {
+                                  if (err) {
+                                    console.error(
+                                      "Error describing table:",
+                                      dbTable,
+                                      err
+                                    );
+                                    return reject(err);
+                                  }
+                                  resolve(results.map((col) => col.Field)); // Extract column names
                                 }
-                                resolve(rows);
+                              );
+                            }
+                          );
+
+                          // Get only the columns that exist in the table
+                          const validColumns = fileInputNames.filter((col) =>
+                            existingColumns.includes(col)
+                          );
+
+                          if (validColumns.length > 0) {
+                            // Create and execute the SELECT query
+                            const selectQuery = `SELECT ${validColumns.join(
+                              ", "
+                            )} FROM cef_${dbTable} WHERE candidate_application_id = ?`;
+                            const rows = await new Promise(
+                              (resolve, reject) => {
+                                connection.query(
+                                  selectQuery,
+                                  [candidateApp.main_id],
+                                  (err, rows) => {
+                                    if (err) {
+                                      console.error(
+                                        "Error querying database for table:",
+                                        dbTable,
+                                        err
+                                      );
+                                      return reject(err);
+                                    }
+                                    resolve(rows);
+                                  }
+                                );
                               }
                             );
-                          });
 
-                          // Process and map the rows to replace column names with labels
-                          const updatedRows = rows.map((row) => {
-                            const updatedRow = {};
-                            for (const [key, value] of Object.entries(row)) {
-                              if (value != null && value !== "") {
-                                const label = dbTableColumnLabel[key];
-                                updatedRow[label || key] = value; // Use label if available, else keep original key
+                            // Process and map the rows to replace column names with labels
+                            const updatedRows = rows.map((row) => {
+                              const updatedRow = {};
+                              for (const [key, value] of Object.entries(row)) {
+                                if (value != null && value !== "") {
+                                  const label = dbTableColumnLabel[key];
+                                  updatedRow[label || key] = value; // Use label if available, else keep original key
+                                }
                               }
-                            }
-                            return updatedRow;
-                          });
+                              return updatedRow;
+                            });
 
-                          if (
-                            updatedRows.length > 0 &&
-                            updatedRows.some((row) => Object.keys(row).length > 0)
-                          ) {
-                            servicesResult.cef[dbTableWithHeadings[dbTable]] = updatedRows;
+                            if (
+                              updatedRows.length > 0 &&
+                              updatedRows.some(
+                                (row) => Object.keys(row).length > 0
+                              )
+                            ) {
+                              servicesResult.cef[dbTableWithHeadings[dbTable]] =
+                                updatedRows;
+                            }
+                          } else {
+                            console.log(
+                              `Skipping table ${dbTable} as no valid columns exist in the table.`
+                            );
                           }
-                        } else {
-                          console.log(
-                            `Skipping table ${dbTable} as no valid columns exist in the table.`
+
+                          tableQueries++;
+                          if (tableQueries === totalTables) {
+                            console.log(
+                              `servicesResult.cef - `,
+                              servicesResult.cef
+                            );
+                            candidateApp.service_data = servicesResult;
+                          }
+                        } catch (error) {
+                          console.error(
+                            `Error processing table ${dbTable}:`,
+                            error
                           );
                         }
-
-                        tableQueries++;
-                        if (tableQueries === totalTables) {
-                          console.log(`servicesResult.cef - `, servicesResult.cef);
-                          candidateApp.service_data = servicesResult;
-                        }
-                      } catch (error) {
-                        console.error(`Error processing table ${dbTable}:`, error);
+                      } else {
+                        console.log(
+                          `Skipping table ${dbTable} as fileInputNames is empty.`
+                        );
                       }
-                    } else {
-                      console.log(
-                        `Skipping table ${dbTable} as fileInputNames is empty.`
-                      );
                     }
-                  })
+                  )
                 );
-
               } catch (error) {
                 return Promise.reject(error); // Reject if any errors occur during CEF processing
               }
@@ -584,7 +674,10 @@ const Customer = {
               callback(null, results);
             })
             .catch((promiseError) => {
-              console.error("Error processing candidate applications:", promiseError);
+              console.error(
+                "Error processing candidate applications:",
+                promiseError
+              );
               connectionRelease(connection);
               callback(promiseError, null);
             });
@@ -592,7 +685,6 @@ const Customer = {
       });
     });
   },
-
 
   applicationDataByClientApplicationID: (
     client_application_id,
@@ -630,7 +722,7 @@ const Customer = {
           report_admin.name AS report_generated_by_name,
           cmt.case_upload
         FROM 
-          \`client_applications\` ca
+          \`candidate_applications\` ca
         LEFT JOIN 
           \`cmt_applications\` cmt 
         ON 
@@ -861,7 +953,7 @@ const Customer = {
               KEY \`client_application_id\` (\`client_application_id\`),
               KEY \`cmt_application_customer_id\` (\`customer_id\`),
               KEY \`cmt_application_cmt_id\` (\`cmt_id\`),
-              CONSTRAINT \`fk_${db_table}_client_application_id\` FOREIGN KEY (\`client_application_id\`) REFERENCES \`client_applications\` (\`id\`) ON DELETE CASCADE,
+              CONSTRAINT \`fk_${db_table}_client_application_id\` FOREIGN KEY (\`client_application_id\`) REFERENCES \`candidate_applications\` (\`id\`) ON DELETE CASCADE,
               CONSTRAINT \`fk_${db_table}_customer_id\` FOREIGN KEY (\`customer_id\`) REFERENCES \`customers\` (\`id\`) ON DELETE CASCADE,
               CONSTRAINT \`fk_${db_table}_cmt_id\` FOREIGN KEY (\`cmt_id\`) REFERENCES \`cmt_applications\` (\`id\`) ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`;
@@ -904,7 +996,7 @@ const Customer = {
 
       const sql = `
         SELECT \`status\`, COUNT(*) AS \`count\` 
-        FROM \`client_applications\` 
+        FROM \`candidate_applications\` 
         GROUP BY \`status\`
       `;
       connection.query(sql, (err, results) => {
@@ -927,7 +1019,7 @@ const Customer = {
 
       const sql = `
         SELECT \`status\`, COUNT(*) AS \`count\` 
-        FROM \`client_applications\` 
+        FROM \`candidate_applications\` 
         WHERE \`branch_id\` = ?
         GROUP BY \`status\`, \`branch_id\`
       `;
