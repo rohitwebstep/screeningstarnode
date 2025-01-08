@@ -23,7 +23,7 @@ const Customer = {
                b.name AS branch_name, 
                COUNT(ca.id) AS application_count,
                MAX(ca.created_at) AS latest_application_date
-        FROM candiate_applications ca
+        FROM candidate_applications ca
         INNER JOIN branches b ON ca.branch_id = b.id
         INNER JOIN customers c ON ca.customer_id = c.id
         WHERE ca.status = ? 
@@ -89,8 +89,7 @@ const Customer = {
                 FROM 
                     BranchesCTE b
                 INNER JOIN 
-                    candiate_applications ca ON b.branch_id = ca.branch_id
-                WHERE ca.is_data_qc = 1
+                    candidate_applications ca ON b.branch_id = ca.branch_id
                 GROUP BY 
                     b.customer_id
             ) AS application_counts ON customers.id = application_counts.customer_id
@@ -151,8 +150,7 @@ const Customer = {
               FROM 
                   BranchesCTE b
               INNER JOIN 
-                  candiate_applications ca ON b.branch_id = ca.branch_id
-              WHERE ca.is_data_qc = 1
+                  candidate_applications ca ON b.branch_id = ca.branch_id
               GROUP BY 
                   b.customer_id
           ) AS application_counts ON customers.id = application_counts.customer_id
