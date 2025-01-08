@@ -8,6 +8,7 @@ const adminRoutes = require("./routes/admin/indexRoutes");
 const ticketRoutes = require("./routes/admin/ticketRoutes");
 const userHistoryRoutes = require("./routes/admin/userHistory");
 const clientMasterTrackerRoutes = require("./routes/admin/clientMasterTrackerRoutes");
+const candidateMasterTrackerRoutes = require("./routes/admin/candidateMasterTrackerRoutes");
 const teamManagementRoutes = require("./routes/admin/teamManagementRoutes");
 const billingSpocRoutes = require("./routes/admin/billingSpocRoutes");
 const billingEscalationRoutes = require("./routes/admin/billingEscalationRoutes");
@@ -44,6 +45,7 @@ app.use("/uploads", express.static("uploads"));
 app.use("/ticket", ticketRoutes);
 app.use("/user-history", userHistoryRoutes);
 app.use("/client-master-tracker", clientMasterTrackerRoutes);
+app.use("/candidate-master-tracker", candidateMasterTrackerRoutes);
 app.use("/team-management", teamManagementRoutes);
 
 // =====----- EMPLOYEE CREDENTIALS -----=====
