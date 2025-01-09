@@ -48,7 +48,7 @@ exports.isApplicationExist = (req, res) => {
     app_id,
     branch_id,
     customer_id,
-    (err, exists) => {
+    (err, currentCandidateApplication) => {
       if (err) {
         console.error("Database error:", err);
         return res.status(500).json({
@@ -57,7 +57,7 @@ exports.isApplicationExist = (req, res) => {
         });
       }
 
-      if (exists) {
+      if (currentCandidateApplication) {
         DAV.getDAVApplicationById(app_id, (err, currentDAVApplication) => {
           if (err) {
             console.error(
@@ -82,6 +82,7 @@ exports.isApplicationExist = (req, res) => {
 
           return res.status(200).json({
             status: true,
+            data: currentCandidateApplication,
             message: "Application exists.",
           });
         });
@@ -94,7 +95,6 @@ exports.isApplicationExist = (req, res) => {
     }
   );
 };
-
 exports.submit = (req, res) => {
   const { branch_id, customer_id, application_id, personal_information } =
     req.body;

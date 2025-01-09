@@ -2,12 +2,7 @@ require("dotenv").config();
 const mysql = require("mysql2");
 
 // Validate critical environment variables
-if (
-  !process.env.DB_HOST ||
-  !process.env.DB_USER ||
-  !process.env.DB_NAME ||
-  !process.env.DB_PASSWORD
-) {
+if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_NAME) {
   console.error(
     "Missing critical environment variables. Please check your .env file."
   );
