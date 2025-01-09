@@ -20,6 +20,7 @@ const fs = require("fs");
 const path = require("path");
 const { generatePDF } = require("../../utils/finalReportPdf");
 const { upload, saveImage, saveImages } = require("../../utils/cloudImageSave");
+const { getClientIpAddress } = require("../../utils/ipAddress");
 
 // Controller to list all customers
 exports.list = (req, res) => {
@@ -528,6 +529,7 @@ exports.applicationByID = (req, res) => {
 };
 
 exports.applicationDelete = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
   const { application_id, admin_id, _token } = req.query;
 
   // Validate required fields
@@ -642,6 +644,8 @@ exports.applicationDelete = (req, res) => {
 };
 
 exports.applicationHighlight = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const { application_id, highlight, admin_id, _token } = req.query;
 
   // Validate required fields
@@ -1131,6 +1135,8 @@ exports.reportFormJsonByServiceID = (req, res) => {
 };
 
 exports.generateReport = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
   const {
     admin_id,
     _token,
