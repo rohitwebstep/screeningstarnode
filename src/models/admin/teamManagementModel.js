@@ -217,13 +217,9 @@ const TeamManagement = {
         }
 
         function proceedToCheckColumns() {
-          const currentColumnsSql = `
-            SELECT COLUMN_NAME 
-            FROM information_schema.columns 
-            WHERE table_schema = DATABASE() 
-            AND table_name = ?`;
+          const currentColumnsSql = `SHOW COLUMNS FROM \`${db_table}\``;
 
-          connection.query(currentColumnsSql, [db_table], (err, results) => {
+          connection.query(currentColumnsSql, (err, results) => {
             if (err) {
               connectionRelease(connection);
               return callback(false, {
@@ -232,10 +228,13 @@ const TeamManagement = {
               });
             }
 
-            const existingColumns = results.map((row) => row.COLUMN_NAME);
+            // Extract column names from the results (use 'Field' instead of 'COLUMN_NAME')
+            const existingColumns = results.map((row) => row.Field);
             const expectedColumns = [db_column];
+
+            // Filter out missing columns
             const missingColumns = expectedColumns.filter(
-              (column) => !existingColumns.includes(column)
+              (field) => !existingColumns.includes(field)
             );
 
             const addColumnPromises = missingColumns.map((column) => {

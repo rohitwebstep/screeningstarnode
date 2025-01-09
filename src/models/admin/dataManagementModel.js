@@ -504,23 +504,22 @@ const Customer = {
       }
 
       // 1. Check for existing columns in cmt_applications
-      const checkColumnsSql = `
-        SELECT COLUMN_NAME 
-        FROM INFORMATION_SCHEMA.COLUMNS 
-        WHERE TABLE_NAME = 'cmt_applications' AND COLUMN_NAME IN (?)`;
+      const checkColumnsSql = `SHOW COLUMNS FROM \`cmt_applications\``;
 
-      connection.query(checkColumnsSql, [fields], (err, results) => {
+      connection.query(checkColumnsSql, (err, results) => {
         if (err) {
           console.error("Error checking columns:", err);
           connectionRelease(connection); // Release connection
           return callback(err, null);
         }
 
-        const existingColumns = results.map((row) => row.COLUMN_NAME);
+        // Extract column names from the results (use 'Field' instead of 'COLUMN_NAME')
+        const existingColumns = results.map((row) => row.Field);
+
+        // Filter out missing columns
         const missingColumns = fields.filter(
           (field) => !existingColumns.includes(field)
         );
-
         // 2. Add missing columns if any
         const addMissingColumns = () => {
           if (missingColumns.length > 0) {
@@ -683,56 +682,52 @@ const Customer = {
           }
 
           function proceedToCheckColumns() {
-            const checkColumnsSql = `
-              SELECT COLUMN_NAME 
-              FROM INFORMATION_SCHEMA.COLUMNS 
-              WHERE TABLE_NAME = ? AND COLUMN_NAME IN (?)`;
+            const checkColumnsSql = `SHOW COLUMNS FROM \`${db_table}\``;
 
-            connection.query(
-              checkColumnsSql,
-              [db_table, fields],
-              (err, results) => {
-                if (err) {
-                  connectionRelease(connection);
-                  console.error("Error checking columns:", err);
-                  return callback(err, null);
-                }
+            connection.query(checkColumnsSql, (err, results) => {
+              if (err) {
+                connectionRelease(connection);
+                console.error("Error checking columns:", err);
+                return callback(err, null);
+              }
 
-                const existingColumns = results.map((row) => row.COLUMN_NAME);
-                const missingColumns = fields.filter(
-                  (field) => !existingColumns.includes(field)
+              // Extract column names from the results (use 'Field' instead of 'COLUMN_NAME')
+              const existingColumns = results.map((row) => row.Field);
+
+              // Filter out missing columns
+              const missingColumns = fields.filter(
+                (field) => !existingColumns.includes(field)
+              );
+
+              if (missingColumns.length > 0) {
+                const alterQueries = missingColumns.map((column) => {
+                  return `ALTER TABLE \`${db_table}\` ADD COLUMN \`${column}\` LONGTEXT`; // Adjust data type as necessary
+                });
+
+                const alterPromises = alterQueries.map(
+                  (query) =>
+                    new Promise((resolve, reject) => {
+                      connection.query(query, (alterErr) => {
+                        if (alterErr) {
+                          console.error("Error adding column:", alterErr);
+                          return reject(alterErr);
+                        }
+                        resolve();
+                      });
+                    })
                 );
 
-                if (missingColumns.length > 0) {
-                  const alterQueries = missingColumns.map((column) => {
-                    return `ALTER TABLE \`${db_table}\` ADD COLUMN \`${column}\` LONGTEXT`; // Adjust data type as necessary
+                Promise.all(alterPromises)
+                  .then(() => checkAndUpdateEntry())
+                  .catch((err) => {
+                    connectionRelease(connection);
+                    console.error("Error executing ALTER statements:", err);
+                    callback(err, null);
                   });
-
-                  const alterPromises = alterQueries.map(
-                    (query) =>
-                      new Promise((resolve, reject) => {
-                        connection.query(query, (alterErr) => {
-                          if (alterErr) {
-                            console.error("Error adding column:", alterErr);
-                            return reject(alterErr);
-                          }
-                          resolve();
-                        });
-                      })
-                  );
-
-                  Promise.all(alterPromises)
-                    .then(() => checkAndUpdateEntry())
-                    .catch((err) => {
-                      connectionRelease(connection);
-                      console.error("Error executing ALTER statements:", err);
-                      callback(err, null);
-                    });
-                } else {
-                  checkAndUpdateEntry();
-                }
+              } else {
+                checkAndUpdateEntry();
               }
-            );
+            });
           }
 
           function checkAndUpdateEntry() {

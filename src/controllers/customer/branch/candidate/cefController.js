@@ -209,8 +209,7 @@ exports.submit = (req, res) => {
     send_mail,
   } = req.body;
 
-  let submitStatus = is_submit; // Use a local variable to avoid direct modification
-  console.log(`submitStatus - `, submitStatus);
+  let submitStatus = is_submit;
   if (submitStatus === 1) {
     const requiredFields = {
       branch_id,
@@ -289,8 +288,6 @@ exports.submit = (req, res) => {
               message: "Customer not found.",
             });
           }
-          console.log(`Step - 1`);
-
           // Check if CEF application exists
           CEF.getCEFApplicationById(
             application_id,
@@ -339,16 +336,12 @@ exports.submit = (req, res) => {
                         "An error occurred while submitting the application.",
                     });
                   }
-                  console.log(`Step - 2`);
-                  console.log(`annexure - `, annexure);
                   // Handle annexures if provided
                   if (
                     typeof annexure === "object" &&
                     annexure !== null &&
                     Object.keys(annexure).length > 0
                   ) {
-                    console.log(`cefResult - `, cefResult);
-                    console.log(`Step - 3`);
                     const annexurePromises = Object.keys(annexure).map(
                       (key) => {
                         const modifiedDbTable = `${key.replace(/-/g, "_")}`;
@@ -408,16 +401,12 @@ exports.submit = (req, res) => {
                         });
                       }
                     );
-                    console.log(`Step - 4`);
 
                     // Process all annexure promises
                     Promise.all(annexurePromises)
                       .then(() => {
-                        console.log(`submitStatus - `, submitStatus);
-                        console.log(`send_mail - `, send_mail);
 
                         if (parseInt(send_mail) === 1 && submitStatus == 1) {
-                          console.log("Sending notification emails...");
                           sendNotificationEmails(
                             application_id,
                             cefResult.insertId,
@@ -430,12 +419,6 @@ exports.submit = (req, res) => {
                             res
                           );
                         } else {
-                          console.log(
-                            "Entering else block: submitStatus:",
-                            submitStatus,
-                            "send_mail:",
-                            send_mail
-                          );
                           return res.status(200).json({
                             status: true,
                             cef_id: cefResult.insertId,
@@ -451,7 +434,6 @@ exports.submit = (req, res) => {
                         });
                       });
                   } else {
-                    console.log(`Step - 10`);
                     CEF.updateSubmitStatus(
                       {
                         candidateAppId: application_id,

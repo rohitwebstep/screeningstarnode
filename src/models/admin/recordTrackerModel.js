@@ -213,11 +213,7 @@ const recordTrackerModel = {
                               const dbTable = reportFormJson.db_table;
 
                               // Query to find the column that starts with "additional_fee"
-                              const additionalFeeColumnQuery = `
-                              SELECT COLUMN_NAME 
-                              FROM INFORMATION_SCHEMA.COLUMNS 
-                              WHERE TABLE_NAME = '${dbTable}' AND COLUMN_NAME LIKE 'additional_fee%';
-                            `;
+                              const additionalFeeColumnQuery = `SHOW COLUMNS FROM \`${dbTable}\` WHERE \`Field\` LIKE 'additional_fee%'`;
 
                               connection.query(
                                 additionalFeeColumnQuery,
@@ -232,15 +228,16 @@ const recordTrackerModel = {
                                   // Identify the additional_fee column
                                   const additionalFeeColumn =
                                     columnResults.length > 0
-                                      ? columnResults[0].COLUMN_NAME
+                                      ? columnResults[0].Field
                                       : null;
 
                                   // Construct the query with a fixed "status" column and dynamic "additional_fee" column
                                   const statusQuery = `
-                                SELECT status${additionalFeeColumn
-                                      ? `, ${additionalFeeColumn}`
-                                      : ""
-                                    }
+                                SELECT status${
+                                  additionalFeeColumn
+                                    ? `, ${additionalFeeColumn}`
+                                    : ""
+                                }
                                 FROM ${dbTable}
                                 WHERE client_application_id = ?;
                               `;
@@ -250,10 +247,12 @@ const recordTrackerModel = {
                                     [application.id],
                                     (err, statusResults) => {
                                       console.warn(
-                                        `SELECT status${additionalFeeColumn
-                                          ? `, ${additionalFeeColumn}`
-                                          : ""
-                                        } FROM ${dbTable} WHERE client_application_id = ${application.id
+                                        `SELECT status${
+                                          additionalFeeColumn
+                                            ? `, ${additionalFeeColumn}`
+                                            : ""
+                                        } FROM ${dbTable} WHERE client_application_id = ${
+                                          application.id
                                         };`
                                       );
                                       if (err) {
@@ -275,10 +274,10 @@ const recordTrackerModel = {
                                             : null,
                                         additionalFee:
                                           additionalFeeColumn &&
-                                            statusResults.length > 0
+                                          statusResults.length > 0
                                             ? statusResults[0][
-                                            additionalFeeColumn
-                                            ]
+                                                additionalFeeColumn
+                                              ]
                                             : null,
                                       });
 
@@ -422,16 +421,12 @@ const recordTrackerModel = {
 
             try {
               const spocNames = await new Promise((resolve, reject) => {
-                connection.query(
-                  spocQuery,
-                  spocIds,
-                  (spocErr, spocResults) => {
-                    if (spocErr) {
-                      return reject(spocErr);
-                    }
-                    resolve(spocResults.map((spoc) => spoc.name || "N/A"));
+                connection.query(spocQuery, spocIds, (spocErr, spocResults) => {
+                  if (spocErr) {
+                    return reject(spocErr);
                   }
-                );
+                  resolve(spocResults.map((spoc) => spoc.name || "N/A"));
+                });
               });
 
               // Attach spoc names to the current result
@@ -478,7 +473,6 @@ const recordTrackerModel = {
 
         callback(null, results);
       });
-
     });
   },
 };
