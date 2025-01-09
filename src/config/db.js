@@ -1,6 +1,7 @@
 require("dotenv").config();
 const mysql = require("mysql2");
 
+/*
 // Validate critical environment variables
 if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_NAME) {
   console.error(
@@ -8,18 +9,29 @@ if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_NAME) {
   );
   process.exit(1);
 }
+*/
+
+// Assign environment variables with fallbacks
+const dbHost = process.env.DB_HOST || "localhost";
+const dbUser = process.env.DB_USER || "root";
+const dbName = process.env.DB_NAME || "screeningstar";
+
+let dbPassword = process.env.DB_PASSWORD || "";
+if (process.env.DB_HOST == "local") {
+  dbPassword = process.env.DB_PASSWORD || "";
+}
 
 // Log environment variables for debugging (optional, avoid in production)
-console.log("DB_HOST:", process.env.DB_HOST);
-console.log("DB_USER:", process.env.DB_USER);
-console.log("DB_NAME:", process.env.DB_NAME);
+console.log("DB_HOST:", dbHost);
+console.log("DB_USER:", dbUser);
+console.log("DB_NAME:", dbName);
 
 // Create a connection pool
 const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
+  host: dbHost,
+  user: dbUser,
+  password: dbPassword,
+  database: dbName,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -42,16 +54,20 @@ const startConnection = (callback, retries = 20) => {
           );
           setTimeout(() => attemptConnection(retriesLeft - 1), 500);
         } else {
-          callback(err, null); // Return error after retries are exhausted
+          callback(err, null);
         }
+      } else if (connection.state === "disconnected") {
+        console.warn("Connection is disconnected. Retrying...");
+        connection.release();
+        attemptConnection(retriesLeft - 1);
       } else {
-        console.log("Connection established"); // Log successful connection
-        callback(null, connection); // Pass the connection to the callback
+        console.log("Connection established");
+        callback(null, connection);
       }
     });
   };
 
-  attemptConnection(retries); // Initial connection attempt
+  attemptConnection(retries);
 };
 
 // Function to release a connection

@@ -237,9 +237,9 @@ const cef = {
           null
         );
       }
-      const checkColumnsSql = `SHOW COLUMNS FROM \`cef_applications${db_table}\``;
+      const checkColumnsSql = `SHOW COLUMNS FROM \`cef_applications\``;
 
-      connection.query(checkColumnsSql, [fields], (checkErr, results) => {
+      connection.query(checkColumnsSql, (checkErr, results) => {
         if (checkErr) {
           console.error("Error checking columns:", checkErr);
           connectionRelease(connection);
