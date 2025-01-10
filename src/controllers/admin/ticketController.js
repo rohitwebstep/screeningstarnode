@@ -430,7 +430,7 @@ exports.update = (req, res) => {
               "Ticket",
               "Update",
               "0",
-              JSON.stringify({ id, ...changes }),
+              JSON.stringify({ ticket_number, ...changes }),
               err,
               () => {}
             );
@@ -446,7 +446,7 @@ exports.update = (req, res) => {
             "Ticket",
             "Update",
             "1",
-            JSON.stringify({ id, ...changes }),
+            JSON.stringify({ ticket_number, ...changes }),
             null,
             () => {}
           );
