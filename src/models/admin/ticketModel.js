@@ -104,7 +104,7 @@ const Branch = {
         );
       }
 
-      const sql = `SELECT id, title, created_at FROM \`tickets\` WHERE \`ticket_number\` = ? LIMIT 1`;
+      const sql = `SELECT id, title, remarks, status, created_at FROM \`tickets\` WHERE \`ticket_number\` = ? LIMIT 1`;
 
       connection.query(sql, [ticketNumber], (err, ticketResults) => {
         // Ensure connection is released even if there's an error
