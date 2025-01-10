@@ -423,7 +423,7 @@ exports.update = (req, res) => {
         Ticket.update(ticket_number, remarks, ticketStatus, (err, result) => {
           if (err) {
             console.error("Database error:", err);
-            Common.adminActivityLog(
+            AdminCommon.adminActivityLog(
               ipAddress,
               ipType,
               admin_id,
@@ -439,7 +439,7 @@ exports.update = (req, res) => {
               .json({ status: false, message: err.message, token: newToken });
           }
 
-          Common.adminActivityLog(
+          AdminCommon.adminActivityLog(
             ipAddress,
             ipType,
             admin_id,
