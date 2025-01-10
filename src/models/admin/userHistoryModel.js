@@ -8,6 +8,7 @@ const tatDelay = {
       SELECT 
         admin_login_logs.*, 
         admins.name AS admin_name, 
+        admins.profile_picture AS profile_picture, 
         admins.email AS admin_email, 
         admins.mobile AS admin_mobile 
       FROM \`admin_login_logs\`
