@@ -24,6 +24,8 @@ const Branch = {
           T.title, 
           T.created_at,
           T.branch_id,
+          T.remarks,
+          T.status,
           B.name AS branch_name,
           C.id AS customer_id,
           C.name AS customer_name,
@@ -77,6 +79,8 @@ const Branch = {
             ticket_id: row.id,
             ticket_number: row.ticket_number,
             title: row.title,
+            remarks: row.remarks,
+            status: row.status,
             created_at: row.created_at,
           });
 
