@@ -349,6 +349,120 @@ exports.upload = (req, res) => {
   );
 };
 
+// Controller to update a service
+exports.update = (req, res) => {
+  const { ipAddress, ipType } = getClientIpAddress(req);
+
+  const { ticket_number, remarks, status, admin_id, _token } = req.body;
+
+  let missingFields = [];
+  if (!ticket_number || ticket_number === "")
+    missingFields.push("Ticket Number");
+  if (!remarks || remarks === "") missingFields.push("Remarks");
+  if (!status || status === "") missingFields.push("Status");
+  if (!admin_id || admin_id === "") missingFields.push("Admin ID");
+  if (!_token || _token === "") missingFields.push("Token");
+  const ticketStatus = status;
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      status: false,
+      message: `Missing required fields: ${missingFields.join(", ")}`,
+    });
+  }
+  const action = "see_more";
+  AdminCommon.isAdminAuthorizedForAction(admin_id, action, (result) => {
+    if (!result.status) {
+      return res.status(403).json({
+        status: false,
+        message: result.message, // Return the message from the authorization function
+      });
+    }
+    AdminCommon.isAdminTokenValid(_token, admin_id, (err, result) => {
+      if (err) {
+        console.error("Error checking token validity:", err);
+        return res.status(500).json(err);
+      }
+
+      if (!result.status) {
+        return res.status(401).json({ status: false, message: result.message });
+      }
+
+      const newToken = result.newToken;
+      Ticket.getTicketByTicketNumber(ticket_number, (err, currentTicket) => {
+        if (err) {
+          console.error("Database error:", err);
+          return res.status(500).json({
+            status: false,
+            message: err.message,
+            token: newToken,
+          });
+        }
+
+        if (!result) {
+          return res.status(404).json({
+            status: false,
+            message: "Ticket not found",
+            token: newToken,
+          });
+        }
+
+        const changes = {};
+        if (currentTicket.remarks !== remarks) {
+          changes.remarks = {
+            old: currentTicket.remarks,
+            new: remarks,
+          };
+        }
+        if (currentTicket.status !== ticketStatus) {
+          changes.ticketStatus = {
+            old: currentTicket.ticketStatus,
+            new: ticketStatus,
+          };
+        }
+
+        Ticket.update(ticket_number, remarks, ticketStatus, (err, result) => {
+          if (err) {
+            console.error("Database error:", err);
+            Common.adminActivityLog(
+              ipAddress,
+              ipType,
+              admin_id,
+              "Ticket",
+              "Update",
+              "0",
+              JSON.stringify({ id, ...changes }),
+              err,
+              () => {}
+            );
+            return res
+              .status(500)
+              .json({ status: false, message: err.message, token: newToken });
+          }
+
+          Common.adminActivityLog(
+            ipAddress,
+            ipType,
+            admin_id,
+            "Ticket",
+            "Update",
+            "1",
+            JSON.stringify({ id, ...changes }),
+            null,
+            () => {}
+          );
+
+          res.json({
+            status: true,
+            message: "Ticket updated successfully",
+            service: result,
+            token: newToken,
+          });
+        });
+      });
+    });
+  });
+};
+
 exports.delete = (req, res) => {
   const { ipAddress, ipType } = getClientIpAddress(req);
 

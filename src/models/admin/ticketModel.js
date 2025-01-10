@@ -153,6 +153,39 @@ const Branch = {
     });
   },
 
+  getTicketByTicketNumber: (ticketNumber, callback) => {
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(
+          { message: "Failed to connect to the database", error: err },
+          null
+        );
+      }
+
+      const sql = `SELECT id, title, remarks, status, created_at FROM \`tickets\` WHERE \`ticket_number\` = ? LIMIT 1`;
+
+      connection.query(sql, [ticketNumber], (err, ticketResults) => {
+        // Ensure connection is released even if there's an error
+        connectionRelease(connection);
+
+        if (err) {
+          console.error("Database query error: 84", err); // Log the error in the query
+          return callback(
+            { message: "Database query error", error: err },
+            null
+          );
+        }
+
+        if (ticketResults.length === 0) {
+          return callback({ message: "Ticket not found" }, null);
+        }
+
+        const ticketData = ticketResults[0];
+        callback(null, ticketData);
+      });
+    });
+  },
+
   chat: (ticketData, callback) => {
     const sqlTicket = `
       SELECT id, branch_id, customer_id, title, description, created_at
@@ -284,6 +317,34 @@ const Branch = {
               );
             }
           );
+        }
+      );
+    });
+  },
+
+  update: (ticket_number, remarks, status, callback) => {
+    const sql = `
+      UPDATE \`tickets\`
+      SET \`remarks\` = ?, \`status\` = ?
+      WHERE \`ticket_number\` = ?
+    `;
+
+    startConnection((err, connection) => {
+      if (err) {
+        return callback(err, null);
+      }
+
+      connection.query(
+        sql,
+        [remarks, status, ticket_number],
+        (queryErr, results) => {
+          connectionRelease(connection); // Release the connection
+
+          if (queryErr) {
+            console.error(" 51", queryErr);
+            return callback(queryErr, null);
+          }
+          callback(null, results);
         }
       );
     });
