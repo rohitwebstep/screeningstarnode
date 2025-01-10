@@ -3,8 +3,17 @@ const moment = require("moment"); // Ensure you have moment.js installed
 
 const tatDelay = {
   index: (callback) => {
-    // SQL query to retrieve applications, customers, branches, and tat_days
-    const SQL = `SELECT * FROM \`admin_login_logs\` ORDER BY \`created_at\` DESC`;
+    // SQL query to retrieve applications, customers, branches, tat_days, and admin details
+    const SQL = `
+      SELECT 
+        admin_login_logs.*, 
+        admins.name AS admin_name, 
+        admins.email AS admin_email, 
+        admins.mobile AS admin_mobile 
+      FROM \`admin_login_logs\`
+      INNER JOIN \`admins\` ON \`admin_login_logs\`.admin_id = \`admins\`.id
+      ORDER BY \`admin_login_logs\`.\`created_at\` DESC
+    `;
 
     startConnection((connectionError, connection) => {
       if (connectionError) {
